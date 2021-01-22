@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="utf-8">
+	<title>Platforming Tips & Tricks</title>
+	<style media="screen">
+		body {
+			background: #181920;
+			padding: 1rem 0;
+		}
+		
+		canvas {
+			display: block;
+			width: 100%;
+			max-width: 640px;
+			margin: 0 auto;
+			padding: 5px;
+			border: 3px solid #ddd;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -webkit-crisp-edges;
+			image-rendering: pixelated;
+			image-rendering: crisp-edges;
+		}
+	</style>
+	<script src="html5engine.js"></script>
+</head>
+<body>
+	<canvas id="second" width="320px" height="180px" tabindex="-1"></canvas>
+	<canvas id="basic" width="320px" height="180px" tabindex="-1"></canvas>
+	
+	<script type="text/javascript">
+		initGames();
+	</script>
+</body>
+</html>
