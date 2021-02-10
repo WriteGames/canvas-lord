@@ -18,6 +18,9 @@ const filterWithinBounds = (a, b) => pos => a.every((p, i) => pos[i] >= p) && b.
 
 const mapToArray = val => [val].flat();
 
+const v2zero = [0, 0];
+const v2one = [1, 1];
+
 const createBitEnum = (prefix, ...names) => {
 	names = names.flat();
 	const bitEnumObj = globalThis[prefix.toUpperCase()] = [];
@@ -281,22 +284,23 @@ class Game {
 		
 		this.ctx.imageSmoothingEnabled = false;
 		
+		this.sceneStack = [];
+		
 		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
 		this.render();
-				
+		
 		this.input = new Input(this);
 		
-		// this.player = new Player(160, 120);
-		this.player = new Player(160 + 100, 120);
+		const sceneWidth = this.canvas.width / 2;
 		
-		this.grid = initGrid2();
-		this.tileset = initTileset(this.grid);
-		this.gridOutline = new GridOutline();
-		this.gridOutline.computeOutline(this.grid);
+		const sceneLeft = new PlayerScene(Player);
+		sceneLeft.setCanvasSize(sceneWidth, this.canvas.height);
 		
-		this.player.scene = {
-			grid: this.grid
-		};
+		const sceneRight = new PlayerScene(Player);
+		sceneRight.screenPos[0] = sceneWidth;
+		sceneRight.setCanvasSize(sceneWidth, this.canvas.height);
+		
+		this.sceneStack.push([sceneLeft, sceneRight]);
 		
 		const timestep = 1000 / 60;
 		
@@ -341,17 +345,15 @@ class Game {
 	}
 	
 	update() {
-		this.player.update(this.input);
+		// this.sceneStack[0]?.[0].update(this.input);
+		this.sceneStack[0]?.forEach(scene => scene.update(this.input));
 	}
 	
 	render() {
 		this.ctx.fillStyle = '#87E1A3';
 		this.ctx.fillRect(0, 0, 640, 360);
 		
-		this.tileset?.render(this.ctx);
-		// this.grid?.render(this.ctx);
-		this.gridOutline?.render(this.ctx);
-		this.player?.render(this.ctx);
+		this.sceneStack[0]?.forEach(scene => scene.render(this.ctx));
 		
 		if (this.focus === false) {
 			this.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
@@ -413,6 +415,99 @@ class Input {
 	
 	clear() {
 		this.keys = this.keys.map(v => 0);
+	}
+}
+
+class Camera extends Array {
+	constructor(x, y) {
+		super();
+		this.push(x, y);
+	}
+	
+	get x() { return this[0]; }
+	get y() { return this[1]; }
+	
+	set x(val) { this[0] = val; }
+	set y(val) { this[1] = val; }
+}
+
+const updateCamera = (scene, player) => {
+	const newX = player.x + (player.width / 2) - scene.canvas.width / 2;
+	scene.camera.x = Math.clamp(newX, 0, scene.canvas.width);
+};
+
+class Scene {
+	constructor() {
+		this.entities = [];
+		this.renderables = [];
+		
+		this.screenPos = [0, 0];
+		this.camera = new Camera(0, 0);
+	}
+	
+	setCanvasSize(width, height) {
+		const canvas = this.canvas = document.createElement('canvas');
+		const ctx = this.ctx = canvas.getContext('2d');
+		canvas.width = width;
+		canvas.height = height;
+	}
+	
+	addEntity(entity) {
+		entity.scene = this;
+		this.entities.push(entity);
+		return entity;
+	}
+	
+	update(input) {
+		this.entities.forEach(entity => entity.update(input));
+		this.renderables = this.renderables;//.filter(e => e).sort();
+	}
+	
+	render(ctx) {
+		this.ctx.fillStyle = '#87E1A3';
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		
+		this.renderables.forEach(entity => entity.render(this.ctx, this.camera));
+		
+		const width = 1;
+		const posOffset = (width / 2);
+		const widthOffset = width;
+		this.ctx.strokeStyle = '#787878';
+		this.ctx.lineWidth = width;
+		this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - widthOffset, this.canvas.height - widthOffset);
+		
+		ctx.drawImage(this.canvas, ...this.screenPos);
+	}
+}
+
+class PlayerScene extends Scene {
+	constructor(Player) {
+		super();
+		
+		// this.player = this.addEntity(new Player(160, 120));
+		this.player = this.addEntity(new Player(160 + 100, 120));
+		
+		this.grid = initGrid2();
+		this.tileset = initTileset(this.grid);
+		this.gridOutline = new GridOutline();
+		this.gridOutline.computeOutline(this.grid);
+		
+		this.renderables.push(this.tileset);
+		// this.renderables.push(this.grid);
+		this.renderables.push(this.gridOutline);
+		this.renderables.push(this.player);
+	}
+	
+	setCanvasSize(width, height) {
+		super.setCanvasSize(width, height);
+		
+		updateCamera(this, this.player);
+	}
+	
+	update(input) {
+		super.update(input);
+		
+		updateCamera(this, this.player);
 	}
 }
 
@@ -626,12 +721,14 @@ class Player {
 		}
 	}
 	
-	render(ctx) {
+	render(ctx, camera = v2zero) {
 		const flipped = this.facing === -1;
 		const scaleX = flipped ? -1 : 1;
 		
-		const drawX = this.x;
-		const drawY = this.y;
+		const [cameraX, cameraY] = camera;
+		
+		const drawX = this.x - cameraX;
+		const drawY = this.y - cameraY;
 		
 		const drawW = this.image.width / 4;
 		const drawH = this.image.height;
@@ -694,10 +791,12 @@ class Grid {
 		return this.data[y * this.columns + x];
 	}
 	
-	renderOutline(ctx) {
+	renderOutline(ctx, camera) {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
+		
+		const [cameraX, cameraY] = camera;
 		
 		ctx.strokeStyle = this.color;
 		ctx.lineWidth = 1;
@@ -705,10 +804,10 @@ class Grid {
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				if (this.data[y * stride + x] === 1) {
-					const x1 = x * this.tileW + 0.5;
-					const y1 = y * this.tileH + 0.5;
-					const x2 = x1 + width;
-					const y2 = y1 + height;
+					const x1 = x * this.tileW + 0.5 - cameraX;
+					const y1 = y * this.tileH + 0.5 - cameraY;
+					const x2 = x1 + width - cameraX;
+					const y2 = y1 + height - cameraY;
 					if (!this.getTile(x - 1, y)) {
 						drawLine(ctx, x1, y1, x1, y2);
 					}
@@ -726,10 +825,12 @@ class Grid {
 		}
 	}
 	
-	renderEachCell(ctx, fill = false) {
+	renderEachCell(ctx, camera, fill = false) {
 		const stride = this.columns;
 		const width = this.tileW - +(!fill);
 		const height = this.tileH - +(!fill);
+		
+		const [cameraX, cameraY] = camera;
 		
 		if (fill === true)
 			ctx.fillStyle = this.color;
@@ -744,28 +845,28 @@ class Grid {
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				if (this.data[y * stride + x] === 1) {
-					drawRect(x * this.tileW + offset, y * this.tileH + offset, width, height);
+					drawRect(x * this.tileW + offset - cameraX, y * this.tileH + offset - cameraY, width, height);
 				}
 			}
 		}
 	}
 	
-	render(ctx) {
+	render(ctx, camera = v2zero) {
 		switch (this.renderMode) {
 			case 0: {
-				this.renderOutline(ctx);
+				this.renderOutline(ctx, camera);
 			} break;
 			
 			case 1: {
-				this.renderEachCell(ctx);
+				this.renderEachCell(ctx, camera);
 			} break;
 			
 			case 2: {
 				const temp = this.color;
 				this.color = 'rgba(255, 0, 0, 0.3)';
-				this.renderEachCell(ctx, true);
+				this.renderEachCell(ctx, camera, true);
 				this.color = temp;
-				this.renderEachCell(ctx, false);
+				this.renderEachCell(ctx, camera, false);
 			} break;
 		}
 	}
@@ -923,13 +1024,15 @@ class GridOutline {
 		boundaryCells.forEach(([x, y]) => this.data[y * columns + x] = 1);
 	}
 	
-	render(ctx) {
+	render(ctx, camera = v2zero) {
 		const fill = true;
 		const grid = this.grid;
 		
 		const stride = grid.columns;
 		const width = grid.tileW - +(!fill);
 		const height = grid.tileH - +(!fill);
+		
+		const [cameraX, cameraY] = camera;
 		
 		const color = 'rgba(0, 255, 0, 0.9)';
 		if (fill === true)
@@ -946,7 +1049,7 @@ class GridOutline {
 			for (let y = 0; y < grid.rows; ++y) {
 				for (let x = 0; x < grid.columns; ++x) {
 					if (this.data[y * stride + x] === 1) {
-						drawRect(x * grid.tileW + offset, y * grid.tileH + offset, width, height);
+						drawRect(x * grid.tileW + offset - cameraX, y * grid.tileH + offset - cameraY, width, height);
 					}
 				}
 			}
@@ -955,7 +1058,7 @@ class GridOutline {
 		const pColor = 'red';
 		
 		if (false) {
-			this.points.forEach(([x, y]) => {
+			this.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
 				ctx.fillStyle = pColor;
 				ctx.beginPath();
 				ctx.arc(x + 0.5, y + 0.5, 2, 0, 2 * Math.PI);
@@ -966,8 +1069,8 @@ class GridOutline {
 		if (true) {
 			ctx.beginPath();
 			ctx.strokeStyle = pColor;
-			ctx.moveTo(...addPos(this.first, [0.5, 0.5]));
-			this.points.forEach(([x, y]) => {
+			ctx.moveTo(...subPos(addPos(this.first, [0.5, 0.5]), camera));
+			this.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
 				ctx.lineTo(x + 0.5, y + 0.5);
 			});
 			ctx.closePath();
@@ -1004,7 +1107,7 @@ class Tileset {
 		this.data[y * this.columns + x] = [tileX, tileY];
 	}
 	
-	render(ctx) {
+	render(ctx, camera = v2zero) {
 		const scale = 1;
 		
 		const {
@@ -1017,25 +1120,19 @@ class Tileset {
 		const srcCols = Math.floor(this.image.width / tileW);
 		const srcRows = Math.floor(this.image.height / tileH);
 		
+		const [cameraX, cameraY] = camera;
+		
 		if (this.imageLoaded === true) {
-			if (false) {
-				const srcX = startX + (separation + tileW) * 2;
-				const srcY = startY + (separation + tileH) * 2;
-				const srcY2 = startY + (separation + tileH) * 6;
-				for (let xx = 0; xx < 320; xx += 16) {
-					ctx.drawImage(image, srcX, srcY, tileW, tileH, xx, 10 * tileH, tileW * scale, tileH * scale);
-					ctx.drawImage(image, srcX, srcY2, tileW, tileH, xx, 11 * tileH, tileW * scale, tileH * scale);
-				}
-			} else {
-				for (let y = 0; y < this.rows; ++y) {
-					for (let x = 0; x < this.columns; ++x) {
-						const val = this.data[y * this.columns + x];
-						if (val !== null) {
-							const [tileX, tileY] = val;
-							const srcX = startX + (separation + tileW) * tileX;
-							const srcY = startY + (separation + tileH) * tileY;
-							ctx.drawImage(image, srcX, srcY, tileW, tileH, x * tileW, y * tileH, tileW * scale, tileH * scale);
-						}
+			for (let y = 0; y < this.rows; ++y) {
+				for (let x = 0; x < this.columns; ++x) {
+					const val = this.data[y * this.columns + x];
+					if (val !== null) {
+						const [tileX, tileY] = val;
+						const srcX = startX + (separation + tileW) * tileX;
+						const srcY = startY + (separation + tileH) * tileY;
+						const dstX = x * tileW - cameraX;
+						const dstY = y * tileH - cameraY;
+						ctx.drawImage(image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
 					}
 				}
 			}
