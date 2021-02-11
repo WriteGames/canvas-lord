@@ -139,10 +139,11 @@ const setTile = (tileset, x, y, bitFlag) => {
 };
 
 class AssetManager {
-	constructor() {
+	constructor(prefix = '') {
 		this.images = new Map();
 		this.imagesLoaded = 0;
 		this.onLoadCallbacks = [];
+		this.prefix = prefix;
 	}
 	
 	addImage(src) {
@@ -155,7 +156,7 @@ class AssetManager {
 			this.imageLoaded(src);
 			this.images.set(src, image);
 		};
-		image.src = src;
+		image.src = `${this.prefix}${src}`;
 	}
 	
 	loadAssets() {
@@ -166,7 +167,9 @@ class AssetManager {
 	
 	imageLoaded(src) {
 		if (++this.imagesLoaded === this.images.size) {
-			this.onLoadCallbacks.forEach(callback => callback());
+			window.requestAnimationFrame(() => {
+				this.onLoadCallbacks.forEach(callback => callback());
+			});
 		}
 	}
 	
