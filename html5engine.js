@@ -68,6 +68,10 @@ const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag)
 
 const setTile = (tileset, x, y, bitFlag) => {
 	switch (bitFlag & ~orTogetherCardinalDirs('LD', 'RD', 'LU', 'RU')) {
+		case 0: {
+			tileset.setTile(x, y, 0, 5);
+		} break;
+		
 		case orTogetherCardinalDirs('NU'): {
 			tileset.setTile(x, y, 0, 7);
 		} break;
@@ -294,17 +298,6 @@ class Game {
 		
 		this.input = new Input(this);
 		
-		const sceneWidth = this.canvas.width / 2;
-		
-		const sceneLeft = new PlayerScene(Player);
-		sceneLeft.setCanvasSize(sceneWidth, this.canvas.height);
-		
-		const sceneRight = new PlayerScene(Player);
-		sceneRight.screenPos[0] = sceneWidth;
-		sceneRight.setCanvasSize(sceneWidth, this.canvas.height);
-		
-		this.sceneStack.push([sceneLeft, sceneRight]);
-		
 		const timestep = 1000 / 60;
 		
 		this._lastFrame = 0;
@@ -348,19 +341,30 @@ class Game {
 	}
 	
 	update() {
-		// this.sceneStack[0]?.[0].update(this.input);
 		this.sceneStack[0]?.forEach(scene => scene.update(this.input));
 	}
 	
 	render() {
-		this.ctx.fillStyle = '#87E1A3';
-		this.ctx.fillRect(0, 0, 640, 360);
+		const {
+			canvas,
+			ctx
+		} = this;
+		
+		ctx.fillStyle = '#87E1A3';
+		ctx.fillRect(0, 0, 640, 360);
 		
 		this.sceneStack[0]?.forEach(scene => scene.render(this.ctx));
 		
+		ctx.strokeStyle = '#323232';
+		ctx.beginPath();
+		ctx.lineWidth = 2;
+		ctx.moveTo(canvas.width / 2, 0.5);
+		ctx.lineTo(canvas.width / 2, 360.5);
+		ctx.stroke();
+		
 		if (this.focus === false) {
-			this.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
-			this.ctx.fillRect(0, 0, 640, 360);
+			ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
+			ctx.fillRect(0, 0, 640, 360);
 		}
 	}
 }
@@ -444,8 +448,13 @@ class Scene {
 		this.entities = [];
 		this.renderables = [];
 		
+		this.shouldUpdate = true;
+		
 		this.screenPos = [0, 0];
 		this.camera = new Camera(0, 0);
+		
+		// this.width = this.height = null;
+		this.boundsX = this.boundsY = null;
 	}
 	
 	setCanvasSize(width, height) {
@@ -462,6 +471,8 @@ class Scene {
 	}
 	
 	update(input) {
+		if (this.shouldUpdate === false) return;
+		
 		this.entities.forEach(entity => entity.update(input));
 		this.renderables = this.renderables;//.filter(e => e).sort();
 	}
@@ -472,12 +483,12 @@ class Scene {
 		
 		this.renderables.forEach(entity => entity.render(this.ctx, this.camera));
 		
-		const width = 1;
-		const posOffset = (width / 2);
-		const widthOffset = width;
-		this.ctx.strokeStyle = '#787878';
-		this.ctx.lineWidth = width;
-		this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - widthOffset, this.canvas.height - widthOffset);
+		// const width = 2;
+		// const posOffset = 0.5;
+		// const widthOffset = width;
+		// this.ctx.strokeStyle = '#787878';
+		// this.ctx.lineWidth = (width * 2 - 1);
+		// this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
 		
 		ctx.drawImage(this.canvas, ...this.screenPos);
 	}
@@ -490,7 +501,12 @@ class PlayerScene extends Scene {
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(160 + 100, 120));
 		
-		this.grid = initGrid2();
+		this.grid = Grid.fromBitmap('grid.bmp', 16, 16);
+		this.width = this.grid.width;
+		this.height = this.grid.height;
+		
+		this.boundsX = [0, this.width];
+		
 		this.tileset = initTileset(this.grid);
 		this.gridOutline = new GridOutline();
 		this.gridOutline.computeOutline(this.grid);
@@ -536,13 +552,7 @@ class Player {
 		this.gspeed = 0.12;	// gravity
 		this.jspeed = -3.95;	// initial jump velocity
 		
-		this.imageLoaded = false;
-		this.image = new Image();
-		this.image.onload = e => {
-			// TODO(bret): this
-			this.imageLoaded = true;
-		};
-		this.image.src = '/examples/img/radiohead_spritesheet.png';
+		this.image = assetManager.images.get('radiohead_spritesheet.png');
 		
 		this.coyote = 0;
 		this.coyoteLimit = 6;
@@ -676,13 +686,15 @@ class Player {
 		}
 	}
 	
+	// TODO(bret): See if you could write this functionally :)
 	collide(x, y) {
 		const {
 			width: w,
-			height: h
+			height: h,
+			scene
 		} = this;
 		
-		const { grid } = this.scene;
+		const { grid } = scene;
 		
 		x = Math.round(x);
 		y = Math.round(y);
@@ -694,15 +706,15 @@ class Player {
 		const maxY = Math.clamp(Math.floor((y + h - 1) / grid.tileH), 0, grid.rows - 1);
 		
 		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
-		if ((true) && ((x < 0) || (x + w > 320)))
+		if ((scene.boundsX !== null) && ((x < scene.boundsX[0]) || (x + w > scene.boundsX[1])))
 			return true;
 		
-		// if ((true) && ((y < 0) || (y + h > 180)))
-		// 	return true;
+		if ((scene.boundsY !== null) && ((y < scene.boundsY[0]) || (y + h > scene.boundsY[1])))
+			return true;
 		
 		for (let yy = minY; yy <= maxY; ++yy) {
 			for (let xx = minX; xx <= maxX; ++xx) {
-				if (grid.data[yy * grid.columns + xx] === 1) {
+				if (grid.getTile(xx, yy) === 1) {
 					return true;
 				}
 			}
@@ -732,7 +744,7 @@ class Player {
 		
 		const drawX = this.x - cameraX;
 		const drawY = this.y - cameraY;
-		
+
 		const drawW = this.image.width / 4;
 		const drawH = this.image.height;
 		
@@ -765,7 +777,8 @@ const drawLine = (ctx, x1, y1, x2, y2) => {
 	ctx.stroke();
 };
 
-// TODO(bret): Read into this: https://en.wikipedia.org/wiki/Boolean_operations_on_polygons
+const pixelCanvas = document.createElement('canvas');
+const pixelCtx = pixelCanvas.getContext('2d');
 class Grid {
 	constructor(width, height, tileW, tileH) {
 		this.width = width;
@@ -775,9 +788,38 @@ class Grid {
 		this.columns = Math.ceil(width / tileW);
 		this.rows = Math.ceil(height / tileH);
 		
+		const size = this.columns * this.rows;
+		
 		this.color = 'rgba(255, 0, 0, 0.6)';
 		this.renderMode = 2;
-		this.data = Array.from({ length: this.columns * this.rows }, v => 0);
+		this.data = Array.from({ length: size }, v => 0);
+	}
+	
+	static fromBitmap(src, tileW, tileH) {
+		const image = assetManager.images.get(src);
+		
+		const width = image.width * tileW;
+		const height = image.height * tileH;
+		const stride = image.width;
+		
+		const grid = new Grid(width, height, tileW, tileH);
+		grid.forEach((_, [x, y]) => {
+			pixelCtx.drawImage(image, -x, -y);
+			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
+			if (data[0] === 0) {
+				grid.setTile(x, y, 1);
+			}
+		});
+		
+		return grid;
+	}
+	
+	forEach(callback) {
+		const stride = this.columns;
+		this.data.map((val, i) => [
+			val,
+			[i % stride, Math.floor(i / stride)]
+		]).forEach(args => callback(...args));
 	}
 	
 	inBounds(x, y) {
@@ -1070,14 +1112,16 @@ class GridOutline {
 		}
 		
 		if (true) {
-			ctx.beginPath();
-			ctx.strokeStyle = pColor;
-			ctx.moveTo(...subPos(addPos(this.first, [0.5, 0.5]), camera));
-			this.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
-				ctx.lineTo(x + 0.5, y + 0.5);
-			});
-			ctx.closePath();
-			ctx.stroke();
+			if (this.first) {
+				ctx.beginPath();
+				ctx.strokeStyle = pColor;
+				ctx.moveTo(...subPos(addPos(this.first, [0.5, 0.5]), camera));
+				this.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
+					ctx.lineTo(x + 0.5, y + 0.5);
+				});
+				ctx.closePath();
+				ctx.stroke();
+			}
 		}
 	}
 }
