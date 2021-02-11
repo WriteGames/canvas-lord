@@ -710,7 +710,7 @@ class Player {
 		
 		return false;
 	}
-
+	
 	updateSprite(xdir) {
 		if ((xdir !== 0) || (this.xspeed !== 0)) {
 			this.timer += Math.abs(this.xspeed * 0.5);
@@ -738,15 +738,15 @@ class Player {
 		
 		const offsetX = -10;
 		
-		if (this.imageLoaded === true) {
-			if (flipped) {
-				ctx.save();
-				ctx.scale(-1, 1);
-			}
-			ctx.drawImage(this.image, this.frame * 32, 0, 32, 32, scaleX * (drawX + offsetX), drawY - 11, scaleX * drawW, drawH);
-			if (flipped)
-				ctx.restore();
+		if (flipped) {
+			ctx.save();
+			ctx.scale(-1, 1);
 		}
+		
+		ctx.drawImage(this.image, this.frame * 32, 0, 32, 32, scaleX * (drawX + offsetX), drawY - 11, scaleX * drawW, drawH);
+		
+		if (flipped)
+			ctx.restore();
 		
 		const drawHitbox = false;
 		if (drawHitbox === true) {
@@ -1091,14 +1091,9 @@ class Tileset {
 		this.columns = Math.ceil(width / tileW);
 		this.rows = Math.ceil(height / tileH);
 		
-		this.data = Array.from({ length: this.columns * this.rows }, v => null);
+		this.image = assetManager.images.get('tileset.png');
 		
-		this.imageLoaded = false;
-		this.image = new Image();
-		this.image.onload = e => {
-			this.imageLoaded = true;
-		};
-		this.image.src = '/examples/img/tileset.png';
+		this.data = Array.from({ length: this.columns * this.rows }, v => null);
 
 		this.startX = 1;
 		this.startY = 1;
@@ -1125,36 +1120,49 @@ class Tileset {
 		
 		const [cameraX, cameraY] = camera;
 		
-		if (this.imageLoaded === true) {
-			for (let y = 0; y < this.rows; ++y) {
-				for (let x = 0; x < this.columns; ++x) {
-					const val = this.data[y * this.columns + x];
-					if (val !== null) {
-						const [tileX, tileY] = val;
-						const srcX = startX + (separation + tileW) * tileX;
-						const srcY = startY + (separation + tileH) * tileY;
-						const dstX = x * tileW - cameraX;
-						const dstY = y * tileH - cameraY;
-						ctx.drawImage(image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
-					}
+		for (let y = 0; y < this.rows; ++y) {
+			for (let x = 0; x < this.columns; ++x) {
+				const val = this.data[y * this.columns + x];
+				if (val !== null) {
+					const [tileX, tileY] = val;
+					const srcX = startX + (separation + tileW) * tileX;
+					const srcY = startY + (separation + tileH) * tileY;
+					const dstX = x * tileW - cameraX;
+					const dstY = y * tileH - cameraY;
+					ctx.drawImage(image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
 				}
 			}
 		}
 	}
 }
 
+let assetManager;
 const initGames = () => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
+	const games = [game1];
 	
-	const assetManager = new AssetManager();
-	assetManager.addImage('/examples/img/radiohead_spritesheet.png');
-	assetManager.addImage('/examples/img/tileset.png');
+	assetManager = new AssetManager('img/');
+	assetManager.addImage('grid.bmp');
+	assetManager.addImage('radiohead_spritesheet.png');
+	assetManager.addImage('tileset.png');
 	assetManager.onLoad(() => {
-		console.log('we loaded all images!!');
-		requestAnimationFrame(() => {
-			game1?.render();
-			// game2?.render();
+		console.log('== AssetManager::onLoad()');
+		
+		games.forEach(game => {
+			const sceneWidth = game.canvas.width / 2;
+			
+			const sceneLeft = new PlayerScene(Player);
+			sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
+			
+			const sceneRight = new PlayerScene(Player);
+			sceneRight.screenPos[0] = sceneWidth;
+			sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
+			sceneRight.shouldUpdate = false;
+			
+			game.sceneStack.push([sceneLeft, sceneRight]);
+			
+			game.render();
 		});
 	});
 	assetManager.loadAssets();
