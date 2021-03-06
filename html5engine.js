@@ -851,8 +851,8 @@ class Grid {
 				if (this.data[y * stride + x] === 1) {
 					const x1 = x * this.tileW + 0.5 - cameraX;
 					const y1 = y * this.tileH + 0.5 - cameraY;
-					const x2 = x1 + width - cameraX;
-					const y2 = y1 + height - cameraY;
+					const x2 = x1 + width - 1;
+					const y2 = y1 + height - 1;
 					if (!this.getTile(x - 1, y)) {
 						drawLine(ctx, x1, y1, x1, y2);
 					}
