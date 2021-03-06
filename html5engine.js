@@ -6,6 +6,7 @@ Math.clamp = (val, min, max) => {
 
 const hashTuple = pos => pos.join(',');
 const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
+const indexToPos = (index, stride) => [index % stride, Math.floor(index / stride)];
 
 const addPos = (a, b) => a.map((v, i) => v + b[i]);
 const subPos = (a, b) => a.map((v, i) => v - b[i]);
@@ -535,6 +536,8 @@ class Player {
 		this.x = x;
 		this.y = y;
 		
+		this.scene = null;
+		
 		this.facing = 1;
 		
 		this.xspeed = 0;
@@ -563,8 +566,6 @@ class Player {
 		this.timer = 0;
 		this.timeout = 5;
 		this.frame = 0;
-		
-		this.scene = null;
 	}
 	
 	update(input) {
@@ -699,18 +700,18 @@ class Player {
 		x = Math.round(x);
 		y = Math.round(y);
 		
-		const minX = Math.clamp(Math.floor(x / grid.tileW), 0, grid.columns - 1);
-		const minY = Math.clamp(Math.floor(y / grid.tileH), 0, grid.rows - 1);
-		
-		const maxX = Math.clamp(Math.floor((x + w - 1) / grid.tileW), 0, grid.columns - 1);
-		const maxY = Math.clamp(Math.floor((y + h - 1) / grid.tileH), 0, grid.rows - 1);
-		
 		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
 		if ((scene.boundsX !== null) && ((x < scene.boundsX[0]) || (x + w > scene.boundsX[1])))
 			return true;
 		
 		if ((scene.boundsY !== null) && ((y < scene.boundsY[0]) || (y + h > scene.boundsY[1])))
 			return true;
+		
+		const minX = Math.clamp(Math.floor(x / grid.tileW), 0, grid.columns - 1);
+		const minY = Math.clamp(Math.floor(y / grid.tileH), 0, grid.rows - 1);
+		
+		const maxX = Math.clamp(Math.floor((x + w - 1) / grid.tileW), 0, grid.columns - 1);
+		const maxY = Math.clamp(Math.floor((y + h - 1) / grid.tileH), 0, grid.rows - 1);
 		
 		for (let yy = minY; yy <= maxY; ++yy) {
 			for (let xx = minX; xx <= maxX; ++xx) {
@@ -724,11 +725,12 @@ class Player {
 	}
 	
 	updateSprite(xdir) {
+		const numFrames = 4;
 		if ((xdir !== 0) || (this.xspeed !== 0)) {
 			this.timer += Math.abs(this.xspeed * 0.5);
 			if (this.timer >= this.timeout) {
 				this.timer = 0;
-				this.frame = (this.frame + 1) % 4;
+				this.frame = (this.frame + 1) % numFrames;
 			}
 		} else {
 			this.frame = 0;
@@ -818,7 +820,7 @@ class Grid {
 		const stride = this.columns;
 		this.data.map((val, i) => [
 			val,
-			[i % stride, Math.floor(i / stride)]
+			indexToPos(i, stride)
 		]).forEach(args => callback(...args));
 	}
 	
@@ -931,7 +933,8 @@ class GridOutline {
 		
 		this.grid = grid;
 		
-		this.data = Array.from({ length: columns * rows }, v => 0);
+		const gridSize = columns * rows;
+		this.data = Array.from({ length: gridSize }, v => 0);
 		
 		const boundaryCells = [];
 		
