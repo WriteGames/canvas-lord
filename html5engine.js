@@ -303,11 +303,14 @@ class Game {
 		
 		this._lastFrame = 0;
 		let deltaTime = 0;
+		const maxFrames = 5;
 		this.mainLoop = time => {
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 			
 			deltaTime += time - this._lastFrame;
 			this._lastFrame = time;
+			
+			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
 			
 			while (deltaTime >= timestep) {
 				this.update();
