@@ -505,7 +505,19 @@ class PlayerScene extends Scene {
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(160 + 100, 120));
 		
-		this.grid = Grid.fromBitmap('grid.bmp', 16, 16);
+		// this.grid = Grid.fromBitmap('grid.bmp', 16, 16);
+		this.grid = Grid.fromBinary([
+			20,
+			12,
+			2048,
+			25165848,
+			125943928,
+			470598016,
+			2021179399,
+			2348906511,
+			402653183,
+			4294901760
+		], 16, 16);
 		this.width = this.grid.width;
 		this.height = this.grid.height;
 		
@@ -815,6 +827,20 @@ class Grid {
 				grid.setTile(x, y, 1);
 			}
 		});
+		
+		return grid;
+	}
+	
+	static fromBinary(data, tileW, tileH) {
+		const [width, height, ...gridData] = data;
+		
+		const grid = new Grid(width * tileW, height * tileH, tileW, tileH);
+		
+		const stride = grid.columns;
+		gridData.flatMap(b => b.toString(2).padStart(32, '0').split(''))
+			.forEach((v, i) => {
+				grid.setTile(...indexToPos(i, stride), +v);
+			});
 		
 		return grid;
 	}
