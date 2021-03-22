@@ -1047,8 +1047,8 @@ class GridOutline {
 			console.log(shapes);
 		}
 		
-		{
-			const targetShape = shapes[3];
+		shapes.forEach(shape => {
+			const targetShape = shape;
 			let first = [...targetShape.shapeCells[0]];
 			console.log('first', first);
 			
@@ -1092,7 +1092,7 @@ class GridOutline {
 			const polygon = { points };
 			this.polygons.push(polygon);
 			
-			const addPoint = (pos, interior) => {
+			const addPointToPolygon = (points, pos, interior) => {
 				const origin = interior ? 0 : -1;
 				const size = 16;
 				const m1 = size - 1;
@@ -1126,7 +1126,7 @@ class GridOutline {
 				points.push(addPos(basePos, offset));
 			};
 			
-			addPoint(first, SOLIDITY === 1);
+			addPointToPolygon(points, first, SOLIDITY === 1);
 			
 			let hitFirst = 0;
 			let rotates = 0;
@@ -1161,11 +1161,11 @@ class GridOutline {
 						next = addPos(next, curDir);
 					}
 					if (lastDir !== curDir)
-						addPoint(next, SOLIDITY === 1);
+						addPointToPolygon(points, next, SOLIDITY === 1);
 					boundaryCells.push(next);
 				} else {
 					rotate(-1);
-					addPoint(next, SOLIDITY === 1);
+					addPointToPolygon(points, next, SOLIDITY === 1);
 					if (++rotates === 4) {
 						console.log('how did we escape here?');
 						break;
@@ -1208,7 +1208,7 @@ class GridOutline {
 					}
 				}
 			}
-		}
+		});
 		
 		console.log(this.polygons);
 	}
