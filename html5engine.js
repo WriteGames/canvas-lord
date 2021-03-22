@@ -7,6 +7,7 @@ Math.clamp = (val, min, max) => {
 const hashTuple = pos => pos.join(',');
 const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
 const indexToPos = (index, stride) => [index % stride, Math.floor(index / stride)];
+const posToIndex = ([x, y], stride) => y * stride + x;
 
 const addPos = (a, b) => a.map((v, i) => v + b[i]);
 const subPos = (a, b) => a.map((v, i) => v - b[i]);
@@ -359,12 +360,16 @@ class Game {
 		
 		this.sceneStack[0]?.forEach(scene => scene.render(this.ctx));
 		
-		ctx.strokeStyle = '#323232';
-		ctx.beginPath();
-		ctx.lineWidth = 2;
-		ctx.moveTo(canvas.width / 2, 0.5);
-		ctx.lineTo(canvas.width / 2, 360.5);
-		ctx.stroke();
+		// Splitscreen
+		if (false)
+		{
+			ctx.strokeStyle = '#323232';
+			ctx.beginPath();
+			ctx.lineWidth = 2;
+			ctx.moveTo(canvas.width / 2, 0.5);
+			ctx.lineTo(canvas.width / 2, 360.5);
+			ctx.stroke();
+		}
 		
 		if (this.focus === false) {
 			ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
@@ -461,6 +466,7 @@ class Scene {
 		this.boundsX = this.boundsY = null;
 	}
 	
+	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
 	setCanvasSize(width, height) {
 		const canvas = this.canvas = document.createElement('canvas');
 		const ctx = this.ctx = canvas.getContext('2d');
@@ -505,19 +511,19 @@ class PlayerScene extends Scene {
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(160 + 100, 120));
 		
-		// this.grid = Grid.fromBitmap('grid.bmp', 16, 16);
-		this.grid = Grid.fromBinary([
-			20,
-			12,
-			2048,
-			25165848,
-			125943928,
-			470598016,
-			2021179399,
-			2348906511,
-			402653183,
-			4294901760
-		], 16, 16);
+		this.grid = Grid.fromBitmap('grid.bmp', 16, 16);
+		// this.grid = Grid.fromBinary([
+		// 	20,
+		// 	12,
+		// 	2048,
+		// 	25165848,
+		// 	125943928,
+		// 	470598016,
+		// 	2021179399,
+		// 	2348906511,
+		// 	402653183,
+		// 	4294901760
+		// ], 16, 16);
 		this.width = this.grid.width;
 		this.height = this.grid.height;
 		
@@ -948,10 +954,18 @@ class Grid {
 	}
 }
 
+const GRID_CELL_COMPUTE_STATE = {
+	UNCHECKED: -1,
+	EMPTY: 0,
+	SOLID: 1,
+	MAYBE_SOLID: 2
+};
+
 class GridOutline {
 	constructor() {
 		this.data = [];
 		this.grid = null;
+		this.polygons = [];
 	}
 	
 	computeOutline(grid) {
@@ -963,7 +977,7 @@ class GridOutline {
 		this.grid = grid;
 		
 		const gridSize = columns * rows;
-		this.data = Array.from({ length: gridSize }, v => 0);
+		this.data = Array.from({ length: gridSize }, v => GRID_CELL_COMPUTE_STATE.UNCHECKED);
 		
 		const boundaryCells = [];
 		
@@ -978,6 +992,7 @@ class GridOutline {
 					first = [x, y];
 					break;
 				}
+				this.data[y * columns + x] = GRID_CELL_COMPUTE_STATE.EMPTY;
 			}
 			if (first !== null)
 				break;
@@ -1012,7 +1027,12 @@ class GridOutline {
 			[dirLN]: [dirLU, dirLN, dirLD]
 		};
 		
-		const points = this.points = [];
+		const points = [];
+		const polygon = {
+			first: null,
+			points
+		};
+		this.polygons.push(polygon);
 		
 		const addPoint = (pos) => {
 			const size = 16;
@@ -1048,6 +1068,78 @@ class GridOutline {
 		};
 		
 		addPoint(first);
+		
+		// Get all shapes
+		{
+			const shapes = {
+				solid: [],
+				empty: []
+			};
+			const checked = this.checked = Array.from({ length: gridSize }).map(v => false);
+			
+			const stride = grid.columns;
+			const fillShape = (start, grid) => {
+				const gridType = grid.data[posToIndex(start, stride)];
+				
+				const queue = [start];
+				const visited = [];
+				
+				let next;
+				while (next = queue.pop()) {
+					const hash = hashTuple(next);
+					if (visited.includes(hash)) continue;
+					
+					const index = posToIndex(next, stride);
+					visited.push(hash);
+					if (grid.data[posToIndex(next, stride)] !== gridType) continue;
+					
+					checked[index] = true;
+					
+					const [x, y] = next;
+					if (x > 0) queue.push([x - 1, y]);
+					if (x < grid.columns - 1) queue.push([x + 1, y]);
+					if (y > 0) queue.push([x, y - 1]);
+					if (y < grid.rows - 1) queue.push([x, y + 1]);
+				}
+				
+				const shapeCells = visited.map(v => v.split(',').map(c => +c));
+				
+				const shape = shapeCells.reduce((acc, cell) => {
+					const [x, y] = cell;
+					return {
+						minX: Math.min(x, acc.minX),
+						maxX: Math.max(x, acc.maxX),
+						minY: Math.min(y, acc.minY),
+						maxY: Math.max(y, acc.maxY)
+					}
+				}, {
+					minX: Number.POSITIVE_INFINITY,
+					maxX: Number.NEGATIVE_INFINITY,
+					minY: Number.POSITIVE_INFINITY,
+					maxY: Number.NEGATIVE_INFINITY
+				});
+				
+				return {
+					...shape,
+					gridType,
+					shapeCells
+				};
+			};
+			
+			let i = 0;
+			let nextIndex;
+			while ((nextIndex = checked.findIndex(v => v === false)) > -1) {
+				const shape = fillShape(indexToPos(nextIndex, stride), grid);
+				
+				// Empty shapes must be enclosed
+				if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
+					continue;
+				
+				const shapeArr = shape.gridType ? shapes.solid : shapes.empty;
+				shapeArr.push(shape);
+			}
+			console.log(shapes);
+		}
 		
 		let hitFirst = 0;
 		let rotates = 0;
@@ -1096,9 +1188,35 @@ class GridOutline {
 				++hitFirst;
 		} while (hitFirst < 2);
 		
-		this.first = this.points.shift();
+		polygon.first = polygon.points[0];//.shift();
 		
-		boundaryCells.forEach(([x, y]) => this.data[y * columns + x] = 1);
+		boundaryCells.forEach(([x, y]) => this.data[y * columns + x] = GRID_CELL_COMPUTE_STATE.MAYBE_SOLID);
+		
+		// Let's do some even-odd raycast testing!!
+		const getCellPoint = (x, y) => [(x + 0.5) * grid.tileW, (y + 0.5) * grid.tileH];
+		
+		// Generate all x-boundaries, as a pair of points
+		const verticalLines
+			= polygon.points
+				.map((point, i, arr) => [point, arr[(i + 1) % arr.length]].sort((a, b) => a[1] - b[1]))
+				.filter(line => line[0][0] === line[1][0])
+				.sort((a, b) => a[0][0] - b[0][0] || a[0][1] - b[0][1]);
+		
+		// console.table(verticalLines.map(line => line.map(l => l.join(','))));
+		
+		for (let yy = 0; yy < grid.rows; ++yy) {
+			for (let xx = 0; xx < grid.columns; ++xx) {
+				const [x, y] = getCellPoint(xx, yy);
+				
+				const inside = verticalLines.filter(line => {
+					const [a, b] = line;
+					const result = (x >= a[0]) && (y >= a[1]) && (y <= b[1]);
+					return result;
+				}).length % 2 === 1;
+				
+				if (inside) this.data[yy * columns + xx] = GRID_CELL_COMPUTE_STATE.SOLID;
+			}
+		}
 	}
 	
 	render(ctx, camera = v2zero) {
@@ -1122,6 +1240,7 @@ class GridOutline {
 		
 		const offset = (fill === true) ? 0 : 0.5;
 		
+		// TODO(Bret): Put a comment here explaining what this does
 		if (false) {
 			for (let y = 0; y < grid.rows; ++y) {
 				for (let x = 0; x < grid.columns; ++x) {
@@ -1132,27 +1251,91 @@ class GridOutline {
 			}
 		}
 		
+		// Draw cell data
+		if (false) {
+			const fill = true;
+			const stride = grid.columns;
+			const width = grid.tileW - +(!fill);
+			const height = grid.tileH - +(!fill);
+			
+			const [cameraX, cameraY] = camera;
+			
+			const setColor = value => {
+				let color = 'black';
+				switch (value) {
+					case GRID_CELL_COMPUTE_STATE.UNCHECKED: color = 'transparent'; break;
+					case GRID_CELL_COMPUTE_STATE.EMPTY: color = 'yellow'; break;
+					case GRID_CELL_COMPUTE_STATE.MAYBE_SOLID: color = 'lime'; break;
+					case GRID_CELL_COMPUTE_STATE.SOLID: color = 'rgba(0, 120, 0, 0.7)'; break;
+				}
+				
+				if (fill === true)
+					ctx.fillStyle = color;
+				else
+					ctx.strokeStyle = color;
+			};
+			
+			ctx.lineWidth = 1;
+			
+			const drawRect = (...args) => (fill === true) ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+			
+			const offset = (fill === true) ? 0 : 0.5;
+			
+			for (let y = 0; y < grid.rows; ++y) {
+				for (let x = 0; x < grid.columns; ++x) {
+					setColor(this.data[y * stride + x]);
+					drawRect(x * grid.tileW + offset - cameraX, y * grid.tileH + offset - cameraY, width, height);
+				}
+			}
+		}
+		
 		const pColor = 'red';
 		
-		if (false) {
-			this.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
-				ctx.fillStyle = pColor;
-				ctx.beginPath();
-				ctx.arc(x + 0.5, y + 0.5, 2, 0, 2 * Math.PI);
-				ctx.fill();
+		// Draw points
+		if (true) {
+			this.polygons.forEach(polygon => {
+					polygon.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
+					ctx.fillStyle = pColor;
+					ctx.beginPath();
+					ctx.arc(x + 0.5, y + 0.5, 2, 0, 2 * Math.PI);
+					ctx.fill();
+				});
 			});
 		}
 		
+		// Draw edges
 		if (true) {
-			if (this.first) {
+			this.polygons.forEach(polygon => {
 				ctx.beginPath();
 				ctx.strokeStyle = pColor;
-				ctx.moveTo(...subPos(addPos(this.first, [0.5, 0.5]), camera));
-				this.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
+				ctx.moveTo(...subPos(addPos(polygon.first, [0.5, 0.5]), camera));
+				polygon.points.slice(1).map(p => subPos(p, camera)).forEach(([x, y]) => {
 					ctx.lineTo(x + 0.5, y + 0.5);
 				});
 				ctx.closePath();
 				ctx.stroke();
+			});
+		}
+		
+		// Draw shapes
+		if (true && this.checked) {
+			const setColor = value => {
+				let color = 'rgba(0, 0, 0, 0.6)';
+				
+				if (fill === true)
+					ctx.fillStyle = color;
+				else
+					ctx.strokeStyle = color;
+			};
+			
+			for (let y = 0; y < grid.rows; ++y) {
+				for (let x = 0; x < grid.columns; ++x) {
+					if (this.checked[y * stride + x]) {
+						setColor();
+						
+						drawRect(x * grid.tileW + offset - cameraX, y * grid.tileH + offset - cameraY, width, height);
+					}
+				}
 			}
 		}
 	}
@@ -1229,14 +1412,17 @@ const initGames = () => {
 			const sceneWidth = game.canvas.width / 2;
 			
 			const sceneLeft = new PlayerScene(Player);
-			sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
+			sceneLeft.player.x = 40;
+			// sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
+			sceneLeft.setCanvasSize(game.canvas.width, game.canvas.height);
 			
-			const sceneRight = new PlayerScene(Player);
-			sceneRight.screenPos[0] = sceneWidth;
-			sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
-			sceneRight.shouldUpdate = false;
+			// const sceneRight = new PlayerScene(Player);
+			// sceneRight.screenPos[0] = sceneWidth;
+			// sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
+			// sceneRight.shouldUpdate = false;
 			
-			game.sceneStack.push([sceneLeft, sceneRight]);
+			// game.sceneStack.push([sceneLeft, sceneRight]);
+			game.sceneStack.push([sceneLeft]);
 			
 			game.render();
 		});
