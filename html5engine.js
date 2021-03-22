@@ -569,11 +569,11 @@ class Player {
 		this.width = 12;
 		this.height = 16;
 		
-		this.aspeed = 0.05;	// acceleration
-		this.fspeed = 0.05;	// friction
+		this.aspeed = 0.05;		// acceleration
+		this.fspeed = 0.05;		// friction
 		
-		this.mspeed = 2.5;	// max speed
-		this.gspeed = 0.12;	// gravity
+		this.mspeed = 2.5;		// max speed
+		this.gspeed = 0.12;		// gravity
 		this.jspeed = -3.95;	// initial jump velocity
 		
 		this.image = assetManager.images.get('radiohead_spritesheet.png');
@@ -1008,12 +1008,12 @@ class GridOutline {
 	constructor() {
 		this.grid = null;
 		this.polygons = [];
-		this.show = false;
+		this.show = true;
 		
 		this.renderOutline = true;
 		this.outlineColor = 'red';
 		
-		this.renderPoints = false;
+		this.renderPoints = true;
 		this.pointsColor = 'red';
 	}
 	
@@ -1161,12 +1161,10 @@ class GridOutline {
 		
 		// Draw points
 		if (this.renderPoints === true) {
+			ctx.fillStyle = this.pointsColor;
 			this.polygons.forEach(polygon => {
-					polygon.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
-					ctx.fillStyle = this.pointsColor;
-					ctx.beginPath();
-					ctx.arc(x + 0.5, y + 0.5, 2, 0, 2 * Math.PI);
-					ctx.fill();
+				polygon.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
+					ctx.fillRect(x - 1, y - 1, 3, 3);
 				});
 			});
 		}
