@@ -449,7 +449,7 @@ class Camera extends Array {
 
 const updateCamera = (scene, player) => {
 	const newX = player.x + (player.width / 2) - scene.canvas.width / 2;
-	scene.camera.x = Math.clamp(newX, 0, scene.canvas.width);
+	scene.camera.x = Math.clamp(newX, 0, scene.width - scene.canvas.width);
 };
 
 class Scene {
