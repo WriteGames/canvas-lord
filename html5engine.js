@@ -979,102 +979,9 @@ class GridOutline {
 		const gridSize = columns * rows;
 		this.data = Array.from({ length: gridSize }, v => GRID_CELL_COMPUTE_STATE.UNCHECKED);
 		
-		const boundaryCells = [];
-		
-		// Find first solid
-		let first = null;
-		const [startX, startY] = [9, 3];
-		// const [startX, startY] = [0, 0];
-		for (let y = startY; y < rows; ++y) {
-			for (let x = startX; x < columns; ++x) {
-				const tile = grid.getTile(x, y);
-				if (tile === 1) {
-					first = [x, y];
-					break;
-				}
-				this.data[y * columns + x] = GRID_CELL_COMPUTE_STATE.EMPTY;
-			}
-			if (first !== null)
-				break;
-		}
-		
-		if (first === null) return;
-		
-		let curDir = dirND;
-		let lastDir = curDir;
-		const rotate = dir => {
-			if (dir === -1) {
-				switch (curDir) {
-					case dirND: curDir = dirRN; break;
-					case dirRN: curDir = dirNU; break;
-					case dirNU: curDir = dirLN; break;
-					case dirLN: curDir = dirND; break;
-				}
-			} else if (dir === 1) {
-				switch (curDir) {
-					case dirND: curDir = dirLN; break;
-					case dirRN: curDir = dirND; break;
-					case dirNU: curDir = dirRN; break;
-					case dirLN: curDir = dirNU; break;
-				}
-			}
-		};
-		
-		const offsets = {
-			[dirNU]: [dirRU, dirNU, dirLU],
-			[dirND]: [dirLD, dirND, dirRD],
-			[dirRN]: [dirRD, dirRN, dirRU],
-			[dirLN]: [dirLU, dirLN, dirLD]
-		};
-		
-		const points = [];
-		const polygon = {
-			first: null,
-			points
-		};
-		this.polygons.push(polygon);
-		
-		const addPoint = (pos) => {
-			const size = 16;
-			const m1 = size - 1;
-			const basePos = scalePos(pos, size);
-			
-			const [lastX, lastY] = points.length ? subPos(points[points.length - 1], basePos) : [0, 0];
-			
-			const offset = [0, 0];
-			switch (curDir) {
-				case dirND: {
-					offset[0] = 0;
-					offset[1] = lastY;
-				} break;
-				
-				case dirNU: {
-					offset[0] = m1;
-					offset[1] = lastY;
-				} break;
-				
-				case dirRN: {
-					offset[0] = lastX;
-					offset[1] = m1;
-				} break;
-				
-				case dirLN: {
-					offset[0] = lastX;
-					offset[1] = 0;
-				} break;
-			}
-			
-			points.push(addPos(basePos, offset));
-		};
-		
-		addPoint(first);
-		
 		// Get all shapes
+		const shapes = [];
 		{
-			const shapes = {
-				solid: [],
-				empty: []
-			};
 			const checked = this.checked = Array.from({ length: gridSize }).map(v => false);
 			
 			const stride = grid.columns;
@@ -1132,91 +1039,178 @@ class GridOutline {
 				const shape = fillShape(indexToPos(nextIndex, stride), grid);
 				
 				// Empty shapes must be enclosed
-				if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
-					continue;
+				// if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
+				// 	continue;
 				
-				const shapeArr = shape.gridType ? shapes.solid : shapes.empty;
-				shapeArr.push(shape);
+				shapes.push(shape);
 			}
 			console.log(shapes);
 		}
 		
-		let hitFirst = 0;
-		let rotates = 0;
-		let next = first;
-		boundaryCells.push(first);
-		let iterations = 0;
-		let nextPoint = [...first];
-		do {
-			if (++iterations > 100) break;
+		{
+			const targetShape = shapes[3];
+			let first = [...targetShape.shapeCells[0]];
+			console.log('first', first);
 			
-			const [x, y] = next;
-			const tile = grid.getTile(x, y);
-			
-			const [p1, p2, p3] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
-			
-			if (p2 === 1) {
-				rotates = 0;
-				if (p1 === 1) {
-					next = addPos(next, curDir);
-					
-					rotate(1);
-					next = addPos(next, curDir);
-				} else /*if (p3 === 1) {
-					rotate(1);
-					next = addPos(next, curDir);
-					rotate(-1);
-					next = addPos(next, curDir);
-				} else*/ {
-					next = addPos(next, curDir);
-				}
-				if (lastDir !== curDir)
-					addPoint(next);
-				boundaryCells.push(next);
-			} else {
-				rotate(-1);
-				addPoint(next);
-				if (++rotates === 4) {
-					console.log('how did we escape here?');
-					break;
-				}
+			if (first === null) {
+				console.log('returned early');
+				return;
 			}
 			
-			lastDir = curDir;
+			const SOLIDITY = targetShape.gridType;
 			
-			if (next.join(',') === first.join(','))
-				++hitFirst;
-		} while (hitFirst < 2);
-		
-		polygon.first = polygon.points[0];//.shift();
-		
-		boundaryCells.forEach(([x, y]) => this.data[y * columns + x] = GRID_CELL_COMPUTE_STATE.MAYBE_SOLID);
-		
-		// Let's do some even-odd raycast testing!!
-		const getCellPoint = (x, y) => [(x + 0.5) * grid.tileW, (y + 0.5) * grid.tileH];
-		
-		// Generate all x-boundaries, as a pair of points
-		const verticalLines
-			= polygon.points
-				.map((point, i, arr) => [point, arr[(i + 1) % arr.length]].sort((a, b) => a[1] - b[1]))
-				.filter(line => line[0][0] === line[1][0])
-				.sort((a, b) => a[0][0] - b[0][0] || a[0][1] - b[0][1]);
-		
-		// console.table(verticalLines.map(line => line.map(l => l.join(','))));
-		
-		for (let yy = 0; yy < grid.rows; ++yy) {
-			for (let xx = 0; xx < grid.columns; ++xx) {
-				const [x, y] = getCellPoint(xx, yy);
+			const boundaryCells = [];
+			
+			let curDir = dirND;
+			let lastDir = curDir;
+			const rotate = dir => {
+				if (dir === -1) {
+					switch (curDir) {
+						case dirND: curDir = dirRN; break;
+						case dirRN: curDir = dirNU; break;
+						case dirNU: curDir = dirLN; break;
+						case dirLN: curDir = dirND; break;
+					}
+				} else if (dir === 1) {
+					switch (curDir) {
+						case dirND: curDir = dirLN; break;
+						case dirRN: curDir = dirND; break;
+						case dirNU: curDir = dirRN; break;
+						case dirLN: curDir = dirNU; break;
+					}
+				}
+			};
+			
+			const offsets = {
+				[dirNU]: [dirRU, dirNU, dirLU],
+				[dirND]: [dirLD, dirND, dirRD],
+				[dirRN]: [dirRD, dirRN, dirRU],
+				[dirLN]: [dirLU, dirLN, dirLD]
+			};
+			
+			const points = [];
+			const polygon = { points };
+			this.polygons.push(polygon);
+			
+			const addPoint = (pos, interior) => {
+				const origin = interior ? 0 : -1;
+				const size = 16;
+				const m1 = size - 1;
+				const basePos = scalePos(pos, size);
 				
-				const inside = verticalLines.filter(line => {
-					const [a, b] = line;
-					const result = (x >= a[0]) && (y >= a[1]) && (y <= b[1]);
-					return result;
-				}).length % 2 === 1;
+				const [lastX, lastY] = points.length ? subPos(points[points.length - 1], basePos) : [origin, origin];
 				
-				if (inside) this.data[yy * columns + xx] = GRID_CELL_COMPUTE_STATE.SOLID;
+				const offset = [0, 0];
+				switch (curDir) {
+					case dirND: {
+						offset[0] = origin;
+						offset[1] = lastY;
+					} break;
+					
+					case dirNU: {
+						offset[0] = m1 - origin;
+						offset[1] = lastY;
+					} break;
+					
+					case dirRN: {
+						offset[0] = lastX;
+						offset[1] = m1 - origin;
+					} break;
+					
+					case dirLN: {
+						offset[0] = lastX;
+						offset[1] = origin;
+					} break;
+				}
+				
+				points.push(addPos(basePos, offset));
+			};
+			
+			addPoint(first, SOLIDITY === 1);
+			
+			let hitFirst = 0;
+			let rotates = 0;
+			let next = first;
+			boundaryCells.push(first);
+			let iterations = 0;
+			let nextPoint = [...first];
+			const firstHash = hashTuple(first);
+			// TODO(bret): Handle edge case where there's only a single cell :/
+			do {
+				if (++iterations > 1000) break;
+				
+				// const [x, y] = next;
+				// console.log(x, y);
+				// const tile = grid.getTile(x, y);
+				
+				const [p1, p2, p3] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
+				
+				if (p2 === SOLIDITY) {
+					rotates = 0;
+					if (p1 === SOLIDITY) {
+						next = addPos(next, curDir);
+						
+						rotate(1);
+						next = addPos(next, curDir);
+					} else /*if (p3 === SOLIDITY) {
+						rotate(1);
+						next = addPos(next, curDir);
+						rotate(-1);
+						next = addPos(next, curDir);
+					} else*/ {
+						next = addPos(next, curDir);
+					}
+					if (lastDir !== curDir)
+						addPoint(next, SOLIDITY === 1);
+					boundaryCells.push(next);
+				} else {
+					rotate(-1);
+					addPoint(next, SOLIDITY === 1);
+					if (++rotates === 4) {
+						console.log('how did we escape here?');
+						break;
+					}
+				}
+				
+				lastDir = curDir;
+				
+				if (hashTuple(next) === firstHash)
+					++hitFirst;
+			} while (hitFirst < 2);
+			
+			boundaryCells.forEach(([x, y]) => this.data[y * columns + x] = GRID_CELL_COMPUTE_STATE.MAYBE_SOLID);
+			
+			// Let's do some even-odd raycast testing!!
+			const getCellPoint = (x, y) => [(x + 0.5) * grid.tileW, (y + 0.5) * grid.tileH];
+			
+			// Generate all x-boundaries, as a pair of points
+			const verticalLines
+				= polygon.points
+					.map((point, i, arr) => [point, arr[(i + 1) % arr.length]].sort((a, b) => a[1] - b[1]))
+					.filter(line => line[0][0] === line[1][0])
+					.sort((a, b) => a[0][0] - b[0][0] || a[0][1] - b[0][1]);
+			
+			// console.table(verticalLines.map(line => line.map(l => l.join(','))));
+			
+			// TODO(bret): Can remove this :)
+			for (let yy = 0; yy < grid.rows; ++yy) {
+				for (let xx = 0; xx < grid.columns; ++xx) {
+					const [x, y] = getCellPoint(xx, yy);
+					
+					const inside = verticalLines.filter(line => {
+						const [a, b] = line;
+						const result = (x >= a[0]) && (y >= a[1]) && (y <= b[1]);
+						return result;
+					}).length % 2 === 1;
+					
+					if (inside) {
+						this.data[yy * columns + xx] = SOLIDITY ? GRID_CELL_COMPUTE_STATE.SOLID : GRID_CELL_COMPUTE_STATE.EMPTY;
+					}
+				}
 			}
 		}
+		
+		console.log(this.polygons);
 	}
 	
 	render(ctx, camera = v2zero) {
@@ -1252,7 +1246,7 @@ class GridOutline {
 		}
 		
 		// Draw cell data
-		if (false) {
+		if (true) {
 			const fill = true;
 			const stride = grid.columns;
 			const width = grid.tileW - +(!fill);
@@ -1308,7 +1302,7 @@ class GridOutline {
 			this.polygons.forEach(polygon => {
 				ctx.beginPath();
 				ctx.strokeStyle = pColor;
-				ctx.moveTo(...subPos(addPos(polygon.first, [0.5, 0.5]), camera));
+				ctx.moveTo(...subPos(addPos(polygon.points[0], [0.5, 0.5]), camera));
 				polygon.points.slice(1).map(p => subPos(p, camera)).forEach(([x, y]) => {
 					ctx.lineTo(x + 0.5, y + 0.5);
 				});
