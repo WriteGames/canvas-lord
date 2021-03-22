@@ -954,18 +954,67 @@ class Grid {
 	}
 }
 
-const GRID_CELL_COMPUTE_STATE = {
-	UNCHECKED: -1,
-	EMPTY: 0,
-	SOLID: 1,
-	MAYBE_SOLID: 2
+const fillShape = (start, grid, checked) => {
+	const stride = grid.columns;
+	
+	const gridType = grid.data[posToIndex(start, stride)];
+	
+	const queue = [start];
+	const visited = [];
+	
+	let next;
+	while (next = queue.pop()) {
+		const hash = hashTuple(next);
+		if (visited.includes(hash)) continue;
+		
+		const index = posToIndex(next, stride);
+		visited.push(hash);
+		if (grid.data[posToIndex(next, stride)] !== gridType) continue;
+		
+		checked[index] = true;
+		
+		const [x, y] = next;
+		if (x > 0) queue.push([x - 1, y]);
+		if (x < grid.columns - 1) queue.push([x + 1, y]);
+		if (y > 0) queue.push([x, y - 1]);
+		if (y < grid.rows - 1) queue.push([x, y + 1]);
+	}
+	
+	const shapeCells = visited.map(v => v.split(',').map(c => +c));
+	
+	const shape = shapeCells.reduce((acc, cell) => {
+		const [x, y] = cell;
+		return {
+			minX: Math.min(x, acc.minX),
+			maxX: Math.max(x, acc.maxX),
+			minY: Math.min(y, acc.minY),
+			maxY: Math.max(y, acc.maxY)
+		}
+	}, {
+		minX: Number.POSITIVE_INFINITY,
+		maxX: Number.NEGATIVE_INFINITY,
+		minY: Number.POSITIVE_INFINITY,
+		maxY: Number.NEGATIVE_INFINITY
+	});
+	
+	return {
+		...shape,
+		gridType,
+		shapeCells
+	};
 };
 
 class GridOutline {
 	constructor() {
-		this.data = [];
 		this.grid = null;
 		this.polygons = [];
+		this.show = false;
+		
+		this.renderOutline = true;
+		this.outlineColor = 'red';
+		
+		this.renderPoints = false;
+		this.pointsColor = 'red';
 	}
 	
 	computeOutline(grid) {
@@ -974,92 +1023,29 @@ class GridOutline {
 			rows
 		} = grid;
 		
-		this.grid = grid;
+		const stride = columns;
 		
-		const gridSize = columns * rows;
-		this.data = Array.from({ length: gridSize }, v => GRID_CELL_COMPUTE_STATE.UNCHECKED);
+		this.grid = grid;
 		
 		// Get all shapes
 		const shapes = [];
-		{
-			const checked = this.checked = Array.from({ length: gridSize }).map(v => false);
+		const checked = Array.from({ length: columns * rows }).map(v => false);
+		
+		let nextIndex;
+		while ((nextIndex = checked.findIndex(v => v === false)) > -1) {
+			const shape = fillShape(indexToPos(nextIndex, stride), grid, checked);
 			
-			const stride = grid.columns;
-			const fillShape = (start, grid) => {
-				const gridType = grid.data[posToIndex(start, stride)];
-				
-				const queue = [start];
-				const visited = [];
-				
-				let next;
-				while (next = queue.pop()) {
-					const hash = hashTuple(next);
-					if (visited.includes(hash)) continue;
-					
-					const index = posToIndex(next, stride);
-					visited.push(hash);
-					if (grid.data[posToIndex(next, stride)] !== gridType) continue;
-					
-					checked[index] = true;
-					
-					const [x, y] = next;
-					if (x > 0) queue.push([x - 1, y]);
-					if (x < grid.columns - 1) queue.push([x + 1, y]);
-					if (y > 0) queue.push([x, y - 1]);
-					if (y < grid.rows - 1) queue.push([x, y + 1]);
-				}
-				
-				const shapeCells = visited.map(v => v.split(',').map(c => +c));
-				
-				const shape = shapeCells.reduce((acc, cell) => {
-					const [x, y] = cell;
-					return {
-						minX: Math.min(x, acc.minX),
-						maxX: Math.max(x, acc.maxX),
-						minY: Math.min(y, acc.minY),
-						maxY: Math.max(y, acc.maxY)
-					}
-				}, {
-					minX: Number.POSITIVE_INFINITY,
-					maxX: Number.NEGATIVE_INFINITY,
-					minY: Number.POSITIVE_INFINITY,
-					maxY: Number.NEGATIVE_INFINITY
-				});
-				
-				return {
-					...shape,
-					gridType,
-					shapeCells
-				};
-			};
+			// Empty shapes must be enclosed
+			if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
+				continue;
 			
-			let i = 0;
-			let nextIndex;
-			while ((nextIndex = checked.findIndex(v => v === false)) > -1) {
-				const shape = fillShape(indexToPos(nextIndex, stride), grid);
-				
-				// Empty shapes must be enclosed
-				// if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
-				// 	continue;
-				
-				shapes.push(shape);
-			}
-			console.log(shapes);
+			shapes.push(shape);
 		}
 		
 		shapes.forEach(shape => {
-			const targetShape = shape;
-			let first = [...targetShape.shapeCells[0]];
-			console.log('first', first);
+			let first = [...shape.shapeCells[0]];
 			
-			if (first === null) {
-				console.log('returned early');
-				return;
-			}
-			
-			const SOLIDITY = targetShape.gridType;
-			
-			const boundaryCells = [];
+			const gridType = shape.gridType;
 			
 			let curDir = dirND;
 			let lastDir = curDir;
@@ -1082,10 +1068,10 @@ class GridOutline {
 			};
 			
 			const offsets = {
-				[dirNU]: [dirRU, dirNU, dirLU],
-				[dirND]: [dirLD, dirND, dirRD],
-				[dirRN]: [dirRD, dirRN, dirRU],
-				[dirLN]: [dirLU, dirLN, dirLD]
+				[dirNU]: [dirRU, dirNU],
+				[dirND]: [dirLD, dirND],
+				[dirRN]: [dirRD, dirRN],
+				[dirLN]: [dirLU, dirLN]
 			};
 			
 			const points = [];
@@ -1126,182 +1112,44 @@ class GridOutline {
 				points.push(addPos(basePos, offset));
 			};
 			
-			addPointToPolygon(points, first, SOLIDITY === 1);
+			addPointToPolygon(points, first, gridType === 1);
 			
-			let hitFirst = 0;
-			let rotates = 0;
 			let next = first;
-			boundaryCells.push(first);
-			let iterations = 0;
-			let nextPoint = [...first];
 			const firstHash = hashTuple(first);
-			// TODO(bret): Handle edge case where there's only a single cell :/
-			do {
-				if (++iterations > 1000) break;
+			for (;;) {
+				const [p1, p2] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
 				
-				// const [x, y] = next;
-				// console.log(x, y);
-				// const tile = grid.getTile(x, y);
-				
-				const [p1, p2, p3] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
-				
-				if (p2 === SOLIDITY) {
-					rotates = 0;
-					if (p1 === SOLIDITY) {
+				if (p2 === gridType) {
+					if (p1 === gridType) {
 						next = addPos(next, curDir);
-						
 						rotate(1);
-						next = addPos(next, curDir);
-					} else /*if (p3 === SOLIDITY) {
-						rotate(1);
-						next = addPos(next, curDir);
-						rotate(-1);
-						next = addPos(next, curDir);
-					} else*/ {
-						next = addPos(next, curDir);
 					}
+					
+					next = addPos(next, curDir);
+					
 					if (lastDir !== curDir)
-						addPointToPolygon(points, next, SOLIDITY === 1);
-					boundaryCells.push(next);
+						addPointToPolygon(points, next, gridType === 1);
 				} else {
 					rotate(-1);
-					addPointToPolygon(points, next, SOLIDITY === 1);
-					if (++rotates === 4) {
-						console.log('how did we escape here?');
-						break;
-					}
+					addPointToPolygon(points, next, gridType === 1);
 				}
 				
 				lastDir = curDir;
 				
-				if (hashTuple(next) === firstHash)
-					++hitFirst;
-			} while (hitFirst < 2);
-			
-			boundaryCells.forEach(([x, y]) => this.data[y * columns + x] = GRID_CELL_COMPUTE_STATE.MAYBE_SOLID);
-			
-			// Let's do some even-odd raycast testing!!
-			const getCellPoint = (x, y) => [(x + 0.5) * grid.tileW, (y + 0.5) * grid.tileH];
-			
-			// Generate all x-boundaries, as a pair of points
-			const verticalLines
-				= polygon.points
-					.map((point, i, arr) => [point, arr[(i + 1) % arr.length]].sort((a, b) => a[1] - b[1]))
-					.filter(line => line[0][0] === line[1][0])
-					.sort((a, b) => a[0][0] - b[0][0] || a[0][1] - b[0][1]);
-			
-			// console.table(verticalLines.map(line => line.map(l => l.join(','))));
-			
-			// TODO(bret): Can remove this :)
-			for (let yy = 0; yy < grid.rows; ++yy) {
-				for (let xx = 0; xx < grid.columns; ++xx) {
-					const [x, y] = getCellPoint(xx, yy);
-					
-					const inside = verticalLines.filter(line => {
-						const [a, b] = line;
-						const result = (x >= a[0]) && (y >= a[1]) && (y <= b[1]);
-						return result;
-					}).length % 2 === 1;
-					
-					if (inside) {
-						this.data[yy * columns + xx] = SOLIDITY ? GRID_CELL_COMPUTE_STATE.SOLID : GRID_CELL_COMPUTE_STATE.EMPTY;
-					}
-				}
-			}
+				if ((curDir === dirND) && (hashTuple(next) === firstHash))
+					break;
+			};
 		});
-		
-		console.log(this.polygons);
 	}
 	
 	render(ctx, camera = v2zero) {
-		const fill = true;
-		const grid = this.grid;
-		
-		const stride = grid.columns;
-		const width = grid.tileW - +(!fill);
-		const height = grid.tileH - +(!fill);
-		
-		const [cameraX, cameraY] = camera;
-		
-		const color = 'rgba(0, 255, 0, 0.9)';
-		if (fill === true)
-			ctx.fillStyle = color;
-		else
-			ctx.strokeStyle = color;
-		ctx.lineWidth = 1;
-		
-		const drawRect = (...args) => (fill === true) ? ctx.fillRect(...args) : ctx.strokeRect(...args);
-		
-		const offset = (fill === true) ? 0 : 0.5;
-		
-		// TODO(Bret): Put a comment here explaining what this does
-		if (false) {
-			for (let y = 0; y < grid.rows; ++y) {
-				for (let x = 0; x < grid.columns; ++x) {
-					if (this.data[y * stride + x] === 1) {
-						drawRect(x * grid.tileW + offset - cameraX, y * grid.tileH + offset - cameraY, width, height);
-					}
-				}
-			}
-		}
-		
-		// Draw cell data
-		if (true) {
-			const fill = true;
-			const stride = grid.columns;
-			const width = grid.tileW - +(!fill);
-			const height = grid.tileH - +(!fill);
-			
-			const [cameraX, cameraY] = camera;
-			
-			const setColor = value => {
-				let color = 'black';
-				switch (value) {
-					case GRID_CELL_COMPUTE_STATE.UNCHECKED: color = 'transparent'; break;
-					case GRID_CELL_COMPUTE_STATE.EMPTY: color = 'yellow'; break;
-					case GRID_CELL_COMPUTE_STATE.MAYBE_SOLID: color = 'lime'; break;
-					case GRID_CELL_COMPUTE_STATE.SOLID: color = 'rgba(0, 120, 0, 0.7)'; break;
-				}
-				
-				if (fill === true)
-					ctx.fillStyle = color;
-				else
-					ctx.strokeStyle = color;
-			};
-			
-			ctx.lineWidth = 1;
-			
-			const drawRect = (...args) => (fill === true) ? ctx.fillRect(...args) : ctx.strokeRect(...args);
-			
-			const offset = (fill === true) ? 0 : 0.5;
-			
-			for (let y = 0; y < grid.rows; ++y) {
-				for (let x = 0; x < grid.columns; ++x) {
-					setColor(this.data[y * stride + x]);
-					drawRect(x * grid.tileW + offset - cameraX, y * grid.tileH + offset - cameraY, width, height);
-				}
-			}
-		}
-		
-		const pColor = 'red';
-		
-		// Draw points
-		if (true) {
-			this.polygons.forEach(polygon => {
-					polygon.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
-					ctx.fillStyle = pColor;
-					ctx.beginPath();
-					ctx.arc(x + 0.5, y + 0.5, 2, 0, 2 * Math.PI);
-					ctx.fill();
-				});
-			});
-		}
+		if (this.show === false) return;
 		
 		// Draw edges
-		if (true) {
+		if (this.renderOutline === true) {
 			this.polygons.forEach(polygon => {
 				ctx.beginPath();
-				ctx.strokeStyle = pColor;
+				ctx.strokeStyle = this.outlineColor;
 				ctx.moveTo(...subPos(addPos(polygon.points[0], [0.5, 0.5]), camera));
 				polygon.points.slice(1).map(p => subPos(p, camera)).forEach(([x, y]) => {
 					ctx.lineTo(x + 0.5, y + 0.5);
@@ -1311,26 +1159,16 @@ class GridOutline {
 			});
 		}
 		
-		// Draw shapes
-		if (true && this.checked) {
-			const setColor = value => {
-				let color = 'rgba(0, 0, 0, 0.6)';
-				
-				if (fill === true)
-					ctx.fillStyle = color;
-				else
-					ctx.strokeStyle = color;
-			};
-			
-			for (let y = 0; y < grid.rows; ++y) {
-				for (let x = 0; x < grid.columns; ++x) {
-					if (this.checked[y * stride + x]) {
-						setColor();
-						
-						drawRect(x * grid.tileW + offset - cameraX, y * grid.tileH + offset - cameraY, width, height);
-					}
-				}
-			}
+		// Draw points
+		if (this.renderPoints === true) {
+			this.polygons.forEach(polygon => {
+					polygon.points.map(p => subPos(p, camera)).forEach(([x, y]) => {
+					ctx.fillStyle = this.pointsColor;
+					ctx.beginPath();
+					ctx.arc(x + 0.5, y + 0.5, 2, 0, 2 * Math.PI);
+					ctx.fill();
+				});
+			});
 		}
 	}
 }
