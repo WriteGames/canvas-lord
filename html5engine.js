@@ -630,7 +630,7 @@ class ContourTracingScene extends Scene {
 	
 	render(ctx) {
 		const { mouse } = this.engine.input;
-		ctx.fillStyle = 'cyan';
+		ctx.fillStyle = 'lime';
 		ctx.fillRect(mouse.x, mouse.y, 8, 8);
 	}
 }
