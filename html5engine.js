@@ -282,6 +282,14 @@ const initTileset = grid => {
 	return tileset;
 };
 
+Object.prototype.definePropertyUnwriteable = (obj, prop, value, descriptor = {}) => {
+	Object.defineProperty(obj, prop, {
+		...descriptor,
+		value,
+		writeable: false
+	});
+};
+
 class Game {
 	constructor(id) {
 		this.focus = false;
@@ -291,9 +299,33 @@ class Game {
 			alpha: false
 		});
 		
+		const computeCanvasSize = (canvas) => {
+			const canvasComputedStyle = getComputedStyle(canvas);
+			
+			Object.definePropertyUnwriteable(canvas, '_actualWidth', parseInt(canvasComputedStyle.width, 10));
+			Object.definePropertyUnwriteable(canvas, '_actualHeight', parseInt(canvasComputedStyle.height, 10));
+			
+			const borderLeft = parseInt(canvasComputedStyle.borderLeftWidth, 10);
+			const borderTop = parseInt(canvasComputedStyle.borderTopWidth, 10);
+			
+			const paddingLeft = parseInt(canvasComputedStyle.paddingLeft, 10);
+			const paddingTop = parseInt(canvasComputedStyle.paddingTop, 10);
+			
+			Object.definePropertyUnwriteable(canvas, '_offsetX', /*borderLeft + */paddingLeft);
+			Object.definePropertyUnwriteable(canvas, '_offsetY', /*borderTop + */paddingTop);
+			
+			Object.definePropertyUnwriteable(canvas, '_scaleX', canvas._actualWidth / canvas.width);
+			Object.definePropertyUnwriteable(canvas, '_scaleY', canvas._actualHeight / canvas.height);
+			Object.definePropertyUnwriteable(canvas, '_scale', canvas.scale);
+		};
+		
+		computeCanvasSize(this.canvas);
+		
 		this.ctx.imageSmoothingEnabled = false;
 		
 		this.sceneStack = [];
+		
+		this.backgroundColor = '#323232';
 		
 		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
 		this.render();
@@ -322,8 +354,11 @@ class Game {
 			this.render();
 		};
 		
-		window.addEventListener('keydown', e => this.input.onKeyDown(e), false);
-		window.addEventListener('keyup', e => this.input.onKeyUp(e), false);
+		window.addEventListener('resize', e => {
+			computeCanvasSize(this.canvas);
+		});
+		
+		// TODO(bret): Is the below TODO already done?
 		// TODO(bret): We should have an event sent out to the game to let it know that the window just regained focus :)
 		// Maybe add something like that for when the canvas regains focus, too?
 		window.addEventListener('blur', e => this.onFocus(false));
@@ -332,17 +367,55 @@ class Game {
 		this.canvas.addEventListener('blur', e => this.onFocus(false));
 	}
 	
+	get width() {
+		return this.canvas.width;
+	}
+	
+	get height() {
+		return this.canvas.height;
+	}
+	
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus) {
 		this.focus = focus;
+		
+		const onMouseMove = e => this.input.onMouseMove(e);
+		const onKeyDown = e => this.input.onKeyDown(e);
+		const onKeyUp = e => this.input.onKeyUp(e);
+		
 		if (focus === true) {
 			this._lastFrame = performance.now();
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
+			
+			// TODO(bret): Find out if we need useCapture here
+			['mouseenter', 'mousemove', 'mouseexit'].forEach(event => {
+				// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
+				this.canvas.addEventListener(event, onMouseMove);
+			});
+			
+			window.addEventListener('keydown', onKeyDown, false);
+			window.addEventListener('keyup', onKeyUp, false);
 		} else {
 			this.render();
 			cancelAnimationFrame(this.frameRequestId);
 			this.input.clear();
+			
+			['mouseenter', 'mousemove', 'mouseexit'].forEach(event => {
+				this.canvas.removeEventListener(event, onMouseMove);
+			});
+			
+			window.removeEventListener('keydown', onKeyDown, false);
+			window.removeEventListener('keyup', onKeyUp, false);
 		}
+	}
+	
+	pushScene(scene) {
+		this.pushScenes(scene);
+	}
+	
+	pushScenes(...scenes) {
+		this.sceneStack.push(scenes);
+		scenes.forEach(scene => scene.engine = this);
 	}
 	
 	update() {
@@ -355,14 +428,13 @@ class Game {
 			ctx
 		} = this;
 		
-		ctx.fillStyle = '#87E1A3';
+		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, 640, 360);
 		
 		this.sceneStack[0]?.forEach(scene => scene.render(this.ctx));
 		
 		// Splitscreen
-		if (false)
-		{
+		if (false) {
 			ctx.strokeStyle = '#323232';
 			ctx.beginPath();
 			ctx.lineWidth = 2;
@@ -382,6 +454,39 @@ class Input {
 	constructor(engine) {
 		this.engine = engine;
 		
+		this.mouse = {
+			pos: [0, 0],
+			realPos: [0, 0]
+		};
+		
+		const defineXYProperties = (mouse, prefix = null) => {
+			const posName = (prefix !== null) ? `${prefix}Pos` : 'pos';
+			const xName = (prefix !== null) ? `${prefix}X` : 'x';
+			const yName = (prefix !== null) ? `${prefix}Y` : 'y';
+			
+			Object.defineProperties(mouse, {
+				[xName]: {
+					get: function() {
+						return mouse[posName][0];
+					},
+					set: function(val) {
+						mouse[posName][0] = val;
+					}
+				},
+				[yName]: {
+					get: function() {
+						return mouse[posName][1];
+					},
+					set: function(val) {
+						mouse[posName][1] = val;
+					}
+				}
+			});
+		};
+		
+		defineXYProperties(this.mouse);
+		defineXYProperties(this.mouse, 'real');
+		
 		this.keys = Array.from({ length: 128 }, v => 0);
 	}
 	
@@ -389,6 +494,14 @@ class Input {
 		for (let k = 0, n = this.keys.length; k < n; ++k) {
 			this.keys[k] &= ~1;
 		}
+	}
+	
+	onMouseMove(e) {
+		this.mouse.realX = e.offsetX - this.engine.canvas._offsetX;
+		this.mouse.realY = e.offsetY - this.engine.canvas._offsetY;
+		
+		this.mouse.x = Math.floor(this.mouse.realX / (this.engine.canvas._scaleX));
+		this.mouse.y = Math.floor(this.mouse.realY / (this.engine.canvas._scaleY));
 	}
 	
 	onKeyDown(e) {
@@ -454,6 +567,8 @@ const updateCamera = (scene, player) => {
 
 class Scene {
 	constructor() {
+		this.engine = null;
+		
 		this.entities = [];
 		this.renderables = [];
 		
@@ -501,6 +616,22 @@ class Scene {
 		// this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
 		
 		ctx.drawImage(this.canvas, ...this.screenPos);
+	}
+}
+
+class ContourTracingScene extends Scene {
+	constructor() {
+		super();
+	}
+	
+	update(input) {
+		super.update(input);
+	}
+	
+	render(ctx) {
+		const { mouse } = this.engine.input;
+		ctx.fillStyle = 'cyan';
+		ctx.fillRect(mouse.x, mouse.y, 8, 8);
 	}
 }
 
@@ -1229,6 +1360,7 @@ let assetManager;
 const initGames = () => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
+	const contourGame = new Game('second');
 	const games = [game1];
 	
 	assetManager = new AssetManager('img/');
@@ -1239,6 +1371,8 @@ const initGames = () => {
 		console.log('== AssetManager::onLoad()');
 		
 		games.forEach(game => {
+			game.backgroundColor = '#87E1A3';
+			
 			const sceneWidth = game.canvas.width / 2;
 			
 			const sceneLeft = new PlayerScene(Player);
@@ -1251,11 +1385,19 @@ const initGames = () => {
 			// sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
 			// sceneRight.shouldUpdate = false;
 			
-			// game.sceneStack.push([sceneLeft, sceneRight]);
-			game.sceneStack.push([sceneLeft]);
+			// game.sceneStack.push(sceneLeft, sceneRight);
+			game.pushScenes(sceneLeft);
 			
 			game.render();
 		});
+		
+		{
+			const contourScene = new ContourTracingScene();
+			
+			contourGame.pushScenes(contourScene);
+			
+			contourGame.render();
+		}
 	});
 	assetManager.loadAssets();
 };
