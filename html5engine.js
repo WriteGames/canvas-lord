@@ -16,6 +16,32 @@ const mapByOffset = offset => pos => addPos(offset, pos);
 const mapFindOffset = origin => pos => subPos(pos, origin);
 const flatMapByOffsets = offsets => pos => offsets.map(offset => addPos(offset, pos));
 
+const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
+const _lineSegmentIntersection = ([a, b], [c, d]) => {
+	const r = subPos(b, a);
+	const s = subPos(d, c);
+	
+	const rxs = crossProduct2D(r, s);
+	
+	const t = crossProduct2D(subPos(c, a), s) / rxs;
+	const u = crossProduct2D(subPos(a, c), r) / -rxs;
+	
+	return [t, u];
+};
+const checkLineSegmentIntersection = (a, b) => {
+	const [t, u] = _lineSegmentIntersection(a, b);
+	
+	// TODO(bret): Play with these values a bit more
+	return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
+};
+const getLineSegmentIntersection = (a, b) => {
+	const [t, u] = _lineSegmentIntersection(a, b);
+	
+	return ((t >= 0) && (t <= 1) && (u >= 0) && (u <= 1))
+		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
+		: null;
+};
+
 const filterWithinBounds = (a, b) => pos => a.every((p, i) => pos[i] >= p) && b.every((p, i) => pos[i] < p);
 
 const mapToArray = val => [val].flat();
@@ -379,6 +405,8 @@ class Game {
 	onFocus(focus) {
 		this.focus = focus;
 		
+		const mouseEvents = ['mousedown', 'mouseup', 'mouseenter', 'mousemove', 'mouseexit']
+		
 		const onMouseMove = e => this.input.onMouseMove(e);
 		const onKeyDown = e => this.input.onKeyDown(e);
 		const onKeyUp = e => this.input.onKeyUp(e);
@@ -388,7 +416,7 @@ class Game {
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 			
 			// TODO(bret): Find out if we need useCapture here
-			['mouseenter', 'mousemove', 'mouseexit'].forEach(event => {
+			mouseEvents.forEach(event => {
 				// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
 				this.canvas.addEventListener(event, onMouseMove);
 			});
@@ -400,7 +428,7 @@ class Game {
 			cancelAnimationFrame(this.frameRequestId);
 			this.input.clear();
 			
-			['mouseenter', 'mousemove', 'mouseexit'].forEach(event => {
+			mouseEvents.forEach(event => {
 				this.canvas.removeEventListener(event, onMouseMove);
 			});
 			
@@ -415,7 +443,9 @@ class Game {
 	
 	pushScenes(...scenes) {
 		this.sceneStack.push(scenes);
-		scenes.forEach(scene => scene.engine = this);
+		scenes.forEach(scene => {
+			scene.engine = this;
+		});
 	}
 	
 	update() {
@@ -455,8 +485,8 @@ class Input {
 		this.engine = engine;
 		
 		this.mouse = {
-			pos: [0, 0],
-			realPos: [0, 0]
+			pos: [-1, -1],
+			realPos: [-1, -1]
 		};
 		
 		const defineXYProperties = (mouse, prefix = null) => {
@@ -622,16 +652,134 @@ class Scene {
 class ContourTracingScene extends Scene {
 	constructor() {
 		super();
+		
+		this.origin = [0, 0];
+		this.target = [0, 0];
+		
+		const shapes = [
+			[
+				[0, 16],
+				[0, 191],
+				[319, 191],
+				[319, 16],
+				[304, 16],
+				[304, 96],
+				[272, 96],
+				[272, 160],
+				[255, 160],
+				[255, 128],
+				[240, 128],
+				[240, 160],
+				[191, 160],
+				[191, 144],
+				[128, 144],
+				[128, 160],
+				[15, 160],
+				[15, 95],
+				[31, 95],
+				[31, 64],
+				[15, 64],
+				[15, 16],
+			],
+			[
+				[64, 16],
+				[64, 47],
+				[79, 47],
+				[79, 16],
+			],
+			[
+				[240, 16],
+				[240, 31],
+				[255, 31],
+				[255, 16],
+			],
+			[
+				[144, 48],
+				[144, 80],
+				[128, 80],
+				[128, 95],
+				[144, 95],
+				[144, 111],
+				[207, 111],
+				[207, 95],
+				[223, 95],
+				[223, 80],
+				[207, 80],
+				[207, 48],
+			],
+			[
+				[159, 79],
+				[159, 96],
+				[192, 96],
+				[192, 79],
+			],
+			[
+				[64, 112],
+				[64, 143],
+				[95, 143],
+				[95, 112],
+			],
+		];
+		
+		this.points = shapes.flat();
+		
+		this.lines = shapes.flatMap(shape => {
+			return shape.map((point, i, arr) => [point, arr[(i + 1) % arr.length]]);
+		});
+		
+		this.intersecting = this.lines.map(line => false);
+		this.intersections = this.lines.map(line => null);
 	}
 	
 	update(input) {
 		super.update(input);
+		
+		const { mouse } = input;
+		
+		this.target = [...mouse.pos];
+		
+		this.intersecting = this.lines.map(line => {
+			return checkLineSegmentIntersection([this.origin, this.target], line);
+		});
+		
+		this.intersections = this.lines.map(line => {
+			return getLineSegmentIntersection([this.origin, this.target], line);
+		});
 	}
 	
 	render(ctx) {
-		const { mouse } = this.engine.input;
-		ctx.fillStyle = 'lime';
-		ctx.fillRect(mouse.x, mouse.y, 8, 8);
+		ctx.lineWidth = 1;
+		
+		const correction = [0.5, 0.5];
+		
+		this.lines.forEach((line, i) => {
+			ctx.strokeStyle = this.intersecting[i] ? 'red' : 'white';
+			
+			ctx.beginPath();
+			ctx.moveTo(...addPos(line[0], correction));
+			ctx.lineTo(...addPos(line[1], correction));
+			ctx.closePath();
+			ctx.stroke();
+		});
+		
+		const inside = this.intersecting.filter(v => v).length % 2 === 1;
+		ctx.strokeStyle = inside ? 'lime' : 'white';
+		
+		ctx.beginPath();
+		ctx.moveTo(...addPos(this.origin, correction));
+		ctx.lineTo(...addPos(this.target, correction));
+		ctx.closePath();
+		ctx.stroke();
+		
+		this.intersections.forEach(i => {
+			if (i !== null) {
+				ctx.strokeStyle = 'lime';
+				ctx.beginPath();
+				ctx.arc(...addPos(i, correction), 5, 0, 2 * Math.PI);
+				ctx.closePath();
+				ctx.stroke();
+			}
+		});
 	}
 }
 
