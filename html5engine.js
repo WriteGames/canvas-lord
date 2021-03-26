@@ -401,6 +401,10 @@ class Game {
 		return this.canvas.height;
 	}
 	
+	get currentScenes() {
+		return this.sceneStack[0];
+	}
+	
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus) {
 		this.focus = focus;
@@ -449,7 +453,7 @@ class Game {
 	}
 	
 	update() {
-		this.sceneStack[0]?.forEach(scene => scene.update(this.input));
+		this.currentScenes?.forEach(scene => scene.update(this.input));
 	}
 	
 	render() {
@@ -461,10 +465,10 @@ class Game {
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, 640, 360);
 		
-		this.sceneStack[0]?.forEach(scene => scene.render(this.ctx));
+		this.currentScenes?.forEach(scene => scene.render(this.ctx));
 		
 		// Splitscreen
-		if (false) {
+		if (this.sceneStack[0]?.length === 2) {
 			ctx.strokeStyle = '#323232';
 			ctx.beginPath();
 			ctx.lineWidth = 2;
@@ -1518,6 +1522,8 @@ const initGames = () => {
 	assetManager.onLoad(() => {
 		console.log('== AssetManager::onLoad()');
 		
+		const splitScreen = true;
+		
 		games.forEach(game => {
 			game.backgroundColor = '#87E1A3';
 			
@@ -1525,16 +1531,22 @@ const initGames = () => {
 			
 			const sceneLeft = new PlayerScene(Player);
 			sceneLeft.player.x = 40;
-			// sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
-			sceneLeft.setCanvasSize(game.canvas.width, game.canvas.height);
+			if (splitScreen === true) {
+				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
+			} else {
+				sceneLeft.setCanvasSize(game.canvas.width, game.canvas.height);
+			}
 			
-			// const sceneRight = new PlayerScene(Player);
-			// sceneRight.screenPos[0] = sceneWidth;
-			// sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
-			// sceneRight.shouldUpdate = false;
-			
-			// game.sceneStack.push(sceneLeft, sceneRight);
-			game.pushScenes(sceneLeft);
+			if (splitScreen === true) {
+				const sceneRight = new PlayerScene(Player);
+				sceneRight.screenPos[0] = sceneWidth;
+				sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
+				sceneRight.shouldUpdate = false;
+				
+				game.pushScenes(sceneLeft, sceneRight);
+			} else {
+				game.pushScenes(sceneLeft);
+			}
 			
 			game.render();
 		});
