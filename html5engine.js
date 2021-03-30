@@ -61,35 +61,45 @@ const createBitEnum = (prefix, ...names) => {
 
 const reduceBitFlags = (acc, val) => acc | val;
 
+const dirNN = 0;
+const [dirRN, dirNU, dirLN, dirND] = Array.from({ length: 4 }).map((_, i) => 1 << i);
 const [
-	dirLU, dirNU, dirRU,
-	dirLN, dirNN, dirRN,
-	dirLD, dirND, dirRD
+	dirLU, dirRU,
+	dirLD, dirRD
+] = [
+	dirLN | dirNU, dirRN | dirNU,
+	dirLN | dirND, dirRN | dirND
+];
+
+const [
+	normLU, normNU, normRU,
+	normLN, normNN, normRN,
+	normLD, normND, normRD
 ] = [
 	[-1, -1], [ 0, -1], [ 1, -1],
 	[-1,  0], [ 0,  0], [ 1,  0],
 	[-1,  1], [ 0,  1], [ 1,  1]
 ];
 
-const orthogalNorms = [dirNU, dirLN, dirRN, dirND];
-const diagonalNorms = [dirLU, dirRU, dirLD, dirRD];
+const orthogalNorms = [normNU, normLN, normRN, normND];
+const diagonalNorms = [normLU, normRU, normLD, normRD];
 const cardinalNorms = [...orthogalNorms, ...diagonalNorms];
 
 // Starts right, goes counter-clockwise
-const cardinalDirStrs = ['RN', 'RU', 'NU', 'LU', 'LN', 'LD', 'ND', 'RD'];
-createBitEnum('CARDINAL_DIR', cardinalDirStrs);
-const mapStrToCardinalDirBitFlag = str => CARDINAL_DIR[str];
+const cardinalNormStrs = ['RN', 'RU', 'NU', 'LU', 'LN', 'LD', 'ND', 'RD'];
+createBitEnum('CARDINAL_NORM', cardinalNormStrs);
+const mapStrToCardinalDirBitFlag = str => CARDINAL_NORM[str];
 
 const normToBitFlagMap = new Map();
 [
-	[dirRN, CARDINAL_DIR.RN], // 1
-	[dirRU, CARDINAL_DIR.RU], // 2
-	[dirNU, CARDINAL_DIR.NU], // 4
-	[dirLU, CARDINAL_DIR.LU], // 8
-	[dirLN, CARDINAL_DIR.LN], // 16
-	[dirLD, CARDINAL_DIR.LD], // 32
-	[dirND, CARDINAL_DIR.ND], // 64
-	[dirRD, CARDINAL_DIR.RD], // 128
+	[normRN, CARDINAL_NORM.RN], // 1
+	[normRU, CARDINAL_NORM.RU], // 2
+	[normNU, CARDINAL_NORM.NU], // 4
+	[normLU, CARDINAL_NORM.LU], // 8
+	[normLN, CARDINAL_NORM.LN], // 16
+	[normLD, CARDINAL_NORM.LD], // 32
+	[normND, CARDINAL_NORM.ND], // 64
+	[normRD, CARDINAL_NORM.RD], // 128
 ].forEach(([dir, bitFlag]) => normToBitFlagMap.set(hashTuple(dir), bitFlag));
 
 const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);
@@ -653,7 +663,7 @@ class Scene {
 	}
 }
 
-class ContourTracingScene extends Scene {
+class LineSegmentScene extends Scene {
 	constructor() {
 		super();
 		
@@ -784,6 +794,70 @@ class ContourTracingScene extends Scene {
 				ctx.stroke();
 			}
 		});
+	}
+}
+
+class ContourTracingScene extends Scene {
+	
+	
+	constructor() {
+		super();
+		
+		this.columns = 20;
+		this.rows = 12;
+		
+		this.tileW = 16;
+		this.tileH = 16;
+		
+		this.gridData = [
+			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+			1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,
+			1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+			1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,
+			1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,
+			1,1,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0,1,
+			1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,
+			1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,
+			1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,1,1,1,
+			1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,0,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+		];
+		
+		this.tracingData = Array.from(this.gridData).map(v => 0);
+		
+		this.crawler = {
+			pos: [0, 0],
+			dir: dirND
+		};
+		
+		this.timer = 0;
+		this.timeout = 60;
+	}
+	
+	update() {
+		if (++this.timer < this.timeout) return;
+		this.timer = 0;
+		
+		// Do shit
+		console.log('y0oooo');
+	}
+	
+	isSolidAt(x, y) {
+		return this.gridData[y * this.columns + x] > 0;
+	}
+	
+	render(ctx) {
+		for (let y = 0; y < this.rows; ++y) {
+			for (let x = 0; x < this.columns; ++x) {
+				if (this.isSolidAt(x, y)) {
+					ctx.strokeStyle = 'white';
+					ctx.strokeRect(x * this.tileW + 0.5, y * this.tileH + 0.5, this.tileW - 1, this.tileH - 1);
+				} else if (false) {
+					// ctx.strokeStyle = 'gray';
+				}
+			}
+		}
 	}
 }
 
@@ -1330,31 +1404,31 @@ class GridOutline {
 			
 			const gridType = shape.gridType;
 			
-			let curDir = dirND;
+			let curDir = normND;
 			let lastDir = curDir;
 			const rotate = dir => {
 				if (dir === -1) {
 					switch (curDir) {
-						case dirND: curDir = dirRN; break;
-						case dirRN: curDir = dirNU; break;
-						case dirNU: curDir = dirLN; break;
-						case dirLN: curDir = dirND; break;
+						case normND: curDir = normRN; break;
+						case normRN: curDir = normNU; break;
+						case normNU: curDir = normLN; break;
+						case normLN: curDir = normND; break;
 					}
 				} else if (dir === 1) {
 					switch (curDir) {
-						case dirND: curDir = dirLN; break;
-						case dirRN: curDir = dirND; break;
-						case dirNU: curDir = dirRN; break;
-						case dirLN: curDir = dirNU; break;
+						case normND: curDir = normLN; break;
+						case normRN: curDir = normND; break;
+						case normNU: curDir = normRN; break;
+						case normLN: curDir = normNU; break;
 					}
 				}
 			};
 			
 			const offsets = {
-				[dirNU]: [dirRU, dirNU],
-				[dirND]: [dirLD, dirND],
-				[dirRN]: [dirRD, dirRN],
-				[dirLN]: [dirLU, dirLN]
+				[normNU]: [normRU, normNU],
+				[normND]: [normLD, normND],
+				[normRN]: [normRD, normRN],
+				[normLN]: [normLU, normLN]
 			};
 			
 			const points = [];
@@ -1371,22 +1445,22 @@ class GridOutline {
 				
 				const offset = [0, 0];
 				switch (curDir) {
-					case dirND: {
+					case normND: {
 						offset[0] = origin;
 						offset[1] = lastY;
 					} break;
 					
-					case dirNU: {
+					case normNU: {
 						offset[0] = m1 - origin;
 						offset[1] = lastY;
 					} break;
 					
-					case dirRN: {
+					case normRN: {
 						offset[0] = lastX;
 						offset[1] = m1 - origin;
 					} break;
 					
-					case dirLN: {
+					case normLN: {
 						offset[0] = lastX;
 						offset[1] = origin;
 					} break;
@@ -1419,7 +1493,7 @@ class GridOutline {
 				
 				lastDir = curDir;
 				
-				if ((curDir === dirND) && (hashTuple(next) === firstHash))
+				if ((curDir === normND) && (hashTuple(next) === firstHash))
 					break;
 			};
 		});
@@ -1512,7 +1586,8 @@ let assetManager;
 const initGames = () => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
-	const contourGame = new Game('second');
+	const lineSegmentGame = new Game('line-segment');
+	const contourTracingGame = new Game('contour-tracing');
 	const games = [game1];
 	
 	assetManager = new AssetManager('img/');
@@ -1551,12 +1626,16 @@ const initGames = () => {
 			game.render();
 		});
 		
-		{
-			const contourScene = new ContourTracingScene();
-			
-			contourGame.pushScenes(contourScene);
-			
-			contourGame.render();
+		if (true) {
+			const lineSegmentScene = new LineSegmentScene();
+			lineSegmentGame.pushScenes(lineSegmentScene);
+			lineSegmentGame.render();
+		}
+		
+		if (true) {
+			const contourTracingScene = new ContourTracingScene();
+			contourTracingGame.pushScenes(contourTracingScene);
+			contourTracingGame.render();
 		}
 	});
 	assetManager.loadAssets();
