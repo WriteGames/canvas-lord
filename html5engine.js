@@ -457,6 +457,7 @@ class Game {
 			cancelAnimationFrame(this.frameRequestId);
 			this.input.clear();
 			
+			// TODO(bret): These don't seem to be working :(
 			mouseEvents.forEach(event => {
 				this.canvas.removeEventListener(event, onMouseMove);
 			});
@@ -558,11 +559,13 @@ class Input {
 	}
 	
 	onMouseMove(e) {
-		this.mouse.realX = e.offsetX - this.engine.canvas._offsetX;
-		this.mouse.realY = e.offsetY - this.engine.canvas._offsetY;
+		const { canvas } = this.engine;
 		
-		this.mouse.x = Math.floor(this.mouse.realX / (this.engine.canvas._scaleX));
-		this.mouse.y = Math.floor(this.mouse.realY / (this.engine.canvas._scaleY));
+		this.mouse.realX = e.offsetX - canvas._offsetX;
+		this.mouse.realY = e.offsetY - canvas._offsetY;
+		
+		this.mouse.x = Math.floor(this.mouse.realX / (canvas._scaleX));
+		this.mouse.y = Math.floor(this.mouse.realY / (canvas._scaleY));
 	}
 	
 	onKeyDown(e) {
