@@ -359,15 +359,15 @@ class Game {
 			
 			const isBorderBox = canvasComputedStyle['box-sizing'] === 'border-box';
 			if (isBorderBox) {
-				width -= (borderLeft + paddingLeft) * 2;
-				height -= (borderTop + paddingTop) * 2;
+				width -= 2 * (borderLeft + paddingLeft);
+				height -= 2 * (borderTop + paddingTop);
 			}
 			
 			Object.definePropertyUnwriteable(canvas, '_actualWidth', width);
 			Object.definePropertyUnwriteable(canvas, '_actualHeight', height);
 			
-			Object.definePropertyUnwriteable(canvas, '_offsetX', 1 * paddingLeft);
-			Object.definePropertyUnwriteable(canvas, '_offsetY', 1 * paddingTop);
+			Object.definePropertyUnwriteable(canvas, '_offsetX', paddingLeft);
+			Object.definePropertyUnwriteable(canvas, '_offsetY', paddingTop);
 			
 			Object.definePropertyUnwriteable(canvas, '_scaleX', canvas._actualWidth / canvas.width);
 			Object.definePropertyUnwriteable(canvas, '_scaleY', canvas._actualHeight / canvas.height);
@@ -868,11 +868,27 @@ class ContourTracingScene extends Scene {
 	}
 	
 	render(ctx) {
+		ctx.strokeStyle = 'gray';
+		
+		for (let y = 0; y < this.rows; ++y) {
+			let yy = y * this.tileH + 0.5;
+			drawLine(ctx, 0.5, yy, this.columns * this.tileW + 0.5, yy);
+			yy += this.tileH - 1;
+			drawLine(ctx, 0.5, yy, this.columns * this.tileW + 0.5, yy);
+		}
+		
+		for (let x = 0; x < this.columns; ++x) {
+			let xx = x * this.tileW + 0.5;
+			drawLine(ctx, xx, 0.5, xx, this.rows * this.tileH + 0.5);
+			xx += this.tileW - 1;
+			drawLine(ctx, xx, 0, xx, this.rows * this.tileH);
+		}
+		
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				if (this.isSolidAt(x, y)) {
-					ctx.strokeStyle = 'white';
-					ctx.strokeRect(x * this.tileW + 0.5, y * this.tileH + 0.5, this.tileW - 1, this.tileH - 1);
+					ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+					ctx.fillRect(x * this.tileW + 0.5, y * this.tileH + 0.5, this.tileW - 1, this.tileH - 1);
 				} else if (false) {
 					// ctx.strokeStyle = 'gray';
 				}
