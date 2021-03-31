@@ -344,11 +344,12 @@ class Game {
 			alpha: false
 		});
 		
-		const computeCanvasSize = (canvas) => {
+		// TODO(bret): Might also want to listen for styling changes to the canvas element
+		const computeCanvasSize = canvas => {
 			const canvasComputedStyle = getComputedStyle(canvas);
 			
-			Object.definePropertyUnwriteable(canvas, '_actualWidth', parseInt(canvasComputedStyle.width, 10));
-			Object.definePropertyUnwriteable(canvas, '_actualHeight', parseInt(canvasComputedStyle.height, 10));
+			let width = parseInt(canvasComputedStyle.width, 10);
+			let height = parseInt(canvasComputedStyle.height, 10);
 			
 			const borderLeft = parseInt(canvasComputedStyle.borderLeftWidth, 10);
 			const borderTop = parseInt(canvasComputedStyle.borderTopWidth, 10);
@@ -356,12 +357,21 @@ class Game {
 			const paddingLeft = parseInt(canvasComputedStyle.paddingLeft, 10);
 			const paddingTop = parseInt(canvasComputedStyle.paddingTop, 10);
 			
-			Object.definePropertyUnwriteable(canvas, '_offsetX', /*borderLeft + */paddingLeft);
-			Object.definePropertyUnwriteable(canvas, '_offsetY', /*borderTop + */paddingTop);
+			const isBorderBox = canvasComputedStyle['box-sizing'] === 'border-box';
+			if (isBorderBox) {
+				width -= (borderLeft + paddingLeft) * 2;
+				height -= (borderTop + paddingTop) * 2;
+			}
+			
+			Object.definePropertyUnwriteable(canvas, '_actualWidth', width);
+			Object.definePropertyUnwriteable(canvas, '_actualHeight', height);
+			
+			Object.definePropertyUnwriteable(canvas, '_offsetX', 1 * paddingLeft);
+			Object.definePropertyUnwriteable(canvas, '_offsetY', 1 * paddingTop);
 			
 			Object.definePropertyUnwriteable(canvas, '_scaleX', canvas._actualWidth / canvas.width);
 			Object.definePropertyUnwriteable(canvas, '_scaleY', canvas._actualHeight / canvas.height);
-			Object.definePropertyUnwriteable(canvas, '_scale', canvas.scale);
+			Object.definePropertyUnwriteable(canvas, '_scale', canvas._scaleX);
 		};
 		
 		computeCanvasSize(this.canvas);
