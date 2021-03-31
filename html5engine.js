@@ -330,7 +330,16 @@ class Game {
 	constructor(id) {
 		this.focus = false;
 		
-		this.canvas = document.getElementById(id);
+		this.sceneStack = [];
+		
+		this.backgroundColor = '#323232';
+		
+		this.canvas = document.querySelector(`canvas#${id}`);
+		if (this.canvas === null) {
+			console.error(`No canvas with id "${id}" was able to be found`);
+			return;
+		}
+		
 		this.ctx = this.canvas.getContext('2d', {
 			alpha: false
 		});
@@ -358,10 +367,6 @@ class Game {
 		computeCanvasSize(this.canvas);
 		
 		this.ctx.imageSmoothingEnabled = false;
-		
-		this.sceneStack = [];
-		
-		this.backgroundColor = '#323232';
 		
 		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
 		this.render();
@@ -471,6 +476,8 @@ class Game {
 			canvas,
 			ctx
 		} = this;
+		
+		if (ctx === undefined) return;
 		
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, 640, 360);
