@@ -4,6 +4,8 @@ Math.clamp = (val, min, max) => {
 	return val;
 };
 
+const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]);
+
 const hashTuple = pos => pos.join(',');
 const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
 const indexToPos = (index, stride) => [index % stride, Math.floor(index / stride)];
@@ -44,8 +46,6 @@ const getLineSegmentIntersection = (a, b) => {
 
 const filterWithinBounds = (a, b) => pos => a.every((p, i) => pos[i] >= p) && b.every((p, i) => pos[i] < p);
 
-const mapToArray = val => [val].flat();
-
 const v2zero = [0, 0];
 const v2one = [1, 1];
 
@@ -81,9 +81,9 @@ const [
 	[-1,  1], [ 0,  1], [ 1,  1]
 ];
 
-const orthogalNorms = [normNU, normLN, normRN, normND];
-const diagonalNorms = [normLU, normRU, normLD, normRD];
-const cardinalNorms = [...orthogalNorms, ...diagonalNorms];
+const orthogalNorms = [normRN, normNU, normLN, normND];
+const diagonalNorms = [normRU, normLU, normLD, normRD];
+const cardinalNorms = interlaceArrays(orthogalNorms, diagonalNorms);
 
 // Starts right, goes counter-clockwise
 const cardinalNormStrs = ['RN', 'RU', 'NU', 'LU', 'LN', 'LD', 'ND', 'RD'];
@@ -1347,6 +1347,129 @@ class Grid {
 	}
 }
 
+// TODO(bret): Rewrite these to use tuples once those are implemented :)
+const rotateNormBy45Deg = (curDir, dir) => {
+	const norms = cardinalNorms;//.flatMap(v => [v, v]);
+	const index = cardinalNorms.indexOf(curDir);
+	if (index === -1) {
+		console.error('rotateNormBy45Deg expects a norm array');
+		return curDir;
+	}
+	
+	const n = cardinalNorms.length;
+	return cardinalNorms[(index - dir + n) % n];
+};
+
+const rotateNormBy90Deg = (curDir, dir) => rotateNormBy45Deg(curDir, 2 * dir);
+
+const findAllPolygonsInGrid = grid => {
+	const polygons = [];
+	
+	const shapes = findAllShapesInGrid(grid);
+	
+	const offsets = {
+		[normNU]: [normRU, normNU],
+		[normND]: [normLD, normND],
+		[normRN]: [normRD, normRN],
+		[normLN]: [normLU, normLN]
+	};
+	
+	shapes.forEach(shape => {
+		const first = [...shape.shapeCells[0]];
+		
+		const gridType = shape.gridType;
+		
+		let curDir = normND;
+		let lastDir = curDir;
+		
+		const points = [];
+		const polygon = { points };
+		polygons.push(polygon);
+		
+		const addPointToPolygon = (points, pos, interior) => {
+			const origin = interior ? 0 : -1;
+			const size = 16;
+			const m1 = size - 1;
+			const basePos = scalePos(pos, size);
+			
+			const [lastX, lastY] = points.length ? subPos(points[points.length - 1], basePos) : [origin, origin];
+			
+			const offset = [0, 0];
+			switch (curDir) {
+				case normND: {
+					offset[0] = origin;
+					offset[1] = lastY;
+				} break;
+				
+				case normNU: {
+					offset[0] = m1 - origin;
+					offset[1] = lastY;
+				} break;
+				
+				case normRN: {
+					offset[0] = lastX;
+					offset[1] = m1 - origin;
+				} break;
+				
+				case normLN: {
+					offset[0] = lastX;
+					offset[1] = origin;
+				} break;
+			}
+			
+			points.push(addPos(basePos, offset));
+		};
+		
+		addPointToPolygon(points, first, gridType === 1);
+		
+		let next = first;
+		const firstHash = hashTuple(first);
+		for (;;) {
+			const [p1, p2] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
+			
+			if (p2 === gridType) {
+				if (p1 === gridType) {
+					next = addPos(next, curDir);
+					curDir = rotateNormBy90Deg(curDir, 1);
+				}
+				
+				next = addPos(next, curDir);
+				
+				if (lastDir !== curDir)
+					addPointToPolygon(points, next, gridType === 1);
+			} else {
+				curDir = rotateNormBy90Deg(curDir, -1);
+				addPointToPolygon(points, next, gridType === 1);
+			}
+			
+			lastDir = curDir;
+			
+			if ((curDir === normND) && (hashTuple(next) === firstHash))
+				break;
+		};
+	});
+	
+	return polygons;
+};
+
+const findAllShapesInGrid = grid => {
+	const shapes = [];
+	const checked = Array.from({ length: grid.columns * grid.rows }).map(v => false);
+	
+	let nextIndex;
+	while ((nextIndex = checked.findIndex(v => v === false)) > -1) {
+		const shape = fillShape(indexToPos(nextIndex, grid.columns), grid, checked);
+		
+		// Empty shapes must be enclosed
+		if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
+			continue;
+		
+		shapes.push(shape);
+	}
+	
+	return shapes;
+};
+
 const fillShape = (start, grid, checked) => {
 	const stride = grid.columns;
 	
@@ -1411,128 +1534,8 @@ class GridOutline {
 	}
 	
 	computeOutline(grid) {
-		const {
-			columns,
-			rows
-		} = grid;
-		
-		const stride = columns;
-		
 		this.grid = grid;
-		
-		// Get all shapes
-		const shapes = [];
-		const checked = Array.from({ length: columns * rows }).map(v => false);
-		
-		let nextIndex;
-		while ((nextIndex = checked.findIndex(v => v === false)) > -1) {
-			const shape = fillShape(indexToPos(nextIndex, stride), grid, checked);
-			
-			// Empty shapes must be enclosed
-			if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
-				continue;
-			
-			shapes.push(shape);
-		}
-		
-		shapes.forEach(shape => {
-			let first = [...shape.shapeCells[0]];
-			
-			const gridType = shape.gridType;
-			
-			let curDir = normND;
-			let lastDir = curDir;
-			const rotate = dir => {
-				if (dir === -1) {
-					switch (curDir) {
-						case normND: curDir = normRN; break;
-						case normRN: curDir = normNU; break;
-						case normNU: curDir = normLN; break;
-						case normLN: curDir = normND; break;
-					}
-				} else if (dir === 1) {
-					switch (curDir) {
-						case normND: curDir = normLN; break;
-						case normRN: curDir = normND; break;
-						case normNU: curDir = normRN; break;
-						case normLN: curDir = normNU; break;
-					}
-				}
-			};
-			
-			const offsets = {
-				[normNU]: [normRU, normNU],
-				[normND]: [normLD, normND],
-				[normRN]: [normRD, normRN],
-				[normLN]: [normLU, normLN]
-			};
-			
-			const points = [];
-			const polygon = { points };
-			this.polygons.push(polygon);
-			
-			const addPointToPolygon = (points, pos, interior) => {
-				const origin = interior ? 0 : -1;
-				const size = 16;
-				const m1 = size - 1;
-				const basePos = scalePos(pos, size);
-				
-				const [lastX, lastY] = points.length ? subPos(points[points.length - 1], basePos) : [origin, origin];
-				
-				const offset = [0, 0];
-				switch (curDir) {
-					case normND: {
-						offset[0] = origin;
-						offset[1] = lastY;
-					} break;
-					
-					case normNU: {
-						offset[0] = m1 - origin;
-						offset[1] = lastY;
-					} break;
-					
-					case normRN: {
-						offset[0] = lastX;
-						offset[1] = m1 - origin;
-					} break;
-					
-					case normLN: {
-						offset[0] = lastX;
-						offset[1] = origin;
-					} break;
-				}
-				
-				points.push(addPos(basePos, offset));
-			};
-			
-			addPointToPolygon(points, first, gridType === 1);
-			
-			let next = first;
-			const firstHash = hashTuple(first);
-			for (;;) {
-				const [p1, p2] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
-				
-				if (p2 === gridType) {
-					if (p1 === gridType) {
-						next = addPos(next, curDir);
-						rotate(1);
-					}
-					
-					next = addPos(next, curDir);
-					
-					if (lastDir !== curDir)
-						addPointToPolygon(points, next, gridType === 1);
-				} else {
-					rotate(-1);
-					addPointToPolygon(points, next, gridType === 1);
-				}
-				
-				lastDir = curDir;
-				
-				if ((curDir === normND) && (hashTuple(next) === firstHash))
-					break;
-			};
-		});
+		this.polygons = findAllPolygonsInGrid(grid);
 	}
 	
 	render(ctx, camera = v2zero) {
