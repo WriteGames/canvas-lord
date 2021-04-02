@@ -44,6 +44,8 @@ const getLineSegmentIntersection = (a, b) => {
 		: null;
 };
 
+const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => ((x >= x1) && (y >= y1) && (x < x2) && (y < y2));
+
 const filterWithinBounds = (a, b) => pos => a.every((p, i) => pos[i] >= p) && b.every((p, i) => pos[i] < p);
 
 const v2zero = [0, 0];
@@ -818,8 +820,6 @@ class LineSegmentScene extends Scene {
 }
 
 class ContourTracingScene extends Scene {
-	
-	
 	constructor() {
 		super();
 		
@@ -830,26 +830,26 @@ class ContourTracingScene extends Scene {
 		this.tileH = 16;
 		
 		this.gridData = [
-			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-			1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,
-			1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-			1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,
-			1,1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,
-			1,1,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0,1,
-			1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,
-			1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,
-			1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,1,1,1,
-			1,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,0,1,1,1,
-			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1,
+			1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+			1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1,
+			1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1,
+			1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1,
+			1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+			1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+			1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1,
+			1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 		];
-		
-		this.tracingData = Array.from(this.gridData).map(v => 0);
 		
 		this.crawler = {
 			pos: [0, 0],
 			dir: dirND
 		};
+		
+		this.polygons = findAllPolygonsInGrid(this.gridData, this.columns, this.rows);
 		
 		this.timer = 0;
 		this.timeout = 60;
@@ -869,6 +869,8 @@ class ContourTracingScene extends Scene {
 	
 	render(ctx) {
 		ctx.strokeStyle = 'gray';
+		
+		const correction = [0.5, 0.5];
 		
 		for (let y = 0; y < this.rows; ++y) {
 			let yy = y * this.tileH + 0.5;
@@ -894,6 +896,17 @@ class ContourTracingScene extends Scene {
 				}
 			}
 		}
+		
+		this.polygons.forEach(polygon => {
+			ctx.beginPath();
+			ctx.strokeStyle = 'red';
+			ctx.moveTo(...subPos(addPos(polygon.points[0], [0.5, 0.5]), this.camera));
+			polygon.points.slice(1).map(p => subPos(p, this.camera)).forEach(([x, y]) => {
+				ctx.lineTo(x + 0.5, y + 0.5);
+			});
+			ctx.closePath();
+			ctx.stroke();
+		});
 	}
 }
 
@@ -1253,7 +1266,7 @@ class Grid {
 	}
 	
 	inBounds(x, y) {
-		return ((x >= 0) && (y >= 0) && (x < this.columns) && (y < this.rows));
+		return (x >= 0) && (y >= 0) && (x < this.columns) && (y < this.rows);
 	}
 	
 	setTile(x, y, value) {
@@ -1362,10 +1375,16 @@ const rotateNormBy45Deg = (curDir, dir) => {
 
 const rotateNormBy90Deg = (curDir, dir) => rotateNormBy45Deg(curDir, 2 * dir);
 
-const findAllPolygonsInGrid = grid => {
-	const polygons = [];
+const findAllPolygonsInGrid = (grid, columns, rows) => {
+	if (grid instanceof Grid) {
+		({
+			data: grid,
+			columns,
+			rows
+		} = grid);
+	}
 	
-	const shapes = findAllShapesInGrid(grid);
+	const polygons = [];
 	
 	const offsets = {
 		[normNU]: [normRU, normNU],
@@ -1374,10 +1393,11 @@ const findAllPolygonsInGrid = grid => {
 		[normLN]: [normLU, normLN]
 	};
 	
+	const shapes = findAllShapesInGrid(grid, columns, rows);
 	shapes.forEach(shape => {
 		const first = [...shape.shapeCells[0]];
 		
-		const gridType = shape.gridType;
+		const { gridType } = shape;
 		
 		let curDir = normND;
 		let lastDir = curDir;
@@ -1425,7 +1445,9 @@ const findAllPolygonsInGrid = grid => {
 		let next = first;
 		const firstHash = hashTuple(first);
 		for (;;) {
-			const [p1, p2] = offsets[curDir].map(o => addPos(next, o)).map(p => grid.getTile(...p));
+			const [p1, p2] = offsets[curDir].map(o => addPos(next, o)).map(p => {
+				return (isWithinBounds(p, v2zero, [columns, rows])) ? grid[posToIndex(p, columns)] : 0;
+			});
 			
 			if (p2 === gridType) {
 				if (p1 === gridType) {
@@ -1452,16 +1474,24 @@ const findAllPolygonsInGrid = grid => {
 	return polygons;
 };
 
-const findAllShapesInGrid = grid => {
+const findAllShapesInGrid = (grid, columns, rows) => {
+	if (grid instanceof Grid) {
+		({
+			// data: grid,
+			columns,
+			rows
+		} = grid);
+	}
+	
 	const shapes = [];
-	const checked = Array.from({ length: grid.columns * grid.rows }).map(v => false);
+	const checked = Array.from({ length: columns * rows }).map(v => false);
 	
 	let nextIndex;
 	while ((nextIndex = checked.findIndex(v => v === false)) > -1) {
-		const shape = fillShape(indexToPos(nextIndex, grid.columns), grid, checked);
+		const shape = fillShape(indexToPos(nextIndex, columns), checked, grid, columns, rows);
 		
 		// Empty shapes must be enclosed
-		if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= grid.columns) || (shape.maxY >= grid.rows)))
+		if ((shape.gridType === 0) && ((shape.minX === 0) || (shape.minY === 0) || (shape.maxX >= columns) || (shape.maxY >= rows)))
 			continue;
 		
 		shapes.push(shape);
@@ -1470,10 +1500,18 @@ const findAllShapesInGrid = grid => {
 	return shapes;
 };
 
-const fillShape = (start, grid, checked) => {
-	const stride = grid.columns;
+const fillShape = (start, checked, grid, columns, rows) => {
+	if (grid instanceof Grid) {
+		({
+			data: grid,
+			columns,
+			rows
+		} = grid);
+	}
 	
-	const gridType = grid.data[posToIndex(start, stride)];
+	const stride = columns;
+	
+	const gridType = grid[posToIndex(start, columns)];
 	
 	const queue = [start];
 	const visited = [];
@@ -1485,15 +1523,15 @@ const fillShape = (start, grid, checked) => {
 		
 		const index = posToIndex(next, stride);
 		visited.push(hash);
-		if (grid.data[posToIndex(next, stride)] !== gridType) continue;
+		if (grid[posToIndex(next, columns)] !== gridType) continue;
 		
 		checked[index] = true;
 		
 		const [x, y] = next;
 		if (x > 0) queue.push([x - 1, y]);
-		if (x < grid.columns - 1) queue.push([x + 1, y]);
+		if (x < columns - 1) queue.push([x + 1, y]);
 		if (y > 0) queue.push([x, y - 1]);
-		if (y < grid.rows - 1) queue.push([x, y + 1]);
+		if (y < rows - 1) queue.push([x, y + 1]);
 	}
 	
 	const shapeCells = visited.map(v => v.split(',').map(c => +c));
