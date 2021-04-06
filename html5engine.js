@@ -407,6 +407,8 @@ class Game {
 			this.render();
 		};
 		
+		this.eventListeners = [];
+		
 		window.addEventListener('resize', e => {
 			computeCanvasSize(this.canvas);
 		});
@@ -432,40 +434,53 @@ class Game {
 		return this.sceneStack[0];
 	}
 	
+	addEventListener(element, type, listener, options) {
+		const eventListener = {
+			element,
+			arguments: [
+				type,
+				listener,
+				options
+			]
+		};
+		
+		element.addEventListener(...eventListener.arguments);
+		
+		this.eventListeners.push(eventListener);
+	}
+	
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus) {
 		this.focus = focus;
-		
-		const mouseEvents = ['mousedown', 'mouseup', 'mouseenter', 'mousemove', 'mouseexit']
-		
-		const onMouseMove = e => this.input.onMouseMove(e);
-		const onKeyDown = e => this.input.onKeyDown(e);
-		const onKeyUp = e => this.input.onKeyUp(e);
 		
 		if (focus === true) {
 			this._lastFrame = performance.now();
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 			
+			const onMouseMove = e => this.input.onMouseMove(e);
+			const onKeyDown = e => this.input.onKeyDown(e);
+			const onKeyUp = e => this.input.onKeyUp(e);
+			
+			const mouseEvents = ['mousedown', 'mouseup', 'mouseenter', 'mousemove', 'mouseexit']
+			
 			// TODO(bret): Find out if we need useCapture here
 			mouseEvents.forEach(event => {
 				// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
-				this.canvas.addEventListener(event, onMouseMove);
+				this.addEventListener(this.canvas, event, onMouseMove);
 			});
 			
-			window.addEventListener('keydown', onKeyDown, false);
-			window.addEventListener('keyup', onKeyUp, false);
+			this.addEventListener(window, 'keydown', onKeyDown, false);
+			this.addEventListener(window, 'keyup', onKeyUp, false);
 		} else {
 			this.render();
 			cancelAnimationFrame(this.frameRequestId);
 			this.input.clear();
 			
-			// TODO(bret): These don't seem to be working :(
-			mouseEvents.forEach(event => {
-				this.canvas.removeEventListener(event, onMouseMove);
+			this.eventListeners.forEach(eventListener => {
+				const { element } = eventListener;
+				element.removeEventListener(...eventListener.arguments);
 			});
-			
-			window.removeEventListener('keydown', onKeyDown, false);
-			window.removeEventListener('keyup', onKeyUp, false);
+			this.eventListeners = [];
 		}
 	}
 	
@@ -571,6 +586,8 @@ class Input {
 	}
 	
 	onKeyDown(e) {
+		console.log('keydown', this);
+		
 		if (this.engine.focus === false) return true;
 		
 		e.preventDefault();
