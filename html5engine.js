@@ -4,12 +4,20 @@ Math.clamp = (val, min, max) => {
 	return val;
 };
 
+const EPSILON = 0.000001;
+
 const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]);
 
 const hashTuple = pos => pos.join(',');
 const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
 const indexToPos = (index, stride) => [index % stride, Math.floor(index / stride)];
 const posToIndex = ([x, y], stride) => y * stride + x;
+const posEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+// TODO(bret): Create a better name for this (ask on Twitter, duh)
+const posInteger = pos => pos.map(v => Math.floor(v));
+
+const distance = (x, y) => Math.abs(Math.sqrt(x * x + y * y));
+const distanceSq = (x, y) => Math.abs(x * x + y * y);
 
 const addPos = (a, b) => a.map((v, i) => v + b[i]);
 const subPos = (a, b) => a.map((v, i) => v - b[i]);
@@ -17,6 +25,30 @@ const scalePos = (p, s) => p.map(v => v * s);
 const mapByOffset = offset => pos => addPos(offset, pos);
 const mapFindOffset = origin => pos => subPos(pos, origin);
 const flatMapByOffsets = offsets => pos => offsets.map(offset => addPos(offset, pos));
+const posDistance = (a, b) => distance(...subPos(b, a));
+// const posDistanceSq = (a, b) => distanceSq(subPos(b, a));
+
+const reduceSum = (acc, v) => acc + v;
+const reduceProduct = (acc, v) => acc * v;
+
+const pathToSegments = path => path.map((vertex, i, vertices) => [vertex, vertices[(i + 1) % vertices.length]]);
+
+const RAD_TO_DEG = 180.0 / Math.PI;
+const radToDeg = rad => rad * RAD_TO_DEG;
+const DEG_TO_RAD = Math.PI / 180.0;
+const degToRad = deg => deg * DEG_TO_RAD;
+
+const RAD_45 = 45 * DEG_TO_RAD;
+const RAD_90 = 90 * DEG_TO_RAD;
+const RAD_180 = 180 * DEG_TO_RAD;
+const RAD_270 = 270 * DEG_TO_RAD;
+const RAD_360 = 360 * DEG_TO_RAD;
+const RAD_540 = 540 * DEG_TO_RAD;
+const RAD_720 = 720 * DEG_TO_RAD;
+
+// const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
+const getAngle = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
+const getAngleBetween = (a, b) => (b - a + RAD_540) % RAD_360 - RAD_180;
 
 const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
 const _lineSegmentIntersection = ([a, b], [c, d]) => {
@@ -43,13 +75,23 @@ const getLineSegmentIntersection = (a, b) => {
 		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
 		: null;
 };
+const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 
 const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => ((x >= x1) && (y >= y1) && (x < x2) && (y < y2));
 
 const filterWithinBounds = (a, b) => pos => a.every((p, i) => pos[i] >= p) && b.every((p, i) => pos[i] < p);
 
-const v2zero = [0, 0];
-const v2one = [1, 1];
+const isPointInsidePath = (point, path) => {
+	const wind =
+		path
+			.map(vertex => getAngle(point, vertex))
+			.map((angle, i, arr) => getAngleBetween(angle, arr[(i + 1) % arr.length]))
+			.reduce(reduceSum, 0);
+	return Math.abs(wind) > EPSILON;
+};
+
+const v2zero = Object.freeze([0, 0]);
+const v2one = Object.freeze([1, 1]);
 
 const createBitEnum = (prefix, ...names) => {
 	names = names.flat();
@@ -457,14 +499,23 @@ class Game {
 			this._lastFrame = performance.now();
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 			
+			const onMouseDown = e => this.input.onMouseDown(e);
+			const onMouseUp = e => this.input.onMouseUp(e);
 			const onMouseMove = e => this.input.onMouseMove(e);
 			const onKeyDown = e => this.input.onKeyDown(e);
 			const onKeyUp = e => this.input.onKeyUp(e);
 			
-			const mouseEvents = ['mousedown', 'mouseup', 'mouseenter', 'mousemove', 'mouseexit']
+			this.addEventListener(this.canvas, 'mousedown', onMouseDown);
+			this.addEventListener(this.canvas, 'mouseup', onMouseUp);
 			
-			// TODO(bret): Find out if we need useCapture here
-			mouseEvents.forEach(event => {
+			// TODO(bret): Find out if we need useCapture here & above
+			[
+				'mousedown',
+				'mouseup',
+				'mouseenter',
+				'mousemove',
+				'mouseexit'
+			].forEach(event => {
 				// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
 				this.addEventListener(this.canvas, event, onMouseMove);
 			});
@@ -535,7 +586,8 @@ class Input {
 		
 		this.mouse = {
 			pos: [-1, -1],
-			realPos: [-1, -1]
+			realPos: [-1, -1],
+			_clicked: 0,
 		};
 		
 		const defineXYProperties = (mouse, prefix = null) => {
@@ -543,23 +595,17 @@ class Input {
 			const xName = (prefix !== null) ? `${prefix}X` : 'x';
 			const yName = (prefix !== null) ? `${prefix}Y` : 'y';
 			
-			Object.defineProperties(mouse, {
-				[xName]: {
-					get: function() {
-						return mouse[posName][0];
+			[xName, yName].forEach((coordName, i) => {
+				Object.defineProperties(mouse, {
+					[coordName]: {
+						get: function() {
+							return mouse[posName][i];
+						},
+						set: function(val) {
+							mouse[posName][i] = val;
+						}
 					},
-					set: function(val) {
-						mouse[posName][0] = val;
-					}
-				},
-				[yName]: {
-					get: function() {
-						return mouse[posName][1];
-					},
-					set: function(val) {
-						mouse[posName][1] = val;
-					}
-				}
+				});
 			});
 		};
 		
@@ -570,11 +616,13 @@ class Input {
 	}
 	
 	update() {
+		this.mouse._clicked &= ~1;
 		for (let k = 0, n = this.keys.length; k < n; ++k) {
 			this.keys[k] &= ~1;
 		}
 	}
 	
+	// Events
 	onMouseMove(e) {
 		const { canvas } = this.engine;
 		
@@ -585,9 +633,31 @@ class Input {
 		this.mouse.y = Math.floor(this.mouse.realY / (canvas._scaleY));
 	}
 	
-	onKeyDown(e) {
-		console.log('keydown', this);
+	onMouseDown(e) {
+		// TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
+		if (this.engine.focus === false) return true;
 		
+		e.preventDefault();
+		if (this.mouseCheck() === false) {
+			this.mouse._clicked = 3;
+		}
+		
+		return false;
+	}
+	
+	onMouseUp(e) {
+		// TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
+		if (this.engine.focus === false) return true;
+		
+		e.preventDefault();
+		if (this.mouseCheck() === true) {
+			this.mouse._clicked = 1;
+		}
+		
+		return false;
+	}
+	
+	onKeyDown(e) {
 		if (this.engine.focus === false) return true;
 		
 		e.preventDefault();
@@ -602,27 +672,54 @@ class Input {
 		if (this.engine.focus === false) return true;
 		
 		e.preventDefault();
-		this.keys[e.keyCode] = 1;
+		if (this.keyCodeCheck(e.keyCode) === true) {
+			this.keys[e.keyCode] = 1;
+		}
 		
 		return false;
+	}
+	
+	// Checks
+	_checkPressed(value) {
+		return value === 3;
+	}
+	
+	_checkHeld(value) {
+		return (value & 2) > 0;
+	}
+	
+	_checkReleased(value) {
+		return value === 1;
+	}
+	
+	mousePressed() {
+		return this._checkPressed(this.mouse._clicked);
+	}
+	
+	mouseCheck() {
+		return this._checkHeld(this.mouse._clicked);
+	}
+	
+	mouseReleased() {
+		return this._checkReleased(this.mouse._clicked);
 	}
 	
 	keyCodePressed(key) {
 		if (Array.isArray(key))
 			return key.some(k => this.keyCodePressed(k) === true);
-		return (this.keys[key] === 3);
+		return this._checkPressed(this.keys[key]);
 	}
 	
 	keyCodeCheck(key) {
 		if (Array.isArray(key))
 			return key.some(k => this.keyCodeCheck(k) === true);
-		return ((this.keys[key] & 2) > 0);
+		return this._checkHeld(this.keys[key]);
 	}
 	
 	keyCodeReleased(key) {
 		if (Array.isArray(key))
 			return key.some(k => this.keyCodeReleased(k) === true);
-		return (this.keys[key] === 1);
+		return this._checkReleased(this.keys[key]);
 	}
 	
 	clear() {
@@ -660,6 +757,10 @@ class Scene {
 		this.screenPos = [0, 0];
 		this.camera = new Camera(0, 0);
 		
+		// TODO(bret): Make these false by default
+		this.escapeToBlur = true;
+		this.allowRefresh = true;
+		
 		// this.width = this.height = null;
 		this.boundsX = this.boundsY = null;
 	}
@@ -679,6 +780,12 @@ class Scene {
 	}
 	
 	update(input) {
+		if ((this.allowRefresh === true) && (input.keyCodePressed(116) === true))
+			location.reload();
+		
+		if ((this.escapeToBlur === true) && (input.keyCodePressed(27) === true))
+			this.engine.canvas.blur();
+		
 		if (this.shouldUpdate === false) return;
 		
 		this.entities.forEach(entity => entity.update(input));
@@ -774,6 +881,14 @@ class LineSegmentScene extends Scene {
 			],
 		];
 		
+		this.shapes = shapes;
+		
+		this.square = shapes[shapes.length - 1];
+		this.innerSquare = shapes[shapes.length - 2];
+		
+		this.windingPoint = v2zero;
+		this.windingPointInsideShape = false;
+		
 		this.points = shapes.flat();
 		
 		this.lines = shapes.flatMap(shape => {
@@ -789,6 +904,9 @@ class LineSegmentScene extends Scene {
 		
 		const { mouse } = input;
 		
+		const record = input.mousePressed();
+		
+		if (record === true) console.time('intersection');
 		this.target = [...mouse.pos];
 		
 		this.intersecting = this.lines.map(line => {
@@ -798,6 +916,26 @@ class LineSegmentScene extends Scene {
 		this.intersections = this.lines.map(line => {
 			return getLineSegmentIntersection([this.origin, this.target], line);
 		});
+		if (record === true) console.timeEnd('intersection');
+		
+		if (input.mousePressed()) {
+			console.time('winding');
+			this.windingPoint = [...mouse.pos];
+			
+			const shapesInside = this.shapes.filter(shape => isPointInsidePath(this.windingPoint, shape))
+			
+			if (shapesInside.length % 2 === 1) {
+				this.windingPointInsideShape = true;
+			} else {
+				// Whether or not we're overlapping any edges
+				this.windingPointInsideShape =
+					this.shapes.some(shape => shape.some((vertex, i, arr) => {
+						return isPointOnLine(this.windingPoint, vertex, arr[(i + 1) % arr.length]);
+					}));
+			}
+			
+			console.timeEnd('winding');
+		}
 	}
 	
 	render(ctx) {
@@ -833,6 +971,21 @@ class LineSegmentScene extends Scene {
 				ctx.stroke();
 			}
 		});
+		
+		const pointColor = (this.windingPointInsideShape) ? '#00E0A7' : '#FF2C55'
+		ctx.fillStyle = pointColor;
+		ctx.beginPath();
+		ctx.arc(...addPos(this.windingPoint, correction), 0.5, 0, 2 * Math.PI);
+		ctx.closePath();
+		ctx.fill();
+		
+		if (true) {
+			ctx.strokeStyle = pointColor;
+			ctx.beginPath();
+			ctx.arc(...addPos(this.windingPoint, correction), 8, 0, 2 * Math.PI);
+			ctx.closePath();
+			ctx.stroke();
+		}
 	}
 }
 
@@ -872,7 +1025,9 @@ class ContourTracingScene extends Scene {
 		this.timeout = 60;
 	}
 	
-	update() {
+	update(input) {
+		super.update(input);
+		
 		if (++this.timer < this.timeout) return;
 		this.timer = 0;
 		
