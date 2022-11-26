@@ -4,11 +4,11 @@
 	"description": "An HTML5 game engine",
 	"packageManager": "pnpm@7.16.1",
 	"engines": {
-	  "node": "^16.15.0",
-	  "pnpm": "7"
+		"node": "^16.15.0",
+		"pnpm": "7"
 	},
 	"scripts": {
-		
+		"lint": "eslint html5engine.js"
 	},
 	"repository": {
 		"type": "git",
@@ -19,5 +19,16 @@
 	"bugs": {
 		"url": "https://github.com/WriteGames/canvas-lord/issues"
 	},
-	"homepage": "https://github.com/WriteGames/canvas-lord#readme"
+	"homepage": "https://github.com/WriteGames/canvas-lord#readme",
+	"dependencies": {
+		"@vercel/style-guide": "4.0.2",
+		"eslint": "8.28.0"
+	},
+	"pnpm": {
+		"peerDependencyRules": {
+			"ignoreMissing": [
+				"typescript"
+			]
+		}
+	}
 }
