@@ -10,13 +10,14 @@ module.exports = {
 		ecmaVersion: 'latest',
 		sourceType: 'script',
 	},
-	ignorePatterns: ['node_modules/'],
+	ignorePatterns: ['node_modules/', 'website/'],
 	rules: {
-		'curly': 0, // ['error', 'multi'],
+		curly: 0, // ['error', 'multi'],
 		'no-bitwise': 0,
 		'no-multi-assign': 0,
 		'no-implicit-coercion': [
-			'error', {
+			'error',
+			{
 				allow: ['~', '+'],
 			},
 		],
