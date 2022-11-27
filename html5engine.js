@@ -93,14 +93,15 @@ const isPointInsidePath = (point, path) => {
 const v2zero = Object.freeze([0, 0]);
 const v2one = Object.freeze([1, 1]);
 
-const createBitEnum = (prefix, ...names) => {
-	names = names.flat();
+const createBitEnum = (prefix, ..._names) => {
+	const names = _names.flat();
 	const bitEnumObj = globalThis[prefix.toUpperCase()] = [];
 	names.forEach((name, i) => {
 		const val = 1 << i;
 		bitEnumObj.push(val);
 		bitEnumObj[name.toUpperCase()] = val;
 	});
+	return bitEnumObj;
 };
 
 const reduceBitFlags = (acc, val) => acc | val;
@@ -131,7 +132,7 @@ const cardinalNorms = interlaceArrays(orthogalNorms, diagonalNorms);
 
 // Starts right, goes counter-clockwise
 const cardinalNormStrs = ['RN', 'RU', 'NU', 'LU', 'LN', 'LD', 'ND', 'RD'];
-createBitEnum('CARDINAL_NORM', cardinalNormStrs);
+const CARDINAL_NORM = createBitEnum('CARDINAL_NORM', cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = str => CARDINAL_NORM[str];
 
 const normToBitFlagMap = new Map();
@@ -150,77 +151,73 @@ const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag)
 
 const setTile = (tileset, x, y, bitFlag) => {
 	switch (bitFlag & ~orTogetherCardinalDirs('LD', 'RD', 'LU', 'RU')) {
-		case 0: {
+		case 0:
 			tileset.setTile(x, y, 0, 5);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('NU'): {
+		case orTogetherCardinalDirs('NU'):
 			tileset.setTile(x, y, 0, 7);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('ND'): {
+		case orTogetherCardinalDirs('ND'):
 			tileset.setTile(x, y, 0, 6);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('LN'): {
+		case orTogetherCardinalDirs('LN'):
 			tileset.setTile(x, y, 3, 4);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('RN'): {
+		case orTogetherCardinalDirs('RN'):
 			tileset.setTile(x, y, 1, 4);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('LN', 'RN'): {
+		case orTogetherCardinalDirs('LN', 'RN'):
 			tileset.setTile(x, y, 0, 2);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('ND', 'NU'): {
+		case orTogetherCardinalDirs('ND', 'NU'):
 			tileset.setTile(x, y, 0, 3);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('RN', 'NU', 'ND'): {
+		case orTogetherCardinalDirs('RN', 'NU', 'ND'):
 			tileset.setTile(x, y, 1, 6);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('NU', 'LN', 'ND'): {
+		case orTogetherCardinalDirs('NU', 'LN', 'ND'):
 			tileset.setTile(x, y, 3, 6);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('RN', 'NU', 'LN', 'ND'): {
+		case orTogetherCardinalDirs('RN', 'NU', 'LN', 'ND'):
 			tileset.setTile(x, y, 2, 6);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('LN', 'ND'): {
+		case orTogetherCardinalDirs('LN', 'ND'):
 			tileset.setTile(x, y, 2, 5);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('LN', 'NU'): {
+		case orTogetherCardinalDirs('LN', 'NU'):
 			tileset.setTile(x, y, 3, 7);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('RN', 'ND'): {
+		case orTogetherCardinalDirs('RN', 'ND'):
 			tileset.setTile(x, y, 2, 3);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('LN', 'RN', 'ND'): {
+		case orTogetherCardinalDirs('LN', 'RN', 'ND'):
 			tileset.setTile(x, y, 2, 2);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('LN', 'ND'): {
-			tileset.setTile(x, y, 2, 5);
-		} break;
-		
-		case orTogetherCardinalDirs('RN', 'NU'): {
+		case orTogetherCardinalDirs('RN', 'NU'):
 			tileset.setTile(x, y, 1, 7);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('RN', 'NU', 'LN'): {
+		case orTogetherCardinalDirs('RN', 'NU', 'LN'):
 			tileset.setTile(x, y, 2, 7);
-		} break;
+			break;
 		
-		case orTogetherCardinalDirs('NU', 'LN'): {
+		case orTogetherCardinalDirs('NU', 'LN'):
 			tileset.setTile(x, y, 3, 7);
-		} break;
+			break;
 	}
 };
 
@@ -598,10 +595,10 @@ class Input {
 			[xName, yName].forEach((coordName, i) => {
 				Object.defineProperties(mouse, {
 					[coordName]: {
-						get: function() {
+						get() {
 							return mouse[posName][i];
 						},
-						set: function(val) {
+						set(val) {
 							mouse[posName][i] = val;
 						}
 					},
@@ -734,9 +731,9 @@ class Camera extends Array {
 	}
 	
 	get x() { return this[0]; }
-	get y() { return this[1]; }
-	
 	set x(val) { this[0] = val; }
+	
+	get y() { return this[1]; }
 	set y(val) { this[1] = val; }
 }
 
@@ -789,7 +786,7 @@ class Scene {
 		if (this.shouldUpdate === false) return;
 		
 		this.entities.forEach(entity => entity.update(input));
-		this.renderables = this.renderables;//.filter(e => e).sort();
+		// this.renderables = this.renderables.filter(e => e).sort();
 	}
 	
 	render(ctx) {
@@ -1189,15 +1186,17 @@ class Player {
 		
 		// Either increase xspeed or apply friction
 		if (xdir !== 0) {
-			if (Math.sign(this.xspeed) === Math.sign(xdir))
+			if (Math.sign(this.xspeed) === Math.sign(xdir)) {
 				this.xspeed += this.aspeed * xdir;
-			else
+			} else {
 				this.xspeed += this.aspeed * xdir * 2;
+			}
 		} else {
-			if (Math.abs(this.xspeed) < this.fspeed)
+			if (Math.abs(this.xspeed) < this.fspeed) {
 				this.xspeed = 0;
-			else
+			} else {
 				this.xspeed -= this.fspeed * Math.sign(this.xspeed);
+			}
 		}
 		
 		// Make sure xspeed does not exceed mspeed;
@@ -1287,7 +1286,7 @@ class Player {
 	}
 	
 	// TODO(bret): See if you could write this functionally :)
-	collide(x, y) {
+	collide(_x, _y) {
 		const {
 			width: w,
 			height: h,
@@ -1296,8 +1295,8 @@ class Player {
 		
 		const { grid } = scene;
 		
-		x = Math.round(x);
-		y = Math.round(y);
+		const x = Math.round(_x);
+		const y = Math.round(_y);
 		
 		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
 		if ((scene.boundsX !== null) && ((x < scene.boundsX[0]) || (x + w > scene.boundsX[1])))
@@ -1513,13 +1512,13 @@ class Grid {
 	
 	render(ctx, camera = v2zero) {
 		switch (this.renderMode) {
-			case 0: {
+			case 0:
 				this.renderOutline(ctx, camera);
-			} break;
+				break;
 			
-			case 1: {
+			case 1:
 				this.renderEachCell(ctx, camera);
-			} break;
+				break;
 			
 			case 2: {
 				const temp = this.color;
@@ -1547,7 +1546,8 @@ const rotateNormBy45Deg = (curDir, dir) => {
 
 const rotateNormBy90Deg = (curDir, dir) => rotateNormBy45Deg(curDir, 2 * dir);
 
-const findAllPolygonsInGrid = (grid, columns, rows) => {
+const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
+	let grid = _grid, columns = _columns, rows = _rows;
 	if (grid instanceof Grid) {
 		({
 			data: grid,
@@ -1588,25 +1588,25 @@ const findAllPolygonsInGrid = (grid, columns, rows) => {
 			
 			const offset = [0, 0];
 			switch (curDir) {
-				case normND: {
+				case normND:
 					offset[0] = origin;
 					offset[1] = lastY;
-				} break;
+					break;
 				
-				case normNU: {
+				case normNU:
 					offset[0] = m1 - origin;
 					offset[1] = lastY;
-				} break;
+					break;
 				
-				case normRN: {
+				case normRN:
 					offset[0] = lastX;
 					offset[1] = m1 - origin;
-				} break;
+					break;
 				
-				case normLN: {
+				case normLN:
 					offset[0] = lastX;
 					offset[1] = origin;
-				} break;
+					break;
 			}
 			
 			points.push(addPos(basePos, offset));
@@ -1646,10 +1646,11 @@ const findAllPolygonsInGrid = (grid, columns, rows) => {
 	return polygons;
 };
 
-const findAllShapesInGrid = (grid, columns, rows) => {
+const findAllShapesInGrid = (_grid, _columns, _rows) => {
+	let grid = _grid, columns = _columns, rows = _rows;
 	if (grid instanceof Grid) {
 		({
-			// data: grid,
+			data: grid,
 			columns,
 			rows
 		} = grid);
@@ -1672,7 +1673,8 @@ const findAllShapesInGrid = (grid, columns, rows) => {
 	return shapes;
 };
 
-const fillShape = (start, checked, grid, columns, rows) => {
+const fillShape = (start, checked, _grid, _columns, _rows) => {
+	let grid = _grid, columns = _columns, rows = _rows;
 	if (grid instanceof Grid) {
 		({
 			data: grid,
@@ -1689,7 +1691,7 @@ const fillShape = (start, checked, grid, columns, rows) => {
 	const visited = [];
 	
 	let next;
-	while (next = queue.pop()) {
+	while ((next = queue.pop())) {
 		const hash = hashTuple(next);
 		if (visited.includes(hash)) continue;
 		
