@@ -71,13 +71,13 @@ const checkLineSegmentIntersection = (a, b) => {
 const getLineSegmentIntersection = (a, b) => {
 	const [t, u] = _lineSegmentIntersection(a, b);
 	
-	return ((t >= 0) && (t <= 1) && (u >= 0) && (u <= 1))
+	return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1)
 		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
 		: null;
 };
 const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 
-const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => ((x >= x1) && (y >= y1) && (x < x2) && (y < y2));
+const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => (x >= x1) && (y >= y1) && (x < x2) && (y < y2);
 
 const filterWithinBounds = (a, b) => pos => a.every((p, i) => pos[i] >= p) && b.every((p, i) => pos[i] < p);
 
@@ -110,20 +110,22 @@ const dirNN = 0;
 const [dirRN, dirNU, dirLN, dirND] = Array.from({ length: 4 }).map((_, i) => 1 << i);
 const [
 	dirLU, dirRU,
-	dirLD, dirRD
+	dirLD, dirRD,
 ] = [
 	dirLN | dirNU, dirRN | dirNU,
-	dirLN | dirND, dirRN | dirND
+	dirLN | dirND, dirRN | dirND,
 ];
 
 const [
 	normLU, normNU, normRU,
 	normLN, normNN, normRN,
-	normLD, normND, normRD
+	normLD, normND, normRD,
 ] = [
+	/* eslint-disable array-bracket-spacing, no-multi-spaces */
 	[-1, -1], [ 0, -1], [ 1, -1],
 	[-1,  0], [ 0,  0], [ 1,  0],
-	[-1,  1], [ 0,  1], [ 1,  1]
+	[-1,  1], [ 0,  1], [ 1,  1],
+	/* eslint-enable array-bracket-spacing, no-multi-spaces */
 ];
 
 const orthogalNorms = [normRN, normNU, normLN, normND];
@@ -284,7 +286,7 @@ const initGrid = () => {
 	for (let x = 4; x <= 5; ++x) {
 		grid.setTile(x, 7, 1);
 		grid.setTile(x, 8, 1);
-		//grid.setTile(x, 9, 1);
+		// grid.setTile(x, 9, 1);
 	}
 	
 	for (let y = 6; y <= 9; ++y) {
@@ -363,7 +365,7 @@ Object.prototype.definePropertyUnwriteable = (obj, prop, value, descriptor = {})
 	Object.defineProperty(obj, prop, {
 		...descriptor,
 		value,
-		writeable: false
+		writeable: false,
 	});
 };
 
@@ -382,7 +384,7 @@ class Game {
 		}
 		
 		this.ctx = this.canvas.getContext('2d', {
-			alpha: false
+			alpha: false,
 		});
 		
 		// TODO(bret): Might also want to listen for styling changes to the canvas element
@@ -479,8 +481,8 @@ class Game {
 			arguments: [
 				type,
 				listener,
-				options
-			]
+				options,
+			],
 		};
 		
 		element.addEventListener(...eventListener.arguments);
@@ -511,7 +513,7 @@ class Game {
 				'mouseup',
 				'mouseenter',
 				'mousemove',
-				'mouseexit'
+				'mouseexit',
 			].forEach(event => {
 				// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
 				this.addEventListener(this.canvas, event, onMouseMove);
@@ -550,7 +552,7 @@ class Game {
 	render() {
 		const {
 			canvas,
-			ctx
+			ctx,
 		} = this;
 		
 		if (ctx === undefined) return;
@@ -588,9 +590,9 @@ class Input {
 		};
 		
 		const defineXYProperties = (mouse, prefix = null) => {
-			const posName = (prefix !== null) ? `${prefix}Pos` : 'pos';
-			const xName = (prefix !== null) ? `${prefix}X` : 'x';
-			const yName = (prefix !== null) ? `${prefix}Y` : 'y';
+			const posName = prefix !== null ? `${prefix}Pos` : 'pos';
+			const xName = prefix !== null ? `${prefix}X` : 'x';
+			const yName = prefix !== null ? `${prefix}Y` : 'y';
 			
 			[xName, yName].forEach((coordName, i) => {
 				Object.defineProperties(mouse, {
@@ -600,7 +602,7 @@ class Input {
 						},
 						set(val) {
 							mouse[posName][i] = val;
-						}
+						},
 					},
 				});
 			});
@@ -626,8 +628,8 @@ class Input {
 		this.mouse.realX = e.offsetX - canvas._offsetX;
 		this.mouse.realY = e.offsetY - canvas._offsetY;
 		
-		this.mouse.x = Math.floor(this.mouse.realX / (canvas._scaleX));
-		this.mouse.y = Math.floor(this.mouse.realY / (canvas._scaleY));
+		this.mouse.x = Math.floor(this.mouse.realX / canvas._scaleX);
+		this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
 	}
 	
 	onMouseDown(e) {
@@ -919,7 +921,7 @@ class LineSegmentScene extends Scene {
 			console.time('winding');
 			this.windingPoint = [...mouse.pos];
 			
-			const shapesInside = this.shapes.filter(shape => isPointInsidePath(this.windingPoint, shape))
+			const shapesInside = this.shapes.filter(shape => isPointInsidePath(this.windingPoint, shape));
 			
 			if (shapesInside.length % 2 === 1) {
 				this.windingPointInsideShape = true;
@@ -969,7 +971,7 @@ class LineSegmentScene extends Scene {
 			}
 		});
 		
-		const pointColor = (this.windingPointInsideShape) ? '#00E0A7' : '#FF2C55'
+		const pointColor = this.windingPointInsideShape ? '#00E0A7' : '#FF2C55';
 		ctx.fillStyle = pointColor;
 		ctx.beginPath();
 		ctx.arc(...addPos(this.windingPoint, correction), 0.5, 0, 2 * Math.PI);
@@ -1008,12 +1010,12 @@ class ContourTracingScene extends Scene {
 			1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1,
 			1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		];
 		
 		this.crawler = {
 			pos: [0, 0],
-			dir: dirND
+			dir: dirND,
 		};
 		
 		this.polygons = findAllPolygonsInGrid(this.gridData, this.columns, this.rows);
@@ -1224,7 +1226,7 @@ class Player {
 		this.yspeed += this.gspeed;
 		
 		// Variable jump height
-		if ((this.yspeed < 0) && (!keyJumpCheck))
+		if ((this.yspeed < 0) && !keyJumpCheck)
 			this.yspeed += this.gspeed;
 		
 		// Actually move
@@ -1290,7 +1292,7 @@ class Player {
 		const {
 			width: w,
 			height: h,
-			scene
+			scene,
 		} = this;
 		
 		const { grid } = scene;
@@ -1432,7 +1434,7 @@ class Grid {
 		const stride = this.columns;
 		this.data.map((val, i) => [
 			val,
-			indexToPos(i, stride)
+			indexToPos(i, stride),
 		]).forEach(args => callback(...args));
 	}
 	
@@ -1486,8 +1488,8 @@ class Grid {
 	
 	renderEachCell(ctx, camera, fill = false) {
 		const stride = this.columns;
-		const width = this.tileW - +(!fill);
-		const height = this.tileH - +(!fill);
+		const width = this.tileW - +!fill;
+		const height = this.tileH - +!fill;
 		
 		const [cameraX, cameraY] = camera;
 		
@@ -1497,9 +1499,9 @@ class Grid {
 			ctx.strokeStyle = this.color;
 		ctx.lineWidth = 1;
 		
-		const drawRect = (...args) => (fill === true) ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+		const drawRect = (...args) => fill === true ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 		
-		const offset = (fill === true) ? 0 : 0.5;
+		const offset = fill === true ? 0 : 0.5;
 		
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
@@ -1533,7 +1535,7 @@ class Grid {
 
 // TODO(bret): Rewrite these to use tuples once those are implemented :)
 const rotateNormBy45Deg = (curDir, dir) => {
-	const norms = cardinalNorms;//.flatMap(v => [v, v]);
+	const norms = cardinalNorms;// .flatMap(v => [v, v]);
 	const index = cardinalNorms.indexOf(curDir);
 	if (index === -1) {
 		console.error('rotateNormBy45Deg expects a norm array');
@@ -1552,7 +1554,7 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
 		({
 			data: grid,
 			columns,
-			rows
+			rows,
 		} = grid);
 	}
 	
@@ -1562,7 +1564,7 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
 		[normNU]: [normRU, normNU],
 		[normND]: [normLD, normND],
 		[normRN]: [normRD, normRN],
-		[normLN]: [normLU, normLN]
+		[normLN]: [normLU, normLN],
 	};
 	
 	const shapes = findAllShapesInGrid(grid, columns, rows);
@@ -1618,7 +1620,7 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
 		const firstHash = hashTuple(first);
 		for (;;) {
 			const [p1, p2] = offsets[curDir].map(o => addPos(next, o)).map(p => {
-				return (isWithinBounds(p, v2zero, [columns, rows])) ? grid[posToIndex(p, columns)] : 0;
+				return isWithinBounds(p, v2zero, [columns, rows]) ? grid[posToIndex(p, columns)] : 0;
 			});
 			
 			if (p2 === gridType) {
@@ -1652,7 +1654,7 @@ const findAllShapesInGrid = (_grid, _columns, _rows) => {
 		({
 			data: grid,
 			columns,
-			rows
+			rows,
 		} = grid);
 	}
 	
@@ -1679,7 +1681,7 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
 		({
 			data: grid,
 			columns,
-			rows
+			rows,
 		} = grid);
 	}
 	
@@ -1716,19 +1718,19 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
 			minX: Math.min(x, acc.minX),
 			maxX: Math.max(x, acc.maxX),
 			minY: Math.min(y, acc.minY),
-			maxY: Math.max(y, acc.maxY)
-		}
+			maxY: Math.max(y, acc.maxY),
+		};
 	}, {
 		minX: Number.POSITIVE_INFINITY,
 		maxX: Number.NEGATIVE_INFINITY,
 		minY: Number.POSITIVE_INFINITY,
-		maxY: Number.NEGATIVE_INFINITY
+		maxY: Number.NEGATIVE_INFINITY,
 	});
 	
 	return {
 		...shape,
 		gridType,
-		shapeCells
+		shapeCells,
 	};
 };
 
@@ -1809,7 +1811,7 @@ class Tileset {
 			image,
 			separation,
 			startX, startY,
-			tileW, tileH
+			tileW, tileH,
 		} = this;
 		
 		const srcCols = Math.floor(this.image.width / tileW);
