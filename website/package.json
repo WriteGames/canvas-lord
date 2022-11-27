@@ -9,6 +9,7 @@
 		"lint": "next lint"
 	},
 	"dependencies": {
+		"canvas-lord": "workspace: *",
 		"@next/eslint-plugin-next": "*",
 		"@vercel/style-guide": "*",
 		"next": "13.0.5",

@@ -383,13 +383,8 @@ const initTileset = (grid) => {
 	return tileset;
 };
 
-Object.prototype.definePropertyUnwriteable = (
-	obj,
-	prop,
-	value,
-	descriptor = {},
-) => {
-	Object.defineProperty(obj, prop, {
+const definePropertyUnwriteable = (obj, prop, value, descriptor = {}) => {
+	return Object.defineProperty(obj, prop, {
 		...descriptor,
 		value,
 		writeable: false,
@@ -437,23 +432,23 @@ class Game {
 				height -= 2 * (borderTop + paddingTop);
 			}
 
-			Object.definePropertyUnwriteable(canvas, '_actualWidth', width);
-			Object.definePropertyUnwriteable(canvas, '_actualHeight', height);
+			definePropertyUnwriteable(canvas, '_actualWidth', width);
+			definePropertyUnwriteable(canvas, '_actualHeight', height);
 
-			Object.definePropertyUnwriteable(canvas, '_offsetX', paddingLeft);
-			Object.definePropertyUnwriteable(canvas, '_offsetY', paddingTop);
+			definePropertyUnwriteable(canvas, '_offsetX', paddingLeft);
+			definePropertyUnwriteable(canvas, '_offsetY', paddingTop);
 
-			Object.definePropertyUnwriteable(
+			definePropertyUnwriteable(
 				canvas,
 				'_scaleX',
 				canvas._actualWidth / canvas.width,
 			);
-			Object.definePropertyUnwriteable(
+			definePropertyUnwriteable(
 				canvas,
 				'_scaleY',
 				canvas._actualHeight / canvas.height,
 			);
-			Object.definePropertyUnwriteable(canvas, '_scale', canvas._scaleX);
+			definePropertyUnwriteable(canvas, '_scale', canvas._scaleX);
 		};
 
 		computeCanvasSize(this.canvas);
@@ -498,6 +493,7 @@ class Game {
 		// Maybe add something like that for when the canvas regains focus, too?
 		window.addEventListener('blur', (e) => this.onFocus(false));
 
+		console.log(this.canvas, this);
 		this.canvas.addEventListener('focus', (e) => this.onFocus(true));
 		this.canvas.addEventListener('blur', (e) => this.onFocus(false));
 	}
@@ -528,6 +524,8 @@ class Game {
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus) {
 		this.focus = focus;
+
+		console.log('test');
 
 		if (focus === true) {
 			this._lastFrame = performance.now();
@@ -1326,12 +1324,12 @@ class Player {
 			for (let xx = 0, n = Math.abs(moveX); xx < n; ++xx) {
 				if (this.collide(this.x + sign, this.y)) {
 					const yy =
-						grounded === false &&
-						this.yspeed >= 0 &&
-						(ledgeBoostHeights.find(
-							(y) => !this.collide(this.x + sign, this.y - y),
-						) ??
-							0);
+						(grounded === false &&
+							this.yspeed >= 0 &&
+							ledgeBoostHeights.find(
+								(y) => !this.collide(this.x + sign, this.y - y),
+							)) ||
+						0;
 
 					if (yy === 0) {
 						moveX = 0;
@@ -1488,8 +1486,8 @@ const drawLine = (ctx, x1, y1, x2, y2) => {
 	ctx.stroke();
 };
 
-const pixelCanvas = document.createElement('canvas');
-const pixelCtx = pixelCanvas.getContext('2d');
+let pixelCanvas;
+let pixelCtx;
 class Grid {
 	constructor(width, height, tileW, tileH) {
 		this.width = width;
@@ -1978,8 +1976,16 @@ class Tileset {
 	}
 }
 
+console.log('we here');
+
 let assetManager;
 const initGames = () => {
+	pixelCanvas = document.createElement('canvas');
+	pixelCtx = pixelCanvas.getContext('2d', {
+		willReadFrequently: true,
+	});
+
+	console.log('initGames called!');
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
 	const lineSegmentGame = new Game('line-segment');
@@ -2036,3 +2042,5 @@ const initGames = () => {
 	});
 	assetManager.loadAssets();
 };
+
+global.initGames = initGames;

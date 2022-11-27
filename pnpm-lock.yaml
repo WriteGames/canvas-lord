@@ -17,6 +17,7 @@ importers:
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
       '@vercel/style-guide': '*'
+      canvas-lord: 'workspace: *'
       eslint: '>=8.24.0 <9.0.0'
       next: 13.0.5
       react: 18.2.0
@@ -25,6 +26,7 @@ importers:
     dependencies:
       '@next/eslint-plugin-next': 13.0.5
       '@vercel/style-guide': 4.0.2_fg5pdz4r4jeun4jqs33fswq5je
+      canvas-lord: link:..
       next: 13.0.5_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0

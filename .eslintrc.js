@@ -1,4 +1,5 @@
 module.exports = {
+	root: true,
 	extends: [
 		'@vercel/style-guide/eslint/browser',
 		'@vercel/style-guide/eslint/node',

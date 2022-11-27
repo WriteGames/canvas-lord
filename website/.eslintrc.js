@@ -9,13 +9,13 @@ module.exports = {
 		'@vercel/style-guide/eslint/react',
 		'@vercel/style-guide/eslint/next',
 		'@vercel/style-guide/eslint/typescript',
-		'../.eslintrc.js',
+		// '../.eslintrc.js',
 	].map((config) => require.resolve(config)),
-	overrides: [],
 	parser: '@typescript-eslint/parser',
+	ignorePatterns: ['node_modules/'],
 	parserOptions: {
 		project,
-		ecmaVersion: 'latest',
+		// ecmaVersion: 'latest',
 	},
 	settings: {
 		'import/resolver': {
@@ -24,5 +24,16 @@ module.exports = {
 			},
 		},
 	},
-	rules: {},
+	rules: {
+		'react/jsx-no-useless-fragment': 'error',
+		'react/jsx-sort-props': 0,
+	},
+	overrides: [
+		{
+			files: ['app/**/{head,layout,page}.tsx'],
+			rules: {
+				'import/no-default-export': 0,
+			},
+		},
+	],
 };
