@@ -121,11 +121,9 @@ const [
 	normLN, normNN, normRN,
 	normLD, normND, normRD,
 ] = [
-	/* eslint-disable array-bracket-spacing, no-multi-spaces */
 	[-1, -1], [ 0, -1], [ 1, -1],
 	[-1,  0], [ 0,  0], [ 1,  0],
 	[-1,  1], [ 0,  1], [ 1,  1],
-	/* eslint-enable array-bracket-spacing, no-multi-spaces */
 ];
 
 const orthogalNorms = [normRN, normNU, normLN, normND];
