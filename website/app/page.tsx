@@ -1,9 +1,9 @@
-import CanvasLord from './canvas-lord';
+import { CanvasLord } from '../components/canvas-lord';
 
 export default function Page(): JSX.Element {
 	return (
 		<>
-			<div>Welcome to Canvas Lord</div>
+			<h1>Welcome to Canvas Lord</h1>
 			<CanvasLord />
 		</>
 	);
