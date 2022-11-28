@@ -1,2 +1,17 @@
 # LF normalization
-* text=auto
+* text=auto eol=LF
+
+# Text files
+*.js text
+*.jsx text
+*.ts text
+*.tsx text
+.editorconfig text
+.gitattributes text
+.gitignore text
+.prettierignore text
+*.json text
+*.yaml text
+*.yml text
+*.css text
+*.html text
