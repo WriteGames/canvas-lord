@@ -1331,9 +1331,9 @@ class Player {
 						(ledgeBoostHeights.find(
 							(y) => !this.collide(this.x + sign, this.y - y),
 						) ??
-							0);
+							false);
 
-					if (yy === 0) {
+					if (yy === false) {
 						moveX = 0;
 						this.xspeed =
 							Math.min(Math.abs(this.xspeed), 1.0) * sign;
