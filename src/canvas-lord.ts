@@ -36,6 +36,8 @@ const posDistance = (a, b) => distance(...subPos(b, a));
 const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;
 
+reduceSum2();
+
 const pathToSegments = (path) =>
 	path.map((vertex, i, vertices) => [
 		vertex,
