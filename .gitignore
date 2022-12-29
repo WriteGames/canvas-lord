@@ -2,3 +2,5 @@
 .DS_Store
 npm-debug.log*
 .pnpm-debug.log*
+tsconfig.tsbuildinfo
+*.map
