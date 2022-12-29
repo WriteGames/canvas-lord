@@ -1,4 +1,70 @@
-Math.clamp = (val, min, max) => {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+interface HTMLCanvasElement {
+	_actualWidth: number;
+	_actualHeight: number;
+	_offsetX: number;
+	_offsetY: number;
+	_scaleX: number;
+	_scaleY: number;
+}
+
+interface Math {
+	clamp: (val: number, min: number, max: number) => number;
+}
+
+// type Vector = number[];
+type V2 = readonly [x: number, y: number];
+type V3 = readonly [x: number, y: number, z: number];
+type V4 = readonly [x: number, y: number, z: number, w: number];
+
+type Readable<T> = {
+	-readonly [P in keyof T]: T[P];
+};
+
+type V2Editable = Readable<V2>;
+// type V3Editable = Readable<V2>;
+// type V4Editable = Readable<V2>;
+
+type Tuple = V2 | V3 | V4;
+
+type TupleT<T extends Tuple> = T extends V2
+	? V2
+	: // V3
+	T extends V3
+	? V3
+	: // V4
+	T extends V4
+	? V4
+	: // other
+	  never; // could also just return T at this point, or add some extra cases that aren't cool (like [] or [number])
+
+type FuncMapTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => A;
+type FuncMapTupleByScalar = <P extends Tuple>(p: P, s: number) => P;
+type FuncReduceTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => number;
+
+type FuncReduceNumber = (acc: number, v: number) => number;
+
+type TupleToObjectTupleHybrid<A extends readonly PropertyKey[]> = Pick<
+	{
+		[TIndex in A[number] | keyof A]: number;
+	},
+	Exclude<keyof A, keyof unknown[]> | A[number]
+>;
+
+const hashTuple = (pos: Tuple): string => pos.join(',');
+
+const _tupleMap = new Map<string, V2 | V3 | V4>();
+const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
+	const hash = hashTuple(args);
+	if (!_tupleMap.has(hash)) {
+		const tuple = Object.freeze(args) as Tuple;
+		_tupleMap.set(hash, tuple);
+	}
+	return _tupleMap.get(hash) as TupleT<V>;
+};
+
+// NOTE: This should be able to infer the return type...
+Math.clamp = (val, min, max): number => {
 	if (val < min) return min;
 	if (val > max) return max;
 	return val;
@@ -6,48 +72,67 @@ Math.clamp = (val, min, max) => {
 
 const EPSILON = 0.000001;
 
-const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]);
+const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
+const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
 
-const hashTuple = (pos) => pos.join(',');
-const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
-const indexToPos = (index, stride) => [
+const distance = (...dimensions: Tuple): number =>
+	Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
+const distanceSq = (...dimensions: Tuple): number =>
+	Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
+
+const interlaceArrays = <T, U, R = Array<T | U>>(
+	a: Readonly<T[]>,
+	b: Readonly<U[]>,
+): R => a.flatMap((v, i) => [v, b[i]]).filter((v) => v !== undefined) as R;
+
+const compareTuple = (a: Tuple, b: Tuple): boolean =>
+	hashTuple(a) === hashTuple(b);
+const indexToPos = (index: number, stride: number): V2 => [
 	index % stride,
 	Math.floor(index / stride),
 ];
-const posToIndex = ([x, y], stride) => y * stride + x;
-const posEqual = (a, b) =>
+const posToIndex = ([x, y]: V2, stride: number): number => y * stride + x;
+const posEqual = (a: Tuple, b: Tuple): boolean =>
 	a.length === b.length && a.every((v, i) => v === b[i]);
-// TODO(bret): Create a better name for this (ask on Twitter, duh)
-const posInteger = (pos) => pos.map((v) => Math.floor(v));
 
-const distance = (x, y) => Math.abs(Math.sqrt(x * x + y * y));
-const distanceSq = (x, y) => Math.abs(x * x + y * y);
+const addPos: FuncMapTuple = (a, b) => {
+	return Tuple(
+		...(a.map((v, i) => v + (b[i] ?? 0)) as unknown as typeof a),
+	) as unknown as typeof a;
+};
 
-const addPos = (a, b) => a.map((v, i) => v + b[i]);
-const subPos = (a, b) => a.map((v, i) => v - b[i]);
-const scalePos = (p, s) => p.map((v) => v * s);
-const mapByOffset = (offset) => (pos) => addPos(offset, pos);
-const mapFindOffset = (origin) => (pos) => subPos(pos, origin);
-const flatMapByOffsets = (offsets) => (pos) =>
-	offsets.map((offset) => addPos(offset, pos));
-const posDistance = (a, b) => distance(...subPos(b, a));
-// const posDistanceSq = (a, b) => distanceSq(subPos(b, a));
+const subPos: FuncMapTuple = (a, b) => {
+	return Tuple(
+		...(a.map((v, i) => v - (b[i] ?? 0)) as unknown as typeof a),
+	) as unknown as typeof a;
+};
+const scalePos: FuncMapTupleByScalar = (p, s) => {
+	return Tuple(
+		...(p.map((v) => v * s) as unknown as typeof p),
+	) as unknown as typeof p;
+};
+const mapByOffset = <V extends Tuple>(offset: V): ((pos: V) => V) => {
+	return (pos: V): V => addPos(offset, pos);
+};
+const mapFindOffset = <V extends Tuple>(origin: V): ((pos: V) => V) => {
+	return (pos: V): V => subPos(pos, origin);
+};
+const flatMapByOffsets = <V extends Tuple>(offsets: V[]): ((pos: V) => V[]) => {
+	return (pos: V): V[] => offsets.map((offset) => addPos(offset, pos));
+};
+const posDistance: FuncReduceTuple = (a, b) => distance(...subPos(b, a));
+const posDistanceSq: FuncReduceTuple = (a, b) => distanceSq(...subPos(b, a));
 
-const reduceSum = (acc, v) => acc + v;
-const reduceProduct = (acc, v) => acc * v;
-
-reduceSum2();
-
-const pathToSegments = (path) =>
-	path.map((vertex, i, vertices) => [
-		vertex,
-		vertices[(i + 1) % vertices.length],
-	]);
+// const pathToSegments = (path) =>
+// 	path.map((vertex, i, vertices) => [
+// 		vertex,
+// 		vertices[(i + 1) % vertices.length],
+// 	]);
 
 const RAD_TO_DEG = 180.0 / Math.PI;
-const radToDeg = (rad) => rad * RAD_TO_DEG;
+const radToDeg = (rad: number): number => rad * RAD_TO_DEG;
 const DEG_TO_RAD = Math.PI / 180.0;
-const degToRad = (deg) => deg * DEG_TO_RAD;
+const degToRad = (deg: number): number => deg * DEG_TO_RAD;
 
 const RAD_45 = 45 * DEG_TO_RAD;
 const RAD_90 = 90 * DEG_TO_RAD;
@@ -58,11 +143,15 @@ const RAD_540 = 540 * DEG_TO_RAD;
 const RAD_720 = 720 * DEG_TO_RAD;
 
 // const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
-const getAngle = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
-const getAngleBetween = (a, b) => ((b - a + RAD_540) % RAD_360) - RAD_180;
+const getAngle: FuncReduceTuple = (a, b) =>
+	Math.atan2(b[1] - a[1], b[0] - a[0]);
+const getAngleBetween: FuncReduceNumber = (a, b) =>
+	((b - a + RAD_540) % RAD_360) - RAD_180;
 
-const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
-const _lineSegmentIntersection = ([a, b], [c, d]) => {
+type Line2D = [V2, V2];
+
+const crossProduct2D: FuncReduceTuple = (a, b) => a[0] * b[1] - a[1] * b[0];
+const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): V2 => {
 	const r = subPos(b, a);
 	const s = subPos(d, c);
 
@@ -73,60 +162,66 @@ const _lineSegmentIntersection = ([a, b], [c, d]) => {
 
 	return [t, u];
 };
-const checkLineSegmentIntersection = (a, b) => {
+const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
 	const [t, u] = _lineSegmentIntersection(a, b);
 
 	// TODO(bret): Play with these values a bit more
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 };
-const getLineSegmentIntersection = (a, b) => {
+const getLineSegmentIntersection = (a: Line2D, b: Line2D): V2 | null => {
 	const [t, u] = _lineSegmentIntersection(a, b);
 
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1
 		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
 		: null;
 };
-const isPointOnLine = (point, a, b) =>
+const isPointOnLine = <V extends Tuple>(point: V, a: V, b: V): boolean =>
 	Math.abs(
 		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
 	) < EPSILON;
 
-const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) =>
+// TODO(bret): Would be fun to make this work with any dimensions
+const isWithinBounds = ([x, y]: V2, [x1, y1]: V2, [x2, y2]: V2): boolean =>
 	x >= x1 && y >= y1 && x < x2 && y < y2;
 
-const filterWithinBounds = (a, b) => (pos) =>
-	a.every((p, i) => pos[i] >= p) && b.every((p, i) => pos[i] < p);
+const filterWithinBounds =
+	<V extends Tuple>(a: V, b: V): ((pos: V) => boolean) =>
+	(pos: V): boolean =>
+		a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
+		b.every((p, i) => (pos[i] ?? Infinity) < p);
 
-const isPointInsidePath = (point, path) => {
+type Path = V2[];
+
+const isPointInsidePath = (point: V2, path: Path): boolean => {
 	const wind = path
 		.map((vertex) => getAngle(point, vertex))
 		.map((angle, i, arr) =>
-			getAngleBetween(angle, arr[(i + 1) % arr.length]),
+			getAngleBetween(angle, arr[(i + 1) % arr.length] as number),
 		)
 		.reduce(reduceSum, 0);
 	return Math.abs(wind) > EPSILON;
 };
 
-const v2zero = Object.freeze([0, 0]);
-const v2one = Object.freeze([1, 1]);
+const v2zero = Tuple(0, 0);
+const v2one = Tuple(1, 1);
 
-const createBitEnum = (prefix, ..._names) => {
+const createBitEnum = <T extends readonly string[]>(
+	..._names: T
+): TupleToObjectTupleHybrid<T> => {
 	const names = _names.flat();
-	const bitEnumObj = (globalThis[prefix.toUpperCase()] = []);
+	const bitEnumObj = {} as TupleToObjectTupleHybrid<T>;
 	names.forEach((name, i) => {
 		const val = 1 << i;
-		bitEnumObj.push(val);
-		bitEnumObj[name.toUpperCase()] = val;
+		bitEnumObj[i as keyof typeof bitEnumObj] = val;
+		bitEnumObj[name.toUpperCase() as keyof typeof bitEnumObj] = val;
 	});
 	return bitEnumObj;
 };
 
-const reduceBitFlags = (acc, val) => acc | val;
-
 const dirNN = 0;
-const [dirRN, dirNU, dirLN, dirND] = Array.from({ length: 4 }).map(
-	(_, i) => 1 << i,
-);
+const [dirRN, dirNU, dirLN, dirND] = Object.freeze(
+	Array.from({ length: 4 }).map((_, i) => 1 << i),
+) as V4;
 // prettier-ignore
 const [
 	dirLU, dirRU,
@@ -136,42 +231,76 @@ const [
 	dirLN | dirND, dirRN | dirND,
 ];
 
+const createNorm = <V extends readonly [number, number]>(norm: V): V => {
+	return Tuple(...norm) as unknown as V;
+};
+
 // prettier-ignore
 const [
 	normLU, normNU, normRU,
 	normLN, normNN, normRN,
 	normLD, normND, normRD,
 ] = [
-	[-1, -1], [ 0, -1], [ 1, -1],
-	[-1,  0], [ 0,  0], [ 1,  0],
-	[-1,  1], [ 0,  1], [ 1,  1],
-];
+		Tuple(-1, -1) as readonly [-1, -1],
+		Tuple(0, -1) as readonly [0, -1],
+		Tuple(1, -1) as readonly [1, -1],
 
-const orthogalNorms = [normRN, normNU, normLN, normND];
-const diagonalNorms = [normRU, normLU, normLD, normRD];
-const cardinalNorms = interlaceArrays(orthogalNorms, diagonalNorms);
+		Tuple(-1, 0) as readonly [-1, 0],
+		Tuple(0, 0) as readonly [0, 0],
+		Tuple(1, 0) as readonly [1, 0],
+
+		Tuple(-1, 1) as readonly [-1, 1],
+		Tuple(0, 1) as readonly [0, 1],
+		Tuple(1, 1) as readonly [1, 1],
+	];
+
+const orthogonalNorms = [normRN, normNU, normLN, normND] as const;
+const diagonalNorms = [normRU, normLU, normLD, normRD] as const;
+const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
+
+type V2OrthogonalNorm = typeof orthogonalNorms[number];
+type V2DiagonalNorm = typeof diagonalNorms[number];
+type V2CardinalNorm = V2OrthogonalNorm | V2DiagonalNorm;
 
 // Starts right, goes counter-clockwise
-const cardinalNormStrs = ['RN', 'RU', 'NU', 'LU', 'LN', 'LD', 'ND', 'RD'];
-const CARDINAL_NORM = createBitEnum('CARDINAL_NORM', cardinalNormStrs);
-const mapStrToCardinalDirBitFlag = (str) => CARDINAL_NORM[str];
+const reduceBitFlags = (acc: number, val: number): number => acc | val;
+const cardinalNormStrs = [
+	'RN',
+	'RU',
+	'NU',
+	'LU',
+	'LN',
+	'LD',
+	'ND',
+	'RD',
+] as const;
+type CardinalNormStr = typeof cardinalNormStrs[number];
+const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
+const mapStrToCardinalDirBitFlag = (str: CardinalNormStr): number =>
+	CARDINAL_NORM[str];
 
-const normToBitFlagMap = new Map();
+const normToBitFlagMap = new Map<V2CardinalNorm, number>();
 [
-	[normRN, CARDINAL_NORM.RN], // 1
-	[normRU, CARDINAL_NORM.RU], // 2
-	[normNU, CARDINAL_NORM.NU], // 4
-	[normLU, CARDINAL_NORM.LU], // 8
-	[normLN, CARDINAL_NORM.LN], // 16
-	[normLD, CARDINAL_NORM.LD], // 32
-	[normND, CARDINAL_NORM.ND], // 64
-	[normRD, CARDINAL_NORM.RD], // 128
-].forEach(([dir, bitFlag]) => normToBitFlagMap.set(hashTuple(dir), bitFlag));
+	[normRN, CARDINAL_NORM.RN] as const, // 1
+	[normRU, CARDINAL_NORM.RU] as const, // 2
+	[normNU, CARDINAL_NORM.NU] as const, // 4
+	[normLU, CARDINAL_NORM.LU] as const, // 8
+	[normLN, CARDINAL_NORM.LN] as const, // 16
+	[normLD, CARDINAL_NORM.LD] as const, // 32
+	[normND, CARDINAL_NORM.ND] as const, // 64
+	[normRD, CARDINAL_NORM.RD] as const, // 128
+].forEach(([dir, bitFlag]) => normToBitFlagMap.set(dir, bitFlag));
 
-const orTogetherCardinalDirs = (...dirs) =>
+const orTogetherCardinalDirs = (...dirs: CardinalNormStr[]): number =>
 	dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);
 
-const setTile = (tileset, x, y, bitFlag) => {
+const globalSetTile = (
+	tileset: Tileset,
+	x: number,
+	y: number,
+	bitFlag: number,
+): void => {
+	console.log({ bitFlag });
 	switch (bitFlag & ~orTogetherCardinalDirs('LD', 'RD', 'LU', 'RU')) {
 		case 0:
 			tileset.setTile(x, y, 0, 5);
@@ -243,6 +372,15 @@ const setTile = (tileset, x, y, bitFlag) => {
 	}
 };
 
+type AssetManagerOnLoadCallback = (src: string) => void;
+
+interface AssetManager {
+	images: Map<string, HTMLImageElement | null>;
+	imagesLoaded: number;
+	onLoadCallbacks: AssetManagerOnLoadCallback[];
+	prefix: string;
+}
+
 class AssetManager {
 	constructor(prefix = '') {
 		this.images = new Map();
@@ -251,71 +389,103 @@ class AssetManager {
 		this.prefix = prefix;
 	}
 
-	addImage(src) {
+	addImage(src: string): void {
 		this.images.set(src, null);
 	}
 
-	loadImage(src) {
+	loadImage(src: string): void {
 		const image = new Image();
-		image.onload = (e) => {
+		image.onload = (): void => {
 			this.imageLoaded(src);
 			this.images.set(src, image);
 		};
 		image.src = `${this.prefix}${src}`;
 	}
 
-	loadAssets() {
+	loadAssets(): void {
 		[...this.images.keys()].forEach((src) => {
 			this.loadImage(src);
 		});
 	}
 
-	imageLoaded(src) {
+	imageLoaded(src: string): void {
 		if (++this.imagesLoaded === this.images.size) {
 			window.requestAnimationFrame(() => {
-				this.onLoadCallbacks.forEach((callback) => callback());
+				this.onLoadCallbacks.forEach((callback) => callback(src));
 			});
 		}
 	}
 
-	onLoad(callback) {
+	onLoad(callback: AssetManagerOnLoadCallback): void {
 		this.onLoadCallbacks.push(callback);
 	}
 }
 
-Object.prototype.definePropertyUnwriteable = (
-	obj,
-	prop,
-	value,
-	descriptor = {},
-) => {
+const defineUnwritableProperty: <T>(
+	obj: T,
+	prop: PropertyKey,
+	value: number,
+	attributes?: PropertyDescriptor & ThisType<unknown>,
+) => T = (obj, prop, value, attributes = {}) =>
 	Object.defineProperty(obj, prop, {
-		...descriptor,
+		...attributes,
 		value,
-		writeable: false,
+		writable: false,
 	});
-};
+
+type CSSColor = string;
+
+// TODO(bret): Rethink this
+interface CachedEventListener {
+	element: Element | Window;
+	arguments: Parameters<Element['addEventListener']>;
+}
+
+interface Game {
+	focus: boolean;
+	sceneStack: Scene[][];
+	backgroundColor: CSSColor;
+	canvas: HTMLCanvasElement;
+	ctx: CanvasRenderingContext2D | undefined;
+	input: Input;
+	_lastFrame: number;
+	mainLoop: (time: number) => void;
+	frameRequestId: number;
+	eventListeners: CachedEventListener[];
+}
+
+type Engine = Game;
 
 class Game {
-	constructor(id) {
+	constructor(id: string) {
 		this.focus = false;
-
 		this.sceneStack = [];
 
 		this.backgroundColor = '#323232';
 
-		this.canvas = document.querySelector(`canvas#${id}`);
-		if (this.canvas === null) {
+		const canvas = document.querySelector<HTMLCanvasElement>(
+			`canvas#${id}`,
+		);
+		if (canvas === null) {
 			console.error(`No canvas with id "${id}" was able to be found`);
 			return;
 		}
 
-		this.ctx = this.canvas.getContext('2d', {
+		const ctx = canvas.getContext('2d', {
 			alpha: false,
 		});
+		if (ctx === null) {
+			console.error(
+				`Context was not able to be created from canvas "#${id}"`,
+			);
+			return;
+		}
+
+		this.canvas = canvas;
+		this.ctx = ctx;
 
 		// TODO(bret): Might also want to listen for styling changes to the canvas element
-		const computeCanvasSize = (canvas) => {
+		const computeCanvasSize = (canvas: HTMLCanvasElement): void => {
 			const canvasComputedStyle = getComputedStyle(canvas);
 
 			let width = parseInt(canvasComputedStyle.width, 10);
@@ -330,30 +500,29 @@ class Game {
 			const paddingLeft = parseInt(canvasComputedStyle.paddingLeft, 10);
 			const paddingTop = parseInt(canvasComputedStyle.paddingTop, 10);
 
-			const isBorderBox =
-				canvasComputedStyle['box-sizing'] === 'border-box';
+			const isBorderBox = canvasComputedStyle.boxSizing === 'border-box';
 			if (isBorderBox) {
 				width -= 2 * (borderLeft + paddingLeft);
 				height -= 2 * (borderTop + paddingTop);
 			}
 
-			Object.definePropertyUnwriteable(canvas, '_actualWidth', width);
-			Object.definePropertyUnwriteable(canvas, '_actualHeight', height);
+			defineUnwritableProperty(canvas, '_actualWidth', width);
+			defineUnwritableProperty(canvas, '_actualHeight', height);
 
-			Object.definePropertyUnwriteable(canvas, '_offsetX', paddingLeft);
-			Object.definePropertyUnwriteable(canvas, '_offsetY', paddingTop);
+			defineUnwritableProperty(canvas, '_offsetX', paddingLeft);
+			defineUnwritableProperty(canvas, '_offsetY', paddingTop);
 
-			Object.definePropertyUnwriteable(
+			defineUnwritableProperty(
 				canvas,
 				'_scaleX',
 				canvas._actualWidth / canvas.width,
 			);
-			Object.definePropertyUnwriteable(
+			defineUnwritableProperty(
 				canvas,
 				'_scaleY',
 				canvas._actualHeight / canvas.height,
 			);
-			Object.definePropertyUnwriteable(canvas, '_scale', canvas._scaleX);
+			defineUnwritableProperty(canvas, '_scale', canvas._scaleX);
 		};
 
 		computeCanvasSize(this.canvas);
@@ -370,7 +539,7 @@ class Game {
 		this._lastFrame = 0;
 		let deltaTime = 0;
 		const maxFrames = 5;
-		this.mainLoop = (time) => {
+		this.mainLoop = (time): void => {
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
 			deltaTime += time - this._lastFrame;
@@ -402,22 +571,25 @@ class Game {
 		this.canvas.addEventListener('blur', (e) => this.onFocus(false));
 	}
 
-	get width() {
+	get width(): number {
 		return this.canvas.width;
 	}
 
-	get height() {
+	get height(): number {
 		return this.canvas.height;
 	}
 
-	get currentScenes() {
+	get currentScenes(): Scene[] | undefined {
 		return this.sceneStack[0];
 	}
 
-	addEventListener(element, type, listener, options) {
-		const eventListener = {
+	addEventListener(
+		element: Element | Window,
+		...rest: CachedEventListener['arguments']
+	): void {
+		const eventListener: CachedEventListener = {
 			element,
-			arguments: [type, listener, options],
+			arguments: rest,
 		};
 
 		element.addEventListener(...eventListener.arguments);
@@ -426,18 +598,24 @@ class Game {
 	}
 
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
-	onFocus(focus) {
+	onFocus(focus: boolean): void {
 		this.focus = focus;
 
-		if (focus === true) {
+		if (focus) {
 			this._lastFrame = performance.now();
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
-			const onMouseDown = (e) => this.input.onMouseDown(e);
-			const onMouseUp = (e) => this.input.onMouseUp(e);
-			const onMouseMove = (e) => this.input.onMouseMove(e);
-			const onKeyDown = (e) => this.input.onKeyDown(e);
-			const onKeyUp = (e) => this.input.onKeyUp(e);
+			// TODO(bret): Do binding
+			const onMouseDown: EventListenerOrEventListenerObject = (e) =>
+				this.input.onMouseDown(e as MouseEvent);
+			const onMouseUp: EventListenerOrEventListenerObject = (e) =>
+				this.input.onMouseUp(e as MouseEvent);
+			const onMouseMove: EventListenerOrEventListenerObject = (e) =>
+				this.input.onMouseMove(e as MouseEvent);
+			const onKeyDown: EventListenerOrEventListenerObject = (e) =>
+				this.input.onKeyDown(e as KeyboardEvent);
+			const onKeyUp: EventListenerOrEventListenerObject = (e) =>
+				this.input.onKeyUp(e as KeyboardEvent);
 
 			this.addEventListener(this.canvas, 'mousedown', onMouseDown);
 			this.addEventListener(this.canvas, 'mouseup', onMouseUp);
@@ -469,22 +647,22 @@ class Game {
 		}
 	}
 
-	pushScene(scene) {
+	pushScene(scene: Scene): void {
 		this.pushScenes(scene);
 	}
 
-	pushScenes(...scenes) {
+	pushScenes(...scenes: Scene[]): void {
 		this.sceneStack.push(scenes);
 		scenes.forEach((scene) => {
 			scene.engine = this;
 		});
 	}
 
-	update() {
+	update(): void {
 		this.currentScenes?.forEach((scene) => scene.update(this.input));
 	}
 
-	render() {
+	render(): void {
 		const { canvas, ctx } = this;
 
 		if (ctx === undefined) return;
@@ -492,7 +670,7 @@ class Game {
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, 640, 360);
 
-		this.currentScenes?.forEach((scene) => scene.render(this.ctx));
+		this.currentScenes?.forEach((scene) => scene.render(ctx));
 
 		// Splitscreen
 		if (this.sceneStack[0]?.length === 2) {
@@ -504,49 +682,337 @@ class Game {
 			ctx.stroke();
 		}
 
-		if (this.focus === false) {
+		if (!this.focus) {
 			ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
 			ctx.fillRect(0, 0, 640, 360);
 		}
 	}
 }
 
+type InputStatus = 0 | 1 | 2 | 3;
+
+interface Mouse {
+	pos: V2;
+	x: V2[0];
+	y: V2[1];
+	realPos: V2;
+	realX: V2[0];
+	realY: V2[1];
+	_clicked: InputStatus;
+}
+
+type KeyCode =
+	| 0
+	| 1
+	| 2
+	| 3
+	| 4
+	| 5
+	| 6
+	| 7
+	| 8
+	| 9
+	| 10
+	| 11
+	| 12
+	| 13
+	| 14
+	| 15
+	| 16
+	| 17
+	| 18
+	| 19
+	| 20
+	| 21
+	| 22
+	| 23
+	| 24
+	| 25
+	| 26
+	| 27
+	| 28
+	| 29
+	| 30
+	| 31
+	| 32
+	| 33
+	| 34
+	| 35
+	| 36
+	| 37
+	| 38
+	| 39
+	| 40
+	| 41
+	| 42
+	| 43
+	| 44
+	| 45
+	| 46
+	| 47
+	| 48
+	| 49
+	| 50
+	| 51
+	| 52
+	| 53
+	| 54
+	| 55
+	| 56
+	| 57
+	| 58
+	| 59
+	| 60
+	| 61
+	| 62
+	| 63
+	| 64
+	| 65
+	| 66
+	| 67
+	| 68
+	| 69
+	| 70
+	| 71
+	| 72
+	| 73
+	| 74
+	| 75
+	| 76
+	| 77
+	| 78
+	| 79
+	| 80
+	| 81
+	| 82
+	| 83
+	| 84
+	| 85
+	| 86
+	| 87
+	| 88
+	| 89
+	| 90
+	| 91
+	| 92
+	| 93
+	| 94
+	| 95
+	| 96
+	| 97
+	| 98
+	| 99
+	| 100
+	| 101
+	| 102
+	| 103
+	| 104
+	| 105
+	| 106
+	| 107
+	| 108
+	| 109
+	| 110
+	| 111
+	| 112
+	| 113
+	| 114
+	| 115
+	| 116
+	| 117
+	| 118
+	| 119
+	| 120
+	| 121
+	| 122
+	| 123
+	| 124
+	| 125
+	| 126
+	| 127;
+
+interface Input {
+	engine: Engine;
+	mouse: Mouse;
+	keys: [
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+		InputStatus,
+	];
+}
+
+type MousePrototype = Pick<Mouse, 'pos' | 'realPos' | '_clicked'>;
+
 class Input {
-	constructor(engine) {
+	constructor(engine: Engine) {
 		this.engine = engine;
 
-		this.mouse = {
+		const mouse: MousePrototype = {
 			pos: [-1, -1],
 			realPos: [-1, -1],
 			_clicked: 0,
 		};
 
-		const defineXYProperties = (mouse, prefix = null) => {
-			const posName = prefix !== null ? `${prefix}Pos` : 'pos';
-			const xName = prefix !== null ? `${prefix}X` : 'x';
-			const yName = prefix !== null ? `${prefix}Y` : 'y';
+		const defineXYProperties = (
+			mouse: MousePrototype,
+			prefix: 'real' | null = null,
+		): void => {
+			const posName = prefix !== null ? (`${prefix}Pos` as const) : 'pos';
+			const xName = prefix !== null ? (`${prefix}X` as const) : 'x';
+			const yName = prefix !== null ? (`${prefix}Y` as const) : 'y';
 
-			[xName, yName].forEach((coordName, i) => {
+			([xName, yName] as const).forEach((coordName, i) => {
 				Object.defineProperties(mouse, {
 					[coordName]: {
 						get() {
 							return mouse[posName][i];
 						},
-						set(val) {
-							mouse[posName][i] = val;
+						set(val: number) {
+							mouse[posName] = Object.freeze(
+								mouse[posName].map((oldVal, index) =>
+									index === i ? val : oldVal,
+								),
+							) as V2;
 						},
 					},
 				});
 			});
 		};
 
-		defineXYProperties(this.mouse);
-		defineXYProperties(this.mouse, 'real');
+		defineXYProperties(mouse);
+		defineXYProperties(mouse, 'real');
 
-		this.keys = Array.from({ length: 128 }, (v) => 0);
+		this.mouse = mouse as Mouse;
+
+		this.keys = Array.from({ length: 128 }, (v) => 0) as typeof this.keys;
 	}
 
-	update() {
+	update(): void {
 		this.mouse._clicked &= ~1;
 		for (let k = 0, n = this.keys.length; k < n; ++k) {
 			this.keys[k] &= ~1;
@@ -554,7 +1020,7 @@ class Input {
 	}
 
 	// Events
-	onMouseMove(e) {
+	onMouseMove(e: MouseEvent): void {
 		const { canvas } = this.engine;
 
 		this.mouse.realX = e.offsetX - canvas._offsetX;
@@ -564,46 +1030,46 @@ class Input {
 		this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
 	}
 
-	onMouseDown(e) {
+	onMouseDown(e: MouseEvent): boolean {
 		// TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
-		if (this.engine.focus === false) return true;
+		if (!this.engine.focus) return true;
 
 		e.preventDefault();
-		if (this.mouseCheck() === false) {
+		if (!this.mouseCheck()) {
 			this.mouse._clicked = 3;
 		}
 
 		return false;
 	}
 
-	onMouseUp(e) {
+	onMouseUp(e: MouseEvent): boolean {
 		// TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
-		if (this.engine.focus === false) return true;
+		if (!this.engine.focus) return true;
 
 		e.preventDefault();
-		if (this.mouseCheck() === true) {
+		if (this.mouseCheck()) {
 			this.mouse._clicked = 1;
 		}
 
 		return false;
 	}
 
-	onKeyDown(e) {
-		if (this.engine.focus === false) return true;
+	onKeyDown(e: KeyboardEvent): boolean {
+		if (!this.engine.focus) return true;
 
 		e.preventDefault();
-		if (this.keyCodeCheck(e.keyCode) === false) {
+		if (!this.keyCodeCheck(e.keyCode as KeyCode)) {
 			this.keys[e.keyCode] = 3;
 		}
 
 		return false;
 	}
 
-	onKeyUp(e) {
-		if (this.engine.focus === false) return true;
+	onKeyUp(e: KeyboardEvent): boolean {
+		if (!this.engine.focus) return true;
 
 		e.preventDefault();
-		if (this.keyCodeCheck(e.keyCode) === true) {
+		if (this.keyCodeCheck(e.keyCode as KeyCode)) {
 			this.keys[e.keyCode] = 1;
 		}
 
@@ -611,72 +1077,97 @@ class Input {
 	}
 
 	// Checks
-	_checkPressed(value) {
+	_checkPressed(value: InputStatus): boolean {
 		return value === 3;
 	}
 
-	_checkHeld(value) {
+	_checkHeld(value: InputStatus): boolean {
 		return (value & 2) > 0;
 	}
 
-	_checkReleased(value) {
+	_checkReleased(value: InputStatus): boolean {
 		return value === 1;
 	}
 
-	mousePressed() {
+	mousePressed(): boolean {
 		return this._checkPressed(this.mouse._clicked);
 	}
 
-	mouseCheck() {
+	mouseCheck(): boolean {
 		return this._checkHeld(this.mouse._clicked);
 	}
 
-	mouseReleased() {
+	mouseReleased(): boolean {
 		return this._checkReleased(this.mouse._clicked);
 	}
 
-	keyCodePressed(key) {
-		if (Array.isArray(key))
-			return key.some((k) => this.keyCodePressed(k) === true);
+	keyCodePressed(key: KeyCode | KeyCode[]): boolean {
+		if (Array.isArray(key)) return key.some((k) => this.keyCodePressed(k));
 		return this._checkPressed(this.keys[key]);
 	}
 
-	keyCodeCheck(key) {
-		if (Array.isArray(key))
-			return key.some((k) => this.keyCodeCheck(k) === true);
+	keyCodeCheck(key: KeyCode | KeyCode[]): boolean {
+		if (Array.isArray(key)) return key.some((k) => this.keyCodeCheck(k));
 		return this._checkHeld(this.keys[key]);
 	}
 
-	keyCodeReleased(key) {
-		if (Array.isArray(key))
-			return key.some((k) => this.keyCodeReleased(k) === true);
+	keyCodeReleased(key: KeyCode | KeyCode[]): boolean {
+		if (Array.isArray(key)) return key.some((k) => this.keyCodeReleased(k));
 		return this._checkReleased(this.keys[key]);
 	}
 
-	clear() {
-		this.keys = this.keys.map((v) => 0);
+	clear(): void {
+		this.keys = this.keys.map((v) => 0) as typeof this.keys;
 	}
 }
 
 class Camera extends Array {
-	constructor(x, y) {
+	constructor(x: V2[0], y: V2[1]) {
 		super();
 		this.push(x, y);
 	}
 
-	get x() {
-		return this[0];
+	get x(): number {
+		return this[0] as number;
 	}
 	set x(val) {
 		this[0] = val;
 	}
 
-	get y() {
-		return this[1];
+	get y(): number {
+		return this[1] as number;
 	}
 	set y(val) {
 		this[1] = val;
 	}
+}
+
+interface IEntity {
+	scene: Scene | null;
+	update: (input: Input) => void;
+}
+
+interface IRenderable {
+	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+}
+
+type Entity = IEntity;
+type Renderable = IRenderable;
+
+interface Scene {
+	engine: Engine | null;
+	entities: Entity[];
+	renderables: Renderable[];
+	shouldUpdate: boolean;
+	screenPos: V2;
+	camera: Camera;
+	escapeToBlur: boolean;
+	allowRefresh: boolean;
+	boundsX: number | null;
+	boundsY: number | null;
+
+	canvas: HTMLCanvasElement;
+	ctx: CanvasRenderingContext2D;
 }
 
 class Scene {
@@ -700,33 +1191,38 @@ class Scene {
 	}
 
 	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
-	setCanvasSize(width, height) {
+	setCanvasSize(width: number, height: number): void {
 		const canvas = (this.canvas = document.createElement('canvas'));
-		const ctx = (this.ctx = canvas.getContext('2d'));
+		const ctx = canvas.getContext('2d');
+		if (ctx) this.ctx = ctx;
 		canvas.width = width;
 		canvas.height = height;
 	}
 
-	addEntity(entity) {
+	addEntity(entity: Entity): Entity {
 		entity.scene = this;
 		this.entities.push(entity);
 		return entity;
 	}
 
-	update(input) {
-		if (this.allowRefresh === true && input.keyCodePressed(116) === true)
-			location.reload();
+	update(input: Input): void {
+		if (this.engine === null) {
+			throw new Error('Scene::engine is not defined');
+			return;
+		}
 
-		if (this.escapeToBlur === true && input.keyCodePressed(27) === true)
+		if (this.allowRefresh && input.keyCodePressed(116)) location.reload();
+
+		if (this.escapeToBlur && input.keyCodePressed(27))
 			this.engine.canvas.blur();
 
-		if (this.shouldUpdate === false) return;
+		if (!this.shouldUpdate) return;
 
 		this.entities.forEach((entity) => entity.update(input));
 		// this.renderables = this.renderables.filter(e => e).sort();
 	}
 
-	render(ctx) {
+	render(ctx: CanvasRenderingContext2D): void {
 		this.ctx.fillStyle = '#87E1A3';
 		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -747,7 +1243,13 @@ class Scene {
 
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 
-const drawLine = (ctx, x1, y1, x2, y2) => {
+const drawLine = (
+	ctx: CanvasRenderingContext2D,
+	x1: number,
+	y1: number,
+	x2: number,
+	y2: number,
+): void => {
 	ctx.beginPath();
 	ctx.moveTo(x1, y1);
 	ctx.lineTo(x2, y2);
@@ -755,9 +1257,26 @@ const drawLine = (ctx, x1, y1, x2, y2) => {
 };
 
 const pixelCanvas = document.createElement('canvas');
-const pixelCtx = pixelCanvas.getContext('2d');
+const _pixelCtx = pixelCanvas.getContext('2d');
+if (!_pixelCtx) {
+	throw Error('pixelCtx failed to create');
+}
+const pixelCtx = _pixelCtx;
+
+interface Grid {
+	width: number;
+	height: number;
+	tileW: number;
+	tileH: number;
+	columns: number;
+	rows: number;
+	color: CSSColor;
+	renderMode: 0 | 1 | 2;
+	data: number[];
+}
+
 class Grid {
-	constructor(width, height, tileW, tileH) {
+	constructor(width: number, height: number, tileW: number, tileH: number) {
 		this.width = width;
 		this.height = height;
 		this.tileW = tileW;
@@ -772,8 +1291,16 @@ class Grid {
 		this.data = Array.from({ length: size }, (v) => 0);
 	}
 
-	static fromBitmap(src, tileW, tileH) {
+	static fromBitmap(
+		assetManager: AssetManager,
+		src: string,
+		tileW: number,
+		tileH: number,
+	): Grid {
 		const image = assetManager.images.get(src);
+		if (!image) {
+			throw new Error('image is not valid');
+		}
 
 		const width = image.width * tileW;
 		const height = image.height * tileH;
@@ -791,7 +1318,11 @@ class Grid {
 		return grid;
 	}
 
-	static fromBinary(data, tileW, tileH) {
+	static fromBinary(
+		data: [number, number, ...number[]],
+		tileW: number,
+		tileH: number,
+	): Grid {
 		const [width, height, ...gridData] = data;
 
 		const grid = new Grid(width * tileW, height * tileH, tileW, tileH);
@@ -806,28 +1337,28 @@ class Grid {
 		return grid;
 	}
 
-	forEach(callback) {
+	forEach(callback: (val: number, pos: V2) => void): void {
 		const stride = this.columns;
 		this.data
-			.map((val, i) => [val, indexToPos(i, stride)])
+			.map<[number, V2]>((val, i) => [val, indexToPos(i, stride)])
 			.forEach((args) => callback(...args));
 	}
 
-	inBounds(x, y) {
+	inBounds(x: number, y: number): boolean {
 		return x >= 0 && y >= 0 && x < this.columns && y < this.rows;
 	}
 
-	setTile(x, y, value) {
-		if (this.inBounds(x, y) === false) return;
+	setTile(x: number, y: number, value: number): void {
+		if (!this.inBounds(x, y)) return;
 		this.data[y * this.columns + x] = value;
 	}
 
-	getTile(x, y) {
-		if (this.inBounds(x, y) === false) return 0;
-		return this.data[y * this.columns + x];
+	getTile(x: number, y: number): number {
+		if (!this.inBounds(x, y)) return 0;
+		return this.data[y * this.columns + x] as number;
 	}
 
-	renderOutline(ctx, camera) {
+	renderOutline(ctx: CanvasRenderingContext2D, camera: V2): void {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
@@ -861,21 +1392,25 @@ class Grid {
 		}
 	}
 
-	renderEachCell(ctx, camera, fill = false) {
+	renderEachCell(
+		ctx: CanvasRenderingContext2D,
+		camera: V2,
+		fill = false,
+	): void {
 		const stride = this.columns;
 		const width = this.tileW - +!fill;
 		const height = this.tileH - +!fill;
 
 		const [cameraX, cameraY] = camera;
 
-		if (fill === true) ctx.fillStyle = this.color;
+		if (fill) ctx.fillStyle = this.color;
 		else ctx.strokeStyle = this.color;
 		ctx.lineWidth = 1;
 
-		const drawRect = (...args) =>
-			fill === true ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+		const drawRect = (...args: Parameters<typeof ctx.fillRect>): void =>
+			fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-		const offset = fill === true ? 0 : 0.5;
+		const offset = fill ? 0 : 0.5;
 
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
@@ -891,7 +1426,7 @@ class Grid {
 		}
 	}
 
-	render(ctx, camera = v2zero) {
+	render(ctx: CanvasRenderingContext2D, camera = v2zero): void {
 		switch (this.renderMode) {
 			case 0:
 				this.renderOutline(ctx, camera);
@@ -914,7 +1449,10 @@ class Grid {
 }
 
 // TODO(bret): Rewrite these to use tuples once those are implemented :)
-const rotateNormBy45Deg = (curDir, dir) => {
+const rotateNormBy45Deg = (
+	curDir: V2CardinalNorm,
+	turns: number,
+): V2CardinalNorm => {
 	const norms = cardinalNorms; // .flatMap(v => [v, v]);
 	const index = cardinalNorms.indexOf(curDir);
 	if (index === -1) {
@@ -923,52 +1461,82 @@ const rotateNormBy45Deg = (curDir, dir) => {
 	}
 
 	const n = cardinalNorms.length;
-	return cardinalNorms[(index - dir + n) % n];
+	return cardinalNorms[(index - turns + n) % n] as V2CardinalNorm;
 };
 
-const rotateNormBy90Deg = (curDir, dir) => rotateNormBy45Deg(curDir, 2 * dir);
+// NOTE: The generic allows it to use V2's orthogonal or diagonal norm types, depending on the `curDir`
+const rotateNormBy90Deg = <V extends V2CardinalNorm>(
+	curDir: V,
+	turns: number,
+): V => rotateNormBy45Deg(curDir, 2 * turns) as V;
 
-const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
-	let grid = _grid,
-		columns = _columns,
-		rows = _rows;
-	if (grid instanceof Grid) {
-		({ data: grid, columns, rows } = grid);
+type GridOrData = Grid | Grid['data'];
+
+interface Polygon {
+	points: Path;
+}
+
+function getGridData(
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): [Grid['data'], number, number] {
+	if (_grid instanceof Grid) {
+		const { data: grid, columns, rows } = _grid;
+		return [grid, columns, rows];
 	}
+	return [_grid, _columns as number, _rows as number];
+}
 
-	const polygons = [];
+const findAllPolygonsInGrid = (
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): Polygon[] => {
+	const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
+
+	const polygons: Polygon[] = [];
 
 	const offsets = {
-		[normNU]: [normRU, normNU],
-		[normND]: [normLD, normND],
-		[normRN]: [normRD, normRN],
-		[normLN]: [normLU, normLN],
-	};
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		[normNU as any]: [normRU, normNU],
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		[normND as any]: [normLD, normND],
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		[normRN as any]: [normRD, normRN],
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		[normLN as any]: [normLU, normLN],
+	} as const;
 
 	const shapes = findAllShapesInGrid(grid, columns, rows);
 	shapes.forEach((shape) => {
-		const first = [...shape.shapeCells[0]];
+		const [first] = shape.shapeCells;
+		if (first === undefined) return;
 
 		const { gridType } = shape;
 
-		let curDir = normND;
+		let curDir = normND as V2OrthogonalNorm;
 		let lastDir = curDir;
 
-		const points = [];
+		const points: Path = [];
 		const polygon = { points };
 		polygons.push(polygon);
 
-		const addPointToPolygon = (points, pos, interior) => {
+		const addPointsToPolygon = (
+			points: Path,
+			pos: V2,
+			interior: boolean,
+		): void => {
 			const origin = interior ? 0 : -1;
 			const size = 16;
 			const m1 = size - 1;
 			const basePos = scalePos(pos, size);
 
 			const [lastX, lastY] = points.length
-				? subPos(points[points.length - 1], basePos)
+				? subPos(points[points.length - 1] as V2, basePos)
 				: [origin, origin];
 
-			const offset = [0, 0];
+			const offset: V2Editable = [0, 0];
 			switch (curDir) {
 				case normND:
 					offset[0] = origin;
@@ -991,35 +1559,38 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
 					break;
 			}
 
-			points.push(addPos(basePos, offset));
+			points.push(addPos(basePos, Tuple(...offset)));
 		};
 
-		addPointToPolygon(points, first, gridType === 1);
+		addPointsToPolygon(points, first, gridType === 1);
 
 		let next = first;
 		const firstHash = hashTuple(first);
+		const addPosToNext = addPos.bind(null, next as V2) as (b: Tuple) => V2;
 		for (;;) {
-			const [p1, p2] = offsets[curDir]
-				.map((o) => addPos(next, o))
-				.map((p) => {
-					return isWithinBounds(p, v2zero, [columns, rows])
-						? grid[posToIndex(p, columns)]
-						: 0;
-				});
+			const [p1, p2] =
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+				(offsets[curDir as any] as [V2CardinalNorm, V2CardinalNorm])
+					.map(addPosToNext)
+					.map((p) => {
+						return isWithinBounds(p, v2zero, [columns, rows])
+							? (grid[posToIndex(p, columns)] as number)
+							: 0;
+					}) as unknown as V2;
 
 			if (p2 === gridType) {
 				if (p1 === gridType) {
-					next = addPos(next, curDir);
+					next = addPos(next, curDir as V2);
 					curDir = rotateNormBy90Deg(curDir, 1);
 				}
 
-				next = addPos(next, curDir);
+				next = addPos(next, curDir as V2);
 
 				if (lastDir !== curDir)
-					addPointToPolygon(points, next, gridType === 1);
+					addPointsToPolygon(points, next, gridType === 1);
 			} else {
 				curDir = rotateNormBy90Deg(curDir, -1);
-				addPointToPolygon(points, next, gridType === 1);
+				addPointsToPolygon(points, next, gridType === 1);
 			}
 
 			lastDir = curDir;
@@ -1031,19 +1602,27 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
 	return polygons;
 };
 
-const findAllShapesInGrid = (_grid, _columns, _rows) => {
-	let grid = _grid,
-		columns = _columns,
-		rows = _rows;
-	if (grid instanceof Grid) {
-		({ data: grid, columns, rows } = grid);
-	}
+interface Shape {
+	gridType: number;
+	shapeCells: V2[];
+	minX: number;
+	maxX: number;
+	minY: number;
+	maxY: number;
+}
+
+const findAllShapesInGrid = (
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): Shape[] => {
+	const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
 
 	const shapes = [];
-	const checked = Array.from({ length: columns * rows }).map((v) => false);
+	const checked = Array.from({ length: columns * rows }, () => false);
 
 	let nextIndex;
-	while ((nextIndex = checked.findIndex((v) => v === false)) > -1) {
+	while ((nextIndex = checked.findIndex((v) => !v)) > -1) {
 		const shape = fillShape(
 			indexToPos(nextIndex, columns),
 			checked,
@@ -1068,20 +1647,28 @@ const findAllShapesInGrid = (_grid, _columns, _rows) => {
 	return shapes;
 };
 
-const fillShape = (start, checked, _grid, _columns, _rows) => {
-	let grid = _grid,
-		columns = _columns,
-		rows = _rows;
-	if (grid instanceof Grid) {
-		({ data: grid, columns, rows } = grid);
-	}
+const fillShape = (
+	start: V2,
+	checked: boolean[],
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): {
+	gridType: number;
+	shapeCells: V2[];
+	minX: number;
+	maxX: number;
+	minY: number;
+	maxY: number;
+} => {
+	const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
 
 	const stride = columns;
 
-	const gridType = grid[posToIndex(start, columns)];
+	const gridType = grid[posToIndex(start, columns)] as number;
 
 	const queue = [start];
-	const visited = [];
+	const visited: string[] = [];
 
 	let next;
 	while ((next = queue.pop())) {
@@ -1101,9 +1688,11 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
 		if (y < rows - 1) queue.push([x, y + 1]);
 	}
 
-	const shapeCells = visited.map((v) => v.split(',').map((c) => +c));
+	const shapeCells = visited.map((v) =>
+		Tuple(...(v.split(',').map((c) => +c) as [number, number])),
+	);
 
-	const shape = shapeCells.reduce(
+	const shapeBounds = shapeCells.reduce(
 		(acc, cell) => {
 			const [x, y] = cell;
 			return {
@@ -1122,11 +1711,23 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
 	);
 
 	return {
-		...shape,
+		...shapeBounds,
 		gridType,
 		shapeCells,
 	};
 };
+
+interface GridOutline {
+	grid: Grid | null;
+	polygons: Polygon[];
+	show: boolean;
+
+	renderOutline: boolean;
+	outlineColor: CSSColor;
+
+	renderPoints: boolean;
+	pointsColor: CSSColor;
+}
 
 class GridOutline {
 	constructor() {
@@ -1141,21 +1742,24 @@ class GridOutline {
 		this.pointsColor = 'red';
 	}
 
-	computeOutline(grid) {
+	computeOutline(grid: Grid): void {
 		this.grid = grid;
 		this.polygons = findAllPolygonsInGrid(grid);
 	}
 
-	render(ctx, camera = v2zero) {
-		if (this.show === false) return;
+	render(ctx: CanvasRenderingContext2D, camera: V2 = v2zero): void {
+		if (!this.show) return;
 
 		// Draw edges
-		if (this.renderOutline === true) {
+		if (this.renderOutline) {
 			this.polygons.forEach((polygon) => {
 				ctx.beginPath();
 				ctx.strokeStyle = this.outlineColor;
 				ctx.moveTo(
-					...subPos(addPos(polygon.points[0], [0.5, 0.5]), camera),
+					...subPos(
+						addPos(polygon.points[0] as V2, Tuple(0.5, 0.5)),
+						camera,
+					),
 				);
 				polygon.points
 					.slice(1)
@@ -1169,7 +1773,7 @@ class GridOutline {
 		}
 
 		// Draw points
-		if (this.renderPoints === true) {
+		if (this.renderPoints) {
 			ctx.fillStyle = this.pointsColor;
 			this.polygons.forEach((polygon) => {
 				polygon.points
@@ -1182,8 +1786,31 @@ class GridOutline {
 	}
 }
 
+interface Tileset {
+	width: number;
+	height: number;
+	tileW: number;
+	tileH: number;
+	columns: number;
+	rows: number;
+
+	image: HTMLImageElement;
+
+	data: Array<V2 | null>;
+
+	startX: number;
+	startY: number;
+	separation: number;
+}
+
 class Tileset {
-	constructor(width, height, tileW, tileH) {
+	constructor(
+		image: HTMLImageElement,
+		width: number,
+		height: number,
+		tileW: number,
+		tileH: number,
+	) {
 		this.width = width;
 		this.height = height;
 		this.tileW = tileW;
@@ -1191,7 +1818,7 @@ class Tileset {
 		this.columns = Math.ceil(width / tileW);
 		this.rows = Math.ceil(height / tileH);
 
-		this.image = assetManager.images.get('tileset.png');
+		this.image = image;
 
 		this.data = Array.from(
 			{ length: this.columns * this.rows },
@@ -1203,12 +1830,12 @@ class Tileset {
 		this.separation = 1;
 	}
 
-	setTile(x, y, tileX, tileY) {
+	setTile(x: number, y: number, tileX: number, tileY: number): void {
 		// TODO(bret): Make sure it's within the bounds
 		this.data[y * this.columns + x] = [tileX, tileY];
 	}
 
-	render(ctx, camera = v2zero) {
+	render(ctx: CanvasRenderingContext2D, camera = v2zero): void {
 		const scale = 1;
 
 		const { image, separation, startX, startY, tileW, tileH } = this;
@@ -1221,7 +1848,7 @@ class Tileset {
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				const val = this.data[y * this.columns + x];
-				if (val !== null) {
+				if (val) {
 					const [tileX, tileY] = val;
 					const srcX = startX + (separation + tileW) * tileX;
 					const srcY = startY + (separation + tileH) * tileY;
@@ -1243,3 +1870,5 @@ class Tileset {
 		}
 	}
 }
+
+/* eslint-enable @typescript-eslint/no-unused-vars */
