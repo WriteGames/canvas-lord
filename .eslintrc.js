@@ -2,7 +2,7 @@ module.exports = {
 	extends: [
 		'@vercel/style-guide/eslint/browser',
 		'@vercel/style-guide/eslint/node',
-	].map((config) => require.resolve(config)),
+	].map(require.resolve),
 	env: {
 		es2022: true,
 	},
