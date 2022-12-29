@@ -7,6 +7,10 @@
 		"node": "^16.15.0",
 		"pnpm": "7"
 	},
+	"scripts": {
+		"compile": "tsc --p tsconfig.json",
+		"watch": "tsc --w --p tsconfig.json"
+	},
 	"keywords": [],
 	"author": "Write Games",
 	"license": "ISC",
