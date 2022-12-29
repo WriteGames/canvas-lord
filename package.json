@@ -1,7 +1,7 @@
 {
-	"name": "canvas-lord",
+	"name": "canvas-lord-root",
 	"version": "1.0.0",
-	"description": "An HTML5 game engine",
+	"private": true,
 	"packageManager": "pnpm@7.20.0",
 	"main": "src/canvas-lord.js",
 	"types": "src/global.d.ts",
@@ -16,7 +16,7 @@
 		"type": "git",
 		"url": "git+https://github.com/WriteGames/canvas-lord.git"
 	},
-	"author": "",
+	"author": "Write Games",
 	"license": "ISC",
 	"bugs": {
 		"url": "https://github.com/WriteGames/canvas-lord/issues"

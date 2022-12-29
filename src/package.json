@@ -1,0 +1,13 @@
+{
+	"name": "canvas-lord",
+	"version": "0.0.1",
+	"description": "An HTML5 game engine",
+	"main": "index.js",
+	"engines": {
+		"node": "^16.15.0",
+		"pnpm": "7"
+	},
+	"keywords": [],
+	"author": "Write Games",
+	"license": "ISC"
+}
