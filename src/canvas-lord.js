@@ -782,14 +782,10 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
     const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
     const polygons = [];
     const offsets = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [normNU]: [normRU, normNU],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [normND]: [normLD, normND],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [normRN]: [normRD, normRN],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [normLN]: [normLU, normLN],
+        [hashTuple(normNU)]: [normRU, normNU],
+        [hashTuple(normND)]: [normLD, normND],
+        [hashTuple(normRN)]: [normRD, normRN],
+        [hashTuple(normLN)]: [normLU, normLN],
     };
     const shapes = findAllShapesInGrid(grid, columns, rows);
     shapes.forEach((shape) => {
@@ -832,14 +828,9 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
             points.push(addPos(basePos, Tuple(...offset)));
         };
         addPointsToPolygon(points, first, gridType === 1);
-        let next = first;
-        const firstHash = hashTuple(first);
-        const addPosToNext = addPos.bind(null, next);
-        for (;;) {
-            const [p1, p2] = 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-            offsets[curDir]
-                .map(addPosToNext)
+        for (let next = first, firstIter = true; firstIter || curDir !== normND || next !== first; firstIter = false) {
+            const [p1, p2] = offsets[hashTuple(curDir)]
+                .map((o) => addPos(next, o))
                 .map((p) => {
                 return isWithinBounds(p, v2zero, [columns, rows])
                     ? grid[posToIndex(p, columns)]
@@ -859,8 +850,7 @@ const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
                 addPointsToPolygon(points, next, gridType === 1);
             }
             lastDir = curDir;
-            if (curDir === normND && hashTuple(next) === firstHash)
-                break;
+            // if (curDir === normND && next === first) break;
         }
     });
     return polygons;

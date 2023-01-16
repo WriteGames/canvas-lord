@@ -1498,14 +1498,10 @@ const findAllPolygonsInGrid = (
 	const polygons: Polygon[] = [];
 
 	const offsets = {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[normNU as any]: [normRU, normNU],
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[normND as any]: [normLD, normND],
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[normRN as any]: [normRD, normRN],
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[normLN as any]: [normLU, normLN],
+		[hashTuple(normNU)]: [normRU, normNU],
+		[hashTuple(normND)]: [normLD, normND],
+		[hashTuple(normRN)]: [normRD, normRN],
+		[hashTuple(normLN)]: [normLU, normLN],
 	} as const;
 
 	const shapes = findAllShapesInGrid(grid, columns, rows);
@@ -1564,19 +1560,20 @@ const findAllPolygonsInGrid = (
 
 		addPointsToPolygon(points, first, gridType === 1);
 
-		let next = first;
-		const firstHash = hashTuple(first);
-		const addPosToNext = addPos.bind(null, next as V2) as (b: Tuple) => V2;
-		for (;;) {
-			const [p1, p2] =
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-				(offsets[curDir as any] as [V2CardinalNorm, V2CardinalNorm])
-					.map(addPosToNext)
-					.map((p) => {
-						return isWithinBounds(p, v2zero, [columns, rows])
-							? (grid[posToIndex(p, columns)] as number)
-							: 0;
-					}) as unknown as V2;
+		for (
+			let next = first, firstIter = true;
+			firstIter || curDir !== normND || next !== first;
+			firstIter = false
+		) {
+			const [p1, p2] = (
+				offsets[hashTuple(curDir)] as [V2CardinalNorm, V2CardinalNorm]
+			)
+				.map((o) => addPos(next, o))
+				.map((p) => {
+					return isWithinBounds(p, v2zero, [columns, rows])
+						? (grid[posToIndex(p, columns)] as number)
+						: 0;
+				}) as unknown as V2;
 
 			if (p2 === gridType) {
 				if (p1 === gridType) {
@@ -1595,7 +1592,7 @@ const findAllPolygonsInGrid = (
 
 			lastDir = curDir;
 
-			if (curDir === normND && hashTuple(next) === firstHash) break;
+			// if (curDir === normND && next === first) break;
 		}
 	});
 
