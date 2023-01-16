@@ -1,4 +1,4 @@
-import './canvas-lord';
+import './canvas-lord.ts';
 
 const engine = {
 	focus: true,
@@ -17,30 +17,6 @@ const loadCanvasLordScript = (): Promise<void> => {
 	});
 };
 
-const KEY = {
-	LEFT: 37 as KeyCode,
-	UP: 38 as KeyCode,
-	RIGHT: 39 as KeyCode,
-} as const;
-
-const emulateKeyDown = (input: Input, key: KeyCode | KeyCode[]): void => {
-	input.onKeyDown({
-		preventDefault: () => {
-			/**/
-		},
-		keyCode: key,
-	} as KeyboardEvent);
-};
-
-const emulateKeyUp = (input: Input, key: KeyCode | KeyCode[]): void => {
-	input.onKeyUp({
-		preventDefault: () => {
-			/**/
-		},
-		keyCode: key,
-	} as KeyboardEvent);
-};
-
 beforeAll(async () => {
 	// TODO: find a better solution for this!
 	await loadCanvasLordScript();
@@ -51,31 +27,48 @@ beforeEach(() => {
 	input = new Input(engine);
 });
 
+const emulateKeyDown = (input: Input, key: Key): void => {
+	input.onKeyDown({
+		preventDefault: () => {
+			/**/
+		},
+		key,
+	} as KeyboardEvent);
+};
+
+const emulateKeyUp = (input: Input, key: Key): void => {
+	input.onKeyUp({
+		preventDefault: () => {
+			/**/
+		},
+		key,
+	} as KeyboardEvent);
+};
+
 describe('input', () => {
-	test('should not have any state on a key at init', () => {
-		const input = new Input(engine);
-		const leftPressed = input.keyCodePressed(KEY.LEFT);
+	test('should not have any keyboard state on a key at init', () => {
+		const leftPressed = input.keyPressed('ArrowLeft');
 		expect(leftPressed).toEqual(false);
-		const leftHeld = input.keyCodeCheck(KEY.LEFT);
+		const leftHeld = input.keyCheck('ArrowLeft');
 		expect(leftHeld).toEqual(false);
-		const leftReleased = input.keyCodeReleased(KEY.LEFT);
+		const leftReleased = input.keyReleased('ArrowLeft');
 		expect(leftReleased).toEqual(false);
 	});
 
 	// key down
 	describe('on keydown', () => {
 		beforeEach(() => {
-			emulateKeyDown(input, KEY.LEFT);
+			emulateKeyDown(input, 'ArrowLeft');
 		});
 
 		describe('first frame', () => {
 			test('should register keydown events', () => {
-				const leftPressed = input.keyCodePressed(KEY.LEFT);
+				const leftPressed = input.keyPressed('ArrowLeft');
 				expect(leftPressed).toEqual(true);
 			});
 
 			test('should be held on press frame', () => {
-				const leftHeld = input.keyCodeCheck(KEY.LEFT);
+				const leftHeld = input.keyCheck('ArrowLeft');
 				expect(leftHeld).toEqual(true);
 			});
 		});
@@ -86,12 +79,12 @@ describe('input', () => {
 			});
 
 			test('should only be pressed for a single frame', () => {
-				const leftPressed = input.keyCodePressed(KEY.LEFT);
+				const leftPressed = input.keyPressed('ArrowLeft');
 				expect(leftPressed).toEqual(false);
 			});
 
 			test('should be held after press frame', () => {
-				const leftHeld = input.keyCodeCheck(KEY.LEFT);
+				const leftHeld = input.keyCheck('ArrowLeft');
 				expect(leftHeld).toEqual(true);
 			});
 		});
@@ -100,18 +93,18 @@ describe('input', () => {
 	// key up
 	describe('on keyup', () => {
 		beforeEach(() => {
-			emulateKeyDown(input, KEY.LEFT);
-			emulateKeyUp(input, KEY.LEFT);
+			emulateKeyDown(input, 'ArrowLeft');
+			emulateKeyUp(input, 'ArrowLeft');
 		});
 
 		describe('first frame', () => {
 			test('should register keyup events', () => {
-				const leftReleased = input.keyCodeReleased(KEY.LEFT);
+				const leftReleased = input.keyReleased('ArrowLeft');
 				expect(leftReleased).toEqual(true);
 			});
 
 			test('should not be held on release frame', () => {
-				const leftHeld = input.keyCodeCheck(KEY.LEFT);
+				const leftHeld = input.keyCheck('ArrowLeft');
 				expect(leftHeld).toEqual(false);
 			});
 		});
@@ -122,12 +115,12 @@ describe('input', () => {
 			});
 
 			test('should only be released for a single frame', () => {
-				const leftReleased = input.keyCodeReleased(KEY.LEFT);
+				const leftReleased = input.keyReleased('ArrowLeft');
 				expect(leftReleased).toEqual(false);
 			});
 
 			test('should not be held after release frame', () => {
-				const leftHeld = input.keyCodeCheck(KEY.LEFT);
+				const leftHeld = input.keyCheck('ArrowLeft');
 				expect(leftHeld).toEqual(false);
 			});
 		});

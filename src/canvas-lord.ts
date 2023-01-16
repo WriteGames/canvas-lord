@@ -80,10 +80,12 @@ const distance = (...dimensions: Tuple): number =>
 const distanceSq = (...dimensions: Tuple): number =>
 	Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 
-const interlaceArrays = <T, U, R = Array<T | U>>(
+const isDefined = <T>(v: T | undefined): v is T => Boolean(v);
+
+const interlaceArrays = <T, U>(
 	a: Readonly<T[]>,
 	b: Readonly<U[]>,
-): R => a.flatMap((v, i) => [v, b[i]]).filter((v) => v !== undefined) as R;
+): Array<T | U> => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
 
 const compareTuple = (a: Tuple, b: Tuple): boolean =>
 	hashTuple(a) === hashTuple(b);
@@ -701,269 +703,177 @@ interface Mouse {
 	_clicked: InputStatus;
 }
 
-type KeyCode =
-	| 0
-	| 1
-	| 2
-	| 3
-	| 4
-	| 5
-	| 6
-	| 7
-	| 8
-	| 9
-	| 10
-	| 11
-	| 12
-	| 13
-	| 14
-	| 15
-	| 16
-	| 17
-	| 18
-	| 19
-	| 20
-	| 21
-	| 22
-	| 23
-	| 24
-	| 25
-	| 26
-	| 27
-	| 28
-	| 29
-	| 30
-	| 31
-	| 32
-	| 33
-	| 34
-	| 35
-	| 36
-	| 37
-	| 38
-	| 39
-	| 40
-	| 41
-	| 42
-	| 43
-	| 44
-	| 45
-	| 46
-	| 47
-	| 48
-	| 49
-	| 50
-	| 51
-	| 52
-	| 53
-	| 54
-	| 55
-	| 56
-	| 57
-	| 58
-	| 59
-	| 60
-	| 61
-	| 62
-	| 63
-	| 64
-	| 65
-	| 66
-	| 67
-	| 68
-	| 69
-	| 70
-	| 71
-	| 72
-	| 73
-	| 74
-	| 75
-	| 76
-	| 77
-	| 78
-	| 79
-	| 80
-	| 81
-	| 82
-	| 83
-	| 84
-	| 85
-	| 86
-	| 87
-	| 88
-	| 89
-	| 90
-	| 91
-	| 92
-	| 93
-	| 94
-	| 95
-	| 96
-	| 97
-	| 98
-	| 99
-	| 100
-	| 101
-	| 102
-	| 103
-	| 104
-	| 105
-	| 106
-	| 107
-	| 108
-	| 109
-	| 110
-	| 111
-	| 112
-	| 113
-	| 114
-	| 115
-	| 116
-	| 117
-	| 118
-	| 119
-	| 120
-	| 121
-	| 122
-	| 123
-	| 124
-	| 125
-	| 126
-	| 127;
+// TODO(bret): Will need to allow for evt.key & evt.which
+const _keys = [
+	'Unidentified',
+	'Alt',
+	'AltGraph',
+	'CapsLock',
+	'Control',
+	'Fn',
+	'FnLock',
+	'Hyper',
+	'Meta',
+	'NumLock',
+	'ScrollLock',
+	'Shift',
+	'Super',
+	'Symbol',
+	'SymbolLock',
+	'Enter',
+	'Tab',
+	' ',
+	'ArrowDown',
+	'ArrowLeft',
+	'ArrowRight',
+	'ArrowUp',
+	'End',
+	'Home',
+	'PageDown',
+	'PageUp',
+	'Backspace',
+	'Clear',
+	'Copy',
+	'CrSel',
+	'Cut',
+	'Delete',
+	'EraseEof',
+	'ExSel',
+	'Insert',
+	'Paste',
+	'Redo',
+	'Undo',
+	'Accept',
+	'Again',
+	'Attn',
+	'Cancel',
+	'ContextMenu',
+	'Escape',
+	'Execute',
+	'Find',
+	'Finish',
+	'Help',
+	'Pause',
+	'Play',
+	'Props',
+	'Select',
+	'ZoomIn',
+	'ZoomOut',
+	'F1',
+	'F2',
+	'F3',
+	'F4',
+	'F5',
+	'F6',
+	'F7',
+	'F8',
+	'F9',
+	'F10',
+	'F11',
+	'F12',
+	' ',
+	'!',
+	'"',
+	'#',
+	'$',
+	'%',
+	'&',
+	"'",
+	'(',
+	')',
+	'*',
+	'+',
+	',',
+	'-',
+	'.',
+	'/',
+	'0',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	':',
+	';',
+	'<',
+	'=',
+	'>',
+	'?',
+	'@',
+	'A',
+	'B',
+	'C',
+	'D',
+	'E',
+	'F',
+	'G',
+	'H',
+	'I',
+	'J',
+	'K',
+	'L',
+	'M',
+	'N',
+	'O',
+	'P',
+	'Q',
+	'R',
+	'S',
+	'T',
+	'U',
+	'V',
+	'W',
+	'X',
+	'Y',
+	'Z',
+	'[',
+	'\\',
+	']',
+	'^',
+	'_',
+	'`',
+	'a',
+	'b',
+	'c',
+	'd',
+	'e',
+	'f',
+	'g',
+	'h',
+	'i',
+	'j',
+	'k',
+	'l',
+	'm',
+	'n',
+	'o',
+	'p',
+	'q',
+	'r',
+	's',
+	't',
+	'u',
+	'v',
+	'w',
+	'x',
+	'y',
+	'z',
+	'{',
+	'|',
+	'}',
+	'~',
+] as const;
+
+type Key = typeof _keys[number];
 
 interface Input {
 	engine: Engine;
 	mouse: Mouse;
-	keys: [
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-		InputStatus,
-	];
+	keys: Record<Key, InputStatus>;
 }
 
 type MousePrototype = Pick<Mouse, 'pos' | 'realPos' | '_clicked'>;
@@ -1009,14 +919,14 @@ class Input {
 
 		this.mouse = mouse as Mouse;
 
-		this.keys = Array.from({ length: 128 }, (v) => 0) as typeof this.keys;
+		this.clear();
 	}
 
 	update(): void {
 		this.mouse._clicked &= ~1;
-		for (let k = 0, n = this.keys.length; k < n; ++k) {
-			this.keys[k] &= ~1;
-		}
+		_keys.forEach((key) => {
+			this.keys[key] &= ~1;
+		});
 	}
 
 	// Events
@@ -1031,9 +941,6 @@ class Input {
 	}
 
 	onMouseDown(e: MouseEvent): boolean {
-		// TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
-		if (!this.engine.focus) return true;
-
 		e.preventDefault();
 		if (!this.mouseCheck()) {
 			this.mouse._clicked = 3;
@@ -1043,9 +950,6 @@ class Input {
 	}
 
 	onMouseUp(e: MouseEvent): boolean {
-		// TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
-		if (!this.engine.focus) return true;
-
 		e.preventDefault();
 		if (this.mouseCheck()) {
 			this.mouse._clicked = 1;
@@ -1056,8 +960,9 @@ class Input {
 
 	onKeyDown(e: KeyboardEvent): boolean {
 		e.preventDefault();
-		if (!this.keyCodeCheck(e.keyCode as KeyCode)) {
-			this.keys[e.keyCode] = 3;
+		const { key } = e as { key: Key };
+		if (!this.keyCheck(key)) {
+			this.keys[key] = 3;
 		}
 
 		return false;
@@ -1065,8 +970,9 @@ class Input {
 
 	onKeyUp(e: KeyboardEvent): boolean {
 		e.preventDefault();
-		if (this.keyCodeCheck(e.keyCode as KeyCode)) {
-			this.keys[e.keyCode] = 1;
+		const { key } = e as { key: Key };
+		if (this.keyCheck(key)) {
+			this.keys[key] = 1;
 		}
 
 		return false;
@@ -1097,23 +1003,26 @@ class Input {
 		return this._checkReleased(this.mouse._clicked);
 	}
 
-	keyCodePressed(key: KeyCode | KeyCode[]): boolean {
-		if (Array.isArray(key)) return key.some((k) => this.keyCodePressed(k));
+	keyPressed(key: Key | Key[]): boolean {
+		if (Array.isArray(key)) return key.some((k) => this.keyPressed(k));
 		return this._checkPressed(this.keys[key]);
 	}
 
-	keyCodeCheck(key: KeyCode | KeyCode[]): boolean {
-		if (Array.isArray(key)) return key.some((k) => this.keyCodeCheck(k));
+	keyCheck(key: Key | Key[]): boolean {
+		if (Array.isArray(key)) return key.some((k) => this.keyCheck(k));
 		return this._checkHeld(this.keys[key]);
 	}
 
-	keyCodeReleased(key: KeyCode | KeyCode[]): boolean {
-		if (Array.isArray(key)) return key.some((k) => this.keyCodeReleased(k));
+	keyReleased(key: Key | Key[]): boolean {
+		if (Array.isArray(key)) return key.some((k) => this.keyReleased(k));
 		return this._checkReleased(this.keys[key]);
 	}
 
 	clear(): void {
-		this.keys = this.keys.map((v) => 0) as typeof this.keys;
+		this.keys = _keys.reduce((acc, key) => {
+			acc[key] = 0;
+			return acc;
+		}, {} as typeof this.keys);
 	}
 }
 
@@ -1207,9 +1116,9 @@ class Scene {
 			return;
 		}
 
-		if (this.allowRefresh && input.keyCodePressed(116)) location.reload();
+		if (this.allowRefresh && input.keyPressed('F5')) location.reload();
 
-		if (this.escapeToBlur && input.keyCodePressed(27))
+		if (this.escapeToBlur && input.keyPressed('Escape'))
 			this.engine.canvas.blur();
 
 		if (!this.shouldUpdate) return;

@@ -22,7 +22,8 @@ const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;
 const distance = (...dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
 const distanceSq = (...dimensions) => Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
-const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]).filter((v) => v !== undefined);
+const isDefined = (v) => Boolean(v);
+const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
 const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
 const indexToPos = (index, stride) => [
     index % stride,
@@ -422,6 +423,170 @@ class Game {
         }
     }
 }
+// TODO(bret): Will need to allow for evt.key & evt.which
+const _keys = [
+    'Unidentified',
+    'Alt',
+    'AltGraph',
+    'CapsLock',
+    'Control',
+    'Fn',
+    'FnLock',
+    'Hyper',
+    'Meta',
+    'NumLock',
+    'ScrollLock',
+    'Shift',
+    'Super',
+    'Symbol',
+    'SymbolLock',
+    'Enter',
+    'Tab',
+    ' ',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'End',
+    'Home',
+    'PageDown',
+    'PageUp',
+    'Backspace',
+    'Clear',
+    'Copy',
+    'CrSel',
+    'Cut',
+    'Delete',
+    'EraseEof',
+    'ExSel',
+    'Insert',
+    'Paste',
+    'Redo',
+    'Undo',
+    'Accept',
+    'Again',
+    'Attn',
+    'Cancel',
+    'ContextMenu',
+    'Escape',
+    'Execute',
+    'Find',
+    'Finish',
+    'Help',
+    'Pause',
+    'Play',
+    'Props',
+    'Select',
+    'ZoomIn',
+    'ZoomOut',
+    'F1',
+    'F2',
+    'F3',
+    'F4',
+    'F5',
+    'F6',
+    'F7',
+    'F8',
+    'F9',
+    'F10',
+    'F11',
+    'F12',
+    ' ',
+    '!',
+    '"',
+    '#',
+    '$',
+    '%',
+    '&',
+    "'",
+    '(',
+    ')',
+    '*',
+    '+',
+    ',',
+    '-',
+    '.',
+    '/',
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    ':',
+    ';',
+    '<',
+    '=',
+    '>',
+    '?',
+    '@',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+    '[',
+    '\\',
+    ']',
+    '^',
+    '_',
+    '`',
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z',
+    '{',
+    '|',
+    '}',
+    '~',
+];
 class Input {
     constructor(engine) {
         this.engine = engine;
@@ -450,13 +615,13 @@ class Input {
         defineXYProperties(mouse);
         defineXYProperties(mouse, 'real');
         this.mouse = mouse;
-        this.keys = Array.from({ length: 128 }, (v) => 0);
+        this.clear();
     }
     update() {
         this.mouse._clicked &= ~1;
-        for (let k = 0, n = this.keys.length; k < n; ++k) {
-            this.keys[k] &= ~1;
-        }
+        _keys.forEach((key) => {
+            this.keys[key] &= ~1;
+        });
     }
     // Events
     onMouseMove(e) {
@@ -467,9 +632,6 @@ class Input {
         this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
     }
     onMouseDown(e) {
-        // TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
-        if (!this.engine.focus)
-            return true;
         e.preventDefault();
         if (!this.mouseCheck()) {
             this.mouse._clicked = 3;
@@ -477,9 +639,6 @@ class Input {
         return false;
     }
     onMouseUp(e) {
-        // TODO(bret): Do we want these to work even if the user clicks outside of the canvas?
-        if (!this.engine.focus)
-            return true;
         e.preventDefault();
         if (this.mouseCheck()) {
             this.mouse._clicked = 1;
@@ -488,15 +647,17 @@ class Input {
     }
     onKeyDown(e) {
         e.preventDefault();
-        if (!this.keyCodeCheck(e.keyCode)) {
-            this.keys[e.keyCode] = 3;
+        const { key } = e;
+        if (!this.keyCheck(key)) {
+            this.keys[key] = 3;
         }
         return false;
     }
     onKeyUp(e) {
         e.preventDefault();
-        if (this.keyCodeCheck(e.keyCode)) {
-            this.keys[e.keyCode] = 1;
+        const { key } = e;
+        if (this.keyCheck(key)) {
+            this.keys[key] = 1;
         }
         return false;
     }
@@ -519,23 +680,26 @@ class Input {
     mouseReleased() {
         return this._checkReleased(this.mouse._clicked);
     }
-    keyCodePressed(key) {
+    keyPressed(key) {
         if (Array.isArray(key))
-            return key.some((k) => this.keyCodePressed(k));
+            return key.some((k) => this.keyPressed(k));
         return this._checkPressed(this.keys[key]);
     }
-    keyCodeCheck(key) {
+    keyCheck(key) {
         if (Array.isArray(key))
-            return key.some((k) => this.keyCodeCheck(k));
+            return key.some((k) => this.keyCheck(k));
         return this._checkHeld(this.keys[key]);
     }
-    keyCodeReleased(key) {
+    keyReleased(key) {
         if (Array.isArray(key))
-            return key.some((k) => this.keyCodeReleased(k));
+            return key.some((k) => this.keyReleased(k));
         return this._checkReleased(this.keys[key]);
     }
     clear() {
-        this.keys = this.keys.map((v) => 0);
+        this.keys = _keys.reduce((acc, key) => {
+            acc[key] = 0;
+            return acc;
+        }, {});
     }
 }
 class Camera extends Array {
@@ -589,9 +753,9 @@ class Scene {
             throw new Error('Scene::engine is not defined');
             return;
         }
-        if (this.allowRefresh && input.keyCodePressed(116))
+        if (this.allowRefresh && input.keyPressed('F5'))
             location.reload();
-        if (this.escapeToBlur && input.keyCodePressed(27))
+        if (this.escapeToBlur && input.keyPressed('Escape'))
             this.engine.canvas.blur();
         if (!this.shouldUpdate)
             return;
