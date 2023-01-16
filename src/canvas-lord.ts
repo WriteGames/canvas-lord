@@ -613,9 +613,9 @@ class Game {
 			const onMouseMove: EventListenerOrEventListenerObject = (e) =>
 				this.input.onMouseMove(e as MouseEvent);
 			const onKeyDown: EventListenerOrEventListenerObject = (e) =>
-				this.input.onKeyDown(e as KeyboardEvent);
+				this.input.onKeyDown(this)(e as KeyboardEvent);
 			const onKeyUp: EventListenerOrEventListenerObject = (e) =>
-				this.input.onKeyUp(e as KeyboardEvent);
+				this.input.onKeyUp(this)(e as KeyboardEvent);
 
 			this.addEventListener(this.canvas, 'mousedown', onMouseDown);
 			this.addEventListener(this.canvas, 'mouseup', onMouseUp);
@@ -1054,26 +1054,30 @@ class Input {
 		return false;
 	}
 
-	onKeyDown(e: KeyboardEvent): boolean {
-		if (!this.engine.focus) return true;
+	onKeyDown(engine: Engine): (e: KeyboardEvent) => boolean {
+		return (e: KeyboardEvent): boolean => {
+			if (!engine.focus) return true;
 
-		e.preventDefault();
-		if (!this.keyCodeCheck(e.keyCode as KeyCode)) {
-			this.keys[e.keyCode] = 3;
-		}
+			e.preventDefault();
+			if (!this.keyCodeCheck(e.keyCode as KeyCode)) {
+				this.keys[e.keyCode] = 3;
+			}
 
-		return false;
+			return false;
+		};
 	}
 
-	onKeyUp(e: KeyboardEvent): boolean {
-		if (!this.engine.focus) return true;
+	onKeyUp(engine: Engine): (e: KeyboardEvent) => boolean {
+		return (e: KeyboardEvent): boolean => {
+			if (!engine.focus) return true;
 
-		e.preventDefault();
-		if (this.keyCodeCheck(e.keyCode as KeyCode)) {
-			this.keys[e.keyCode] = 1;
-		}
+			e.preventDefault();
+			if (this.keyCodeCheck(e.keyCode as KeyCode)) {
+				this.keys[e.keyCode] = 1;
+			}
 
-		return false;
+			return false;
+		};
 	}
 
 	// Checks
@@ -1256,12 +1260,12 @@ const drawLine = (
 	ctx.stroke();
 };
 
-const pixelCanvas = document.createElement('canvas');
-const _pixelCtx = pixelCanvas.getContext('2d');
-if (!_pixelCtx) {
-	throw Error('pixelCtx failed to create');
-}
-const pixelCtx = _pixelCtx;
+// const pixelCanvas = document.createElement('canvas');
+// const _pixelCtx = pixelCanvas.getContext('2d');
+// if (!_pixelCtx) {
+// 	throw Error('pixelCtx failed to create');
+// }
+// const pixelCtx = _pixelCtx;
 
 interface Grid {
 	width: number;
@@ -1308,11 +1312,11 @@ class Grid {
 
 		const grid = new Grid(width, height, tileW, tileH);
 		grid.forEach((_, [x, y]) => {
-			pixelCtx.drawImage(image, -x, -y);
-			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
-			if (data[0] === 0) {
-				grid.setTile(x, y, 1);
-			}
+			// pixelCtx.drawImage(image, -x, -y);
+			// const { data } = pixelCtx.getImageData(0, 0, 1, 1);
+			// if (data[0] === 0) {
+			// 	grid.setTile(x, y, 1);
+			// }
 		});
 
 		return grid;
