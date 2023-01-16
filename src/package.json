@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"compile": "tsc --p tsconfig-build.json",
-		"test": "jest",
+		"test": "jest --watch",
 		"watch": "tsc --w --p tsconfig-build.json"
 	},
 	"keywords": [],
@@ -21,6 +21,9 @@
 	"devDependencies": {
 		"@types/jest": "29.2.5",
 		"jest": "29.3.1",
+		"jest-canvas-mock": "2.4.0",
+		"jest-environment-jsdom": "29.3.1",
 		"ts-jest": "29.0.5"
-	}
+	},
+	"type": "commonjs"
 }

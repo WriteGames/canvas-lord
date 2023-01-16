@@ -6,8 +6,8 @@
 		"target": "ESNext",
 		"esModuleInterop": true,
 		"sourceMap": true,
-		"strict": true
+		"strict": true,
+		"module": "commonjs"
 	},
-	"files": ["canvas-lord.ts"],
-	"include": ["**/*.test.ts"]
+	"include": ["**/*.ts", "**/*.spec.ts"]
 }
