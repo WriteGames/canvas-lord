@@ -626,6 +626,12 @@ const drawLine = (ctx, x1, y1, x2, y2) => {
     ctx.lineTo(x2, y2);
     ctx.stroke();
 };
+const pixelCanvas = document.createElement('canvas');
+const _pixelCtx = pixelCanvas.getContext('2d');
+if (!_pixelCtx) {
+    throw Error('pixelCtx failed to create');
+}
+const pixelCtx = _pixelCtx;
 class Grid {
     constructor(width, height, tileW, tileH) {
         this.width = width;
@@ -649,11 +655,11 @@ class Grid {
         const stride = image.width;
         const grid = new Grid(width, height, tileW, tileH);
         grid.forEach((_, [x, y]) => {
-            // pixelCtx.drawImage(image, -x, -y);
-            // const { data } = pixelCtx.getImageData(0, 0, 1, 1);
-            // if (data[0] === 0) {
-            // 	grid.setTile(x, y, 1);
-            // }
+            pixelCtx.drawImage(image, -x, -y);
+            const { data } = pixelCtx.getImageData(0, 0, 1, 1);
+            if (data[0] === 0) {
+                grid.setTile(x, y, 1);
+            }
         });
         return grid;
     }

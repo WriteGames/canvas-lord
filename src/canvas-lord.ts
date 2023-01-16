@@ -1260,12 +1260,12 @@ const drawLine = (
 	ctx.stroke();
 };
 
-// const pixelCanvas = document.createElement('canvas');
-// const _pixelCtx = pixelCanvas.getContext('2d');
-// if (!_pixelCtx) {
-// 	throw Error('pixelCtx failed to create');
-// }
-// const pixelCtx = _pixelCtx;
+const pixelCanvas = document.createElement('canvas');
+const _pixelCtx = pixelCanvas.getContext('2d');
+if (!_pixelCtx) {
+	throw Error('pixelCtx failed to create');
+}
+const pixelCtx = _pixelCtx;
 
 interface Grid {
 	width: number;
@@ -1312,11 +1312,11 @@ class Grid {
 
 		const grid = new Grid(width, height, tileW, tileH);
 		grid.forEach((_, [x, y]) => {
-			// pixelCtx.drawImage(image, -x, -y);
-			// const { data } = pixelCtx.getImageData(0, 0, 1, 1);
-			// if (data[0] === 0) {
-			// 	grid.setTile(x, y, 1);
-			// }
+			pixelCtx.drawImage(image, -x, -y);
+			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
+			if (data[0] === 0) {
+				grid.setTile(x, y, 1);
+			}
 		});
 
 		return grid;
