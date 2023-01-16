@@ -3,4 +3,5 @@
 npm-debug.log*
 .pnpm-debug.log*
 tsconfig.tsbuildinfo
+tsconfig*.tsbuildinfo
 *.map

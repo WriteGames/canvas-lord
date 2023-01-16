@@ -8,5 +8,6 @@
 		"sourceMap": true,
 		"strict": true
 	},
-	"files": ["canvas-lord.ts"]
+	"files": ["canvas-lord.ts"],
+	"include": ["**/*.test.ts"]
 }
