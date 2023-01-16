@@ -359,8 +359,8 @@ class Game {
             const onMouseDown = (e) => this.input.onMouseDown(e);
             const onMouseUp = (e) => this.input.onMouseUp(e);
             const onMouseMove = (e) => this.input.onMouseMove(e);
-            const onKeyDown = (e) => this.input.onKeyDown(this)(e);
-            const onKeyUp = (e) => this.input.onKeyUp(this)(e);
+            const onKeyDown = (e) => this.input.onKeyDown(e);
+            const onKeyUp = (e) => this.input.onKeyUp(e);
             this.addEventListener(this.canvas, 'mousedown', onMouseDown);
             this.addEventListener(this.canvas, 'mouseup', onMouseUp);
             // TODO(bret): Find out if we need useCapture here & above
@@ -486,27 +486,19 @@ class Input {
         }
         return false;
     }
-    onKeyDown(engine) {
-        return (e) => {
-            if (!engine.focus)
-                return true;
-            e.preventDefault();
-            if (!this.keyCodeCheck(e.keyCode)) {
-                this.keys[e.keyCode] = 3;
-            }
-            return false;
-        };
+    onKeyDown(e) {
+        e.preventDefault();
+        if (!this.keyCodeCheck(e.keyCode)) {
+            this.keys[e.keyCode] = 3;
+        }
+        return false;
     }
-    onKeyUp(engine) {
-        return (e) => {
-            if (!engine.focus)
-                return true;
-            e.preventDefault();
-            if (this.keyCodeCheck(e.keyCode)) {
-                this.keys[e.keyCode] = 1;
-            }
-            return false;
-        };
+    onKeyUp(e) {
+        e.preventDefault();
+        if (this.keyCodeCheck(e.keyCode)) {
+            this.keys[e.keyCode] = 1;
+        }
+        return false;
     }
     // Checks
     _checkPressed(value) {

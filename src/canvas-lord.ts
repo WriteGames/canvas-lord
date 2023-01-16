@@ -606,16 +606,16 @@ class Game {
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
 			// TODO(bret): Do binding
-			const onMouseDown: EventListenerOrEventListenerObject = (e) =>
+			const onMouseDown: EventListener = (e) =>
 				this.input.onMouseDown(e as MouseEvent);
-			const onMouseUp: EventListenerOrEventListenerObject = (e) =>
+			const onMouseUp: EventListener = (e) =>
 				this.input.onMouseUp(e as MouseEvent);
-			const onMouseMove: EventListenerOrEventListenerObject = (e) =>
+			const onMouseMove: EventListener = (e) =>
 				this.input.onMouseMove(e as MouseEvent);
-			const onKeyDown: EventListenerOrEventListenerObject = (e) =>
-				this.input.onKeyDown(this)(e as KeyboardEvent);
-			const onKeyUp: EventListenerOrEventListenerObject = (e) =>
-				this.input.onKeyUp(this)(e as KeyboardEvent);
+			const onKeyDown: EventListener = (e) =>
+				this.input.onKeyDown(e as KeyboardEvent);
+			const onKeyUp: EventListener = (e) =>
+				this.input.onKeyUp(e as KeyboardEvent);
 
 			this.addEventListener(this.canvas, 'mousedown', onMouseDown);
 			this.addEventListener(this.canvas, 'mouseup', onMouseUp);
@@ -1054,30 +1054,22 @@ class Input {
 		return false;
 	}
 
-	onKeyDown(engine: Engine): (e: KeyboardEvent) => boolean {
-		return (e: KeyboardEvent): boolean => {
-			if (!engine.focus) return true;
+	onKeyDown(e: KeyboardEvent): boolean {
+		e.preventDefault();
+		if (!this.keyCodeCheck(e.keyCode as KeyCode)) {
+			this.keys[e.keyCode] = 3;
+		}
 
-			e.preventDefault();
-			if (!this.keyCodeCheck(e.keyCode as KeyCode)) {
-				this.keys[e.keyCode] = 3;
-			}
-
-			return false;
-		};
+		return false;
 	}
 
-	onKeyUp(engine: Engine): (e: KeyboardEvent) => boolean {
-		return (e: KeyboardEvent): boolean => {
-			if (!engine.focus) return true;
+	onKeyUp(e: KeyboardEvent): boolean {
+		e.preventDefault();
+		if (this.keyCodeCheck(e.keyCode as KeyCode)) {
+			this.keys[e.keyCode] = 1;
+		}
 
-			e.preventDefault();
-			if (this.keyCodeCheck(e.keyCode as KeyCode)) {
-				this.keys[e.keyCode] = 1;
-			}
-
-			return false;
-		};
+		return false;
 	}
 
 	// Checks
