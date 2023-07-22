@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<title>Canvas Lord</title>
+		<style media="screen">
+			body {
+				background: #181920;
+				padding: 1rem 0;
+				color: #ddd;
+			}
+
+			canvas {
+				display: block;
+				width: 100%;
+				max-width: 640px;
+				margin: 0 auto;
+				padding: 5px;
+				border: 3px solid #ddd;
+				image-rendering: -moz-crisp-edges;
+				image-rendering: -webkit-crisp-edges;
+				image-rendering: pixelated;
+				image-rendering: crisp-edges;
+			}
+
+			h2 {
+				text-align: center;
+				margin-block: 2rem 1rem;
+			}
+		</style>
+		<script src="../canvas-lord.js"></script>
+	</head>
+	<body>
+		<h2>Title</h2>
+		<canvas id="spin" width="320px" height="180px" tabindex="-1"></canvas>
+
+		<script type="text/javascript">
+			const drawRect = (ctx, fill, ...args) =>
+				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+
+			['spin'].forEach((id) => {
+				const game = new Game(id);
+
+				class UpdateRenderScene extends Scene {
+					constructor() {
+						super();
+
+						this.updates = 0;
+						this.renders = 0;
+					}
+
+					update() {
+						++this.updates;
+					}
+
+					render(ctx) {
+						++this.renders;
+
+						ctx.fillStyle = 'white';
+						ctx.fillText(`Update Count: ${this.updates}`, 3, 10);
+						ctx.fillText(`Render Count: ${this.renders}`, 3, 22);
+
+						const angle = this.updates / 30;
+
+						const xCenter = 320 / 2;
+						const yCenter = 180 / 2;
+
+						const drawSpinningRect = (angle, color) => {
+							const scale = 1 + Math.sin(angle) / 4;
+							const size = 40 * scale;
+							const offset = size / 2;
+
+							const xOffset = Math.cos(angle) * 30;
+							const x = xCenter + xOffset - offset;
+							const y = yCenter - offset;
+
+							ctx.fillStyle = color;
+							drawRect(ctx, true, x, y, size, size);
+						};
+
+						const rects = [
+							[angle, 'red'],
+							[angle + Math.PI, 'green'],
+						].sort(([a], [b]) =>
+							Math.sign(Math.sin(a) - Math.sin(b)),
+						);
+
+						rects.forEach((rect) => drawSpinningRect(...rect));
+					}
+				}
+
+				const scene = new UpdateRenderScene();
+
+				game.pushScene(scene);
+			});
+		</script>
+	</body>
+</html>
