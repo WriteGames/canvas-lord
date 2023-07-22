@@ -315,12 +315,15 @@ class Game {
             deltaTime += time - this._lastFrame;
             this._lastFrame = time;
             deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
+            let didUpdate = false;
             while (deltaTime >= timestep) {
                 this.update();
                 this.input.update();
                 deltaTime -= timestep;
+                didUpdate = true;
             }
-            this.render();
+            if (didUpdate)
+                this.render();
         };
         this.eventListeners = [];
         window.addEventListener('resize', (e) => {

@@ -549,13 +549,15 @@ class Game {
 
 			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
 
+			let didUpdate = false;
 			while (deltaTime >= timestep) {
 				this.update();
 				this.input.update();
 				deltaTime -= timestep;
+				didUpdate = true;
 			}
 
-			this.render();
+			if (didUpdate) this.render();
 		};
 
 		this.eventListeners = [];
