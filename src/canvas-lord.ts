@@ -443,9 +443,9 @@ interface CachedEventListener {
 	arguments: Parameters<Element['addEventListener']>;
 }
 
-// TODO(bret): Add 'always' that ignores blur/focus events
-type UpdateSettings = 'focus' | 'onEvent' | 'manual';
-type UpdateOnEvent = Extract<keyof GlobalEventHandlersEventMap, 'mouseover'>;
+// TODO(bret): Add 'tabfocus' that ignores blur/focus events, and 'always' that ignores browser blur/focus
+type UpdateSettings = 'always' | 'focus' | 'onEvent' | 'manual';
+type UpdateOnEvent = Extract<keyof GlobalEventHandlersEventMap, 'mousemove'>;
 type RenderSettings = 'onUpdate' | 'manual';
 
 interface GameLoopSettings {
