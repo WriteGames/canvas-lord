@@ -260,8 +260,8 @@ const orthogonalNorms = [normRN, normNU, normLN, normND] as const;
 const diagonalNorms = [normRU, normLU, normLD, normRD] as const;
 const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
 
-type V2OrthogonalNorm = typeof orthogonalNorms[number];
-type V2DiagonalNorm = typeof diagonalNorms[number];
+type V2OrthogonalNorm = (typeof orthogonalNorms)[number];
+type V2DiagonalNorm = (typeof diagonalNorms)[number];
 type V2CardinalNorm = V2OrthogonalNorm | V2DiagonalNorm;
 
 // Starts right, goes counter-clockwise
@@ -276,7 +276,7 @@ const cardinalNormStrs = [
 	'ND',
 	'RD',
 ] as const;
-type CardinalNormStr = typeof cardinalNormStrs[number];
+type CardinalNormStr = (typeof cardinalNormStrs)[number];
 const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str: CardinalNormStr): number =>
 	CARDINAL_NORM[str];
@@ -868,7 +868,7 @@ const _keys = [
 	'~',
 ] as const;
 
-type Key = typeof _keys[number];
+type Key = (typeof _keys)[number];
 
 interface Input {
 	engine: Engine;
