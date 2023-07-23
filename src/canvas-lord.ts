@@ -444,24 +444,29 @@ interface CachedEventListener {
 }
 
 // TODO(bret): Add 'tabfocus' that ignores blur/focus events, and 'always' that ignores browser blur/focus
-type UpdateSettings = 'always' | 'focus' | 'onEvent' | 'manual';
+type UpdateSettings = 'always' | 'focus' | 'manual' | 'onEvent';
 type UpdateOnEvent = Extract<keyof GlobalEventHandlersEventMap, 'mousemove'>;
-type RenderSettings = 'onUpdate' | 'manual';
+type RenderSettings = 'manual' | 'onUpdate';
 
-interface GameLoopSettings {
-	update: UpdateSettings;
-	updateOn?: UpdateOnEvent[];
-	render: RenderSettings;
-}
+type GameLoopSettings =
+	| {
+			update: Exclude<UpdateSettings, 'onEvent'>;
+			render: RenderSettings;
+	  }
+	| {
+			update: Extract<UpdateSettings, 'onEvent'>;
+			updateOn: UpdateOnEvent[];
+			render: RenderSettings;
+	  };
 
-const gameEvents = ['update'] as const;
+// TODO(bret): 'tabblur', 'tabfocus'
+const gameEvents = ['blur', 'focus', 'update'] as const;
 
 type GameEvent = (typeof gameEvents)[number];
 type EventCallback = () => void;
 
 interface Game {
-	listeners: Record<GameEvent, EventCallback[]>;
-	bindedRender: EventCallback;
+	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
 	gameLoopSettings: GameLoopSettings;
 	sceneStack: Scene[][];
@@ -473,11 +478,17 @@ interface Game {
 	mainLoop: (time: number) => void;
 	frameRequestId: number;
 	eventListeners: CachedEventListener[];
+	_onGameLoopSettingsUpdate?: EventCallback;
 }
 
 type Engine = Game;
 
 class Game {
+	gameLoopSettings: GameLoopSettings = {
+		update: 'focus',
+		render: 'onUpdate',
+	};
+
 	constructor(id: string, gameLoopSettings?: GameLoopSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
 			`canvas#${id}`,
@@ -503,29 +514,11 @@ class Game {
 		this.focus = false;
 
 		this.listeners = gameEvents.reduce((acc, val) => {
-			acc[val] = [];
+			acc[val] = new Set<EventCallback>();
 			return acc;
 		}, {} as typeof this.listeners);
 
-		this.bindedRender = this.render.bind(this);
-
-		this.gameLoopSettings = gameLoopSettings ?? {
-			update: 'focus',
-			render: 'onUpdate',
-		};
-
-		if (this.gameLoopSettings.update === 'onEvent') {
-			const bindedUpdate = this.update.bind(this);
-			this.gameLoopSettings.updateOn?.forEach((event) => {
-				this.canvas.addEventListener(event, bindedUpdate);
-			});
-		}
-
-		if (this.gameLoopSettings.render === 'onUpdate') {
-			const event = 'update';
-			const listener = this.listeners[event];
-			listener.push(this.bindedRender);
-		}
+		if (gameLoopSettings) this.gameLoopSettings = gameLoopSettings;
 
 		this.sceneStack = [];
 
@@ -595,10 +588,8 @@ class Game {
 			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
 
 			while (deltaTime >= timestep) {
-				if (this.gameLoopSettings.update === 'focus') {
-					this.input.update();
-					this.update();
-				}
+				this.input.update();
+				this.update();
 				deltaTime -= timestep;
 			}
 		};
@@ -609,13 +600,12 @@ class Game {
 			computeCanvasSize(this.canvas);
 		});
 
-		// TODO(bret): Is the below TODO already done?
-		// TODO(bret): We should have an event sent out to the game to let it know that the window just regained focus :)
-		// Maybe add something like that for when the canvas regains focus, too?
 		window.addEventListener('blur', (e) => this.onFocus(false));
 
 		this.canvas.addEventListener('focus', (e) => this.onFocus(true));
 		this.canvas.addEventListener('blur', (e) => this.onFocus(false));
+
+		this.updateGameLoopSettings(this.gameLoopSettings);
 	}
 
 	get width(): number {
@@ -628,6 +618,70 @@ class Game {
 
 	get currentScenes(): Scene[] | undefined {
 		return this.sceneStack[0];
+	}
+
+	// TODO(bret): We're going to need to make a less clunky interface
+	updateGameLoopSettings(newGameLoopSettings: GameLoopSettings): void {
+		this._onGameLoopSettingsUpdate?.();
+
+		this.gameLoopSettings = newGameLoopSettings;
+
+		const update = this.update.bind(this);
+		const render = this.render.bind(this);
+		const startMainLoop = this.startMainLoop.bind(this);
+		const killMainLoop = this.killMainLoop.bind(this);
+
+		// Add new callbacks
+		switch (this.gameLoopSettings.update) {
+			case 'always':
+				startMainLoop();
+				break;
+
+			case 'focus':
+				this.listeners.focus.add(startMainLoop);
+				this.listeners.blur.add(killMainLoop);
+				break;
+
+			case 'manual':
+				break;
+
+			case 'onEvent':
+				this.gameLoopSettings.updateOn.forEach((event) => {
+					this.canvas.addEventListener(event, update);
+				});
+				break;
+		}
+
+		if (this.gameLoopSettings.render === 'onUpdate') {
+			this.listeners.update.add(render);
+		}
+
+		this._onGameLoopSettingsUpdate = (): void => {
+			// Remove existing callbacks
+			switch (this.gameLoopSettings.update) {
+				case 'always':
+					killMainLoop();
+					break;
+
+				case 'focus':
+					this.listeners.focus.delete(startMainLoop);
+					this.listeners.blur.delete(killMainLoop);
+					break;
+
+				case 'manual':
+					break;
+
+				case 'onEvent':
+					this.gameLoopSettings.updateOn.forEach((event) => {
+						this.canvas.removeEventListener(event, update);
+					});
+					break;
+			}
+
+			if (this.gameLoopSettings.render === 'onUpdate') {
+				this.listeners.update.delete(render);
+			}
+		};
 	}
 
 	addEventListener(
@@ -644,55 +698,56 @@ class Game {
 		this.eventListeners.push(eventListener);
 	}
 
+	startMainLoop(): void {
+		this._lastFrame = performance.now();
+		this.frameRequestId = requestAnimationFrame(this.mainLoop);
+
+		// TODO(bret): Do binding
+		const onMouseDown: EventListener = (e) =>
+			this.input.onMouseDown(e as MouseEvent);
+		const onMouseUp: EventListener = (e) =>
+			this.input.onMouseUp(e as MouseEvent);
+		const onMouseMove: EventListener = (e) =>
+			this.input.onMouseMove(e as MouseEvent);
+		const onKeyDown: EventListener = (e) =>
+			this.input.onKeyDown(e as KeyboardEvent);
+		const onKeyUp: EventListener = (e) =>
+			this.input.onKeyUp(e as KeyboardEvent);
+
+		this.addEventListener(this.canvas, 'mousedown', onMouseDown);
+		this.addEventListener(this.canvas, 'mouseup', onMouseUp);
+
+		// TODO(bret): Find out if we need useCapture here & above
+		[
+			'mousedown',
+			'mouseup',
+			'mouseenter',
+			'mousemove',
+			'mouseexit',
+		].forEach((event) => {
+			// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
+			this.addEventListener(this.canvas, event, onMouseMove);
+		});
+
+		this.addEventListener(window, 'keydown', onKeyDown, false);
+		this.addEventListener(window, 'keyup', onKeyUp, false);
+	}
+
+	killMainLoop(): void {
+		cancelAnimationFrame(this.frameRequestId);
+		this.input.clear();
+
+		this.eventListeners.forEach((eventListener) => {
+			const { element } = eventListener;
+			element.removeEventListener(...eventListener.arguments);
+		});
+		this.eventListeners = [];
+	}
+
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus: boolean): void {
 		this.focus = focus;
-
-		if (focus) {
-			this._lastFrame = performance.now();
-			this.frameRequestId = requestAnimationFrame(this.mainLoop);
-
-			// TODO(bret): Do binding
-			const onMouseDown: EventListener = (e) =>
-				this.input.onMouseDown(e as MouseEvent);
-			const onMouseUp: EventListener = (e) =>
-				this.input.onMouseUp(e as MouseEvent);
-			const onMouseMove: EventListener = (e) =>
-				this.input.onMouseMove(e as MouseEvent);
-			const onKeyDown: EventListener = (e) =>
-				this.input.onKeyDown(e as KeyboardEvent);
-			const onKeyUp: EventListener = (e) =>
-				this.input.onKeyUp(e as KeyboardEvent);
-
-			this.addEventListener(this.canvas, 'mousedown', onMouseDown);
-			this.addEventListener(this.canvas, 'mouseup', onMouseUp);
-
-			// TODO(bret): Find out if we need useCapture here & above
-			[
-				'mousedown',
-				'mouseup',
-				'mouseenter',
-				'mousemove',
-				'mouseexit',
-			].forEach((event) => {
-				// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
-				this.addEventListener(this.canvas, event, onMouseMove);
-			});
-
-			this.addEventListener(window, 'keydown', onKeyDown, false);
-			this.addEventListener(window, 'keyup', onKeyUp, false);
-		} else {
-			// TODO(bret): Only cal lthis if there's been a render since the last blur
-			this.render();
-			cancelAnimationFrame(this.frameRequestId);
-			this.input.clear();
-
-			this.eventListeners.forEach((eventListener) => {
-				const { element } = eventListener;
-				element.removeEventListener(...eventListener.arguments);
-			});
-			this.eventListeners = [];
-		}
+		this.sendEvent(focus ? 'focus' : 'blur');
 	}
 
 	pushScene(scene: Scene): void {
@@ -709,7 +764,11 @@ class Game {
 	update(): void {
 		this.currentScenes?.forEach((scene) => scene.update(this.input));
 
-		this.listeners.update.forEach((c) => c());
+		this.sendEvent('update');
+	}
+
+	sendEvent(event: GameEvent): void {
+		this.listeners[event].forEach((c) => c());
 	}
 
 	render(): void {
@@ -730,11 +789,6 @@ class Game {
 			ctx.moveTo(canvas.width / 2, 0.5);
 			ctx.lineTo(canvas.width / 2, 360.5);
 			ctx.stroke();
-		}
-
-		if (!this.focus) {
-			ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
-			ctx.fillRect(0, 0, 640, 360);
 		}
 	}
 }

@@ -43,10 +43,12 @@
 			const canvasesDiv = document.getElementById('canvases');
 
 			const variants = [
+				{ update: 'always', render: 'onUpdate' },
 				{ update: 'focus', render: 'onUpdate' },
 				{ update: 'onEvent', render: 'onUpdate' },
 				{ update: 'manual', render: 'onUpdate' },
 
+				{ update: 'always', render: 'manual' },
 				{ update: 'focus', render: 'manual' },
 				{ update: 'onEvent', render: 'manual' },
 				{ update: 'manual', render: 'manual' },
@@ -80,6 +82,13 @@
 
 				const game = new Game(id, gameLoopSettings);
 
+				const drawOverlay = () => {
+					game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
+					game.ctx.fillRect(0, 0, 640, 360);
+				};
+
+				game.listeners.blur.add(drawOverlay);
+
 				const updateButton = document.createElement('button');
 				updateButton.textContent = 'Update';
 				updateButton.onclick = () => game.update();
@@ -108,6 +117,11 @@
 						ctx.fillStyle = 'white';
 						ctx.fillText(`Update Count: ${this.updates}`, 3, 10);
 						ctx.fillText(`Render Count: ${this.renders}`, 3, 22);
+						ctx.fillText(
+							`Focued: ${this.engine.focus} (as of last render)`,
+							3,
+							34,
+						);
 
 						const angle = this.updates / 30;
 
@@ -143,6 +157,7 @@
 				game.pushScene(scene);
 
 				game.render();
+				drawOverlay();
 			});
 		</script>
 	</body>
