@@ -445,12 +445,12 @@ interface CachedEventListener {
 
 // TODO(bret): Add 'always' that ignores blur/focus events
 type UpdateSettings = 'focus' | 'onEvent' | 'manual';
-type UpdateOnEvents = 'mousemove';
+type UpdateOnEvent = Extract<keyof GlobalEventHandlersEventMap, 'mouseover'>;
 type RenderSettings = 'onUpdate' | 'manual';
 
 interface GameLoopSettings {
 	update: UpdateSettings;
-	updateOn?: UpdateOnEvents[];
+	updateOn?: UpdateOnEvent[];
 	render: RenderSettings;
 }
 
