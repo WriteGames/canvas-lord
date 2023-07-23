@@ -460,7 +460,7 @@ type GameEvent = (typeof gameEvents)[number];
 type EventCallback = () => void;
 
 interface Game {
-	listeners: Map<GameEvent, EventCallback[]>;
+	listeners: Record<GameEvent, EventCallback[]>;
 	bindedRender: EventCallback;
 	focus: boolean;
 	gameLoopSettings: GameLoopSettings;
@@ -502,13 +502,12 @@ class Game {
 
 		this.focus = false;
 
-		this.listeners = new Map<GameEvent, EventCallback[]>();
+		this.listeners = gameEvents.reduce((acc, val) => {
+			acc[val] = [];
+			return acc;
+		}, {} as typeof this.listeners);
 
 		this.bindedRender = this.render.bind(this);
-
-		gameEvents.forEach((event) => {
-			this.listeners.set(event, []);
-		});
 
 		this.gameLoopSettings = gameLoopSettings ?? {
 			update: 'focus',
@@ -524,10 +523,7 @@ class Game {
 
 		if (this.gameLoopSettings.render === 'onUpdate') {
 			const event = 'update';
-			const listener = this.listeners.get(event);
-			if (listener === undefined) {
-				throw new Error(`${event} is not a valid event`);
-			}
+			const listener = this.listeners[event];
 			listener.push(this.bindedRender);
 		}
 
@@ -713,9 +709,7 @@ class Game {
 	update(): void {
 		this.currentScenes?.forEach((scene) => scene.update(this.input));
 
-		const update = this.listeners.get('update');
-		// this will always be set
-		update?.forEach((c) => c());
+		this.listeners.update.forEach((c) => c());
 	}
 
 	render(): void {

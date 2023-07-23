@@ -278,11 +278,11 @@ class Game {
         this.canvas = canvas;
         this.ctx = ctx;
         this.focus = false;
-        this.listeners = new Map();
+        this.listeners = gameEvents.reduce((acc, val) => {
+            acc[val] = [];
+            return acc;
+        }, {});
         this.bindedRender = this.render.bind(this);
-        gameEvents.forEach((event) => {
-            this.listeners.set(event, []);
-        });
         this.gameLoopSettings = gameLoopSettings ?? {
             update: 'focus',
             render: 'onUpdate',
@@ -295,10 +295,7 @@ class Game {
         }
         if (this.gameLoopSettings.render === 'onUpdate') {
             const event = 'update';
-            const listener = this.listeners.get(event);
-            if (listener === undefined) {
-                throw new Error(`${event} is not a valid event`);
-            }
+            const listener = this.listeners[event];
             listener.push(this.bindedRender);
         }
         this.sceneStack = [];
@@ -426,9 +423,7 @@ class Game {
     }
     update() {
         this.currentScenes?.forEach((scene) => scene.update(this.input));
-        const update = this.listeners.get('update');
-        // this will always be set
-        update?.forEach((c) => c());
+        this.listeners.update.forEach((c) => c());
     }
     render() {
         const { canvas, ctx } = this;
