@@ -262,27 +262,7 @@ const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.d
 });
 const gameEvents = ['update'];
 class Game {
-    constructor(id) {
-        this.focus = false;
-        this.listeners = new Map();
-        this.bindedRender = this.render.bind(this);
-        gameEvents.forEach((event) => {
-            this.listeners.set(event, []);
-        });
-        this.gameLoopSettings = {
-            update: 'default',
-            render: 'onUpdate',
-        };
-        if (this.gameLoopSettings.render === 'onUpdate') {
-            const event = 'update';
-            const listener = this.listeners.get(event);
-            if (listener === undefined) {
-                throw new Error(`${event} is not a valid event`);
-            }
-            listener.push(this.bindedRender);
-        }
-        this.sceneStack = [];
-        this.backgroundColor = '#323232';
+    constructor(id, gameLoopSettings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
             console.error(`No canvas with id "${id}" was able to be found`);
@@ -297,6 +277,32 @@ class Game {
         }
         this.canvas = canvas;
         this.ctx = ctx;
+        this.focus = false;
+        this.listeners = new Map();
+        this.bindedRender = this.render.bind(this);
+        gameEvents.forEach((event) => {
+            this.listeners.set(event, []);
+        });
+        this.gameLoopSettings = gameLoopSettings ?? {
+            update: 'focus',
+            render: 'onUpdate',
+        };
+        if (this.gameLoopSettings.update === 'onEvent') {
+            const bindedUpdate = this.update.bind(this);
+            this.gameLoopSettings.updateOn?.forEach((event) => {
+                this.canvas.addEventListener(event, bindedUpdate);
+            });
+        }
+        if (this.gameLoopSettings.render === 'onUpdate') {
+            const event = 'update';
+            const listener = this.listeners.get(event);
+            if (listener === undefined) {
+                throw new Error(`${event} is not a valid event`);
+            }
+            listener.push(this.bindedRender);
+        }
+        this.sceneStack = [];
+        this.backgroundColor = '#323232';
         // TODO(bret): Might also want to listen for styling changes to the canvas element
         const computeCanvasSize = (canvas) => {
             const canvasComputedStyle = getComputedStyle(canvas);
@@ -334,7 +340,7 @@ class Game {
             this._lastFrame = time;
             deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
             while (deltaTime >= timestep) {
-                if (this.gameLoopSettings.update === 'default') {
+                if (this.gameLoopSettings.update === 'focus') {
                     this.input.update();
                     this.update();
                 }

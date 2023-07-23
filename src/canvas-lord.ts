@@ -443,12 +443,14 @@ interface CachedEventListener {
 	arguments: Parameters<Element['addEventListener']>;
 }
 
-// update: focus (default) | always | events | manual
-type UpdateSettings = 'default' | 'manual';
+// TODO(bret): Add 'always' that ignores blur/focus events
+type UpdateSettings = 'focus' | 'onEvent' | 'manual';
+type UpdateOnEvents = 'mousemove';
 type RenderSettings = 'onUpdate' | 'manual';
 
 interface GameLoopSettings {
 	update: UpdateSettings;
+	updateOn?: UpdateOnEvents[];
 	render: RenderSettings;
 }
 
@@ -476,35 +478,7 @@ interface Game {
 type Engine = Game;
 
 class Game {
-	constructor(id: string) {
-		this.focus = false;
-
-		this.listeners = new Map<GameEvent, EventCallback[]>();
-
-		this.bindedRender = this.render.bind(this);
-
-		gameEvents.forEach((event) => {
-			this.listeners.set(event, []);
-		});
-
-		this.gameLoopSettings = {
-			update: 'default',
-			render: 'onUpdate',
-		};
-
-		if (this.gameLoopSettings.render === 'onUpdate') {
-			const event = 'update';
-			const listener = this.listeners.get(event);
-			if (listener === undefined) {
-				throw new Error(`${event} is not a valid event`);
-			}
-			listener.push(this.bindedRender);
-		}
-
-		this.sceneStack = [];
-
-		this.backgroundColor = '#323232';
-
+	constructor(id: string, gameLoopSettings?: GameLoopSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
 			`canvas#${id}`,
 		);
@@ -525,6 +499,41 @@ class Game {
 
 		this.canvas = canvas;
 		this.ctx = ctx;
+
+		this.focus = false;
+
+		this.listeners = new Map<GameEvent, EventCallback[]>();
+
+		this.bindedRender = this.render.bind(this);
+
+		gameEvents.forEach((event) => {
+			this.listeners.set(event, []);
+		});
+
+		this.gameLoopSettings = gameLoopSettings ?? {
+			update: 'focus',
+			render: 'onUpdate',
+		};
+
+		if (this.gameLoopSettings.update === 'onEvent') {
+			const bindedUpdate = this.update.bind(this);
+			this.gameLoopSettings.updateOn?.forEach((event) => {
+				this.canvas.addEventListener(event, bindedUpdate);
+			});
+		}
+
+		if (this.gameLoopSettings.render === 'onUpdate') {
+			const event = 'update';
+			const listener = this.listeners.get(event);
+			if (listener === undefined) {
+				throw new Error(`${event} is not a valid event`);
+			}
+			listener.push(this.bindedRender);
+		}
+
+		this.sceneStack = [];
+
+		this.backgroundColor = '#323232';
 
 		// TODO(bret): Might also want to listen for styling changes to the canvas element
 		const computeCanvasSize = (canvas: HTMLCanvasElement): void => {
@@ -590,7 +599,7 @@ class Game {
 			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
 
 			while (deltaTime >= timestep) {
-				if (this.gameLoopSettings.update === 'default') {
+				if (this.gameLoopSettings.update === 'focus') {
 					this.input.update();
 					this.update();
 				}

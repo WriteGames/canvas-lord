@@ -43,10 +43,12 @@
 			const canvasesDiv = document.getElementById('canvases');
 
 			const variants = [
-				{ update: 'default', render: 'onUpdate' },
+				{ update: 'focus', render: 'onUpdate' },
+				{ update: 'onEvent', render: 'onUpdate' },
 				{ update: 'manual', render: 'onUpdate' },
 
-				{ update: 'default', render: 'manual' },
+				{ update: 'focus', render: 'manual' },
+				{ update: 'onEvent', render: 'manual' },
 				{ update: 'manual', render: 'manual' },
 			];
 
@@ -70,10 +72,13 @@
 				const { id } = canvas;
 				const [update, render] = id.split('-');
 
-				const game = new Game(id);
+				const gameLoopSettings = {
+					update,
+					updateOn: update === 'onEvent' ? ['mousemove'] : undefined,
+					render,
+				};
 
-				game.gameLoopSettings.update = update;
-				game.gameLoopSettings.render = render;
+				const game = new Game(id, gameLoopSettings);
 
 				const updateButton = document.createElement('button');
 				updateButton.textContent = 'Update';
