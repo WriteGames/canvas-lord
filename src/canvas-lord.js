@@ -260,9 +260,27 @@ const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.d
     value,
     writable: false,
 });
+const gameEvents = ['update'];
 class Game {
     constructor(id) {
         this.focus = false;
+        this.listeners = new Map();
+        this.bindedRender = this.render.bind(this);
+        gameEvents.forEach((event) => {
+            this.listeners.set(event, []);
+        });
+        this.gameLoopSettings = {
+            update: 'default',
+            render: 'onUpdate',
+        };
+        if (this.gameLoopSettings.render === 'onUpdate') {
+            const event = 'update';
+            const listener = this.listeners.get(event);
+            if (listener === undefined) {
+                throw new Error(`${event} is not a valid event`);
+            }
+            listener.push(this.bindedRender);
+        }
         this.sceneStack = [];
         this.backgroundColor = '#323232';
         const canvas = document.querySelector(`canvas#${id}`);
@@ -315,15 +333,13 @@ class Game {
             deltaTime += time - this._lastFrame;
             this._lastFrame = time;
             deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
-            let didUpdate = false;
             while (deltaTime >= timestep) {
-                this.update();
-                this.input.update();
+                if (this.gameLoopSettings.update === 'default') {
+                    this.input.update();
+                    this.update();
+                }
                 deltaTime -= timestep;
-                didUpdate = true;
             }
-            if (didUpdate)
-                this.render();
         };
         this.eventListeners = [];
         window.addEventListener('resize', (e) => {
@@ -382,6 +398,7 @@ class Game {
             this.addEventListener(window, 'keyup', onKeyUp, false);
         }
         else {
+            // TODO(bret): Only cal lthis if there's been a render since the last blur
             this.render();
             cancelAnimationFrame(this.frameRequestId);
             this.input.clear();
@@ -403,6 +420,9 @@ class Game {
     }
     update() {
         this.currentScenes?.forEach((scene) => scene.update(this.input));
+        const update = this.listeners.get('update');
+        // this will always be set
+        update?.forEach((c) => c());
     }
     render() {
         const { canvas, ctx } = this;

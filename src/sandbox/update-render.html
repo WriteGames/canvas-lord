@@ -27,19 +27,63 @@
 				text-align: center;
 				margin-block: 2rem 1rem;
 			}
+
+			button {
+				display: block;
+				margin-block: 1rem;
+				margin-inline: auto;
+			}
 		</style>
 		<script src="../canvas-lord.js"></script>
 	</head>
 	<body>
-		<h2>Title</h2>
-		<canvas id="spin" width="320px" height="180px" tabindex="-1"></canvas>
+		<div id="canvases"></div>
 
 		<script type="text/javascript">
+			const canvasesDiv = document.getElementById('canvases');
+
+			const variants = [
+				{ update: 'default', render: 'onUpdate' },
+				{ update: 'manual', render: 'onUpdate' },
+
+				{ update: 'default', render: 'manual' },
+				{ update: 'manual', render: 'manual' },
+			];
+
+			variants.forEach(({ update, render }) => {
+				const title = document.createElement('h2');
+				title.textContent = `Update: ${update} | Render: ${render}`;
+
+				const canvas = document.createElement('canvas');
+				canvas.id = [update, render].join('-');
+				canvas.setAttribute('width', '320px');
+				canvas.setAttribute('height', '180px');
+				canvas.setAttribute('tabindex', '-1');
+
+				canvasesDiv.append(title, canvas);
+			});
+
 			const drawRect = (ctx, fill, ...args) =>
 				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-			['spin'].forEach((id) => {
+			[...document.querySelectorAll('canvas')].forEach((canvas) => {
+				const { id } = canvas;
+				const [update, render] = id.split('-');
+
 				const game = new Game(id);
+
+				game.gameLoopSettings.update = update;
+				game.gameLoopSettings.render = render;
+
+				const updateButton = document.createElement('button');
+				updateButton.textContent = 'Update';
+				updateButton.onclick = () => game.update();
+				canvas.after(updateButton);
+
+				const renderButton = document.createElement('button');
+				renderButton.textContent = 'Render';
+				renderButton.onclick = () => game.render();
+				updateButton.after(renderButton);
 
 				class UpdateRenderScene extends Scene {
 					constructor() {
@@ -92,6 +136,8 @@
 				const scene = new UpdateRenderScene();
 
 				game.pushScene(scene);
+
+				game.render();
 			});
 		</script>
 	</body>

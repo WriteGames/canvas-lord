@@ -443,8 +443,25 @@ interface CachedEventListener {
 	arguments: Parameters<Element['addEventListener']>;
 }
 
+// update: focus (default) | always | events | manual
+type UpdateSettings = 'default' | 'manual';
+type RenderSettings = 'onUpdate' | 'manual';
+
+interface GameLoopSettings {
+	update: UpdateSettings;
+	render: RenderSettings;
+}
+
+const gameEvents = ['update'] as const;
+
+type GameEvent = (typeof gameEvents)[number];
+type EventCallback = () => void;
+
 interface Game {
+	listeners: Map<GameEvent, EventCallback[]>;
+	bindedRender: EventCallback;
 	focus: boolean;
+	gameLoopSettings: GameLoopSettings;
 	sceneStack: Scene[][];
 	backgroundColor: CSSColor;
 	canvas: HTMLCanvasElement;
@@ -461,6 +478,29 @@ type Engine = Game;
 class Game {
 	constructor(id: string) {
 		this.focus = false;
+
+		this.listeners = new Map<GameEvent, EventCallback[]>();
+
+		this.bindedRender = this.render.bind(this);
+
+		gameEvents.forEach((event) => {
+			this.listeners.set(event, []);
+		});
+
+		this.gameLoopSettings = {
+			update: 'default',
+			render: 'onUpdate',
+		};
+
+		if (this.gameLoopSettings.render === 'onUpdate') {
+			const event = 'update';
+			const listener = this.listeners.get(event);
+			if (listener === undefined) {
+				throw new Error(`${event} is not a valid event`);
+			}
+			listener.push(this.bindedRender);
+		}
+
 		this.sceneStack = [];
 
 		this.backgroundColor = '#323232';
@@ -549,15 +589,13 @@ class Game {
 
 			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
 
-			let didUpdate = false;
 			while (deltaTime >= timestep) {
-				this.update();
-				this.input.update();
+				if (this.gameLoopSettings.update === 'default') {
+					this.input.update();
+					this.update();
+				}
 				deltaTime -= timestep;
-				didUpdate = true;
 			}
-
-			if (didUpdate) this.render();
 		};
 
 		this.eventListeners = [];
@@ -639,6 +677,7 @@ class Game {
 			this.addEventListener(window, 'keydown', onKeyDown, false);
 			this.addEventListener(window, 'keyup', onKeyUp, false);
 		} else {
+			// TODO(bret): Only cal lthis if there's been a render since the last blur
 			this.render();
 			cancelAnimationFrame(this.frameRequestId);
 			this.input.clear();
@@ -664,6 +703,10 @@ class Game {
 
 	update(): void {
 		this.currentScenes?.forEach((scene) => scene.update(this.input));
+
+		const update = this.listeners.get('update');
+		// this will always be set
+		update?.forEach((c) => c());
 	}
 
 	render(): void {
