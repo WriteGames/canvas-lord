@@ -22,15 +22,9 @@
 		"url": "https://github.com/WriteGames/canvas-lord/issues"
 	},
 	"homepage": "https://github.com/WriteGames/canvas-lord#readme",
-	"dependencies": {
+	"devDependencies": {
 		"@vercel/style-guide": "4.0.2",
-		"eslint": "8.28.0"
-	},
-	"pnpm": {
-		"peerDependencyRules": {
-			"ignoreMissing": [
-				"typescript"
-			]
-		}
+		"eslint": "8.28.0",
+		"typescript": "4.9.4"
 	}
 }
