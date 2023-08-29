@@ -9,20 +9,16 @@
 		"lint": "next lint"
 	},
 	"dependencies": {
-		"@next/eslint-plugin-next": "*",
-		"@vercel/style-guide": "*",
 		"next": "13.0.5",
 		"react": "18.2.0",
-		"react-dom": "18.2.0",
-		"typescript": "*"
+		"react-dom": "18.2.0"
 	},
 	"devDependencies": {
+		"@next/eslint-plugin-next": "12.3.0",
 		"@types/node": "18.11.9",
 		"@types/react": "18.0.25",
 		"@types/react-dom": "18.0.9",
-		"eslint": ">=8.24.0 <9.0.0"
-	},
-	"peerDependencies": {
-		"eslint": ">=8.24.0 <9.0.0"
+		"eslint": "8.28.0",
+		"typescript": "4.9.4"
 	}
 }
