@@ -507,11 +507,11 @@ class Player {
 		const rightKeys = [39, 68];
 		const jumpKeys = [32, 38, 87, 90];
 
-		const keyLeftCheck = input.keyCodeCheck(leftKeys);
-		const keyRightCheck = input.keyCodeCheck(rightKeys);
-		const keyJumpCheck = input.keyCodeCheck(jumpKeys);
+		const keyLeftCheck = input.keyCheck(leftKeys);
+		const keyRightCheck = input.keyCheck(rightKeys);
+		const keyJumpCheck = input.keyCheck(jumpKeys);
 
-		const keyJumpPressed = input.keyCodePressed(jumpKeys);
+		const keyJumpPressed = input.keyPressed(jumpKeys);
 
 		const grounded = this.collide(this.x, this.y + 1);
 

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<title>Canvas Lord</title>
+		<style media="screen">
+			body {
+				background: #181920;
+				padding: 1rem 0;
+				color: #ddd;
+			}
+
+			canvas {
+				display: block;
+				width: 100%;
+				max-width: 640px;
+				margin: 0 auto;
+				padding: 5px;
+				border: 3px solid #ddd;
+				image-rendering: -moz-crisp-edges;
+				image-rendering: -webkit-crisp-edges;
+				image-rendering: pixelated;
+				image-rendering: crisp-edges;
+			}
+
+			h2 {
+				text-align: center;
+				margin-block: 2rem 1rem;
+			}
+
+			button {
+				display: block;
+				margin-block: 1rem;
+				margin-inline: auto;
+			}
+		</style>
+		<script src="../canvas-lord.js"></script>
+	</head>
+	<body>
+		<div id="canvases"></div>
+
+		<script type="text/javascript">
+			const canvasesDiv = document.getElementById('canvases');
+
+			const variants = [
+				{ update: 'always', render: 'onUpdate' },
+				{ update: 'focus', render: 'onUpdate' },
+				{ update: 'onEvent', render: 'onUpdate' },
+				{ update: 'manual', render: 'onUpdate' },
+
+				{ update: 'always', render: 'manual' },
+				{ update: 'focus', render: 'manual' },
+				{ update: 'onEvent', render: 'manual' },
+				{ update: 'manual', render: 'manual' },
+			];
+
+			variants.forEach(({ update, render }) => {
+				const title = document.createElement('h2');
+				title.textContent = `Update: ${update} | Render: ${render}`;
+
+				const canvas = document.createElement('canvas');
+				canvas.id = [update, render].join('-');
+				canvas.setAttribute('width', '320px');
+				canvas.setAttribute('height', '180px');
+				canvas.setAttribute('tabindex', '-1');
+
+				canvasesDiv.append(title, canvas);
+			});
+
+			const drawRect = (ctx, fill, ...args) =>
+				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+
+			[...document.querySelectorAll('canvas')].forEach((canvas) => {
+				const { id } = canvas;
+				const [update, render] = id.split('-');
+
+				const gameLoopSettings = {
+					update,
+					updateOn: update === 'onEvent' ? ['mousemove'] : undefined,
+					render,
+				};
+
+				const game = new Game(id, gameLoopSettings);
+
+				const drawOverlay = () => {
+					game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
+					game.ctx.fillRect(0, 0, 640, 360);
+				};
+
+				game.listeners.blur.add(drawOverlay);
+
+				const updateButton = document.createElement('button');
+				updateButton.textContent = 'Update';
+				updateButton.onclick = () => game.update();
+				canvas.after(updateButton);
+
+				const renderButton = document.createElement('button');
+				renderButton.textContent = 'Render';
+				renderButton.onclick = () => game.render();
+				updateButton.after(renderButton);
+
+				class UpdateRenderScene extends Scene {
+					constructor() {
+						super();
+
+						this.updates = 0;
+						this.renders = 0;
+					}
+
+					update() {
+						++this.updates;
+					}
+
+					render(ctx) {
+						++this.renders;
+
+						ctx.fillStyle = 'white';
+						ctx.fillText(`Update Count: ${this.updates}`, 3, 10);
+						ctx.fillText(`Render Count: ${this.renders}`, 3, 22);
+						ctx.fillText(
+							`Focued: ${this.engine.focus} (as of last render)`,
+							3,
+							34,
+						);
+
+						const angle = this.updates / 30;
+
+						const xCenter = 320 / 2;
+						const yCenter = 180 / 2;
+
+						const drawSpinningRect = (angle, color) => {
+							const scale = 1 + Math.sin(angle) / 4;
+							const size = 40 * scale;
+							const offset = size / 2;
+
+							const xOffset = Math.cos(angle) * 30;
+							const x = xCenter + xOffset - offset;
+							const y = yCenter - offset;
+
+							ctx.fillStyle = color;
+							drawRect(ctx, true, x, y, size, size);
+						};
+
+						const rects = [
+							[angle, 'red'],
+							[angle + Math.PI, 'green'],
+						].sort(([a], [b]) =>
+							Math.sign(Math.sin(a) - Math.sin(b)),
+						);
+
+						rects.forEach((rect) => drawSpinningRect(...rect));
+					}
+				}
+
+				const scene = new UpdateRenderScene();
+
+				game.pushScene(scene);
+
+				game.render();
+				drawOverlay();
+			});
+		</script>
+	</body>
+</html>
