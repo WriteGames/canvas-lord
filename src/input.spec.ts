@@ -1,26 +1,9 @@
-import './canvas-lord.ts';
+import { Input, type Key, type Engine } from './canvas-lord.js';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 const engine = {
 	focus: true,
 } as Engine;
-
-const loadCanvasLordScript = (): Promise<void> => {
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.async = true;
-		script.setAttribute('src', './canvas-lord/src/canvas-lord.js');
-
-		script.addEventListener('load', () => resolve());
-		script.addEventListener('error', reject);
-
-		document.body.appendChild(script);
-	});
-};
-
-beforeAll(async () => {
-	// TODO: find a better solution for this!
-	await loadCanvasLordScript();
-});
 
 let input: Input;
 beforeEach(() => {

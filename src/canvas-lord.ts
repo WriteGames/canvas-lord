@@ -975,9 +975,9 @@ const _keys = [
 	'~',
 ] as const;
 
-type Key = (typeof _keys)[number];
+export type Key = (typeof _keys)[number];
 
-interface Input {
+export interface Input {
 	engine: Engine;
 	mouse: Mouse;
 	keys: Record<Key, InputStatus>;
@@ -985,7 +985,7 @@ interface Input {
 
 type MousePrototype = Pick<Mouse, 'pos' | 'realPos' | '_clicked'>;
 
-class Input {
+export class Input {
 	constructor(engine: Engine) {
 		this.engine = engine;
 
@@ -1263,7 +1263,7 @@ export const drawLine = (
 	ctx.stroke();
 };
 
-const pixelCanvas = document.createElement('canvas');
+const pixelCanvas = new OffscreenCanvas(1, 1);
 const _pixelCtx = pixelCanvas.getContext('2d');
 if (!_pixelCtx) {
 	throw Error('pixelCtx failed to create');
