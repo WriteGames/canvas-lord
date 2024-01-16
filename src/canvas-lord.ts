@@ -749,6 +749,7 @@ export class Game {
 
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus: boolean): void {
+		if (this.focus === focus) return;
 		this.focus = focus;
 		this.sendEvent(focus ? 'focus' : 'blur');
 	}
