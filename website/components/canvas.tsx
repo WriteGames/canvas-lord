@@ -1,14 +1,17 @@
 'use client';
 
-import { Game, Scene } from 'canvas-lord';
+import { Engine, Game, Scene } from 'canvas-lord';
 import { useEffect } from 'react';
 
 export const Canvas = ({ id }: { id: string }) => {
 	useEffect(() => {
 		const game = new Game(id);
 
-		const drawRect = (ctx, fill, ...args) =>
-			fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+		const drawRect = (
+			ctx: CanvasRenderingContext2D,
+			fill: boolean,
+			...args: Parameters<(typeof ctx)['fillRect']>
+		) => (fill ? ctx.fillRect(...args) : ctx.strokeRect(...args));
 
 		const drawOverlay = () => {
 			game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
@@ -18,15 +21,8 @@ export const Canvas = ({ id }: { id: string }) => {
 		game.listeners.blur.add(drawOverlay);
 
 		class UpdateRenderScene extends Scene {
-			updates: 0;
-			renders: 0;
-
-			constructor() {
-				super();
-
-				this.updates = 0;
-				this.renders = 0;
-			}
+			updates = 0;
+			renders = 0;
 
 			update() {
 				++this.updates;
@@ -45,7 +41,7 @@ export const Canvas = ({ id }: { id: string }) => {
 				const xCenter = 320 / 2;
 				const yCenter = 180 / 2;
 
-				const drawSpinningRect = (angle, color) => {
+				const drawSpinningRect = (angle: number, color: string) => {
 					const scale = 1 + Math.sin(angle) / 4;
 					const size = 40 * scale;
 					const offset = size / 2;
@@ -58,9 +54,9 @@ export const Canvas = ({ id }: { id: string }) => {
 					drawRect(ctx, true, x, y, size, size);
 				};
 
-				const rects = [
-					[angle, 'red'],
-					[angle + Math.PI, 'green'],
+				const rects: Array<readonly [number, string]> = [
+					[angle, 'red'] as const,
+					[angle + Math.PI, 'green'] as const,
 				].sort(([a], [b]) => Math.sign(Math.sin(a) - Math.sin(b)));
 
 				rects.forEach((rect) => drawSpinningRect(...rect));

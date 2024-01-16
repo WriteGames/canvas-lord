@@ -1,3 +1,30 @@
+import {
+	AssetManager,
+	cardinalNorms,
+	filterWithinBounds,
+	Game,
+	globalSetTile,
+	Grid,
+	GridOutline,
+	mapByOffset,
+	mapFindOffset,
+	normToBitFlagMap,
+	reduceBitFlags,
+	Scene,
+	Tileset,
+	Tuple,
+	v2zero,
+	addPos,
+	subPos,
+	dirND,
+	findAllPolygonsInGrid,
+	drawLine,
+	checkLineSegmentIntersection,
+	getLineSegmentIntersection,
+	isPointOnLine,
+	isPointInsidePath,
+} from './canvas-lord.js';
+
 /* eslint-disable no-undef */
 const initGrid = () => {
 	const grid = new Grid(320, 180, 16, 16);
@@ -741,7 +768,7 @@ class Player {
 }
 
 let assetManager;
-const initGames = () => {
+export const initGames = () => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
 	const lineSegmentGame = new Game('line-segment');

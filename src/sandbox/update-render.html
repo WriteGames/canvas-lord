@@ -34,12 +34,13 @@
 				margin-inline: auto;
 			}
 		</style>
-		<script src="../canvas-lord.js"></script>
 	</head>
 	<body>
 		<div id="canvases"></div>
 
-		<script type="text/javascript">
+		<script type="module">
+			import { Game, Scene } from '../canvas-lord.js';
+
 			const canvasesDiv = document.getElementById('canvases');
 
 			const variants = [
@@ -100,12 +101,8 @@
 				updateButton.after(renderButton);
 
 				class UpdateRenderScene extends Scene {
-					constructor() {
-						super();
-
-						this.updates = 0;
-						this.renders = 0;
-					}
+					updates = 0;
+					renders = 0;
 
 					update() {
 						++this.updates;

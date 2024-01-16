@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 const hashTuple = (pos) => pos.join(',');
 const _tupleMap = new Map();
-const Tuple = (...args) => {
+export const Tuple = (...args) => {
     const hash = hashTuple(args);
     if (!_tupleMap.has(hash)) {
         const tuple = Object.freeze(args);
@@ -31,26 +31,26 @@ const indexToPos = (index, stride) => [
 ];
 const posToIndex = ([x, y], stride) => y * stride + x;
 const posEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
-const addPos = (a, b) => {
+export const addPos = (a, b) => {
     return Tuple(...a.map((v, i) => v + (b[i] ?? 0)));
 };
-const subPos = (a, b) => {
+export const subPos = (a, b) => {
     return Tuple(...a.map((v, i) => v - (b[i] ?? 0)));
 };
-const scalePos = (p, s) => {
+export const scalePos = (p, s) => {
     return Tuple(...p.map((v) => v * s));
 };
-const mapByOffset = (offset) => {
+export const mapByOffset = (offset) => {
     return (pos) => addPos(offset, pos);
 };
-const mapFindOffset = (origin) => {
+export const mapFindOffset = (origin) => {
     return (pos) => subPos(pos, origin);
 };
-const flatMapByOffsets = (offsets) => {
+export const flatMapByOffsets = (offsets) => {
     return (pos) => offsets.map((offset) => addPos(offset, pos));
 };
-const posDistance = (a, b) => distance(...subPos(b, a));
-const posDistanceSq = (a, b) => distanceSq(...subPos(b, a));
+export const posDistance = (a, b) => distance(...subPos(b, a));
+export const posDistanceSq = (a, b) => distanceSq(...subPos(b, a));
 // const pathToSegments = (path) =>
 // 	path.map((vertex, i, vertices) => [
 // 		vertex,
@@ -79,31 +79,31 @@ const _lineSegmentIntersection = ([a, b], [c, d]) => {
     const u = crossProduct2D(subPos(a, c), r) / -rxs;
     return [t, u];
 };
-const checkLineSegmentIntersection = (a, b) => {
+export const checkLineSegmentIntersection = (a, b) => {
     const [t, u] = _lineSegmentIntersection(a, b);
     // TODO(bret): Play with these values a bit more
     return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 };
-const getLineSegmentIntersection = (a, b) => {
+export const getLineSegmentIntersection = (a, b) => {
     const [t, u] = _lineSegmentIntersection(a, b);
     return t >= 0 && t <= 1 && u >= 0 && u <= 1
         ? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
         : null;
 };
-const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
+export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions
 const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => x >= x1 && y >= y1 && x < x2 && y < y2;
-const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
+export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
     b.every((p, i) => (pos[i] ?? Infinity) < p);
-const isPointInsidePath = (point, path) => {
+export const isPointInsidePath = (point, path) => {
     const wind = path
         .map((vertex) => getAngle(point, vertex))
         .map((angle, i, arr) => getAngleBetween(angle, arr[(i + 1) % arr.length]))
         .reduce(reduceSum, 0);
     return Math.abs(wind) > EPSILON;
 };
-const v2zero = Tuple(0, 0);
-const v2one = Tuple(1, 1);
+export const v2zero = Tuple(0, 0);
+export const v2one = Tuple(1, 1);
 const createBitEnum = (..._names) => {
     const names = _names.flat();
     const bitEnumObj = {};
@@ -114,10 +114,10 @@ const createBitEnum = (..._names) => {
     });
     return bitEnumObj;
 };
-const dirNN = 0;
-const [dirRN, dirNU, dirLN, dirND] = Object.freeze(Array.from({ length: 4 }).map((_, i) => 1 << i));
+export const dirNN = 0;
+export const [dirRN, dirNU, dirLN, dirND] = Object.freeze(Array.from({ length: 4 }).map((_, i) => 1 << i));
 // prettier-ignore
-const [dirLU, dirRU, dirLD, dirRD,] = [
+export const [dirLU, dirRU, dirLD, dirRD,] = [
     dirLN | dirNU, dirRN | dirNU,
     dirLN | dirND, dirRN | dirND,
 ];
@@ -138,9 +138,9 @@ const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] 
 ];
 const orthogonalNorms = [normRN, normNU, normLN, normND];
 const diagonalNorms = [normRU, normLU, normLD, normRD];
-const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
+export const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
 // Starts right, goes counter-clockwise
-const reduceBitFlags = (acc, val) => acc | val;
+export const reduceBitFlags = (acc, val) => acc | val;
 const cardinalNormStrs = [
     'RN',
     'RU',
@@ -153,7 +153,7 @@ const cardinalNormStrs = [
 ];
 const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str) => CARDINAL_NORM[str];
-const normToBitFlagMap = new Map();
+export const normToBitFlagMap = new Map();
 [
     [normRN, CARDINAL_NORM.RN], // 1
     [normRU, CARDINAL_NORM.RU], // 2
@@ -165,7 +165,7 @@ const normToBitFlagMap = new Map();
     [normRD, CARDINAL_NORM.RD],
 ].forEach(([dir, bitFlag]) => normToBitFlagMap.set(dir, bitFlag));
 const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);
-const globalSetTile = (tileset, x, y, bitFlag) => {
+export const globalSetTile = (tileset, x, y, bitFlag) => {
     console.log({ bitFlag });
     switch (bitFlag & ~orTogetherCardinalDirs('LD', 'RD', 'LU', 'RU')) {
         case 0:
@@ -221,7 +221,7 @@ const globalSetTile = (tileset, x, y, bitFlag) => {
             break;
     }
 };
-class AssetManager {
+export class AssetManager {
     constructor(prefix = '') {
         this.images = new Map();
         this.imagesLoaded = 0;
@@ -838,7 +838,7 @@ export class Scene {
     }
 }
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
-const drawLine = (ctx, x1, y1, x2, y2) => {
+export const drawLine = (ctx, x1, y1, x2, y2) => {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
@@ -850,7 +850,7 @@ if (!_pixelCtx) {
     throw Error('pixelCtx failed to create');
 }
 const pixelCtx = _pixelCtx;
-class Grid {
+export class Grid {
     constructor(width, height, tileW, tileH) {
         this.width = width;
         this.height = height;
@@ -1000,7 +1000,7 @@ function getGridData(_grid, _columns, _rows) {
     }
     return [_grid, _columns, _rows];
 }
-const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
+export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
     const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
     const polygons = [];
     const offsets = {
@@ -1142,7 +1142,7 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
         shapeCells,
     };
 };
-class GridOutline {
+export class GridOutline {
     constructor() {
         this.grid = null;
         this.polygons = [];
@@ -1188,7 +1188,7 @@ class GridOutline {
         }
     }
 }
-class Tileset {
+export class Tileset {
     constructor(image, width, height, tileW, tileH) {
         this.width = width;
         this.height = height;

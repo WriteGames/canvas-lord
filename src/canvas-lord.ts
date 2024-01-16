@@ -57,7 +57,7 @@ type TupleToObjectTupleHybrid<A extends readonly PropertyKey[]> = Pick<
 const hashTuple = (pos: Tuple): string => pos.join(',');
 
 const _tupleMap = new Map<string, V2 | V3 | V4>();
-const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
+export const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
 	const hash = hashTuple(args);
 	if (!_tupleMap.has(hash)) {
 		const tuple = Object.freeze(args) as unknown as Tuple;
@@ -100,33 +100,36 @@ const posToIndex = ([x, y]: V2, stride: number): number => y * stride + x;
 const posEqual = (a: Tuple, b: Tuple): boolean =>
 	a.length === b.length && a.every((v, i) => v === b[i]);
 
-const addPos: FuncMapTuple = (a, b) => {
+export const addPos: FuncMapTuple = (a, b) => {
 	return Tuple(
 		...(a.map((v, i) => v + (b[i] ?? 0)) as unknown as typeof a),
 	) as unknown as typeof a;
 };
 
-const subPos: FuncMapTuple = (a, b) => {
+export const subPos: FuncMapTuple = (a, b) => {
 	return Tuple(
 		...(a.map((v, i) => v - (b[i] ?? 0)) as unknown as typeof a),
 	) as unknown as typeof a;
 };
-const scalePos: FuncMapTupleByScalar = (p, s) => {
+export const scalePos: FuncMapTupleByScalar = (p, s) => {
 	return Tuple(
 		...(p.map((v) => v * s) as unknown as typeof p),
 	) as unknown as typeof p;
 };
-const mapByOffset = <V extends Tuple>(offset: V): ((pos: V) => V) => {
+export const mapByOffset = <V extends Tuple>(offset: V): ((pos: V) => V) => {
 	return (pos: V): V => addPos(offset, pos);
 };
-const mapFindOffset = <V extends Tuple>(origin: V): ((pos: V) => V) => {
+export const mapFindOffset = <V extends Tuple>(origin: V): ((pos: V) => V) => {
 	return (pos: V): V => subPos(pos, origin);
 };
-const flatMapByOffsets = <V extends Tuple>(offsets: V[]): ((pos: V) => V[]) => {
+export const flatMapByOffsets = <V extends Tuple>(
+	offsets: V[],
+): ((pos: V) => V[]) => {
 	return (pos: V): V[] => offsets.map((offset) => addPos(offset, pos));
 };
-const posDistance: FuncReduceTuple = (a, b) => distance(...subPos(b, a));
-const posDistanceSq: FuncReduceTuple = (a, b) => distanceSq(...subPos(b, a));
+export const posDistance: FuncReduceTuple = (a, b) => distance(...subPos(b, a));
+export const posDistanceSq: FuncReduceTuple = (a, b) =>
+	distanceSq(...subPos(b, a));
 
 // const pathToSegments = (path) =>
 // 	path.map((vertex, i, vertices) => [
@@ -167,20 +170,20 @@ const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): V2 => {
 
 	return [t, u];
 };
-const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
+export const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
 	const [t, u] = _lineSegmentIntersection(a, b);
 
 	// TODO(bret): Play with these values a bit more
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 };
-const getLineSegmentIntersection = (a: Line2D, b: Line2D): V2 | null => {
+export const getLineSegmentIntersection = (a: Line2D, b: Line2D): V2 | null => {
 	const [t, u] = _lineSegmentIntersection(a, b);
 
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1
 		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
 		: null;
 };
-const isPointOnLine = <V extends Tuple>(point: V, a: V, b: V): boolean =>
+export const isPointOnLine = <V extends Tuple>(point: V, a: V, b: V): boolean =>
 	Math.abs(
 		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
 	) < EPSILON;
@@ -189,7 +192,7 @@ const isPointOnLine = <V extends Tuple>(point: V, a: V, b: V): boolean =>
 const isWithinBounds = ([x, y]: V2, [x1, y1]: V2, [x2, y2]: V2): boolean =>
 	x >= x1 && y >= y1 && x < x2 && y < y2;
 
-const filterWithinBounds =
+export const filterWithinBounds =
 	<V extends Tuple>(a: V, b: V): ((pos: V) => boolean) =>
 	(pos: V): boolean =>
 		a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
@@ -197,7 +200,7 @@ const filterWithinBounds =
 
 type Path = V2[];
 
-const isPointInsidePath = (point: V2, path: Path): boolean => {
+export const isPointInsidePath = (point: V2, path: Path): boolean => {
 	const wind = path
 		.map((vertex) => getAngle(point, vertex))
 		.map((angle, i, arr) =>
@@ -207,8 +210,8 @@ const isPointInsidePath = (point: V2, path: Path): boolean => {
 	return Math.abs(wind) > EPSILON;
 };
 
-const v2zero = Tuple(0, 0);
-const v2one = Tuple(1, 1);
+export const v2zero = Tuple(0, 0);
+export const v2one = Tuple(1, 1);
 
 const createBitEnum = <T extends readonly string[]>(
 	..._names: T
@@ -223,12 +226,12 @@ const createBitEnum = <T extends readonly string[]>(
 	return bitEnumObj;
 };
 
-const dirNN = 0;
-const [dirRN, dirNU, dirLN, dirND] = Object.freeze(
+export const dirNN = 0;
+export const [dirRN, dirNU, dirLN, dirND] = Object.freeze(
 	Array.from({ length: 4 }).map((_, i) => 1 << i),
 ) as V4;
 // prettier-ignore
-const [
+export const [
 	dirLU, dirRU,
 	dirLD, dirRD,
 ] = [
@@ -261,14 +264,14 @@ const [
 
 const orthogonalNorms = [normRN, normNU, normLN, normND] as const;
 const diagonalNorms = [normRU, normLU, normLD, normRD] as const;
-const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
+export const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
 
 type V2OrthogonalNorm = (typeof orthogonalNorms)[number];
 type V2DiagonalNorm = (typeof diagonalNorms)[number];
 type V2CardinalNorm = V2OrthogonalNorm | V2DiagonalNorm;
 
 // Starts right, goes counter-clockwise
-const reduceBitFlags = (acc: number, val: number): number => acc | val;
+export const reduceBitFlags = (acc: number, val: number): number => acc | val;
 const cardinalNormStrs = [
 	'RN',
 	'RU',
@@ -284,7 +287,7 @@ const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str: CardinalNormStr): number =>
 	CARDINAL_NORM[str];
 
-const normToBitFlagMap = new Map<V2CardinalNorm, number>();
+export const normToBitFlagMap = new Map<V2CardinalNorm, number>();
 [
 	[normRN, CARDINAL_NORM.RN] as const, // 1
 	[normRU, CARDINAL_NORM.RU] as const, // 2
@@ -299,7 +302,7 @@ const normToBitFlagMap = new Map<V2CardinalNorm, number>();
 const orTogetherCardinalDirs = (...dirs: CardinalNormStr[]): number =>
 	dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);
 
-const globalSetTile = (
+export const globalSetTile = (
 	tileset: Tileset,
 	x: number,
 	y: number,
@@ -379,14 +382,14 @@ const globalSetTile = (
 
 type AssetManagerOnLoadCallback = (src: string) => void;
 
-interface AssetManager {
+export interface AssetManager {
 	images: Map<string, HTMLImageElement | null>;
 	imagesLoaded: number;
 	onLoadCallbacks: AssetManagerOnLoadCallback[];
 	prefix: string;
 }
 
-class AssetManager {
+export class AssetManager {
 	constructor(prefix = '') {
 		this.images = new Map();
 		this.imagesLoaded = 0;
@@ -1254,7 +1257,7 @@ export class Scene {
 
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 
-const drawLine = (
+export const drawLine = (
 	ctx: CanvasRenderingContext2D,
 	x1: number,
 	y1: number,
@@ -1274,7 +1277,7 @@ if (!_pixelCtx) {
 }
 const pixelCtx = _pixelCtx;
 
-interface Grid {
+export interface Grid {
 	width: number;
 	height: number;
 	tileW: number;
@@ -1286,7 +1289,7 @@ interface Grid {
 	data: number[];
 }
 
-class Grid {
+export class Grid {
 	constructor(width: number, height: number, tileW: number, tileH: number) {
 		this.width = width;
 		this.height = height;
@@ -1499,7 +1502,7 @@ function getGridData(
 	return [_grid, _columns as number, _rows as number];
 }
 
-const findAllPolygonsInGrid = (
+export const findAllPolygonsInGrid = (
 	_grid: GridOrData,
 	_columns?: number,
 	_rows?: number,
@@ -1725,7 +1728,7 @@ const fillShape = (
 	};
 };
 
-interface GridOutline {
+export interface GridOutline {
 	grid: Grid | null;
 	polygons: Polygon[];
 	show: boolean;
@@ -1737,7 +1740,7 @@ interface GridOutline {
 	pointsColor: CSSColor;
 }
 
-class GridOutline {
+export class GridOutline {
 	constructor() {
 		this.grid = null;
 		this.polygons = [];
@@ -1794,7 +1797,7 @@ class GridOutline {
 	}
 }
 
-interface Tileset {
+export interface Tileset {
 	width: number;
 	height: number;
 	tileW: number;
@@ -1811,7 +1814,7 @@ interface Tileset {
 	separation: number;
 }
 
-class Tileset {
+export class Tileset {
 	constructor(
 		image: HTMLImageElement,
 		width: number,
