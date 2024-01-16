@@ -23,8 +23,8 @@
 	},
 	"homepage": "https://github.com/WriteGames/canvas-lord#readme",
 	"devDependencies": {
-		"@vercel/style-guide": "4.0.2",
-		"eslint": "8.28.0",
+		"@vercel/style-guide": "5.1.0",
+		"eslint": "8.56.0",
 		"typescript": "5.3.3"
 	}
 }

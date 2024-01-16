@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars -- extending existing interfaces */
+
 interface HTMLCanvasElement {
 	_actualWidth: number;
 	_actualHeight: number;
@@ -11,6 +12,10 @@ interface HTMLCanvasElement {
 interface Math {
 	clamp: (val: number, min: number, max: number) => number;
 }
+
+/* eslint-enable @typescript-eslint/no-unused-vars -- this extends the existing HTMLCanvasElement interface */
+
+/* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 
 // type Vector = number[];
 type V2 = readonly [x: number, y: number];
@@ -1875,4 +1880,4 @@ class Tileset {
 	}
 }
 
-/* eslint-enable @typescript-eslint/no-unused-vars */
+/* eslint-enable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */

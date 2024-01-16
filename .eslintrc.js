@@ -22,6 +22,9 @@ module.exports = {
 			},
 		],
 
+		// Revisit
+		'@typescript-eslint/no-confusing-void-expression': 0,
+
 		// Temporary
 		'no-console': 0,
 		'no-constant-condition': 0,
