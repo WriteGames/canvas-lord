@@ -1,3 +1,14 @@
+import dynamic from 'next/dynamic';
+
+const Canvas = dynamic(() => import('../components/canvas'), {
+	loading: () => <p>Loading...</p>,
+	ssr: false,
+});
+
 export default function Page() {
-	return <div>Welcome to WriteGames.com</div>;
+	return (
+		<div>
+			<Canvas id="testing" />
+		</div>
+	);
 }

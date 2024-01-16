@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- extending existing interfaces */
 
-interface HTMLCanvasElement {
-	_actualWidth: number;
-	_actualHeight: number;
-	_offsetX: number;
-	_offsetY: number;
-	_scaleX: number;
-	_scaleY: number;
-}
+declare global {
+	interface HTMLCanvasElement {
+		_actualWidth: number;
+		_actualHeight: number;
+		_offsetX: number;
+		_offsetY: number;
+		_scaleX: number;
+		_scaleY: number;
+	}
 
-interface Math {
-	clamp: (val: number, min: number, max: number) => number;
+	interface Math {
+		clamp: (val: number, min: number, max: number) => number;
+	}
 }
 
 /* eslint-enable @typescript-eslint/no-unused-vars -- this extends the existing HTMLCanvasElement interface */
@@ -75,7 +77,7 @@ Math.clamp = (val, min, max): number => {
 	return val;
 };
 
-const EPSILON = 0.000001;
+export const EPSILON = 0.000001;
 
 const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
 const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
@@ -470,7 +472,7 @@ const gameEvents = ['blur', 'focus', 'update'] as const;
 type GameEvent = (typeof gameEvents)[number];
 type EventCallback = () => void;
 
-interface Game {
+export interface Game {
 	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
 	gameLoopSettings: GameLoopSettings;
@@ -486,9 +488,9 @@ interface Game {
 	_onGameLoopSettingsUpdate?: EventCallback;
 }
 
-type Engine = Game;
+export type Engine = Game;
 
-class Game {
+export class Game {
 	gameLoopSettings: GameLoopSettings = {
 		update: 'focus',
 		render: 'onUpdate',
@@ -1166,7 +1168,7 @@ interface IRenderable {
 type Entity = IEntity;
 type Renderable = IRenderable;
 
-interface Scene {
+export interface Scene {
 	engine: Engine | null;
 	entities: Entity[];
 	renderables: Renderable[];
@@ -1182,7 +1184,7 @@ interface Scene {
 	ctx: CanvasRenderingContext2D;
 }
 
-class Scene {
+export class Scene {
 	constructor() {
 		this.engine = null;
 

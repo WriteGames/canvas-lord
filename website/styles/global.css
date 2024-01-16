@@ -1,0 +1,55 @@
+html {
+	font-family: sans-serif;
+}
+
+@layer layout {
+	.container {
+		grid-template-rows: auto 1fr auto;
+		height: 100%;
+	}
+
+	.layout {
+		--padding: 1rem;
+		--max-width: 37.5rem;
+		display: grid;
+		grid-template-columns:
+			[full-start] minmax(1rem, 1fr)
+			[padding-start] var(--padding)
+			[main-start] minmax(0, calc(var(--max-width) - 2 * var(--padding)))
+			[main-end]
+			var(--padding) [padding-end]
+			minmax(1rem, 1fr) [full-end];
+
+		> *:not(script) {
+			display: grid;
+			grid-template-columns: var(--padding) [main-start] auto [main-end] var(
+					--padding
+				);
+			grid-template-columns: subgrid;
+			grid-column: padding;
+			> * {
+				grid-column: main;
+			}
+		}
+	}
+}
+
+header {
+	padding-block: var(--padding);
+	background: red;
+	grid-column: full;
+}
+
+main {
+	padding-block: var(--padding);
+}
+
+footer {
+	padding-block: var(--padding);
+	background: red;
+	grid-column: full;
+}
+
+h1 {
+	font-size: 2rem;
+}

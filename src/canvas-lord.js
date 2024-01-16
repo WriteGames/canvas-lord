@@ -1,4 +1,4 @@
-"use strict";
+/* eslint-disable @typescript-eslint/no-unused-vars -- extending existing interfaces */
 const hashTuple = (pos) => pos.join(',');
 const _tupleMap = new Map();
 const Tuple = (...args) => {
@@ -17,7 +17,7 @@ Math.clamp = (val, min, max) => {
         return max;
     return val;
 };
-const EPSILON = 0.000001;
+export const EPSILON = 0.000001;
 const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;
 const distance = (...dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
@@ -262,7 +262,7 @@ const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.d
 });
 // TODO(bret): 'tabblur', 'tabfocus'
 const gameEvents = ['blur', 'focus', 'update'];
-class Game {
+export class Game {
     gameLoopSettings = {
         update: 'focus',
         render: 'onUpdate',
@@ -780,7 +780,7 @@ class Camera extends Array {
         this[1] = val;
     }
 }
-class Scene {
+export class Scene {
     constructor() {
         this.engine = null;
         this.entities = [];
@@ -1225,5 +1225,5 @@ class Tileset {
         }
     }
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
+/* eslint-enable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 //# sourceMappingURL=canvas-lord.js.map
