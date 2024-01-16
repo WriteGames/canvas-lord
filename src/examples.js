@@ -503,9 +503,9 @@ class Player {
 	}
 
 	update(input) {
-		const leftKeys = [37, 65];
-		const rightKeys = [39, 68];
-		const jumpKeys = [32, 38, 87, 90];
+		const leftKeys = ['ArrowLeft', 'a', 'A'];
+		const rightKeys = ['ArrowRight', 'd', 'D'];
+		const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
 
 		const keyLeftCheck = input.keyCheck(leftKeys);
 		const keyRightCheck = input.keyCheck(rightKeys);
