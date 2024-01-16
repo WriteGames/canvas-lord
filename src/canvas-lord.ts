@@ -588,8 +588,8 @@ class Game {
 			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
 
 			while (deltaTime >= timestep) {
-				this.input.update();
 				this.update();
+				this.input.update();
 				deltaTime -= timestep;
 			}
 		};
