@@ -1263,8 +1263,14 @@ export const drawLine = (
 	ctx.stroke();
 };
 
-const pixelCanvas = new OffscreenCanvas(1, 1);
-const _pixelCtx = pixelCanvas.getContext('2d');
+const pixelCanvas =
+	typeof OffscreenCanvas !== 'undefined'
+		? new OffscreenCanvas(1, 1)
+		: document.createElement('canvas');
+const _pixelCtx =
+	typeof OffscreenCanvas !== 'undefined'
+		? (pixelCanvas as OffscreenCanvas).getContext('2d')
+		: (pixelCanvas as HTMLCanvasElement).getContext('2d');
 if (!_pixelCtx) {
 	throw Error('pixelCtx failed to create');
 }

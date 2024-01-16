@@ -838,8 +838,16 @@ export const drawLine = (ctx, x1, y1, x2, y2) => {
     ctx.lineTo(x2, y2);
     ctx.stroke();
 };
-// const pixelCanvas = new OffscreenCanvas(1, 1);
-const pixelCanvas = document.createElement('canvas');
+const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
+    ? new OffscreenCanvas(1, 1)
+    : document.createElement('canvas');
+const _pixelCtx = typeof OffscreenCanvas !== 'undefined'
+    ? pixelCanvas.getContext('2d')
+    : pixelCanvas.getContext('2d');
+if (!_pixelCtx) {
+    throw Error('pixelCtx failed to create');
+}
+const pixelCtx = _pixelCtx;
 export class Grid {
     constructor(width, height, tileW, tileH) {
         this.width = width;
