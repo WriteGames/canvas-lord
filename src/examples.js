@@ -445,8 +445,8 @@ class ContourTracingScene extends Scene {
 }
 
 class PlayerScene extends Scene {
-	constructor(Player) {
-		super();
+	constructor(Player, engine) {
+		super(engine);
 
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(160 + 100, 120));
@@ -789,7 +789,7 @@ export const initGames = () => {
 
 			const sceneWidth = game.canvas.width / 2;
 
-			const sceneLeft = new PlayerScene(Player);
+			const sceneLeft = new PlayerScene(Player, game);
 			sceneLeft.player.x = 40;
 			if (splitScreen === true) {
 				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
@@ -798,7 +798,7 @@ export const initGames = () => {
 			}
 
 			if (splitScreen === true) {
-				const sceneRight = new PlayerScene(Player);
+				const sceneRight = new PlayerScene(Player, game);
 				sceneRight.screenPos[0] = sceneWidth;
 				sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
 				sceneRight.shouldUpdate = false;
@@ -812,13 +812,15 @@ export const initGames = () => {
 		});
 
 		if (true) {
-			const lineSegmentScene = new LineSegmentScene();
+			const lineSegmentScene = new LineSegmentScene(lineSegmentGame);
 			lineSegmentGame.pushScenes(lineSegmentScene);
 			lineSegmentGame.render();
 		}
 
 		if (true) {
-			const contourTracingScene = new ContourTracingScene();
+			const contourTracingScene = new ContourTracingScene(
+				contourTracingGame,
+			);
 			contourTracingGame.pushScenes(contourTracingScene);
 			contourTracingGame.render();
 		}

@@ -63,7 +63,7 @@ export const Canvas = ({ id }: { id: string }) => {
 			}
 		}
 
-		const scene = new UpdateRenderScene();
+		const scene = new UpdateRenderScene(game);
 
 		game.pushScene(scene);
 

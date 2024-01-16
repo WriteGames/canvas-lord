@@ -478,7 +478,7 @@ export interface Game {
 	sceneStack: Scene[][];
 	backgroundColor: CSSColor;
 	canvas: HTMLCanvasElement;
-	ctx: CanvasRenderingContext2D | undefined;
+	ctx: CanvasRenderingContext2D;
 	input: Input;
 	_lastFrame: number;
 	mainLoop: (time: number) => void;
@@ -780,8 +780,6 @@ export class Game {
 
 	render(): void {
 		const { canvas, ctx } = this;
-
-		if (ctx === undefined) return;
 
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, 640, 360);
@@ -1169,7 +1167,7 @@ type Entity = IEntity;
 type Renderable = IRenderable;
 
 export interface Scene {
-	engine: Engine | null;
+	engine: Engine;
 	entities: Entity[];
 	renderables: Renderable[];
 	shouldUpdate: boolean;
@@ -1185,8 +1183,8 @@ export interface Scene {
 }
 
 export class Scene {
-	constructor() {
-		this.engine = null;
+	constructor(engine: Engine) {
+		this.engine = engine;
 
 		this.entities = [];
 		this.renderables = [];
@@ -1220,11 +1218,6 @@ export class Scene {
 	}
 
 	update(input: Input): void {
-		if (this.engine === null) {
-			throw new Error('Scene::engine is not defined');
-			return;
-		}
-
 		if (this.allowRefresh && input.keyPressed('F5')) location.reload();
 
 		if (this.escapeToBlur && input.keyPressed('Escape'))

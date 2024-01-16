@@ -469,8 +469,6 @@ export class Game {
     }
     render() {
         const { canvas, ctx } = this;
-        if (ctx === undefined)
-            return;
         ctx.fillStyle = this.backgroundColor;
         ctx.fillRect(0, 0, 640, 360);
         this.currentScenes?.forEach((scene) => scene.render(ctx));
@@ -783,8 +781,8 @@ class Camera extends Array {
     }
 }
 export class Scene {
-    constructor() {
-        this.engine = null;
+    constructor(engine) {
+        this.engine = engine;
         this.entities = [];
         this.renderables = [];
         this.shouldUpdate = true;
@@ -811,10 +809,6 @@ export class Scene {
         return entity;
     }
     update(input) {
-        if (this.engine === null) {
-            throw new Error('Scene::engine is not defined');
-            return;
-        }
         if (this.allowRefresh && input.keyPressed('F5'))
             location.reload();
         if (this.escapeToBlur && input.keyPressed('Escape'))
