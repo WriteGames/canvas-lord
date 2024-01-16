@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- extending existing interfaces */
+/* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 const hashTuple = (pos) => pos.join(',');
 const _tupleMap = new Map();
 const Tuple = (...args) => {

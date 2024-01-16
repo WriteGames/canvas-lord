@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- extending existing interfaces */
+/* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 
 declare global {
 	interface HTMLCanvasElement {
@@ -14,10 +14,6 @@ declare global {
 		clamp: (val: number, min: number, max: number) => number;
 	}
 }
-
-/* eslint-enable @typescript-eslint/no-unused-vars -- this extends the existing HTMLCanvasElement interface */
-
-/* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 
 // type Vector = number[];
 type V2 = readonly [x: number, y: number];
