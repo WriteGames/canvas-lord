@@ -57,7 +57,7 @@ const _tupleMap = new Map<string, V2 | V3 | V4>();
 const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
 	const hash = hashTuple(args);
 	if (!_tupleMap.has(hash)) {
-		const tuple = Object.freeze(args) as Tuple;
+		const tuple = Object.freeze(args) as unknown as Tuple;
 		_tupleMap.set(hash, tuple);
 	}
 	return _tupleMap.get(hash) as TupleT<V>;

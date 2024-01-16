@@ -155,13 +155,13 @@ const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str) => CARDINAL_NORM[str];
 const normToBitFlagMap = new Map();
 [
-    [normRN, CARDINAL_NORM.RN],
-    [normRU, CARDINAL_NORM.RU],
-    [normNU, CARDINAL_NORM.NU],
-    [normLU, CARDINAL_NORM.LU],
-    [normLN, CARDINAL_NORM.LN],
-    [normLD, CARDINAL_NORM.LD],
-    [normND, CARDINAL_NORM.ND],
+    [normRN, CARDINAL_NORM.RN], // 1
+    [normRU, CARDINAL_NORM.RU], // 2
+    [normNU, CARDINAL_NORM.NU], // 4
+    [normLU, CARDINAL_NORM.LU], // 8
+    [normLN, CARDINAL_NORM.LN], // 16
+    [normLD, CARDINAL_NORM.LD], // 32
+    [normND, CARDINAL_NORM.ND], // 64
     [normRD, CARDINAL_NORM.RD],
 ].forEach(([dir, bitFlag]) => normToBitFlagMap.set(dir, bitFlag));
 const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);

@@ -1,4 +1,4 @@
 {
-  "typescript.tsdk": "..\\node_modules\\.pnpm\\typescript@4.9.3\\node_modules\\typescript\\lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+	"typescript.tsdk": "..\\node_modules\\.pnpm\\typescript@5.3.3\\node_modules\\typescript\\lib",
+	"typescript.enablePromptUseWorkspaceTsdk": true
 }
