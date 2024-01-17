@@ -10,7 +10,7 @@
 	},
 	"scripts": {
 		"compile": "tsc --p tsconfig-build.json",
-		"test": "vitest",
+		"test": "vitest --pool=forks",
 		"watch": "tsc --w --p tsconfig-build.json"
 	},
 	"keywords": [],
