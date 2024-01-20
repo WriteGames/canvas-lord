@@ -101,11 +101,16 @@ export class Logger {
 		const glyph = ctx.measureText('0');
 		const ascenderHeight = glyph.actualBoundingBoxAscent;
 
+		const longestPrefix =
+			Array.from(this.watched)
+				.map(([k]) => k.length + this.watchedDelimiter.length)
+				.sort((a, b) => b - a)[0] ?? 0;
+
 		const longestLength =
 			[
 				Array.from(this.watched).map(
 					([k, log]) =>
-						k.length +
+						longestPrefix +
 						this.watchedDelimiter.length +
 						log.str.length,
 				),
@@ -137,8 +142,10 @@ export class Logger {
 		ctx.fillStyle = 'white';
 
 		this.watched.forEach((log, key) => {
+			const prefix = `${key}${this.watchedDelimiter}`;
+			const spaces = ' '.repeat(longestPrefix - prefix.length);
 			ctx.fillText(
-				`${key}${this.watchedDelimiter}${log.str}`,
+				`${prefix}${spaces}${log.str}`,
 				drawX + paddingX,
 				drawY + paddingY + ascenderHeight,
 			);

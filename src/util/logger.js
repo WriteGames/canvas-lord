@@ -71,8 +71,11 @@ export class Logger {
         ctx.font = '10px Monospace';
         const glyph = ctx.measureText('0');
         const ascenderHeight = glyph.actualBoundingBoxAscent;
+        const longestPrefix = Array.from(this.watched)
+            .map(([k]) => k.length + this.watchedDelimiter.length)
+            .sort((a, b) => b - a)[0] ?? 0;
         const longestLength = [
-            Array.from(this.watched).map(([k, log]) => k.length +
+            Array.from(this.watched).map(([k, log]) => longestPrefix +
                 this.watchedDelimiter.length +
                 log.str.length),
             this.logs.map((log) => log.str.length),
@@ -93,7 +96,9 @@ export class Logger {
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = 'white';
         this.watched.forEach((log, key) => {
-            ctx.fillText(`${key}${this.watchedDelimiter}${log.str}`, drawX + paddingX, drawY + paddingY + ascenderHeight);
+            const prefix = `${key}${this.watchedDelimiter}`;
+            const spaces = ' '.repeat(longestPrefix - prefix.length);
+            ctx.fillText(`${prefix}${spaces}${log.str}`, drawX + paddingX, drawY + paddingY + ascenderHeight);
             drawY += textHeight;
         });
         this.logs.forEach((log) => {
