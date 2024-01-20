@@ -768,13 +768,13 @@ class Player {
 }
 
 let assetManager;
-export const initGames = () => {
+export const initGames = (src = '') => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
 	const lineSegmentGame = new Game('line-segment');
 	const contourTracingGame = new Game('contour-tracing');
 	const games = [game1];
-	assetManager = new AssetManager('img/');
+	assetManager = new AssetManager(`${src}img/`);
 
 	assetManager.addImage('grid.bmp');
 	assetManager.addImage('radiohead_spritesheet.png');

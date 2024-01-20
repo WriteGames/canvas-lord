@@ -1,6 +1,7 @@
 'use client';
 
 import { Engine, Game, Scene } from 'canvas-lord';
+import Script from 'next/script';
 import { useEffect } from 'react';
 
 export const Canvas = ({ id }: { id: string }) => {
@@ -71,23 +72,40 @@ export const Canvas = ({ id }: { id: string }) => {
 		drawOverlay();
 	}, []);
 
+	const canvasStyle = `box-sizing: border-box;
+	display: block;
+	width: 100%;
+	max-width: 640px;
+	aspect-ratio: 16 / 9;
+	margin: 0 auto;
+	padding: 5px;
+	border: 3px solid #ddd;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -webkit-crisp-edges;
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;`;
+
 	return (
 		<>
-			<style>{`canvas {
-			box-sizing: border-box;
-			display: block;
-			width: 100%;
-			max-width: 640px;
-			aspect-ratio: 16 / 9;
-			margin: 0 auto;
-			padding: 5px;
-			border: 3px solid #ddd;
-			image-rendering: -moz-crisp-edges;
-			image-rendering: -webkit-crisp-edges;
-			image-rendering: pixelated;
-			image-rendering: crisp-edges;
-			}`}</style>
+			<style>{`canvas {${canvasStyle}}`}</style>
 			<canvas id={id} width="320px" height="180px" tabIndex={-1}></canvas>
+			<canvas id="basic" width="320px" height="180px" tabIndex={-1}></canvas>
+			<canvas
+				id="line-segment"
+				width="320px"
+				height="180px"
+				tabIndex={-1}
+			></canvas>
+			<canvas
+				id="contour-tracing"
+				width="320px"
+				height="180px"
+				tabIndex={-1}
+			></canvas>
+			<Script type="module">{`
+				import { initGames } from 'http://canvas-lord.localhost/src/examples.js';
+				initGames('http://canvas-lord.localhost/');
+			`}</Script>
 		</>
 	);
 };
