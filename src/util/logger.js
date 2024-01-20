@@ -1,28 +1,34 @@
+export const YesNoLogParser = (value) => {
+    return value ? 'yes' : 'no';
+};
 const loggerDefaults = Object.freeze({
     // TODO: is there any way we could get the game FPS to determine this?
-    defaultLifespan: 60 * 2,
-    defaultLogRenderer: (ctx, str, drawX, drawY) => {
+    defaultLifespan: 60,
+    defaultLogRenderer: (ctx, log, drawX, drawY) => {
         ctx.fillStyle = 'white';
-        ctx.fillText(str, drawX, drawY);
+        ctx.fillText(log.str, drawX, drawY);
     },
 });
+const defaultLogParser = (val) => JSON.parse(JSON.stringify(val)).toString();
 export class Log {
+    #_value;
+    #_str = 'undefined';
     logger;
     elapsed;
     lifespan;
-    #_value;
-    #_str = 'undefined';
+    parser;
     renderer;
     constructor(logger, value, options = {}) {
         this.logger = logger;
-        this.value = value;
         this.elapsed = 0;
         this.lifespan = options.lifespan ?? logger.defaultLifespan;
+        this.parser = options.parser ?? defaultLogParser;
         this.renderer = options.renderer ?? logger.defaultLogRenderer;
+        this.value = value;
     }
     set value(val) {
         this.#_value = val;
-        this.#_str = JSON.parse(JSON.stringify(val)).toString();
+        this.#_str = this.parser(val);
     }
     get value() {
         return this.#_value;
@@ -83,9 +89,7 @@ export class Logger {
             .map(([k]) => k.length + this.watchedDelimiter.length)
             .sort((a, b) => b - a)[0] ?? 0;
         const longestLength = [
-            Array.from(this.watched).map(([k, log]) => longestPrefix +
-                this.watchedDelimiter.length +
-                log.str.length),
+            Array.from(this.watched).map(([k, log]) => longestPrefix + log.str.length),
             this.logs.map((log) => log.str.length),
         ]
             .flat()
@@ -106,15 +110,15 @@ export class Logger {
         this.watched.forEach((log, key) => {
             let prefix = `${key}${this.watchedDelimiter}`;
             prefix += ' '.repeat(longestPrefix - prefix.length);
-            ctx.fillStyle = 'rgb(230, 230, 230)';
+            ctx.fillStyle = '#e6e6e6';
             ctx.fillText(prefix, drawX + paddingX, drawY + paddingY + ascenderHeight);
             const prefixWidth = ctx.measureText(prefix).width;
-            log.renderer(ctx, log.str, drawX + paddingX + prefixWidth, drawY + paddingY + ascenderHeight);
+            log.renderer(ctx, log, drawX + paddingX + prefixWidth, drawY + paddingY + ascenderHeight);
             drawY += textHeight;
         });
         ctx.fillStyle = 'white';
         this.logs.forEach((log) => {
-            log.renderer(ctx, log.str, drawX + paddingX, drawY + paddingY + ascenderHeight);
+            log.renderer(ctx, log, drawX + paddingX, drawY + paddingY + ascenderHeight);
             drawY += textHeight;
         });
     }

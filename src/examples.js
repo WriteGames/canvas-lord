@@ -26,7 +26,7 @@ import {
 } from './canvas-lord.js';
 
 import { ButtonsOverlay } from './util/buttons-overlay.js';
-import { Logger } from './util/logger.js';
+import { Logger, YesNoLogParser } from './util/logger.js';
 import { Inspector } from './inspector.js';
 
 /* eslint-disable no-undef */
@@ -450,7 +450,7 @@ class ContourTracingScene extends Scene {
 
 const LOG_TYPE = {
 	CAN_JUMP: 'Can Jump',
-	COYOTE: 'Coyote',
+	COYOTE: 'Coyote Frames',
 };
 
 class PlayerScene extends Scene {
@@ -461,8 +461,18 @@ class PlayerScene extends Scene {
 		this.player = this.addEntity(new Player(40, 144));
 
 		this.logger = this.addEntity(new Logger(10, 10));
-		this.logger.watch(LOG_TYPE.CAN_JUMP, true);
-		this.logger.watch(LOG_TYPE.COYOTE, 0);
+		const validRenderer = (ctx, log, drawX, drawY) => {
+			ctx.fillStyle = log.value ? 'white' : '#ccc';
+			ctx.fillText(log.str, drawX, drawY);
+		};
+
+		this.logger.watch(LOG_TYPE.COYOTE, 0, {
+			renderer: validRenderer,
+		});
+		this.logger.watch(LOG_TYPE.CAN_JUMP, true, {
+			parser: YesNoLogParser,
+			renderer: validRenderer,
+		});
 
 		this.player.logger = this.logger;
 

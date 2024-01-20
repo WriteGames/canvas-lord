@@ -1,14 +1,21 @@
 export type LogValue = any;
 
+export type LogParser = (value: LogValue) => string;
+
+export const YesNoLogParser = (value: LogValue) => {
+	return value ? 'yes' : 'no';
+};
+
 export type LogRenderer = (
 	ctx: CanvasRenderingContext2D,
-	str: string,
+	log: Log,
 	drawX: number,
 	drawY: number,
 ) => void;
 
 export interface LogOptions {
 	lifespan?: number;
+	parser?: LogParser;
 	renderer?: LogRenderer;
 }
 
@@ -19,33 +26,39 @@ export interface LoggerOptions {
 
 const loggerDefaults = Object.freeze({
 	// TODO: is there any way we could get the game FPS to determine this?
-	defaultLifespan: 60 * 2,
-	defaultLogRenderer: (ctx, str, drawX, drawY) => {
+	defaultLifespan: 60,
+	defaultLogRenderer: (ctx, log, drawX, drawY) => {
 		ctx.fillStyle = 'white';
-		ctx.fillText(str, drawX, drawY);
+		ctx.fillText(log.str, drawX, drawY);
 	},
 } as Required<LoggerOptions>);
 
+const defaultLogParser = (val: LogValue) =>
+	JSON.parse(JSON.stringify(val)).toString();
+
 export class Log {
+	#_value: LogValue;
+	#_str: string = 'undefined';
 	logger: Logger;
 	elapsed: number;
 	lifespan: number;
-	#_value: LogValue;
-	#_str: string = 'undefined';
+	parser: LogParser;
 	renderer: LogRenderer;
 
 	constructor(logger: Logger, value: LogValue, options: LogOptions = {}) {
 		this.logger = logger;
-		this.value = value;
 
 		this.elapsed = 0;
 		this.lifespan = options.lifespan ?? logger.defaultLifespan;
+		this.parser = options.parser ?? defaultLogParser;
 		this.renderer = options.renderer ?? logger.defaultLogRenderer;
+
+		this.value = value;
 	}
 
 	set value(val) {
 		this.#_value = val;
-		this.#_str = JSON.parse(JSON.stringify(val)).toString();
+		this.#_str = this.parser(val);
 	}
 
 	get value() {
@@ -126,10 +139,7 @@ export class Logger {
 		const longestLength =
 			[
 				Array.from(this.watched).map(
-					([k, log]) =>
-						longestPrefix +
-						this.watchedDelimiter.length +
-						log.str.length,
+					([k, log]) => longestPrefix + log.str.length,
 				),
 				this.logs.map((log) => log.str.length),
 			]
@@ -161,7 +171,7 @@ export class Logger {
 		this.watched.forEach((log, key) => {
 			let prefix = `${key}${this.watchedDelimiter}`;
 			prefix += ' '.repeat(longestPrefix - prefix.length);
-			ctx.fillStyle = 'rgb(230, 230, 230)';
+			ctx.fillStyle = '#e6e6e6';
 			ctx.fillText(
 				prefix,
 				drawX + paddingX,
@@ -171,7 +181,7 @@ export class Logger {
 			const prefixWidth = ctx.measureText(prefix).width;
 			log.renderer(
 				ctx,
-				log.str,
+				log,
 				drawX + paddingX + prefixWidth,
 				drawY + paddingY + ascenderHeight,
 			);
@@ -183,7 +193,7 @@ export class Logger {
 		this.logs.forEach((log) => {
 			log.renderer(
 				ctx,
-				log.str,
+				log,
 				drawX + paddingX,
 				drawY + paddingY + ascenderHeight,
 			);
