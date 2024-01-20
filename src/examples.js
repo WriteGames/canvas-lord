@@ -25,6 +25,7 @@ import {
 	isPointInsidePath,
 } from './canvas-lord.js';
 
+import { ButtonsOverlay } from './util/buttons-overlay.js';
 import { Logger } from './util/logger.js';
 import { Inspector } from './inspector.js';
 
@@ -465,6 +466,14 @@ class PlayerScene extends Scene {
 
 		this.player.logger = this.logger;
 
+		const buttons = this.addEntity(
+			new ButtonsOverlay(50, 168, {
+				left: leftKeys,
+				right: rightKeys,
+				jump: jumpKeys,
+			}),
+		);
+
 		this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
 		// this.grid = Grid.fromBinary([
 		// 	20,
@@ -492,6 +501,7 @@ class PlayerScene extends Scene {
 		this.renderables.push(this.gridOutline);
 		this.renderables.push(this.player);
 		this.renderables.push(this.logger);
+		this.renderables.push(buttons);
 	}
 
 	setCanvasSize(width, height) {
@@ -506,6 +516,10 @@ class PlayerScene extends Scene {
 		updateCamera(this, this.player);
 	}
 }
+
+const leftKeys = ['ArrowLeft', 'a', 'A'];
+const rightKeys = ['ArrowRight', 'd', 'D'];
+const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
 
 class Player {
 	constructor(x, y) {
@@ -545,10 +559,6 @@ class Player {
 	}
 
 	update(input) {
-		const leftKeys = ['ArrowLeft', 'a', 'A'];
-		const rightKeys = ['ArrowRight', 'd', 'D'];
-		const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
-
 		const keyLeftCheck = input.keyCheck(leftKeys);
 		const keyRightCheck = input.keyCheck(rightKeys);
 		const keyJumpCheck = input.keyCheck(jumpKeys);
