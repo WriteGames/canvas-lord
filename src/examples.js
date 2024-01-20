@@ -25,6 +25,7 @@ import {
 	isPointInsidePath,
 } from './canvas-lord.js';
 
+import { Logger } from './util/logger.js';
 import { Inspector } from './inspector.js';
 
 /* eslint-disable no-undef */
@@ -446,14 +447,23 @@ class ContourTracingScene extends Scene {
 	}
 }
 
+const LOG_TYPE = {
+	CAN_JUMP: 'Can Jump',
+	COYOTE: 'Coyote',
+};
+
 class PlayerScene extends Scene {
 	constructor(Player, engine) {
 		super(engine);
 
 		// this.player = this.addEntity(new Player(160, 120));
-		this.player = this.addEntity(new Player(160 + 100, 120));
+		this.player = this.addEntity(new Player(40, 144));
 
 		this.logger = this.addEntity(new Logger(10, 10));
+		this.logger.watch(LOG_TYPE.CAN_JUMP, true);
+		this.logger.watch(LOG_TYPE.COYOTE, 0);
+
+		this.player.logger = this.logger;
 
 		this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
 		// this.grid = Grid.fromBinary([
@@ -583,11 +593,17 @@ class Player {
 			this.jumpInput = this.jumpInputLimit;
 		}
 
+		const canJump = grounded || this.coyote > 0;
+		// TODO: would be cool to give the logger data & have it compute things itself!
+		this.logger.set(LOG_TYPE.CAN_JUMP, canJump);
+		this.logger.set(LOG_TYPE.COYOTE, this.coyote);
+
 		// Try jumping
-		if ((grounded || this.coyote > 0) && this.jumpInput > 0) {
+		if (canJump && this.jumpInput > 0) {
 			this.yspeed = this.jspeed;
 			this.coyote = 0;
 			this.jumpInput = 0;
+			this.logger.log('Jumped!');
 		}
 
 		// Apply gravity
@@ -772,94 +788,6 @@ class Player {
 	}
 }
 
-class Log {
-	constructor(logger, str, options = {}) {
-		this.logger = logger;
-		this.str = str;
-
-		this.lifespan = options.lifespan ?? logger.defaultLifespan;
-	}
-}
-
-// Entity
-const loggerDefaults = Object.freeze({
-	// TODO: is there any way we could get the game FPS to determine this?
-	defaultLifespan: 60,
-});
-
-class Logger {
-	constructor(x, y, options = {}) {
-		this.x = x;
-		this.y = y;
-
-		const resolvedOptions = Object.assign({}, this.loggerDefaults, options);
-
-		this.defaultLifespan = resolvedOptions.defaultLifespan;
-		this.logs = [];
-
-		console.log('we have a logger?');
-	}
-
-	log(str, options) {
-		const log = new Log(this, str, options);
-		this.logs.push(log);
-	}
-
-	update(input) {
-		if (input.keyPressed('Enter')) {
-			this.log('Testing');
-		}
-	}
-
-	// TODO: figure out the camera/scene viewport logic :S
-	render(ctx) {
-		if (this.logs.length === 0) return;
-
-		let drawX = this.x,
-			drawY = this.y;
-
-		ctx.font = '10px Monospace';
-
-		const glyph = ctx.measureText('0');
-		const ascenderHeight = glyph.actualBoundingBoxAscent;
-		const longestLength = this.logs
-			.map((log) => log.str.length)
-			.sort((a, b) => b - a)[0];
-
-		const textWidth = glyph.width * longestLength;
-		const textHeight = 10;
-
-		const paddingX = 3;
-		const paddingY = 3;
-
-		// background
-		ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-		ctx.fillRect(
-			drawX,
-			drawY,
-			textWidth + paddingX * 2,
-			textHeight * this.logs.length +
-				paddingY * 2 -
-				// for the first line, we only want the ascender height
-				(textHeight - ascenderHeight),
-		);
-
-		// text
-		ctx.textBaseline = 'alphabetic';
-		ctx.fillStyle = 'white';
-
-		this.logs.forEach((log) => {
-			ctx.fillText(
-				log.str,
-				drawX + paddingX,
-				drawY + paddingY + ascenderHeight,
-			);
-
-			drawY += textHeight;
-		});
-	}
-}
-
 let assetManager;
 export const initGames = (src = '') => {
 	const game1 = new Game('basic');
@@ -891,7 +819,6 @@ export const initGames = (src = '') => {
 			const sceneWidth = game.canvas.width / 2;
 
 			const sceneLeft = new PlayerScene(Player, game);
-			sceneLeft.player.x = 40;
 			if (splitScreen === true) {
 				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
 			} else {
@@ -902,7 +829,7 @@ export const initGames = (src = '') => {
 				const sceneRight = new PlayerScene(Player, game);
 				sceneRight.screenPos[0] = sceneWidth;
 				sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
-				sceneRight.shouldUpdate = false;
+				// sceneRight.shouldUpdate = false;
 
 				game.pushScenes(sceneLeft, sceneRight);
 			} else {
