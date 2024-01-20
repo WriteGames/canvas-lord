@@ -453,6 +453,8 @@ class PlayerScene extends Scene {
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(160 + 100, 120));
 
+		this.logger = this.addEntity(new Logger(10, 10));
+
 		this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
 		// this.grid = Grid.fromBinary([
 		// 	20,
@@ -479,6 +481,7 @@ class PlayerScene extends Scene {
 		// this.renderables.push(this.grid);
 		this.renderables.push(this.gridOutline);
 		this.renderables.push(this.player);
+		this.renderables.push(this.logger);
 	}
 
 	setCanvasSize(width, height) {
@@ -766,6 +769,94 @@ class Player {
 				this.height - 1,
 			);
 		}
+	}
+}
+
+class Log {
+	constructor(logger, str, options = {}) {
+		this.logger = logger;
+		this.str = str;
+
+		this.lifespan = options.lifespan ?? logger.defaultLifespan;
+	}
+}
+
+// Entity
+const loggerDefaults = Object.freeze({
+	// TODO: is there any way we could get the game FPS to determine this?
+	defaultLifespan: 60,
+});
+
+class Logger {
+	constructor(x, y, options = {}) {
+		this.x = x;
+		this.y = y;
+
+		const resolvedOptions = Object.assign({}, this.loggerDefaults, options);
+
+		this.defaultLifespan = resolvedOptions.defaultLifespan;
+		this.logs = [];
+
+		console.log('we have a logger?');
+	}
+
+	log(str, options) {
+		const log = new Log(this, str, options);
+		this.logs.push(log);
+	}
+
+	update(input) {
+		if (input.keyPressed('Enter')) {
+			this.log('Testing');
+		}
+	}
+
+	// TODO: figure out the camera/scene viewport logic :S
+	render(ctx) {
+		if (this.logs.length === 0) return;
+
+		let drawX = this.x,
+			drawY = this.y;
+
+		ctx.font = '10px Monospace';
+
+		const glyph = ctx.measureText('0');
+		const ascenderHeight = glyph.actualBoundingBoxAscent;
+		const longestLength = this.logs
+			.map((log) => log.str.length)
+			.sort((a, b) => b - a)[0];
+
+		const textWidth = glyph.width * longestLength;
+		const textHeight = 10;
+
+		const paddingX = 3;
+		const paddingY = 3;
+
+		// background
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+		ctx.fillRect(
+			drawX,
+			drawY,
+			textWidth + paddingX * 2,
+			textHeight * this.logs.length +
+				paddingY * 2 -
+				// for the first line, we only want the ascender height
+				(textHeight - ascenderHeight),
+		);
+
+		// text
+		ctx.textBaseline = 'alphabetic';
+		ctx.fillStyle = 'white';
+
+		this.logs.forEach((log) => {
+			ctx.fillText(
+				log.str,
+				drawX + paddingX,
+				drawY + paddingY + ascenderHeight,
+			);
+
+			drawY += textHeight;
+		});
 	}
 }
 
