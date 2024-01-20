@@ -49,12 +49,14 @@ export class Inspector {
         updatedInputs.forEach((item) => {
             const newValue = Number(item.latestInput);
             if (!isNaN(newValue)) {
+                // @ts-expect-error
                 player[item.property] = newValue;
             }
             if (!item.focused)
                 item.latestInput = null;
         });
         otherInputs.forEach((item) => {
+            // @ts-expect-error
             item.input.value = player[item.property];
         });
     }
