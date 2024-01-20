@@ -1,6 +1,10 @@
 const loggerDefaults = Object.freeze({
     // TODO: is there any way we could get the game FPS to determine this?
     defaultLifespan: 60 * 2,
+    defaultLogRenderer: (ctx, str, drawX, drawY) => {
+        ctx.fillStyle = 'white';
+        ctx.fillText(str, drawX, drawY);
+    },
 });
 export class Log {
     logger;
@@ -8,11 +12,13 @@ export class Log {
     lifespan;
     #_value;
     #_str = 'undefined';
+    renderer;
     constructor(logger, value, options = {}) {
         this.logger = logger;
         this.value = value;
         this.elapsed = 0;
         this.lifespan = options.lifespan ?? logger.defaultLifespan;
+        this.renderer = options.renderer ?? logger.defaultLogRenderer;
     }
     set value(val) {
         this.#_value = val;
@@ -29,6 +35,7 @@ export class Logger {
     x;
     y;
     defaultLifespan;
+    defaultLogRenderer;
     logs;
     watched;
     watchedDelimiter;
@@ -37,6 +44,7 @@ export class Logger {
         this.y = y;
         const resolvedOptions = Object.assign({}, loggerDefaults, options);
         this.defaultLifespan = resolvedOptions.defaultLifespan;
+        this.defaultLogRenderer = resolvedOptions.defaultLogRenderer;
         this.logs = [];
         this.watched = new Map();
         this.watchedDelimiter = ': ';
@@ -96,13 +104,17 @@ export class Logger {
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = 'white';
         this.watched.forEach((log, key) => {
-            const prefix = `${key}${this.watchedDelimiter}`;
-            const spaces = ' '.repeat(longestPrefix - prefix.length);
-            ctx.fillText(`${prefix}${spaces}${log.str}`, drawX + paddingX, drawY + paddingY + ascenderHeight);
+            let prefix = `${key}${this.watchedDelimiter}`;
+            prefix += ' '.repeat(longestPrefix - prefix.length);
+            ctx.fillStyle = 'rgb(230, 230, 230)';
+            ctx.fillText(prefix, drawX + paddingX, drawY + paddingY + ascenderHeight);
+            const prefixWidth = ctx.measureText(prefix).width;
+            log.renderer(ctx, log.str, drawX + paddingX + prefixWidth, drawY + paddingY + ascenderHeight);
             drawY += textHeight;
         });
+        ctx.fillStyle = 'white';
         this.logs.forEach((log) => {
-            ctx.fillText(log.str, drawX + paddingX, drawY + paddingY + ascenderHeight);
+            log.renderer(ctx, log.str, drawX + paddingX, drawY + paddingY + ascenderHeight);
             drawY += textHeight;
         });
     }

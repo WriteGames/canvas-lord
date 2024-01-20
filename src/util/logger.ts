@@ -1,16 +1,29 @@
 export type LogValue = any;
 
+export type LogRenderer = (
+	ctx: CanvasRenderingContext2D,
+	str: string,
+	drawX: number,
+	drawY: number,
+) => void;
+
 export interface LogOptions {
 	lifespan?: number;
+	renderer?: LogRenderer;
 }
 
 export interface LoggerOptions {
 	defaultLifespan?: number;
+	defaultLogRenderer?: LogRenderer;
 }
 
 const loggerDefaults = Object.freeze({
 	// TODO: is there any way we could get the game FPS to determine this?
 	defaultLifespan: 60 * 2,
+	defaultLogRenderer: (ctx, str, drawX, drawY) => {
+		ctx.fillStyle = 'white';
+		ctx.fillText(str, drawX, drawY);
+	},
 } as Required<LoggerOptions>);
 
 export class Log {
@@ -19,6 +32,7 @@ export class Log {
 	lifespan: number;
 	#_value: LogValue;
 	#_str: string = 'undefined';
+	renderer: LogRenderer;
 
 	constructor(logger: Logger, value: LogValue, options: LogOptions = {}) {
 		this.logger = logger;
@@ -26,6 +40,7 @@ export class Log {
 
 		this.elapsed = 0;
 		this.lifespan = options.lifespan ?? logger.defaultLifespan;
+		this.renderer = options.renderer ?? logger.defaultLogRenderer;
 	}
 
 	set value(val) {
@@ -46,6 +61,7 @@ export class Logger {
 	x: number;
 	y: number;
 	defaultLifespan: number;
+	defaultLogRenderer: LogRenderer;
 	logs: Log[];
 	watched: Map<string, Log>;
 	watchedDelimiter: string;
@@ -57,6 +73,7 @@ export class Logger {
 		const resolvedOptions = Object.assign({}, loggerDefaults, options);
 
 		this.defaultLifespan = resolvedOptions.defaultLifespan;
+		this.defaultLogRenderer = resolvedOptions.defaultLogRenderer;
 		this.logs = [];
 		this.watched = new Map();
 		this.watchedDelimiter = ': ';
@@ -142,19 +159,30 @@ export class Logger {
 		ctx.fillStyle = 'white';
 
 		this.watched.forEach((log, key) => {
-			const prefix = `${key}${this.watchedDelimiter}`;
-			const spaces = ' '.repeat(longestPrefix - prefix.length);
+			let prefix = `${key}${this.watchedDelimiter}`;
+			prefix += ' '.repeat(longestPrefix - prefix.length);
+			ctx.fillStyle = 'rgb(230, 230, 230)';
 			ctx.fillText(
-				`${prefix}${spaces}${log.str}`,
+				prefix,
 				drawX + paddingX,
+				drawY + paddingY + ascenderHeight,
+			);
+
+			const prefixWidth = ctx.measureText(prefix).width;
+			log.renderer(
+				ctx,
+				log.str,
+				drawX + paddingX + prefixWidth,
 				drawY + paddingY + ascenderHeight,
 			);
 
 			drawY += textHeight;
 		});
 
+		ctx.fillStyle = 'white';
 		this.logs.forEach((log) => {
-			ctx.fillText(
+			log.renderer(
+				ctx,
 				log.str,
 				drawX + paddingX,
 				drawY + paddingY + ascenderHeight,
