@@ -13,6 +13,11 @@ export interface Inspector {
 	items: Item[];
 }
 
+export interface InspectorWatchOptions {
+	min?: number;
+	max?: number;
+}
+
 export class Inspector {
 	engine: Engine;
 	wrapper: HTMLElement;
@@ -31,9 +36,15 @@ export class Inspector {
 		this.wrapper = inspectorElem;
 	}
 
-	watch(property: string) {
+	watch(property: string, options?: InspectorWatchOptions) {
 		const input = document.createElement('input');
+		input.type = 'number';
 		this.wrapper.append(property, input);
+
+		if (options) {
+			if (options.min !== undefined) input.min = String(options.min);
+			if (options.max !== undefined) input.max = String(options.max);
+		}
 
 		const item: Item = {
 			input,

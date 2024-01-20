@@ -10,9 +10,16 @@ export class Inspector {
         engine.listeners.update.add(this.onUpdate.bind(this));
         this.wrapper = inspectorElem;
     }
-    watch(property) {
+    watch(property, options) {
         const input = document.createElement('input');
+        input.type = 'number';
         this.wrapper.append(property, input);
+        if (options) {
+            if (options.min !== undefined)
+                input.min = String(options.min);
+            if (options.max !== undefined)
+                input.max = String(options.max);
+        }
         const item = {
             input,
             latestInput: null,

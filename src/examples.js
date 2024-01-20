@@ -778,6 +778,14 @@ export const initGames = (src = '') => {
 	const games = [game1];
 	assetManager = new AssetManager(`${src}img/`);
 
+	const inspector = new Inspector(game1);
+	inspector.watch('x', {});
+	inspector.watch('y', {});
+	inspector.watch('coyoteLimit', {
+		min: 0,
+		max: 60,
+	});
+
 	assetManager.addImage('grid.bmp');
 	assetManager.addImage('radiohead_spritesheet.png');
 	assetManager.addImage('tileset.png');
@@ -826,12 +834,9 @@ export const initGames = (src = '') => {
 			contourTracingGame.pushScenes(contourTracingScene);
 			contourTracingGame.render();
 		}
+
+		inspector.onUpdate();
 	});
 	assetManager.loadAssets();
-
-	const inspector = new Inspector(game1);
-	inspector.watch('x');
-	inspector.watch('y');
-	inspector.watch('coyoteLimit');
 };
 /* eslint-enable no-undef */

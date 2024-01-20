@@ -5,6 +5,12 @@
 		<title>Platforming Tips & Tricks</title>
 		<meta name="color-scheme" content="dark light" />
 		<style media="screen">
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
 			body {
 				padding: 1rem 0;
 				display: flex;
@@ -28,17 +34,20 @@
 			}
 
 			.inspector {
+				text-align: right;
 				display: grid;
-				grid-template-columns: auto auto;
+				grid-template-columns: 20ch auto;
 				width: 100%;
-				max-width: 640px;
+				/* max-width: 640px; */
 				margin: 0 auto;
-				padding: 5px;
+				gap: 2px 0.5rem;
+				padding: 0.5rem;
 				border: 3px solid #ddd;
 				border-top: 0;
 			}
 
 			canvas {
+				box-sizing: content-box;
 				display: block;
 				width: 100%;
 				max-width: 640px;
