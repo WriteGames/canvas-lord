@@ -60,7 +60,7 @@ const _tupleMap = new Map<string, V2 | V3 | V4>();
 export const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
 	const hash = hashTuple(args);
 	if (!_tupleMap.has(hash)) {
-		const tuple = Object.freeze(args) as unknown as Tuple;
+		const tuple = Object.freeze<Tuple>(args);
 		_tupleMap.set(hash, tuple);
 	}
 	return _tupleMap.get(hash) as TupleT<V>;
@@ -403,11 +403,18 @@ export class AssetManager {
 
 	loadImage(src: string): void {
 		const image = new Image();
+		const fullPath = `${this.prefix}${src}`;
+		if (
+			fullPath.startsWith('http') &&
+			!fullPath.startsWith(location.origin)
+		) {
+			image.crossOrigin = 'Anonymous';
+		}
 		image.onload = (): void => {
 			this.imageLoaded(src);
 			this.images.set(src, image);
 		};
-		image.src = `${this.prefix}${src}`;
+		image.src = fullPath;
 	}
 
 	loadAssets(): void {

@@ -233,11 +233,16 @@ export class AssetManager {
     }
     loadImage(src) {
         const image = new Image();
+        const fullPath = `${this.prefix}${src}`;
+        if (fullPath.startsWith('http') &&
+            !fullPath.startsWith(location.origin)) {
+            image.crossOrigin = 'Anonymous';
+        }
         image.onload = () => {
             this.imageLoaded(src);
             this.images.set(src, image);
         };
-        image.src = `${this.prefix}${src}`;
+        image.src = fullPath;
     }
     loadAssets() {
         [...this.images.keys()].forEach((src) => {
