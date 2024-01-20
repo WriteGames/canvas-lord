@@ -12,7 +12,7 @@ export const Canvas = ({ id, src }: { id: string; src: string }) => {
 		const importGame = async () => {
 			const module = await import(`@/examples/${src}`);
 			const { initGames } = module;
-			initGames(id, 'http://canvas-lord.localhost/');
+			initGames(id, 'https://sandbox.canvaslord.com/');
 		};
 
 		void importGame();
