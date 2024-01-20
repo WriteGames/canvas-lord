@@ -448,6 +448,12 @@ class ContourTracingScene extends Scene {
 	}
 }
 
+const EVENT_TYPE = {
+	UPDATE_CAN_JUMP: 'update-can-jump',
+	UPDATE_COYOTE: 'update-coyote',
+	JUMP: 'jump',
+};
+
 const LOG_TYPE = {
 	CAN_JUMP: 'Can Jump',
 	COYOTE: 'Coyote Frames',
@@ -474,7 +480,26 @@ class PlayerScene extends Scene {
 			renderer: validRenderer,
 		});
 
-		this.player.logger = this.logger;
+		this.messages.subscribe(
+			{
+				receive: (message, payload) => {
+					switch (message) {
+						case EVENT_TYPE.UPDATE_CAN_JUMP:
+							this.logger.set(LOG_TYPE.CAN_JUMP, payload);
+							break;
+						case EVENT_TYPE.UPDATE_COYOTE:
+							this.logger.set(LOG_TYPE.COYOTE, payload);
+							break;
+						case EVENT_TYPE.JUMP:
+							this.logger.log('Jumped!');
+							break;
+					}
+				},
+			},
+			EVENT_TYPE.UPDATE_CAN_JUMP,
+			EVENT_TYPE.UPDATE_COYOTE,
+			EVENT_TYPE.JUMP,
+		);
 
 		const buttons = this.addEntity(
 			new ButtonsOverlay(50, 168, {
@@ -614,16 +639,15 @@ class Player {
 		}
 
 		const canJump = grounded || this.coyote > 0;
-		// TODO: would be cool to give the logger data & have it compute things itself!
-		this.logger.set(LOG_TYPE.CAN_JUMP, canJump);
-		this.logger.set(LOG_TYPE.COYOTE, this.coyote);
+		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_CAN_JUMP, canJump);
+		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_COYOTE, this.coyote);
 
 		// Try jumping
 		if (canJump && this.jumpInput > 0) {
 			this.yspeed = this.jspeed;
 			this.coyote = 0;
 			this.jumpInput = 0;
-			this.logger.log('Jumped!');
+			this.scene.messages.sendMessage(EVENT_TYPE.JUMP);
 		}
 
 		// Apply gravity

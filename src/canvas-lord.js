@@ -805,12 +805,43 @@ class Camera extends Array {
         this[1] = val;
     }
 }
+class Messages {
+    subscribers;
+    constructor() {
+        this.subscribers = new Map();
+    }
+    subscribe(subscriber, ...messages) {
+        messages.forEach((message) => {
+            if (!this.subscribers.has(message)) {
+                this.subscribers.set(message, []);
+            }
+            const subs = this.subscribers.get(message);
+            subs?.push(subscriber);
+        });
+    }
+    sendMessage(message, payload) {
+        const subs = this.subscribers.get(message);
+        if (!subs) {
+            console.warn(`${message} isn't registered`);
+            return;
+        }
+        subs.forEach((sub) => {
+            const receive = sub.receive;
+            if (!receive) {
+                console.warn(`subscriber doesn't have receive() method`, sub);
+                return;
+            }
+            receive(message, payload);
+        });
+    }
+}
 export class Scene {
     constructor(engine) {
         this.engine = engine;
         this.entities = [];
         this.renderables = [];
         this.shouldUpdate = true;
+        this.messages = new Messages();
         this.screenPos = [0, 0];
         this.camera = new Camera(0, 0);
         // TODO(bret): Make these false by default

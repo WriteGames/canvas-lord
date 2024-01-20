@@ -1208,6 +1208,7 @@ export interface Scene {
 	engine: Engine;
 	entities: Entity[];
 	renderables: Renderable[];
+	messages: Messages;
 	shouldUpdate: boolean;
 	screenPos: V2;
 	camera: Camera;
@@ -1220,6 +1221,46 @@ export interface Scene {
 	ctx: CanvasRenderingContext2D;
 }
 
+type MessagesPayload = object;
+type MessagesSubscriber = {
+	receive?: (message: string, payload: MessagesPayload) => void;
+};
+
+class Messages {
+	subscribers: Map<string, MessagesSubscriber[]>;
+
+	constructor() {
+		this.subscribers = new Map<string, MessagesSubscriber[]>();
+	}
+
+	subscribe(subscriber: MessagesSubscriber, ...messages: string[]) {
+		messages.forEach((message) => {
+			if (!this.subscribers.has(message)) {
+				this.subscribers.set(message, []);
+			}
+			const subs = this.subscribers.get(message);
+			subs?.push(subscriber);
+		});
+	}
+
+	sendMessage(message: string, payload: MessagesPayload) {
+		const subs = this.subscribers.get(message);
+		if (!subs) {
+			console.warn(`${message} isn't registered`);
+			return;
+		}
+
+		subs.forEach((sub) => {
+			const receive = sub.receive;
+			if (!receive) {
+				console.warn(`subscriber doesn't have receive() method`, sub);
+				return;
+			}
+			receive(message, payload);
+		});
+	}
+}
+
 export class Scene {
 	constructor(engine: Engine) {
 		this.engine = engine;
@@ -1228,6 +1269,8 @@ export class Scene {
 		this.renderables = [];
 
 		this.shouldUpdate = true;
+
+		this.messages = new Messages();
 
 		this.screenPos = [0, 0];
 		this.camera = new Camera(0, 0);
