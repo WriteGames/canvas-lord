@@ -166,7 +166,6 @@ export const normToBitFlagMap = new Map();
 ].forEach(([dir, bitFlag]) => normToBitFlagMap.set(dir, bitFlag));
 const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);
 export const globalSetTile = (tileset, x, y, bitFlag) => {
-    console.log({ bitFlag });
     switch (bitFlag & ~orTogetherCardinalDirs('LD', 'RD', 'LU', 'RU')) {
         case 0:
             tileset.setTile(x, y, 0, 5);
@@ -272,12 +271,14 @@ export class Game {
         update: 'focus',
         render: 'onUpdate',
     };
+    inspectors = [];
     constructor(id, gameLoopSettings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
             console.error(`No canvas with id "${id}" was able to be found`);
             return;
         }
+        canvas._engine = this;
         const ctx = canvas.getContext('2d', {
             alpha: false,
         });
@@ -287,6 +288,12 @@ export class Game {
         }
         this.canvas = canvas;
         this.ctx = ctx;
+        this.wrapper = document.createElement('div');
+        this.wrapper.classList.add('canvas-lord');
+        this.wrapper.tabIndex = -1;
+        this.canvas.removeAttribute('tabIndex');
+        this.canvas.after(this.wrapper);
+        this.wrapper.append(this.canvas);
         this.focus = false;
         this.listeners = gameEvents.reduce((acc, val) => {
             acc[val] = new Set();
@@ -332,19 +339,24 @@ export class Game {
             deltaTime += time - this._lastFrame;
             this._lastFrame = time;
             deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
+            // should we send a pre-/post- message in case there are
+            // multiple updates that happen in a single while?
             while (deltaTime >= timestep) {
                 this.update();
                 this.input.update();
                 deltaTime -= timestep;
             }
+            this.updateInspectors();
         };
         this.eventListeners = [];
         window.addEventListener('resize', (e) => {
             computeCanvasSize(this.canvas);
         });
         window.addEventListener('blur', (e) => this.onFocus(false));
-        this.canvas.addEventListener('focus', (e) => this.onFocus(true));
-        this.canvas.addEventListener('blur', (e) => this.onFocus(false));
+        // TODO: should we allow folks to customize this to be directly on the canvas?
+        this.focusElement = this.wrapper;
+        this.focusElement.addEventListener('focusin', (e) => this.onFocus(true));
+        this.focusElement.addEventListener('focusout', (e) => this.onFocus(false));
         this.updateGameLoopSettings(this.gameLoopSettings);
     }
     get width() {
@@ -355,6 +367,76 @@ export class Game {
     }
     get currentScenes() {
         return this.sceneStack[0];
+    }
+    addInspector() {
+        const inspectorElem = document.createElement('div');
+        inspectorElem.classList.add('inspector');
+        const newValues = [null, null, null];
+        const updateValue = (n) => (e) => {
+            const target = e.target;
+            if (!target)
+                return;
+            newValues[n] = target.value;
+        };
+        const xInput = document.createElement('input');
+        xInput.type = 'text';
+        xInput.addEventListener('input', updateValue(0), false);
+        const yInput = document.createElement('input');
+        yInput.type = 'text';
+        yInput.addEventListener('input', updateValue(1), false);
+        const coyoteTimeInput = document.createElement('input');
+        coyoteTimeInput.type = 'text';
+        coyoteTimeInput.addEventListener('input', updateValue(2), false);
+        inspectorElem.append('X: ', xInput, 'Y: ', yInput, 'Coyote Time: ', coyoteTimeInput);
+        this.canvas.after(inspectorElem);
+        const inspector = {
+            wrapper: inspectorElem,
+            inputs: [xInput, yInput, coyoteTimeInput],
+            newValues,
+        };
+        this.inspectors.push(inspector);
+    }
+    updateInspectors() {
+        this.inspectors.forEach((inspector) => {
+            const scene = this.currentScenes?.[0];
+            if (scene &&
+                inspector.inputs[0] &&
+                inspector.inputs[1] &&
+                inspector.inputs[2]) {
+                const player = scene.entities?.[0];
+                if (inspector.newValues[0]) {
+                    const newValue = Number(inspector.newValues[0]);
+                    if (!isNaN(newValue)) {
+                        player.x = newValue;
+                    }
+                    if (inspector.inputs[0] !== document.activeElement)
+                        inspector.newValues[0] = null;
+                }
+                if (inspector.newValues[1]) {
+                    const newValue = Number(inspector.newValues[1]);
+                    if (!isNaN(newValue)) {
+                        player.y = newValue;
+                    }
+                    if (inspector.inputs[1] !== document.activeElement)
+                        inspector.newValues[1] = null;
+                }
+                if (inspector.newValues[2]) {
+                    const newValue = Number(inspector.newValues[2]);
+                    if (!isNaN(newValue)) {
+                        console.log('updating coyoteLimit', newValue);
+                        player.coyoteLimit = newValue;
+                    }
+                    if (inspector.inputs[2] !== document.activeElement)
+                        inspector.newValues[2] = null;
+                }
+                if (inspector.inputs[0] !== document.activeElement)
+                    inspector.inputs[0].value = player?.x;
+                if (inspector.inputs[1] !== document.activeElement)
+                    inspector.inputs[1].value = player?.y;
+                if (inspector.inputs[2] !== document.activeElement)
+                    inspector.inputs[2].value = player?.coyoteLimit;
+            }
+        });
     }
     // TODO(bret): We're going to need to make a less clunky interface
     updateGameLoopSettings(newGameLoopSettings) {
@@ -437,8 +519,8 @@ export class Game {
             // TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
             this.addEventListener(this.canvas, event, onMouseMove);
         });
-        this.addEventListener(window, 'keydown', onKeyDown, false);
-        this.addEventListener(window, 'keyup', onKeyUp, false);
+        this.addEventListener(this.focusElement, 'keydown', onKeyDown, false);
+        this.addEventListener(this.focusElement, 'keyup', onKeyUp, false);
     }
     killMainLoop() {
         cancelAnimationFrame(this.frameRequestId);
@@ -690,6 +772,8 @@ export class Input {
     }
     // Events
     onMouseMove(e) {
+        if (document.activeElement !== this.engine.focusElement)
+            return;
         const { canvas } = this.engine;
         this.mouse.realX = e.offsetX - canvas._offsetX;
         this.mouse.realY = e.offsetY - canvas._offsetY;
@@ -697,6 +781,8 @@ export class Input {
         this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
     }
     onMouseDown(e) {
+        if (document.activeElement !== this.engine.focusElement)
+            return;
         e.preventDefault();
         if (!this.mouseCheck()) {
             this.mouse._clicked = 3;
@@ -704,6 +790,8 @@ export class Input {
         return false;
     }
     onMouseUp(e) {
+        if (document.activeElement !== this.engine.focusElement)
+            return;
         e.preventDefault();
         if (this.mouseCheck()) {
             this.mouse._clicked = 1;
@@ -711,6 +799,8 @@ export class Input {
         return false;
     }
     onKeyDown(e) {
+        if (document.activeElement !== this.engine.focusElement)
+            return;
         e.preventDefault();
         const { key } = e;
         if (!this.keyCheck(key)) {
@@ -719,6 +809,8 @@ export class Input {
         return false;
     }
     onKeyUp(e) {
+        if (document.activeElement !== this.engine.focusElement)
+            return;
         e.preventDefault();
         const { key } = e;
         if (this.keyCheck(key)) {

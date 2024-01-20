@@ -579,7 +579,7 @@ class Player {
 		}
 
 		// Try jumping
-		if (this.coyote > 0 && this.jumpInput > 0) {
+		if ((grounded || this.coyote > 0) && this.jumpInput > 0) {
 			this.yspeed = this.jspeed;
 			this.coyote = 0;
 			this.jumpInput = 0;
@@ -826,5 +826,7 @@ export const initGames = (src = '') => {
 		}
 	});
 	assetManager.loadAssets();
+
+	game1.addInspector();
 };
 /* eslint-enable no-undef */

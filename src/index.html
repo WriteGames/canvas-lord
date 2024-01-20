@@ -3,10 +3,39 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>Platforming Tips & Tricks</title>
+		<meta name="color-scheme" content="dark light" />
 		<style media="screen">
 			body {
-				background: #181920;
 				padding: 1rem 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 1rem;
+			}
+
+			.canvas-lord {
+				width: 100%;
+				max-width: 656px;
+				margin: 0 auto;
+				&:focus-within canvas {
+					border-color: #bbf;
+				}
+			}
+
+			.canvas-lord:has(.inspector) {
+				display: grid;
+				width: 100%;
+			}
+
+			.inspector {
+				display: grid;
+				grid-template-columns: auto auto;
+				width: 100%;
+				max-width: 640px;
+				margin: 0 auto;
+				padding: 5px;
+				border: 3px solid #ddd;
+				border-top: 0;
 			}
 
 			canvas {
@@ -24,6 +53,7 @@
 		</style>
 	</head>
 	<body>
+		<canvas id="basic" width="320px" height="180px" tabindex="-1"></canvas>
 		<canvas
 			id="contour-tracing"
 			width="320px"
@@ -36,7 +66,6 @@
 			height="180px"
 			tabindex="-1"
 		></canvas>
-		<canvas id="basic" width="320px" height="180px" tabindex="-1"></canvas>
 		<canvas id="second" width="320px" height="180px" tabindex="-1"></canvas>
 
 		<script type="module">
