@@ -478,12 +478,6 @@ const gameEvents = ['blur', 'focus', 'update'] as const;
 type GameEvent = (typeof gameEvents)[number];
 type EventCallback = () => void;
 
-interface Inspector {
-	wrapper: HTMLElement;
-	inputs: HTMLInputElement[];
-	newValues: (string | null)[];
-}
-
 export interface Game {
 	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
@@ -500,8 +494,6 @@ export interface Game {
 	frameRequestId: number;
 	eventListeners: CachedEventListener[];
 	_onGameLoopSettingsUpdate?: EventCallback;
-
-	inspectors: Inspector[];
 }
 
 export type Engine = Game;
@@ -511,8 +503,6 @@ export class Game {
 		update: 'focus',
 		render: 'onUpdate',
 	};
-
-	inspectors: Inspector[] = [];
 
 	constructor(id: string, gameLoopSettings?: GameLoopSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
@@ -630,8 +620,6 @@ export class Game {
 				this.input.update();
 				deltaTime -= timestep;
 			}
-
-			this.updateInspectors();
 		};
 
 		this.eventListeners = [];
@@ -664,98 +652,6 @@ export class Game {
 
 	get currentScenes(): Scene[] | undefined {
 		return this.sceneStack[0];
-	}
-
-	addInspector(): void {
-		const inspectorElem = document.createElement('div');
-		inspectorElem.classList.add('inspector');
-
-		const newValues = [null, null, null] as Inspector['newValues'];
-
-		const updateValue = (n: number) => (e: Event) => {
-			const target = e.target as HTMLInputElement;
-			if (!target) return;
-
-			newValues[n] = target.value;
-		};
-
-		const xInput = document.createElement('input');
-		xInput.type = 'text';
-		xInput.addEventListener('input', updateValue(0), false);
-
-		const yInput = document.createElement('input');
-		yInput.type = 'text';
-		yInput.addEventListener('input', updateValue(1), false);
-
-		const coyoteTimeInput = document.createElement('input');
-		coyoteTimeInput.type = 'text';
-		coyoteTimeInput.addEventListener('input', updateValue(2), false);
-
-		inspectorElem.append(
-			'X: ',
-			xInput,
-			'Y: ',
-			yInput,
-			'Coyote Time: ',
-			coyoteTimeInput,
-		);
-
-		this.canvas.after(inspectorElem);
-
-		const inspector: Inspector = {
-			wrapper: inspectorElem,
-			inputs: [xInput, yInput, coyoteTimeInput],
-			newValues,
-		};
-
-		this.inspectors.push(inspector);
-	}
-
-	updateInspectors(): void {
-		this.inspectors.forEach((inspector) => {
-			const scene = this.currentScenes?.[0];
-			if (
-				scene &&
-				inspector.inputs[0] &&
-				inspector.inputs[1] &&
-				inspector.inputs[2]
-			) {
-				const player = scene.entities?.[0];
-
-				if (inspector.newValues[0]) {
-					const newValue = Number(inspector.newValues[0]);
-					if (!isNaN(newValue)) {
-						player.x = newValue;
-					}
-					if (inspector.inputs[0] !== document.activeElement)
-						inspector.newValues[0] = null;
-				}
-				if (inspector.newValues[1]) {
-					const newValue = Number(inspector.newValues[1]);
-					if (!isNaN(newValue)) {
-						player.y = newValue;
-					}
-					if (inspector.inputs[1] !== document.activeElement)
-						inspector.newValues[1] = null;
-				}
-				if (inspector.newValues[2]) {
-					const newValue = Number(inspector.newValues[2]);
-					if (!isNaN(newValue)) {
-						console.log('updating coyoteLimit', newValue);
-						player.coyoteLimit = newValue;
-					}
-					if (inspector.inputs[2] !== document.activeElement)
-						inspector.newValues[2] = null;
-				}
-
-				if (inspector.inputs[0] !== document.activeElement)
-					inspector.inputs[0].value = player?.x;
-				if (inspector.inputs[1] !== document.activeElement)
-					inspector.inputs[1].value = player?.y;
-				if (inspector.inputs[2] !== document.activeElement)
-					inspector.inputs[2].value = player?.coyoteLimit;
-			}
-		});
 	}
 
 	// TODO(bret): We're going to need to make a less clunky interface

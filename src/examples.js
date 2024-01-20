@@ -25,6 +25,8 @@ import {
 	isPointInsidePath,
 } from './canvas-lord.js';
 
+import { Inspector } from './inspector.js';
+
 /* eslint-disable no-undef */
 const initGrid = () => {
 	const grid = new Grid(320, 180, 16, 16);
@@ -827,6 +829,9 @@ export const initGames = (src = '') => {
 	});
 	assetManager.loadAssets();
 
-	game1.addInspector();
+	const inspector = new Inspector(game1);
+	inspector.watch('x');
+	inspector.watch('y');
+	inspector.watch('coyoteLimit');
 };
 /* eslint-enable no-undef */
