@@ -466,6 +466,7 @@ class PlayerScene extends Scene {
 		this.componentSystemMap.set(moveEightComponent, moveEightSystem);
 		this.componentSystemMap.set(rect, rectSystem);
 		this.componentSystemMap.set(circle, circleSystem);
+		this.componentSystemMap.set(image, imageSystem);
 
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(40, 144));
@@ -573,6 +574,65 @@ const createComponent = (component) => Object.freeze(copyObject(component));
 
 const pos2D = createComponent(v2zero);
 
+const image = createComponent({
+	imageSrc: null,
+	frame: 0,
+	frameW: 0,
+	frameH: 0,
+	angle: 0,
+	scaleX: 1,
+	scaleY: 1,
+	originX: 0,
+	originY: 0,
+	offsetX: 0,
+	offsetY: 0,
+});
+const imageSystem = {
+	render(entity, ctx, camera) {
+		console.log('time to render the image');
+
+		const {
+			imageSrc,
+			frame,
+			frameW,
+			frameH,
+			angle,
+			scaleX,
+			scaleY,
+			originX,
+			originY,
+			offsetX,
+			offsetY,
+		} = entity.component(image);
+
+		ctx.imageSmoothingEnabled = false;
+
+		const drawX = entity.x - camera.x - offsetX;
+		const drawY = entity.y - camera.y - offsetY;
+
+		ctx.save();
+		ctx.translate(originX, originY);
+		ctx.translate(drawX, drawY);
+		ctx.rotate((angle / 180) * Math.PI);
+		ctx.translate(-drawX, -drawY);
+		ctx.scale(scaleX, scaleY);
+		ctx.translate(-originX, -originY);
+
+		ctx.drawImage(
+			imageSrc,
+			frame * frameW,
+			0,
+			frameW,
+			frameH,
+			drawX / scaleX,
+			drawY / scaleY,
+			frameW,
+			frameH,
+		);
+		ctx.restore();
+	},
+};
+
 const rect = createComponent({});
 const circle = createComponent({});
 
@@ -617,11 +677,7 @@ const moveEightSystem = {
 // TODO: how do I do a component group??
 
 class Entity {
-	_x = 0;
-	_y = 0;
-
 	components = new Map();
-	systems = [moveEightSystem];
 
 	constructor(x, y) {
 		this.addComponent(pos2D);
@@ -681,10 +737,16 @@ class Circle extends Entity {
 	}
 }
 
-class Player {
+class Player extends Entity {
 	constructor(x, y) {
-		this.x = x;
-		this.y = y;
+		super(x, y);
+
+		const imageComp = this.addComponent(image);
+		imageComp.offsetX = 10;
+		imageComp.offsetY = 11;
+		imageComp.originX = 16;
+		imageComp.frameW = 32;
+		imageComp.frameH = 32;
 
 		this.scene = null;
 
@@ -705,7 +767,9 @@ class Player {
 		this.gspeed = 0.12; // gravity
 		this.jspeed = -3.95; // initial jump velocity
 
-		this.image = assetManager.images.get('radiohead_spritesheet.png');
+		imageComp.imageSrc = this.image = assetManager.images.get(
+			'radiohead_spritesheet.png',
+		);
 
 		this.coyote = 0;
 		this.coyoteLimit = 6;
@@ -730,6 +794,9 @@ class Player {
 		// See if the player is trying to move left or right
 		const xdir = keyRightCheck - keyLeftCheck;
 		this.facing = xdir || this.facing;
+
+		const imageComp = this.component(image);
+		imageComp.scaleX = this.facing;
 
 		if (this.coyote > 0) --this.coyote;
 		if (this.jumpInput > 0) --this.jumpInput;
@@ -909,16 +976,17 @@ class Player {
 			this.frame = 0;
 			this.timer = this.timeout - 1;
 		}
+
+		const imageComp = this.component(image);
+		imageComp.frame = this.frame;
 	}
 
-	render(ctx, camera = v2zero) {
+	render(ctx, camera) {
 		const flipped = this.facing === -1;
 		const scaleX = flipped ? -1 : 1;
 
-		const [cameraX, cameraY] = camera;
-
-		const drawX = this.x - cameraX;
-		const drawY = this.y - cameraY;
+		const drawX = this.x - camera.x;
+		const drawY = this.y - camera.y;
 
 		const drawW = this.image.width / 4;
 		const drawH = this.image.height;
