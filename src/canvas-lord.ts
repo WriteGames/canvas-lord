@@ -1192,44 +1192,6 @@ class Camera extends Array {
 	}
 }
 
-interface IEntityComponent {}
-
-interface IEntitySystem {
-	update?: (input: Input) => void;
-	render?: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
-}
-
-export interface IEntity {
-	scene: Scene | null;
-	update: (input: Input) => void;
-	components?: IEntityComponent[];
-	systems?: IEntitySystem[];
-}
-
-export interface IRenderable {
-	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
-}
-
-export type Entity = IEntity;
-export type Renderable = IRenderable;
-
-export interface Scene {
-	engine: Engine;
-	entities: Entity[];
-	renderables: Renderable[];
-	messages: Messages;
-	shouldUpdate: boolean;
-	screenPos: V2;
-	camera: Camera;
-	escapeToBlur: boolean;
-	allowRefresh: boolean;
-	boundsX: number | null;
-	boundsY: number | null;
-
-	canvas: HTMLCanvasElement;
-	ctx: CanvasRenderingContext2D;
-}
-
 type MessagesPayload = object;
 type MessagesSubscriber = {
 	receive?: (message: string, payload: MessagesPayload) => void;
@@ -1270,9 +1232,55 @@ class Messages {
 	}
 }
 
+interface IEntityComponent {}
+
+interface IEntitySystem {
+	update?: (entity: IEntity, input: Input) => void;
+	render?: (
+		entity: IEntity,
+		ctx: CanvasRenderingContext2D,
+		camera: Camera,
+	) => void;
+}
+
+export interface IEntity {
+	scene: Scene | null;
+	update: (input: Input) => void;
+	component?: (component: IEntityComponent) => IEntityComponent;
+	components?: IEntityComponent[];
+	systems?: IEntitySystem[];
+}
+
+export interface IRenderable {
+	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+}
+
+export type Entity = IEntity;
+export type Renderable = IRenderable;
+
+export interface Scene {
+	engine: Engine;
+	entities: Entity[];
+	renderables: Renderable[];
+	componentSystemMap: Map<IEntityComponent, IEntitySystem>;
+	messages: Messages;
+	shouldUpdate: boolean;
+	screenPos: V2;
+	camera: Camera;
+	escapeToBlur: boolean;
+	allowRefresh: boolean;
+	boundsX: number | null;
+	boundsY: number | null;
+
+	canvas: HTMLCanvasElement;
+	ctx: CanvasRenderingContext2D;
+}
+
 export class Scene {
 	constructor(engine: Engine) {
 		this.engine = engine;
+
+		this.componentSystemMap = new Map<IEntityComponent, IEntitySystem>();
 
 		this.entities = [];
 		this.renderables = [];
@@ -1317,6 +1325,16 @@ export class Scene {
 
 		this.entities.forEach((entity) => entity.update(input));
 		// this.renderables = this.renderables.filter(e => e).sort();
+
+		this.componentSystemMap.forEach((system, component) => {
+			const { update } = system;
+			if (!update) return;
+
+			const entities = this.entities.filter((e) =>
+				Boolean(e.component?.(component)),
+			);
+			entities.forEach((entity) => update(entity, input));
+		});
 	}
 
 	render(ctx: CanvasRenderingContext2D): void {
@@ -1333,6 +1351,18 @@ export class Scene {
 		// this.ctx.strokeStyle = '#787878';
 		// this.ctx.lineWidth = (width * 2 - 1);
 		// this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
+
+		this.componentSystemMap.forEach((system, component) => {
+			const { render } = system;
+			if (!render) return;
+
+			const entities = this.entities.filter((e) =>
+				Boolean(e.component?.(component)),
+			);
+			entities.forEach((entity) => {
+				render(entity, this.ctx, this.camera);
+			});
+		});
 
 		ctx.drawImage(this.canvas, ...this.screenPos);
 	}

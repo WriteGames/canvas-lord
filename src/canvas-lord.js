@@ -838,6 +838,7 @@ class Messages {
 export class Scene {
     constructor(engine) {
         this.engine = engine;
+        this.componentSystemMap = new Map();
         this.entities = [];
         this.renderables = [];
         this.shouldUpdate = true;
@@ -873,6 +874,13 @@ export class Scene {
             return;
         this.entities.forEach((entity) => entity.update(input));
         // this.renderables = this.renderables.filter(e => e).sort();
+        this.componentSystemMap.forEach((system, component) => {
+            const { update } = system;
+            if (!update)
+                return;
+            const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
+            entities.forEach((entity) => update(entity, input));
+        });
     }
     render(ctx) {
         this.ctx.fillStyle = '#87E1A3';
@@ -884,6 +892,15 @@ export class Scene {
         // this.ctx.strokeStyle = '#787878';
         // this.ctx.lineWidth = (width * 2 - 1);
         // this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
+        this.componentSystemMap.forEach((system, component) => {
+            const { render } = system;
+            if (!render)
+                return;
+            const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
+            entities.forEach((entity) => {
+                render(entity, this.ctx, this.camera);
+            });
+        });
         ctx.drawImage(this.canvas, ...this.screenPos);
     }
 }

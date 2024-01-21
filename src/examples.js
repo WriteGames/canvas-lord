@@ -460,8 +460,6 @@ const LOG_TYPE = {
 };
 
 class PlayerScene extends Scene {
-	componentSystemMap = new Map();
-
 	constructor(Player, engine) {
 		super(engine);
 
@@ -558,33 +556,7 @@ class PlayerScene extends Scene {
 	update(input) {
 		super.update(input);
 
-		this.componentSystemMap.forEach((system, component) => {
-			if (!system.update) return;
-
-			const entities = this.entities.filter((e) =>
-				Boolean(e.component?.(component)),
-			);
-			entities.forEach(system.update);
-		});
-
 		updateCamera(this, this.player);
-	}
-
-	render(ctx) {
-		super.render(ctx);
-
-		this.componentSystemMap.forEach((system, component) => {
-			if (!system.render) return;
-
-			const entities = this.entities.filter((e) =>
-				Boolean(e.component?.(component)),
-			);
-			entities.forEach((entity) => {
-				system.render(entity, this.ctx, this.camera);
-			});
-		});
-
-		ctx.drawImage(this.canvas, ...this.screenPos);
 	}
 }
 
@@ -612,8 +584,8 @@ const rectSystem = {
 		let size = 10;
 		let offset = size >>> 1;
 		ctx.fillRect(
-			entity.x - camera[0] - offset,
-			entity.y - camera[1] - offset,
+			entity.x - camera.x - offset,
+			entity.y - camera.y - offset,
 			size,
 			size,
 		);
@@ -625,13 +597,7 @@ const circleSystem = {
 		ctx.fillStyle = 'magenta';
 		let size = 5;
 		ctx.beginPath();
-		ctx.arc(
-			entity.x - camera[0],
-			entity.y - camera[1],
-			size,
-			0,
-			Math.PI * 2,
-		);
+		ctx.arc(entity.x - camera.x, entity.y - camera.y, size, 0, Math.PI * 2);
 		ctx.fill();
 	},
 };
