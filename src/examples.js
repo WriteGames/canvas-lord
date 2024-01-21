@@ -460,11 +460,20 @@ const LOG_TYPE = {
 };
 
 class PlayerScene extends Scene {
+	componentSystemMap = new Map();
+
 	constructor(Player, engine) {
 		super(engine);
 
+		this.componentSystemMap.set(moveEightComponent, moveEightSystem);
+		this.componentSystemMap.set(rect, rectSystem);
+		this.componentSystemMap.set(circle, circleSystem);
+
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(40, 144));
+
+		this.square = this.addEntity(new Square(30, 90));
+		this.square = this.addEntity(new Circle(60, 90));
 
 		this.logger = this.addEntity(new Logger(10, 10));
 		const validRenderer = (ctx, log, drawX, drawY) => {
@@ -537,6 +546,7 @@ class PlayerScene extends Scene {
 		this.renderables.push(this.player);
 		this.renderables.push(this.logger);
 		this.renderables.push(buttons);
+		this.renderables.push(this.square);
 	}
 
 	setCanvasSize(width, height) {
@@ -548,13 +558,162 @@ class PlayerScene extends Scene {
 	update(input) {
 		super.update(input);
 
+		this.componentSystemMap.forEach((system, component) => {
+			if (!system.update) return;
+
+			const entities = this.entities.filter((e) =>
+				Boolean(e.component?.(component)),
+			);
+			entities.forEach(system.update);
+		});
+
 		updateCamera(this, this.player);
+	}
+
+	render(ctx) {
+		super.render(ctx);
+
+		this.componentSystemMap.forEach((system, component) => {
+			if (!system.render) return;
+
+			const entities = this.entities.filter((e) =>
+				Boolean(e.component?.(component)),
+			);
+			entities.forEach((entity) => {
+				system.render(entity, this.ctx, this.camera);
+			});
+		});
+
+		ctx.drawImage(this.canvas, ...this.screenPos);
 	}
 }
 
 const leftKeys = ['ArrowLeft', 'a', 'A'];
 const rightKeys = ['ArrowRight', 'd', 'D'];
 const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
+
+const copyObject = (obj) =>
+	Array.isArray(obj) ? [...obj] : Object.assign({}, obj);
+
+// TODO: rename to registerComponent? And then do something with that?
+// TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
+const createComponent = (component) => Object.freeze(copyObject(component));
+
+const pos2D = createComponent(v2zero);
+
+const rect = createComponent({});
+const circle = createComponent({});
+
+const moveEightComponent = createComponent({ originX: 30, originY: 90, dt: 0 });
+
+const rectSystem = {
+	render(entity, ctx, camera) {
+		ctx.fillStyle = 'magenta';
+		let size = 10;
+		let offset = size >>> 1;
+		ctx.fillRect(
+			entity.x - camera[0] - offset,
+			entity.y - camera[1] - offset,
+			size,
+			size,
+		);
+	},
+};
+
+const circleSystem = {
+	render(entity, ctx, camera) {
+		ctx.fillStyle = 'magenta';
+		let size = 5;
+		ctx.beginPath();
+		ctx.arc(
+			entity.x - camera[0],
+			entity.y - camera[1],
+			size,
+			0,
+			Math.PI * 2,
+		);
+		ctx.fill();
+	},
+};
+
+const moveEightSystem = {
+	update: (entity) => {
+		const move8Comp = entity.component(moveEightComponent);
+
+		const { originX, originY, dt } = move8Comp;
+
+		entity.x = originX + Math.cos(dt / 16) * 16;
+		entity.y = originY + Math.sin(dt / 8) * 8;
+		++move8Comp.dt;
+	},
+};
+
+// TODO: how do I do a component group??
+
+class Entity {
+	_x = 0;
+	_y = 0;
+
+	components = new Map();
+	systems = [moveEightSystem];
+
+	constructor(x, y) {
+		this.addComponent(pos2D);
+
+		this.x = x;
+		this.y = y;
+	}
+
+	addComponent(component) {
+		// TODO: we'll want to make sure we use a deepCopy
+		this.components.set(component, copyObject(component));
+		return this.component(component);
+	}
+
+	component(component) {
+		return this.components.get(component);
+	}
+
+	get x() {
+		return this.component(pos2D)[0];
+	}
+	set x(val) {
+		this.component(pos2D)[0] = val;
+	}
+
+	get y() {
+		return this.component(pos2D)[1];
+	}
+	set y(val) {
+		this.component(pos2D)[1] = val;
+	}
+
+	update() {}
+
+	render() {}
+}
+
+class Square extends Entity {
+	constructor(x, y) {
+		super(x, y);
+
+		const moveEight = this.addComponent(moveEightComponent);
+		moveEight.originX = x;
+		moveEight.originY = y;
+		const r = this.addComponent(rect);
+	}
+}
+
+class Circle extends Entity {
+	constructor(x, y) {
+		super(x, y);
+
+		const moveEight = this.addComponent(moveEightComponent);
+		moveEight.originX = x;
+		moveEight.originY = y;
+		const r = this.addComponent(circle);
+	}
+}
 
 class Player {
 	constructor(x, y) {

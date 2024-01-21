@@ -1192,9 +1192,18 @@ class Camera extends Array {
 	}
 }
 
+interface IEntityComponent {}
+
+interface IEntitySystem {
+	update?: (input: Input) => void;
+	render?: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+}
+
 export interface IEntity {
 	scene: Scene | null;
 	update: (input: Input) => void;
+	components?: IEntityComponent[];
+	systems?: IEntitySystem[];
 }
 
 export interface IRenderable {
