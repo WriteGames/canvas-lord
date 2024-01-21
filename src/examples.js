@@ -471,8 +471,8 @@ class PlayerScene extends Scene {
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(40, 144));
 
-		this.square = this.addEntity(new Square(30, 90));
-		this.square = this.addEntity(new Circle(60, 90));
+		this.addEntity(new Square(30, 90));
+		this.addEntity(new Circle(60, 90));
 
 		this.logger = this.addEntity(new Logger(10, 10));
 		const validRenderer = (ctx, log, drawX, drawY) => {
@@ -545,7 +545,6 @@ class PlayerScene extends Scene {
 		this.renderables.push(this.player);
 		this.renderables.push(this.logger);
 		this.renderables.push(buttons);
-		this.renderables.push(this.square);
 	}
 
 	setCanvasSize(width, height) {
