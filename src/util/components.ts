@@ -1,4 +1,5 @@
-import { IEntityComponent, v2zero } from '../canvas-lord.js';
+import { IEntityComponent } from './types.js';
+import { v2zero } from './math.js';
 
 type InferTuple<T> = T extends readonly [...infer Tuple] ? Tuple : T;
 export const copyObject = <T extends object | unknown[], U = InferTuple<T>>(

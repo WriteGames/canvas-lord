@@ -484,9 +484,7 @@ class PlayerScene extends Scene {
 		const c1 = this.addEntity(new Circle(60, 90));
 		const c2 = this.addEntity(new Circle(0, 0));
 		c1.component(Components.circle).color = 'purple';
-		c1.radius = 5;
 		c2.component(Components.circle).color = 'magenta';
-		c2.radius = 5;
 
 		this.logger = this.addEntity(new Logger(10, 10));
 		const validRenderer = (ctx, log, drawX, drawY) => {
@@ -640,6 +638,7 @@ class Circle extends Entity {
 		moveEight.originX = x;
 		moveEight.originY = y;
 		const r = this.addComponent(Components.circle);
+		r.radius = 5;
 	}
 }
 

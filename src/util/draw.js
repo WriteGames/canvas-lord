@@ -1,4 +1,5 @@
-const drawable = {
+// TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
+export const drawable = {
     angle: 0,
     scaleX: 1,
     scaleY: 1,
@@ -9,7 +10,7 @@ const drawable = {
 };
 const moveCanvas = (callback) => {
     return (ctx, options, x, y, ...args) => {
-        const { originX, originY, angle, scaleX, scaleY } = Object.assign({}, options, drawable);
+        const { originX, originY, angle, scaleX, scaleY } = Object.assign({}, drawable, options);
         ctx.save();
         ctx.translate(originX, originY);
         ctx.translate(x, y);
@@ -71,7 +72,6 @@ export const Draw = {
             return;
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(imageSrc, sourceX, sourceY, width, height, drawX, drawY, width, height);
-        ctx.restore();
     }),
 };
 //# sourceMappingURL=draw.js.map

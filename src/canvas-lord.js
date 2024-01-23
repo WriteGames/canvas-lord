@@ -1,14 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-const hashTuple = (pos) => pos.join(',');
-const _tupleMap = new Map();
-export const Tuple = (...args) => {
-    const hash = hashTuple(args);
-    if (!_tupleMap.has(hash)) {
-        const tuple = Object.freeze(args);
-        _tupleMap.set(hash, tuple);
-    }
-    return _tupleMap.get(hash);
-};
+import { v2zero, Tuple, hashTuple, } from './util/math.js';
+import { Draw, drawable } from './util/draw.js';
+// TODO: only export these from math.js
+export { v2zero, v2one, Tuple } from './util/math.js';
 // NOTE: This should be able to infer the return type...
 Math.clamp = (val, min, max) => {
     if (val < min)
@@ -102,8 +96,6 @@ export const isPointInsidePath = (point, path) => {
         .reduce(reduceSum, 0);
     return Math.abs(wind) > EPSILON;
 };
-export const v2zero = Tuple(0, 0);
-export const v2one = Tuple(1, 1);
 const createBitEnum = (..._names) => {
     const names = _names.flat();
     const bitEnumObj = {};
@@ -904,13 +896,6 @@ export class Scene {
         ctx.drawImage(this.canvas, ...this.screenPos);
     }
 }
-// TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
-export const drawLine = (ctx, x1, y1, x2, y2) => {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-};
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
     ? new OffscreenCanvas(1, 1)
     : document.createElement('canvas');
@@ -997,16 +982,16 @@ export class Grid {
                     const x2 = x1 + width - 1;
                     const y2 = y1 + height - 1;
                     if (!this.getTile(x - 1, y)) {
-                        drawLine(ctx, x1, y1, x1, y2);
+                        Draw.line(ctx, drawable, x1, y1, x1, y2);
                     }
                     if (!this.getTile(x + 1, y)) {
-                        drawLine(ctx, x2, y1, x2, y2);
+                        Draw.line(ctx, drawable, x2, y1, x2, y2);
                     }
                     if (!this.getTile(x, y - 1)) {
-                        drawLine(ctx, x1, y1, x2, y1);
+                        Draw.line(ctx, drawable, x1, y1, x2, y1);
                     }
                     if (!this.getTile(x, y + 1)) {
-                        drawLine(ctx, x1, y2, x2, y2);
+                        Draw.line(ctx, drawable, x1, y2, x2, y2);
                     }
                 }
             }

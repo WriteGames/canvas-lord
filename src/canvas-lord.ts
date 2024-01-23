@@ -1,5 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 
+import {
+	V2,
+	V3,
+	V4,
+	v2zero,
+	Tuple,
+	hashTuple,
+	V2Editable,
+} from './util/math.js';
+
+import { type IEntityComponent } from './util/types.js';
+
+import { Draw, drawable } from './util/draw.js';
+
+// TODO: only export these from math.js
+export { v2zero, v2one, Tuple } from './util/math.js';
+
 declare global {
 	interface HTMLCanvasElement {
 		_engine: Engine;
@@ -16,31 +33,9 @@ declare global {
 	}
 }
 
-// type Vector = number[];
-type V2 = readonly [x: number, y: number];
-type V3 = readonly [x: number, y: number, z: number];
-type V4 = readonly [x: number, y: number, z: number, w: number];
-
 type Writeable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
-
-type V2Editable = Writeable<V2>;
-// type V3Editable = Readable<V2>;
-// type V4Editable = Readable<V2>;
-
-type Tuple = V2 | V3 | V4;
-
-type TupleT<T extends Tuple> = T extends V2
-	? V2
-	: // V3
-	T extends V3
-	? V3
-	: // V4
-	T extends V4
-	? V4
-	: // other
-	  never; // could also just return T at this point, or add some extra cases that aren't cool (like [] or [number])
 
 type FuncMapTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => A;
 type FuncMapTupleByScalar = <P extends Tuple>(p: P, s: number) => P;
@@ -54,18 +49,6 @@ type TupleToObjectTupleHybrid<A extends readonly PropertyKey[]> = Pick<
 	},
 	Exclude<keyof A, keyof unknown[]> | A[number]
 >;
-
-const hashTuple = (pos: Tuple): string => pos.join(',');
-
-const _tupleMap = new Map<string, V2 | V3 | V4>();
-export const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
-	const hash = hashTuple(args);
-	if (!_tupleMap.has(hash)) {
-		const tuple = Object.freeze<Tuple>(args);
-		_tupleMap.set(hash, tuple);
-	}
-	return _tupleMap.get(hash) as TupleT<V>;
-};
 
 // NOTE: This should be able to infer the return type...
 Math.clamp = (val, min, max): number => {
@@ -210,9 +193,6 @@ export const isPointInsidePath = (point: V2, path: Path): boolean => {
 		.reduce(reduceSum, 0);
 	return Math.abs(wind) > EPSILON;
 };
-
-export const v2zero = Tuple(0, 0);
-export const v2one = Tuple(1, 1);
 
 const createBitEnum = <T extends readonly string[]>(
 	..._names: T
@@ -1232,8 +1212,6 @@ class Messages {
 	}
 }
 
-export interface IEntityComponent {}
-
 export interface IEntitySystem {
 	update?: (entity: IEntity, input: Input) => void;
 	render?: (
@@ -1370,21 +1348,6 @@ export class Scene {
 	}
 }
 
-// TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
-
-export const drawLine = (
-	ctx: CanvasRenderingContext2D,
-	x1: number,
-	y1: number,
-	x2: number,
-	y2: number,
-): void => {
-	ctx.beginPath();
-	ctx.moveTo(x1, y1);
-	ctx.lineTo(x2, y2);
-	ctx.stroke();
-};
-
 const pixelCanvas =
 	typeof OffscreenCanvas !== 'undefined'
 		? new OffscreenCanvas(1, 1)
@@ -1511,16 +1474,16 @@ export class Grid {
 					const x2 = x1 + width - 1;
 					const y2 = y1 + height - 1;
 					if (!this.getTile(x - 1, y)) {
-						drawLine(ctx, x1, y1, x1, y2);
+						Draw.line(ctx, drawable, x1, y1, x1, y2);
 					}
 					if (!this.getTile(x + 1, y)) {
-						drawLine(ctx, x2, y1, x2, y2);
+						Draw.line(ctx, drawable, x2, y1, x2, y2);
 					}
 					if (!this.getTile(x, y - 1)) {
-						drawLine(ctx, x1, y1, x2, y1);
+						Draw.line(ctx, drawable, x1, y1, x2, y1);
 					}
 					if (!this.getTile(x, y + 1)) {
-						drawLine(ctx, x1, y2, x2, y2);
+						Draw.line(ctx, drawable, x1, y2, x2, y2);
 					}
 				}
 			}
