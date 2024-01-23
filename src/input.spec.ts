@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 const engine = {
 	focus: true,
+	focusElement: document.activeElement,
 } as Engine;
 
 let input: Input;
