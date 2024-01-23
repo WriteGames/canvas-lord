@@ -21,11 +21,11 @@ type V2 = readonly [x: number, y: number];
 type V3 = readonly [x: number, y: number, z: number];
 type V4 = readonly [x: number, y: number, z: number, w: number];
 
-type Readable<T> = {
+type Writeable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
 
-type V2Editable = Readable<V2>;
+type V2Editable = Writeable<V2>;
 // type V3Editable = Readable<V2>;
 // type V4Editable = Readable<V2>;
 
@@ -1232,9 +1232,9 @@ class Messages {
 	}
 }
 
-interface IEntityComponent {}
+export interface IEntityComponent {}
 
-interface IEntitySystem {
+export interface IEntitySystem {
 	update?: (entity: IEntity, input: Input) => void;
 	render?: (
 		entity: IEntity,
@@ -1244,9 +1244,11 @@ interface IEntitySystem {
 }
 
 export interface IEntity {
+	x: number;
+	y: number;
 	scene: Scene | null;
 	update: (input: Input) => void;
-	component?: (component: IEntityComponent) => IEntityComponent;
+	component?: <T extends IEntityComponent>(component: T) => Writeable<T>;
 	components?: IEntityComponent[];
 	systems?: IEntitySystem[];
 }

@@ -18,13 +18,15 @@ import {
 	subPos,
 	dirND,
 	findAllPolygonsInGrid,
-	drawLine,
 	checkLineSegmentIntersection,
 	getLineSegmentIntersection,
 	isPointOnLine,
 	isPointInsidePath,
 } from './canvas-lord.js';
 
+import * as Components from './util/components.js';
+import * as Systems from './util/systems.js';
+import { Draw } from './util/draw.js';
 import { ButtonsOverlay } from './util/buttons-overlay.js';
 import { Logger, YesNoLogParser } from './util/logger.js';
 import { Inspector } from './inspector.js';
@@ -401,17 +403,17 @@ class ContourTracingScene extends Scene {
 		const correction = [0.5, 0.5];
 
 		for (let y = 0; y < this.rows; ++y) {
-			let yy = y * this.tileH + 0.5;
-			drawLine(ctx, 0.5, yy, this.columns * this.tileW + 0.5, yy);
+			let yy = y * this.tileH;
+			Draw.line(ctx, {}, 0, yy, this.columns * this.tileW + 0, yy);
 			yy += this.tileH - 1;
-			drawLine(ctx, 0.5, yy, this.columns * this.tileW + 0.5, yy);
+			Draw.line(ctx, {}, 0, yy, this.columns * this.tileW + 0, yy);
 		}
 
 		for (let x = 0; x < this.columns; ++x) {
-			let xx = x * this.tileW + 0.5;
-			drawLine(ctx, xx, 0.5, xx, this.rows * this.tileH + 0.5);
+			let xx = x * this.tileW;
+			Draw.line(ctx, {}, xx, 0, xx, this.rows * this.tileH);
 			xx += this.tileW - 1;
-			drawLine(ctx, xx, 0, xx, this.rows * this.tileH);
+			Draw.line(ctx, {}, xx, 0, xx, this.rows * this.tileH);
 		}
 
 		for (let y = 0; y < this.rows; ++y) {
@@ -463,16 +465,28 @@ class PlayerScene extends Scene {
 	constructor(Player, engine) {
 		super(engine);
 
-		this.componentSystemMap.set(moveEightComponent, moveEightSystem);
-		this.componentSystemMap.set(rect, rectSystem);
-		this.componentSystemMap.set(circle, circleSystem);
-		this.componentSystemMap.set(image, imageSystem);
+		this.componentSystemMap.set(
+			Components.moveEightComponent,
+			Systems.moveEightSystem,
+		);
+		this.componentSystemMap.set(Components.rect, Systems.rectSystem);
+		this.componentSystemMap.set(Components.circle, Systems.circleSystem);
+		this.componentSystemMap.set(Components.image, Systems.imageSystem);
 
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(40, 144));
 
-		this.addEntity(new Square(30, 90));
-		this.addEntity(new Circle(60, 90));
+		this.addEntity(new Square(30, 90)).component(Components.rect).color =
+			'red';
+		this.addEntity(new Square(0, 0)).component(Components.rect).color =
+			'blue';
+
+		const c1 = this.addEntity(new Circle(60, 90));
+		const c2 = this.addEntity(new Circle(0, 0));
+		c1.component(Components.circle).color = 'purple';
+		c1.radius = 5;
+		c2.component(Components.circle).color = 'magenta';
+		c2.radius = 5;
 
 		this.logger = this.addEntity(new Logger(10, 10));
 		const validRenderer = (ctx, log, drawX, drawY) => {
@@ -564,122 +578,11 @@ const leftKeys = ['ArrowLeft', 'a', 'A'];
 const rightKeys = ['ArrowRight', 'd', 'D'];
 const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
 
-const copyObject = (obj) =>
-	Array.isArray(obj) ? [...obj] : Object.assign({}, obj);
-
-// TODO: rename to registerComponent? And then do something with that?
-// TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
-const createComponent = (component) => Object.freeze(copyObject(component));
-
-const pos2D = createComponent(v2zero);
-
-const image = createComponent({
-	imageSrc: null,
-	frame: 0,
-	frameW: 0,
-	frameH: 0,
-	angle: 0,
-	scaleX: 1,
-	scaleY: 1,
-	originX: 0,
-	originY: 0,
-	offsetX: 0,
-	offsetY: 0,
-});
-const imageSystem = {
-	render(entity, ctx, camera) {
-		console.log('time to render the image');
-
-		const {
-			imageSrc,
-			frame,
-			frameW,
-			frameH,
-			angle,
-			scaleX,
-			scaleY,
-			originX,
-			originY,
-			offsetX,
-			offsetY,
-		} = entity.component(image);
-
-		ctx.imageSmoothingEnabled = false;
-
-		const drawX = entity.x - camera.x - offsetX;
-		const drawY = entity.y - camera.y - offsetY;
-
-		ctx.save();
-		ctx.translate(originX, originY);
-		ctx.translate(drawX, drawY);
-		ctx.rotate((angle / 180) * Math.PI);
-		ctx.translate(-drawX, -drawY);
-		ctx.scale(scaleX, scaleY);
-		ctx.translate(-originX, -originY);
-
-		ctx.drawImage(
-			imageSrc,
-			frame * frameW,
-			0,
-			frameW,
-			frameH,
-			drawX / scaleX,
-			drawY / scaleY,
-			frameW,
-			frameH,
-		);
-		ctx.restore();
-	},
-};
-
-const rect = createComponent({});
-const circle = createComponent({});
-
-const moveEightComponent = createComponent({ originX: 30, originY: 90, dt: 0 });
-
-const rectSystem = {
-	render(entity, ctx, camera) {
-		ctx.fillStyle = 'magenta';
-		let size = 10;
-		let offset = size >>> 1;
-		ctx.fillRect(
-			entity.x - camera.x - offset,
-			entity.y - camera.y - offset,
-			size,
-			size,
-		);
-	},
-};
-
-const circleSystem = {
-	render(entity, ctx, camera) {
-		ctx.fillStyle = 'magenta';
-		let size = 5;
-		ctx.beginPath();
-		ctx.arc(entity.x - camera.x, entity.y - camera.y, size, 0, Math.PI * 2);
-		ctx.fill();
-	},
-};
-
-const moveEightSystem = {
-	update: (entity) => {
-		const move8Comp = entity.component(moveEightComponent);
-
-		const { originX, originY, dt } = move8Comp;
-
-		entity.x = originX + Math.cos(dt / 16) * 16;
-		entity.y = originY + Math.sin(dt / 8) * 8;
-		++move8Comp.dt;
-	},
-};
-
-// TODO: how do I do a component group??
-
 class Entity {
 	components = new Map();
 
 	constructor(x, y) {
-		this.addComponent(pos2D);
+		this.addComponent(Components.pos2D);
 
 		this.x = x;
 		this.y = y;
@@ -687,7 +590,7 @@ class Entity {
 
 	addComponent(component) {
 		// TODO: we'll want to make sure we use a deepCopy
-		this.components.set(component, copyObject(component));
+		this.components.set(component, Components.copyObject(component));
 		return this.component(component);
 	}
 
@@ -696,17 +599,17 @@ class Entity {
 	}
 
 	get x() {
-		return this.component(pos2D)[0];
+		return this.component(Components.pos2D)[0];
 	}
 	set x(val) {
-		this.component(pos2D)[0] = val;
+		this.component(Components.pos2D)[0] = val;
 	}
 
 	get y() {
-		return this.component(pos2D)[1];
+		return this.component(Components.pos2D)[1];
 	}
 	set y(val) {
-		this.component(pos2D)[1] = val;
+		this.component(Components.pos2D)[1] = val;
 	}
 
 	update() {}
@@ -718,10 +621,14 @@ class Square extends Entity {
 	constructor(x, y) {
 		super(x, y);
 
-		const moveEight = this.addComponent(moveEightComponent);
+		const moveEight = this.addComponent(Components.moveEightComponent);
 		moveEight.originX = x;
 		moveEight.originY = y;
-		const r = this.addComponent(rect);
+		const r = this.addComponent(Components.rect);
+		r.width = 10;
+		r.height = 10;
+		r.originX = r.width >> 1;
+		r.originY = r.width >> 1;
 	}
 }
 
@@ -729,10 +636,10 @@ class Circle extends Entity {
 	constructor(x, y) {
 		super(x, y);
 
-		const moveEight = this.addComponent(moveEightComponent);
+		const moveEight = this.addComponent(Components.moveEightComponent);
 		moveEight.originX = x;
 		moveEight.originY = y;
-		const r = this.addComponent(circle);
+		const r = this.addComponent(Components.circle);
 	}
 }
 
@@ -740,7 +647,7 @@ class Player extends Entity {
 	constructor(x, y) {
 		super(x, y);
 
-		const imageComp = this.addComponent(image);
+		const imageComp = this.addComponent(Components.image);
 		imageComp.offsetX = 10;
 		imageComp.offsetY = 11;
 		imageComp.originX = 16;
@@ -794,7 +701,7 @@ class Player extends Entity {
 		const xdir = keyRightCheck - keyLeftCheck;
 		this.facing = xdir || this.facing;
 
-		const imageComp = this.component(image);
+		const imageComp = this.component(Components.image);
 		imageComp.scaleX = this.facing;
 
 		if (this.coyote > 0) --this.coyote;
@@ -976,7 +883,7 @@ class Player extends Entity {
 			this.timer = this.timeout - 1;
 		}
 
-		const imageComp = this.component(image);
+		const imageComp = this.component(Components.image);
 		imageComp.frame = this.frame;
 	}
 
