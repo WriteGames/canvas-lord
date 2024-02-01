@@ -11,6 +11,7 @@ import {
 	normToBitFlagMap,
 	reduceBitFlags,
 	Scene,
+	Entity,
 	Tileset,
 	Tuple,
 	v2zero,
@@ -24,10 +25,13 @@ import {
 	isPointInsidePath,
 } from './canvas-lord.js';
 
+import { createSceneGrid, createButtons } from './shared.js';
+
+import { Player, EVENT_TYPE, leftKeys, rightKeys, jumpKeys } from './player.js';
+
 import * as Components from './util/components.js';
 import * as Systems from './util/systems.js';
 import { Draw } from './util/draw.js';
-import { ButtonsOverlay } from './util/buttons-overlay.js';
 import { Logger, YesNoLogParser } from './util/logger.js';
 import { Inspector } from './inspector.js';
 
@@ -87,57 +91,6 @@ const initGrid2 = () => {
 	grid.setTile(8 + 5, 5, 1);
 
 	return grid;
-};
-
-const initTileset = (grid) => {
-	const tileset = new Tileset(
-		assetManager.images.get('tileset.png'),
-		grid.width,
-		grid.height,
-		16,
-		16,
-	);
-
-	const setCloud1 = (x, y) => tileset.setTile(x, y, 4, 3);
-	const setCloud2 = (x, y) =>
-		[0, 1].forEach((v) => tileset.setTile(x + v, y, 5 + v, 3));
-	const setCloud3 = (x, y) =>
-		[0, 1, 2].forEach((v) => tileset.setTile(x + v, y, 4 + v, 4));
-
-	setCloud1(7, 1);
-	setCloud1(14, 2);
-
-	setCloud2(4, 3);
-	setCloud2(9, 7);
-	setCloud2(0, 8);
-
-	setCloud3(5, 5);
-	setCloud3(15, 6);
-	setCloud3(-1, 2);
-
-	const filterWithinGridBounds = filterWithinBounds(
-		Tuple(0, 0),
-		Tuple(grid.columns, grid.rows),
-	);
-	for (let y = 0; y < grid.rows; ++y) {
-		for (let x = 0; x < grid.columns; ++x) {
-			const pos = Tuple(x, y);
-
-			if (grid.getTile(...pos) === 0) continue;
-
-			const val = cardinalNorms
-				.map(mapByOffset(pos))
-				.filter(filterWithinGridBounds)
-				.filter((pos) => grid.getTile(...pos))
-				.map(mapFindOffset(pos))
-				.map((norm) => normToBitFlagMap.get(norm))
-				.reduce(reduceBitFlags, 0);
-
-			globalSetTile(tileset, x, y, val);
-		}
-	}
-
-	return tileset;
 };
 
 const updateCamera = (scene, player) => {
@@ -450,19 +403,13 @@ class ContourTracingScene extends Scene {
 	}
 }
 
-const EVENT_TYPE = {
-	UPDATE_CAN_JUMP: 'update-can-jump',
-	UPDATE_COYOTE: 'update-coyote',
-	JUMP: 'jump',
-};
-
 const LOG_TYPE = {
 	CAN_JUMP: 'Can Jump',
 	COYOTE: 'Coyote Frames',
 };
 
-class PlayerScene extends Scene {
-	constructor(Player, engine) {
+class ComponentScene extends Scene {
+	constructor(engine) {
 		super(engine);
 
 		this.componentSystemMap.set(
@@ -473,9 +420,6 @@ class PlayerScene extends Scene {
 		this.componentSystemMap.set(Components.circle, Systems.circleSystem);
 		this.componentSystemMap.set(Components.image, Systems.imageSystem);
 
-		// this.player = this.addEntity(new Player(160, 120));
-		this.player = this.addEntity(new Player(40, 144));
-
 		this.addEntity(new Square(30, 90)).component(Components.rect).color =
 			'red';
 		this.addEntity(new Square(0, 0)).component(Components.rect).color =
@@ -485,6 +429,15 @@ class PlayerScene extends Scene {
 		const c2 = this.addEntity(new Circle(0, 0));
 		c1.component(Components.circle).color = 'purple';
 		c2.component(Components.circle).color = 'magenta';
+	}
+}
+
+class PlayerScene extends Scene {
+	constructor(Player, engine) {
+		super(engine);
+
+		// this.player = this.addEntity(new Player(160, 120));
+		this.player = this.addEntity(new Player(40, 144, assetManager));
 
 		this.logger = this.addEntity(new Logger(10, 10));
 		const validRenderer = (ctx, log, drawX, drawY) => {
@@ -521,42 +474,8 @@ class PlayerScene extends Scene {
 			EVENT_TYPE.JUMP,
 		);
 
-		const buttons = this.addEntity(
-			new ButtonsOverlay(50, 168, {
-				left: leftKeys,
-				right: rightKeys,
-				jump: jumpKeys,
-			}),
-		);
-
-		this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
-		// this.grid = Grid.fromBinary([
-		// 	20,
-		// 	12,
-		// 	2048,
-		// 	25165848,
-		// 	125943928,
-		// 	470598016,
-		// 	2021179399,
-		// 	2348906511,
-		// 	402653183,
-		// 	4294901760
-		// ], 16, 16);
-		this.width = this.grid.width;
-		this.height = this.grid.height;
-
-		this.boundsX = [0, this.width];
-
-		this.tileset = initTileset(this.grid);
-		this.gridOutline = new GridOutline();
-		this.gridOutline.computeOutline(this.grid);
-
-		this.renderables.push(this.tileset);
-		// this.renderables.push(this.grid);
-		this.renderables.push(this.gridOutline);
-		this.renderables.push(this.player);
-		this.renderables.push(this.logger);
-		this.renderables.push(buttons);
+		createSceneGrid(this, assetManager);
+		createButtons(this, { leftKeys, rightKeys, jumpKeys });
 	}
 
 	setCanvasSize(width, height) {
@@ -570,49 +489,6 @@ class PlayerScene extends Scene {
 
 		updateCamera(this, this.player);
 	}
-}
-
-const leftKeys = ['ArrowLeft', 'a', 'A'];
-const rightKeys = ['ArrowRight', 'd', 'D'];
-const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
-
-class Entity {
-	components = new Map();
-
-	constructor(x, y) {
-		this.addComponent(Components.pos2D);
-
-		this.x = x;
-		this.y = y;
-	}
-
-	addComponent(component) {
-		// TODO: we'll want to make sure we use a deepCopy
-		this.components.set(component, Components.copyObject(component));
-		return this.component(component);
-	}
-
-	component(component) {
-		return this.components.get(component);
-	}
-
-	get x() {
-		return this.component(Components.pos2D)[0];
-	}
-	set x(val) {
-		this.component(Components.pos2D)[0] = val;
-	}
-
-	get y() {
-		return this.component(Components.pos2D)[1];
-	}
-	set y(val) {
-		this.component(Components.pos2D)[1] = val;
-	}
-
-	update() {}
-
-	render() {}
 }
 
 class Square extends Entity {
@@ -642,301 +518,11 @@ class Circle extends Entity {
 	}
 }
 
-class Player extends Entity {
-	constructor(x, y) {
-		super(x, y);
-
-		const imageComp = this.addComponent(Components.image);
-		imageComp.offsetX = 10;
-		imageComp.offsetY = 11;
-		imageComp.originX = 16;
-		imageComp.frameW = 32;
-		imageComp.frameH = 32;
-
-		this.scene = null;
-
-		this.facing = 1;
-
-		this.xspeed = 0;
-		this.xRemainder = 0;
-		this.yspeed = 0;
-		this.yRemainder = 0;
-
-		this.width = 12;
-		this.height = 16;
-
-		this.aspeed = 0.05; // acceleration
-		this.fspeed = 0.05; // friction
-
-		this.mspeed = 2.5; // max speed
-		this.gspeed = 0.12; // gravity
-		this.jspeed = -3.95; // initial jump velocity
-
-		imageComp.imageSrc = this.image = assetManager.images.get(
-			'radiohead_spritesheet.png',
-		);
-
-		this.coyote = 0;
-		this.coyoteLimit = 6;
-
-		this.jumpInput = 0;
-		this.jumpInputLimit = 8;
-
-		this.timer = 0;
-		this.timeout = 5;
-		this.frame = 0;
-	}
-
-	update(input) {
-		const keyLeftCheck = input.keyCheck(leftKeys);
-		const keyRightCheck = input.keyCheck(rightKeys);
-		const keyJumpCheck = input.keyCheck(jumpKeys);
-
-		const keyJumpPressed = input.keyPressed(jumpKeys);
-
-		const grounded = this.collide(this.x, this.y + 1);
-
-		// See if the player is trying to move left or right
-		const xdir = keyRightCheck - keyLeftCheck;
-		this.facing = xdir || this.facing;
-
-		const imageComp = this.component(Components.image);
-		imageComp.scaleX = this.facing;
-
-		if (this.coyote > 0) --this.coyote;
-		if (this.jumpInput > 0) --this.jumpInput;
-
-		// Either increase xspeed or apply friction
-		if (xdir !== 0) {
-			if (Math.sign(this.xspeed) === Math.sign(xdir)) {
-				this.xspeed += this.aspeed * xdir;
-			} else {
-				this.xspeed += this.aspeed * xdir * 2;
-			}
-		} else {
-			if (Math.abs(this.xspeed) < this.fspeed) {
-				this.xspeed = 0;
-			} else {
-				this.xspeed -= this.fspeed * Math.sign(this.xspeed);
-			}
-		}
-
-		// Make sure xspeed does not exceed mspeed;
-		this.xspeed = Math.clamp(this.xspeed, -this.mspeed, this.mspeed);
-
-		// See if we're on the ground
-		if (grounded === true) {
-			// Set coyote to the limit!
-			this.coyote = this.coyoteLimit;
-		}
-
-		if (keyJumpPressed) {
-			// Set jumpInput to the limit!
-			this.jumpInput = this.jumpInputLimit;
-		}
-
-		const canJump = grounded || this.coyote > 0;
-		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_CAN_JUMP, canJump);
-		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_COYOTE, this.coyote);
-
-		// Try jumping
-		if (canJump && this.jumpInput > 0) {
-			this.yspeed = this.jspeed;
-			this.coyote = 0;
-			this.jumpInput = 0;
-			this.scene.messages.sendMessage(EVENT_TYPE.JUMP);
-		}
-
-		// Apply gravity
-		this.yspeed += this.gspeed;
-
-		// Variable jump height
-		if (this.yspeed < 0 && !keyJumpCheck) this.yspeed += this.gspeed;
-
-		// Actually move
-		this.moveX();
-		this.moveY();
-
-		// Handle animation
-		this.updateSprite(xdir);
-	}
-
-	moveX() {
-		const grounded = this.collide(this.x, this.y + 1);
-		const ledgeBoostHeights = Array.from({ length: 2 }, (_, i) => i + 1);
-
-		this.xRemainder += this.xspeed;
-
-		let moveX = Math.round(this.xRemainder);
-
-		if (moveX !== 0) {
-			this.xRemainder -= moveX;
-
-			const sign = Math.sign(moveX);
-			for (let xx = 0, n = Math.abs(moveX); xx < n; ++xx) {
-				if (this.collide(this.x + sign, this.y)) {
-					const yy =
-						grounded === false &&
-						this.yspeed >= 0 &&
-						(ledgeBoostHeights.find(
-							(y) => !this.collide(this.x + sign, this.y - y),
-						) ??
-							false);
-
-					if (yy === false) {
-						moveX = 0;
-						this.xspeed =
-							Math.min(Math.abs(this.xspeed), 1.0) * sign;
-						this.xRemainder = 0;
-						break;
-					}
-
-					this.y -= yy;
-				}
-
-				this.x += sign;
-			}
-		}
-	}
-
-	moveY() {
-		this.yRemainder += this.yspeed;
-		let moveY = Math.round(this.yRemainder);
-
-		if (moveY !== 0) {
-			this.yRemainder -= moveY;
-
-			const sign = Math.sign(moveY);
-			for (let yy = 0, n = Math.abs(moveY); yy < n; ++yy) {
-				if (this.collide(this.x, this.y + sign)) {
-					moveY = 0;
-					this.yspeed = 0;
-				} else {
-					this.y += sign;
-				}
-			}
-		}
-	}
-
-	// TODO(bret): See if you could write this functionally :)
-	collide(_x, _y) {
-		const { width: w, height: h, scene } = this;
-
-		const { grid } = scene;
-
-		const x = Math.round(_x);
-		const y = Math.round(_y);
-
-		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
-		if (
-			scene.boundsX !== null &&
-			(x < scene.boundsX[0] || x + w > scene.boundsX[1])
-		)
-			return true;
-
-		if (
-			scene.boundsY !== null &&
-			(y < scene.boundsY[0] || y + h > scene.boundsY[1])
-		)
-			return true;
-
-		const minX = Math.clamp(
-			Math.floor(x / grid.tileW),
-			0,
-			grid.columns - 1,
-		);
-		const minY = Math.clamp(Math.floor(y / grid.tileH), 0, grid.rows - 1);
-
-		const maxX = Math.clamp(
-			Math.floor((x + w - 1) / grid.tileW),
-			0,
-			grid.columns - 1,
-		);
-		const maxY = Math.clamp(
-			Math.floor((y + h - 1) / grid.tileH),
-			0,
-			grid.rows - 1,
-		);
-
-		for (let yy = minY; yy <= maxY; ++yy) {
-			for (let xx = minX; xx <= maxX; ++xx) {
-				if (grid.getTile(xx, yy) === 1) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	updateSprite(xdir) {
-		const numFrames = 4;
-		if (xdir !== 0 || this.xspeed !== 0) {
-			this.timer += Math.abs(this.xspeed * 0.5);
-			if (this.timer >= this.timeout) {
-				this.timer = 0;
-				this.frame = (this.frame + 1) % numFrames;
-			}
-		} else {
-			this.frame = 0;
-			this.timer = this.timeout - 1;
-		}
-
-		const imageComp = this.component(Components.image);
-		imageComp.frame = this.frame;
-	}
-
-	render(ctx, camera) {
-		const flipped = this.facing === -1;
-		const scaleX = flipped ? -1 : 1;
-
-		const drawX = this.x - camera.x;
-		const drawY = this.y - camera.y;
-
-		const drawW = this.image.width / 4;
-		const drawH = this.image.height;
-
-		const offsetX = -10;
-
-		if (flipped) {
-			ctx.save();
-			ctx.scale(-1, 1);
-		}
-
-		ctx.drawImage(
-			this.image,
-			this.frame * 32,
-			0,
-			32,
-			32,
-			scaleX * (drawX + offsetX),
-			drawY - 11,
-			scaleX * drawW,
-			drawH,
-		);
-
-		if (flipped) ctx.restore();
-
-		const drawHitbox = false;
-		if (drawHitbox === true) {
-			ctx.strokeStyle = 'red';
-			ctx.strokeRect(
-				drawX + 0.5,
-				drawY + 0.5,
-				this.width - 1,
-				this.height - 1,
-			);
-		}
-	}
-}
-
 let assetManager;
-export const initGames = (src = '') => {
+export const initGames = (src = '', gamesMap) => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
-	const lineSegmentGame = new Game('line-segment');
-	const contourTracingGame = new Game('contour-tracing');
-	const games = [game1];
+	const games = gamesMap.map(({ id }) => new Game(id)).concat(game1);
 	assetManager = new AssetManager(`${src}img/`);
 
 	const inspector = new Inspector(game1);
@@ -953,14 +539,16 @@ export const initGames = (src = '') => {
 	assetManager.onLoad(() => {
 		console.log('== AssetManager::onLoad()');
 
-		const splitScreen = true;
+		const splitScreen = false;
 
-		games.forEach((game) => {
+		games.forEach((game, gameIndex) => {
 			game.backgroundColor = '#87E1A3';
 
 			const sceneWidth = game.canvas.width / 2;
 
-			const sceneLeft = new PlayerScene(Player, game);
+			const PlayerClass = gamesMap[gameIndex]?.player ?? Player;
+
+			const sceneLeft = new PlayerScene(PlayerClass, game);
 			if (splitScreen === true) {
 				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
 			} else {
@@ -968,7 +556,7 @@ export const initGames = (src = '') => {
 			}
 
 			if (splitScreen === true) {
-				const sceneRight = new PlayerScene(Player, game);
+				const sceneRight = new PlayerScene(PlayerClass, game);
 				sceneRight.screenPos[0] = sceneWidth;
 				sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
 				// sceneRight.shouldUpdate = false;
@@ -981,13 +569,15 @@ export const initGames = (src = '') => {
 			game.render();
 		});
 
-		if (true) {
+		if (true && document.querySelector('#line-segment')) {
+			const lineSegmentGame = new Game('line-segment');
 			const lineSegmentScene = new LineSegmentScene(lineSegmentGame);
 			lineSegmentGame.pushScenes(lineSegmentScene);
 			lineSegmentGame.render();
 		}
 
-		if (true) {
+		if (true && document.querySelector('#contour-tracing')) {
+			const contourTracingGame = new Game('contour-tracing');
 			const contourTracingScene = new ContourTracingScene(
 				contourTracingGame,
 			);
