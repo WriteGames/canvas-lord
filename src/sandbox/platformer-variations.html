@@ -73,11 +73,15 @@
 
 		<script type="module">
 			import { initGames } from '../examples.js';
-			import { PlayerWithComponents } from '../player.js';
+			import {
+				PlayerWithComponents,
+				horizontalMovementComponent,
+			} from '../player.js';
 			initGames('/src/', [
 				{
 					id: 'bare-bones',
 					player: PlayerWithComponents,
+					components: [horizontalMovementComponent],
 				},
 			]);
 		</script>

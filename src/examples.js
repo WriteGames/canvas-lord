@@ -27,7 +27,16 @@ import {
 
 import { createSceneGrid, createButtons } from './shared.js';
 
-import { Player, EVENT_TYPE, leftKeys, rightKeys, jumpKeys } from './player.js';
+import {
+	Player,
+	EVENT_TYPE,
+	leftKeys,
+	rightKeys,
+	jumpKeys,
+	// components
+	horizontalMovementComponent,
+	horizontalMovementSystem,
+} from './player.js';
 
 import * as Components from './util/components.js';
 import * as Systems from './util/systems.js';
@@ -433,11 +442,17 @@ class ComponentScene extends Scene {
 }
 
 class PlayerScene extends Scene {
-	constructor(Player, engine) {
+	constructor(Player, engine, components) {
 		super(engine);
+
+		this.componentSystemMap.set(
+			horizontalMovementComponent,
+			horizontalMovementSystem,
+		);
 
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(40, 144, assetManager));
+		components.forEach((c) => this.player.addComponent(c));
 
 		this.logger = this.addEntity(new Logger(10, 10));
 		const validRenderer = (ctx, log, drawX, drawY) => {
@@ -547,8 +562,9 @@ export const initGames = (src = '', gamesMap) => {
 			const sceneWidth = game.canvas.width / 2;
 
 			const PlayerClass = gamesMap[gameIndex]?.player ?? Player;
+			const components = gamesMap[gameIndex]?.components ?? [];
 
-			const sceneLeft = new PlayerScene(PlayerClass, game);
+			const sceneLeft = new PlayerScene(PlayerClass, game, components);
 			if (splitScreen === true) {
 				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
 			} else {
@@ -556,7 +572,11 @@ export const initGames = (src = '', gamesMap) => {
 			}
 
 			if (splitScreen === true) {
-				const sceneRight = new PlayerScene(PlayerClass, game);
+				const sceneRight = new PlayerScene(
+					PlayerClass,
+					game,
+					components,
+				);
 				sceneRight.screenPos[0] = sceneWidth;
 				sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
 				// sceneRight.shouldUpdate = false;

@@ -17,8 +17,6 @@ import { Draw, drawable } from './util/draw.js';
 // TODO: only export these from math.js
 export { v2zero, v2one, Tuple } from './util/math.js';
 
-export { Entity } from './util/entity.js';
-
 declare global {
 	interface HTMLCanvasElement {
 		_engine: Engine;
