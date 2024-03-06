@@ -11,7 +11,6 @@ import {
 	normToBitFlagMap,
 	reduceBitFlags,
 	Scene,
-	Entity,
 	Tileset,
 	Tuple,
 	v2zero,
@@ -24,6 +23,8 @@ import {
 	isPointOnLine,
 	isPointInsidePath,
 } from './canvas-lord.js';
+
+import { Entity } from './util/entity.js';
 
 import { createSceneGrid, createButtons } from './shared.js';
 
@@ -534,7 +535,7 @@ class Circle extends Entity {
 }
 
 let assetManager;
-export const initGames = (src = '', gamesMap) => {
+export const initGames = (src = '', gamesMap = []) => {
 	const game1 = new Game('basic');
 	// const game2 = new Game('second');
 	const games = gamesMap.map(({ id }) => new Game(id)).concat(game1);
