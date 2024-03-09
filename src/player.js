@@ -331,6 +331,20 @@ export class Player extends Entity {
 	}
 }
 
+export const baseHorizontalMovementComponent = Components.createComponent({});
+export const baseHorizontalMovementSystem = {
+	update(entity) {
+		entity.moveX();
+	},
+};
+
+export const baseVerticalMovementComponent = Components.createComponent({});
+export const baseVerticalMovementSystem = {
+	update(entity) {
+		entity.moveY();
+	},
+};
+
 export const horizontalMovementComponent = Components.createComponent({});
 
 export const horizontalMovementSystem = {
@@ -341,16 +355,92 @@ export const horizontalMovementSystem = {
 		entity.xspeed = 0;
 		if (keyLeftCheck) entity.xspeed = -2;
 		if (keyRightCheck) entity.xspeed = 2;
-
-		entity.moveX();
 	},
 };
 
 export const verticalMovementComponent = Components.createComponent({});
 
+// TODO: do we want to assign components, or make "archetypes" that are relations between components & systems? A lot of these components are going to be the same
+// TODO: separate the yspeed & entity.moveY() into a separate component/system, and then have a component that adds a system to do the actual movement
+// TODO: alternatively, each scene/world could have its own understanding of how to register that component to systems (probably the best, albeit, the most typing)
+
 export const verticalMovementSystem = {
 	update(entity, input) {
-		entity.moveY();
+		const keyJumpCheck = input.keyCheck(jumpKeys);
+
+		if (keyJumpCheck) entity.yspeed = -1;
+		else entity.yspeed = 1;
+	},
+};
+
+// IDEA(bret): find a way to essentially make the FPS a #define constant
+// IDEA(bret): Number.EPSILON is a constant globally available. Could Canvas Lord introduce a "scoped global" concept similar to how you can do it in Node.js (might have been a third-party library I'm thinking of)
+export const verticalMovementComponent2 = Components.createComponent({
+	jumpActive: false,
+	jumpElapsed: 0,
+	jumpDuration: 30, // 60 FPS
+});
+
+// TODO: maybe add a TypeScript feature that allows us to emulate pointers?
+// doing something like
+//		let { *jumpDuration } = vComp;
+// would transpile all future calls like
+//		*jumpDuration = 10
+// or
+//		const x = *jumpDuration
+// be rewritten to be `vComp.jumpDuration` instead of `*jumpDuration`
+// technically, we could drop the * before each jumpDuration
+// NOTE: my code would need to be transpiled, maybe to a .ts file before going to .js, so there is a version of the code that is readable to those who aren't familiar with my syntax additions
+// NOTE: that might not be a bad idea - I could write code however I want, and then enforce a style guide on the generated intermediate TS file!
+// ie `jumpElapsed = (keyJumpPressed) jumpElapsed + deltaTime : 0`
+// could be expanded to a if/else statement (also transform the first chunk into `+=`)
+export const verticalMovementSystem2 = {
+	update(entity, input) {
+		const keyJumpCheck = input.keyCheck(jumpKeys);
+		const keyJumpPressed = input.keyPressed(jumpKeys);
+
+		const vComp = entity.component?.(verticalMovementComponent2);
+		const { jumpDuration } = vComp;
+
+		const grounded = entity.collide(entity.x, entity.y + 1);
+		if (grounded && keyJumpPressed) {
+			vComp.jumpElapsed = 0;
+			vComp.jumpActive = true;
+		}
+
+		if (vComp.jumpActive && vComp.jumpElapsed < jumpDuration) {
+			vComp.jumpElapsed += 1;
+		} else {
+			vComp.jumpActive = false;
+		}
+
+		if (vComp.jumpActive) {
+			entity.yspeed = -2;
+		} else {
+			// add gravity
+			entity.yspeed = 2;
+		}
+
+		// FIXME: don't hardcode strings (currently would result in an import loop)
+		entity.scene.logger.set('Can Jump', grounded);
+		entity.scene.logger.set('Jump Elapsed', vComp.jumpElapsed);
+		entity.scene.logger.set('Jump Active', vComp.jumpActive);
+
+		// if (keyJumpCheck) {
+		// 	vComp.jumpElapsed += 1;
+		// } else {
+		// 	vComp.jumpActive = false;
+		// }
+
+		// FIXME(bret): Log out to CL logger
+		// console.log({ jumpElapsed: vComp.jumpElapsed });
+
+		// NOTE(bret): `<`/`<=` is dependent on whether or not `keyJumpCheck` is a standalone `if` or an `else if` following `keyJumpPressed`
+		// if (vComp.jumpActive && vComp.jumpElapsed <= jumpDuration) {
+		// 	entity.yspeed = -1;
+		// } else {
+		// 	entity.yspeed = 1;
+		// }
 	},
 };
 

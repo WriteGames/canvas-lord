@@ -866,6 +866,7 @@ export class Scene {
             return;
         this.entities.forEach((entity) => entity.update(input));
         // this.renderables = this.renderables.filter(e => e).sort();
+        // REVIEW(bret): make sure that this is a stable ordering!
         this.componentSystemMap.forEach((system, component) => {
             const { update } = system;
             if (!update)

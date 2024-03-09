@@ -1226,6 +1226,7 @@ export interface IEntity {
 	y: number;
 	scene: Scene | null;
 	update: (input: Input) => void;
+	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
 	component?: <T extends IEntityComponent>(component: T) => Writeable<T>;
 	components?: IEntityComponent[];
 	systems?: IEntitySystem[];
@@ -1306,6 +1307,7 @@ export class Scene {
 		this.entities.forEach((entity) => entity.update(input));
 		// this.renderables = this.renderables.filter(e => e).sort();
 
+		// REVIEW(bret): make sure that this is a stable ordering!
 		this.componentSystemMap.forEach((system, component) => {
 			const { update } = system;
 			if (!update) return;

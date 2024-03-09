@@ -64,6 +64,7 @@
 	<body>
 		<canvas id="basic" width="320px" height="180px" tabindex="-1"></canvas>
 
+		<h3 style="text-decoration: underline">Bare bones</h3>
 		<canvas
 			id="bare-bones"
 			width="320px"
@@ -71,17 +72,44 @@
 			tabindex="-1"
 		></canvas>
 
+		<h3 style="text-decoration: underline">Y Vel</h3>
+		<canvas
+			id="yvelocity"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+
 		<script type="module">
-			import { initGames } from '../examples.js';
+			import { initGames, LOG_TYPE } from '../examples.js';
 			import {
 				PlayerWithComponents,
 				horizontalMovementComponent,
+				verticalMovementComponent,
+				verticalMovementComponent2,
 			} from '../player.js';
 			initGames('/src/', [
 				{
 					id: 'bare-bones',
 					player: PlayerWithComponents,
-					components: [horizontalMovementComponent],
+					components: [
+						horizontalMovementComponent,
+						verticalMovementComponent,
+					],
+					logTypes: [],
+				},
+				{
+					id: 'yvelocity',
+					player: PlayerWithComponents,
+					components: [
+						horizontalMovementComponent,
+						verticalMovementComponent2,
+					],
+					logTypes: [
+						LOG_TYPE.JUMP_ACTIVE,
+						LOG_TYPE.JUMP_ELAPSED,
+						LOG_TYPE.CAN_JUMP,
+					],
 				},
 			]);
 		</script>

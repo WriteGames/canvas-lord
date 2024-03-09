@@ -1,29 +1,41 @@
+// IDEA(bret): What if we can define types of logs and toggle them on/off?
+// IDEA(bret): There could also be a setting that you can enable to choose whether getting a value sent to that Log item causes it to display
+// IDEA(bret): You could also have a timeout that causes that log value to disable after not receiving a change for X frames
 export const YesNoLogParser = (value) => {
     return value ? 'yes' : 'no';
 };
-const loggerDefaults = Object.freeze({
-    // TODO: is there any way we could get the game FPS to determine this?
-    defaultLifespan: 60,
-    defaultLogRenderer: (ctx, log, drawX, drawY) => {
-        ctx.fillStyle = 'white';
-        ctx.fillText(log.str, drawX, drawY);
+const defaultLoggerOptions = Object.freeze({
+    logs: {
+        defaults: {
+            lifespan: 60,
+            parser: (val) => JSON.parse(JSON.stringify(val)).toString(),
+            visible: true,
+            renderer: (ctx, log, drawX, drawY) => {
+                ctx.fillStyle = 'white';
+                ctx.fillText(log.str, drawX, drawY);
+            },
+        },
     },
 });
-const defaultLogParser = (val) => JSON.parse(JSON.stringify(val)).toString();
 export class Log {
     #_value;
     #_str = 'undefined';
     logger;
     elapsed;
+    // CLEANUP(bret): is there any way to add these from LogOptions? Or vice-versa?
     lifespan;
     parser;
+    visible;
     renderer;
+    // CLEANUP_END
     constructor(logger, value, options = {}) {
         this.logger = logger;
         this.elapsed = 0;
-        this.lifespan = options.lifespan ?? logger.defaultLifespan;
-        this.parser = options.parser ?? defaultLogParser;
-        this.renderer = options.renderer ?? logger.defaultLogRenderer;
+        const { defaults } = logger.options.logs;
+        this.lifespan = options.lifespan ?? defaults.lifespan;
+        this.parser = options.parser ?? defaults.parser;
+        this.visible = options.visible ?? defaults.visible; // FIXME(bret)
+        this.renderer = options.renderer ?? defaults.renderer;
         this.value = value;
     }
     set value(val) {
@@ -40,20 +52,26 @@ export class Log {
 export class Logger {
     x;
     y;
-    defaultLifespan;
-    defaultLogRenderer;
+    options;
     logs;
     watched;
     watchedDelimiter;
     constructor(x, y, options = {}) {
         this.x = x;
         this.y = y;
-        const resolvedOptions = Object.assign({}, loggerDefaults, options);
-        this.defaultLifespan = resolvedOptions.defaultLifespan;
-        this.defaultLogRenderer = resolvedOptions.defaultLogRenderer;
+        // REVISIT(bret): Make this generic :)
+        // NOTE(bret): structuredClone would be neat here, but it cannot copy functions (perhaps the``transfer` option would help there?)
+        this.options = Object.assign({}, defaultLoggerOptions);
+        Object.assign(this.options.logs, options.logs);
+        // REVISIT(bret): Do we need these? Could they just be getter/setters?
+        // this.defaultLifespan = this.options.defaultLifespan;
+        // this.defaultLogRenderer = this.options.defaultLogRenderer;
         this.logs = [];
         this.watched = new Map();
         this.watchedDelimiter = ': ';
+    }
+    setLogDefault(key, value) {
+        this.options.logs.defaults[key] = value;
     }
     log(str, options) {
         const log = new Log(this, str, options);
@@ -78,18 +96,22 @@ export class Logger {
         this.logs.forEach((log) => log.elapsed++);
     }
     render(ctx) {
-        const lines = this.watched.size + this.logs.length;
+        // FIXME: handle this better
+        const watched = Array.from(this.watched).filter(([_, v]) => v.visible);
+        const logs = this.logs.filter((l) => l.visible);
+        // FIXME(bret): Implement a proper hide/visible system :P
+        const lines = watched.length + logs.length;
         if (lines === 0)
             return;
         let drawX = this.x, drawY = this.y;
         ctx.font = '10px Monospace';
         const glyph = ctx.measureText('0');
         const ascenderHeight = glyph.actualBoundingBoxAscent;
-        const longestPrefix = Array.from(this.watched)
+        const longestPrefix = watched
             .map(([k]) => k.length + this.watchedDelimiter.length)
             .sort((a, b) => b - a)[0] ?? 0;
         const longestLength = [
-            Array.from(this.watched).map(([k, log]) => longestPrefix + log.str.length),
+            watched.map(([_, log]) => longestPrefix + log.str.length),
             this.logs.map((log) => log.str.length),
         ]
             .flat()
@@ -107,7 +129,9 @@ export class Logger {
         // text
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = 'white';
-        this.watched.forEach((log, key) => {
+        watched.forEach(([key, log]) => {
+            if (!log.visible)
+                return;
             let prefix = `${key}${this.watchedDelimiter}`;
             prefix += ' '.repeat(longestPrefix - prefix.length);
             ctx.fillStyle = '#e6e6e6';
@@ -117,7 +141,9 @@ export class Logger {
             drawY += textHeight;
         });
         ctx.fillStyle = 'white';
-        this.logs.forEach((log) => {
+        logs.forEach((log) => {
+            if (!log.visible)
+                return;
             log.renderer(ctx, log, drawX + paddingX, drawY + paddingY + ascenderHeight);
             drawY += textHeight;
         });

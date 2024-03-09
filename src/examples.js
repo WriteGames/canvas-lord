@@ -37,6 +37,14 @@ import {
 	// components
 	horizontalMovementComponent,
 	horizontalMovementSystem,
+	verticalMovementComponent,
+	verticalMovementSystem,
+	verticalMovementComponent2,
+	verticalMovementSystem2,
+	baseHorizontalMovementComponent,
+	baseHorizontalMovementSystem,
+	baseVerticalMovementComponent,
+	baseVerticalMovementSystem,
 } from './player.js';
 
 import * as Components from './util/components.js';
@@ -413,7 +421,9 @@ class ContourTracingScene extends Scene {
 	}
 }
 
-const LOG_TYPE = {
+export const LOG_TYPE = {
+	JUMP_ELAPSED: 'Jump Elapsed',
+	JUMP_ACTIVE: 'Jump Active', // is technically computed
 	CAN_JUMP: 'Can Jump',
 	COYOTE: 'Coyote Frames',
 };
@@ -443,28 +453,81 @@ class ComponentScene extends Scene {
 }
 
 class PlayerScene extends Scene {
-	constructor(Player, engine, components) {
+	constructor(Player, engine, components, logTypes) {
 		super(engine);
 
-		this.componentSystemMap.set(
-			horizontalMovementComponent,
-			horizontalMovementSystem,
-		);
+		// register components
+		// TODO: (maybe make this its own function? either Scene.init() or more specifically Scene.initComponents() - have a Scene._init() behind the scenes)
+		{
+			// input-related
+			// velocity clean-up
+			this.componentSystemMap.set(
+				horizontalMovementComponent,
+				horizontalMovementSystem,
+			);
+
+			this.componentSystemMap.set(
+				verticalMovementComponent,
+				verticalMovementSystem,
+			);
+
+			this.componentSystemMap.set(
+				verticalMovementComponent2,
+				verticalMovementSystem2,
+			);
+
+			// actual movement
+			this.componentSystemMap.set(
+				baseHorizontalMovementComponent,
+				baseHorizontalMovementSystem,
+			);
+
+			this.componentSystemMap.set(
+				baseVerticalMovementComponent,
+				baseVerticalMovementSystem,
+			);
+		}
 
 		// this.player = this.addEntity(new Player(160, 120));
 		this.player = this.addEntity(new Player(40, 144, assetManager));
-		components.forEach((c) => this.player.addComponent(c));
+		if (components?.length) {
+			[
+				baseHorizontalMovementComponent,
+				baseVerticalMovementComponent,
+				...components,
+			].forEach((c) => this.player.addComponent(c));
+		}
 
-		this.logger = this.addEntity(new Logger(10, 10));
+		const _logger = new Logger(10, 10);
+		_logger.setLogDefault('visible', false);
+		this.logger = this.addEntity(_logger);
 		const validRenderer = (ctx, log, drawX, drawY) => {
 			ctx.fillStyle = log.value ? 'white' : '#ccc';
 			ctx.fillText(log.str, drawX, drawY);
 		};
 
+		// TODO: this.logger.setVisibility(logType, visible)
+
+		// TODO: this.logger.watchComponent(entity, component);
+		//	- would get all properties by key
+		//	- could pass in an object with an exclude or include array for which keys to care about
+
+		this.logger.watch(LOG_TYPE.JUMP_ACTIVE, true, {
+			visible: logTypes.includes(LOG_TYPE.JUMP_ACTIVE),
+			parser: YesNoLogParser,
+			renderer: validRenderer,
+		});
+		this.logger.watch(LOG_TYPE.JUMP_ELAPSED, 0, {
+			visible: logTypes.includes(LOG_TYPE.JUMP_ACTIVE),
+			renderer: validRenderer, // FIXME: flip the
+		});
+
 		this.logger.watch(LOG_TYPE.COYOTE, 0, {
+			visible: logTypes.includes(LOG_TYPE.COYOTE),
 			renderer: validRenderer,
 		});
 		this.logger.watch(LOG_TYPE.CAN_JUMP, true, {
+			visible: logTypes.includes(LOG_TYPE.CAN_JUMP),
 			parser: YesNoLogParser,
 			renderer: validRenderer,
 		});
@@ -564,8 +627,18 @@ export const initGames = (src = '', gamesMap = []) => {
 
 			const PlayerClass = gamesMap[gameIndex]?.player ?? Player;
 			const components = gamesMap[gameIndex]?.components ?? [];
+			const logTypes = gamesMap[gameIndex]?.logTypes ?? [
+				// CLEANUP: Delete this
+				LOG_TYPE.COYOTE,
+				LOG_TYPE.CAN_JUMP,
+			];
 
-			const sceneLeft = new PlayerScene(PlayerClass, game, components);
+			const sceneLeft = new PlayerScene(
+				PlayerClass,
+				game,
+				components,
+				logTypes,
+			);
 			if (splitScreen === true) {
 				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
 			} else {
