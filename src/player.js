@@ -89,16 +89,10 @@ export class Player extends Entity {
 	}
 
 	update(input) {
-		const keyLeftCheck = input.keyCheck(leftKeys);
-		const keyRightCheck = input.keyCheck(rightKeys);
-		const keyJumpCheck = input.keyCheck(jumpKeys);
-
-		const keyJumpPressed = input.keyPressed(jumpKeys);
-
 		const grounded = this.collide(this.x, this.y + 1);
 
 		// See if the player is trying to move left or right
-		const xdir = keyRightCheck - keyLeftCheck;
+		const xdir = input.keyCheck(rightKeys) - input.keyCheck(leftKeys);
 		this.facing = xdir || this.facing;
 
 		// const imageComp = this.component(Components.image);
@@ -141,7 +135,7 @@ export class Player extends Entity {
 		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_COYOTE, this.coyote);
 
 		// Try jumping
-		if (canJump && this.jumpInput > 0) {
+		if (input.keyPressed(jumpKeys) && this.jumpInput > 0) {
 			this.yspeed = this.jspeed;
 			this.coyote = 0;
 			this.jumpInput = 0;
@@ -152,7 +146,8 @@ export class Player extends Entity {
 		this.yspeed += this.gspeed;
 
 		// Variable jump height
-		if (this.yspeed < 0 && !keyJumpCheck) this.yspeed += this.gspeed;
+		if (this.yspeed < 0 && !input.keyCheck(jumpKeys))
+			this.yspeed += this.gspeed;
 
 		// Actually move
 		this.moveX();
@@ -347,14 +342,12 @@ export const baseVerticalMovementSystem = {
 
 export const horizontalMovementComponent = Components.createComponent({});
 
+// DOCS: make sure to point out the weird behavior here!
 export const horizontalMovementSystem = {
 	update(entity, input) {
-		const keyLeftCheck = input.keyCheck(leftKeys);
-		const keyRightCheck = input.keyCheck(rightKeys);
-
 		entity.xspeed = 0;
-		if (keyLeftCheck) entity.xspeed = -2;
-		if (keyRightCheck) entity.xspeed = 2;
+		if (input.keyCheck(leftKeys)) entity.xspeed = -2;
+		if (input.keyCheck(rightKeys)) entity.xspeed = 2;
 	},
 };
 
@@ -366,9 +359,7 @@ export const verticalMovementComponent = Components.createComponent({});
 
 export const verticalMovementSystem = {
 	update(entity, input) {
-		const keyJumpCheck = input.keyCheck(jumpKeys);
-
-		if (keyJumpCheck) entity.yspeed = -1;
+		if (input.keyCheck(jumpKeys)) entity.yspeed = -1;
 		else entity.yspeed = 1;
 	},
 };
@@ -396,19 +387,15 @@ export const verticalMovementComponent2 = Components.createComponent({
 // could be expanded to a if/else statement (also transform the first chunk into `+=`)
 export const verticalMovementSystem2 = {
 	update(entity, input) {
-		const keyJumpCheck = input.keyCheck(jumpKeys);
-		const keyJumpPressed = input.keyPressed(jumpKeys);
-
 		const vComp = entity.component?.(verticalMovementComponent2);
-		const { jumpDuration } = vComp;
 
 		const grounded = entity.collide(entity.x, entity.y + 1);
-		if (grounded && keyJumpPressed) {
+		if (grounded && input.keyPressed(jumpKeys)) {
 			vComp.jumpElapsed = 0;
 			vComp.jumpActive = true;
 		}
 
-		if (vComp.jumpActive && vComp.jumpElapsed < jumpDuration) {
+		if (vComp.jumpActive && vComp.jumpElapsed < vComp.jumpDuration) {
 			vComp.jumpElapsed += 1;
 		} else {
 			vComp.jumpActive = false;
