@@ -1,0 +1,20 @@
+{
+	"extends": "@vercel/style-guide/typescript",
+	"compilerOptions": {
+		"incremental": true,
+		"lib": ["ESNext", "dom"],
+		"target": "ESNext",
+		"esModuleInterop": true,
+		"sourceMap": true,
+		"strict": true,
+		"module": "NodeNext",
+		"moduleResolution": "nodenext"
+	},
+	"include": ["**/*.ts"],
+	"exclude": [
+		"node_modules",
+		"**/*.config.ts",
+		"**/*.spec.ts",
+		"**/*.test.ts"
+	]
+}
