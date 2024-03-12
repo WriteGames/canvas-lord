@@ -1,3 +1,4 @@
+import * as Components from './components.js';
 export class Entity {
     components = new Map();
     constructor(x, y) {

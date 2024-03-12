@@ -22,9 +22,9 @@ import {
 	getLineSegmentIntersection,
 	isPointOnLine,
 	isPointInsidePath,
-} from './canvas-lord.js';
+} from './bin/canvas-lord.js';
 
-import { Entity } from './util/entity.js';
+import { Entity } from './bin/util/entity.js';
 
 import { createSceneGrid, createButtons } from './shared.js';
 
@@ -47,11 +47,11 @@ import {
 	baseVerticalMovementSystem,
 } from './player.js';
 
-import * as Components from './util/components.js';
-import * as Systems from './util/systems.js';
-import { Draw } from './util/draw.js';
-import { Logger, YesNoLogParser } from './util/logger.js';
-import { Inspector } from './inspector.js';
+import * as Components from './bin/util/components.js';
+import * as Systems from './bin/util/systems.js';
+import { Draw } from './bin/util/draw.js';
+import { Logger, YesNoLogParser } from './bin/util/logger.js';
+import { Inspector } from './bin/inspector.js';
 
 /* eslint-disable no-undef */
 const initGrid = () => {

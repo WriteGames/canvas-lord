@@ -22,9 +22,9 @@ import {
 	getLineSegmentIntersection,
 	isPointOnLine,
 	isPointInsidePath,
-} from './canvas-lord.js';
+} from './bin/canvas-lord.js';
 
-import { ButtonsOverlay } from './util/buttons-overlay.js';
+import { ButtonsOverlay } from './bin/util/buttons-overlay.js';
 
 export const initTileset = (assetManager, grid) => {
 	const tileset = new Tileset(

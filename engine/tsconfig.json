@@ -1,4 +1,7 @@
 {
 	"extends": "@writegames/shared-config/typescript",
+	"compilerOptions": {
+		"outDir": "bin"
+	},
 	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }

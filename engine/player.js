@@ -1,4 +1,4 @@
-import * as Components from './util/components.js';
+import * as Components from './bin/util/components.js';
 
 class Entity {
 	components = new Map();
