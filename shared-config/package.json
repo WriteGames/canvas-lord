@@ -1,0 +1,29 @@
+{
+	"name": "@writegames/shared-config",
+	"version": "1.0.0",
+	"private": true,
+	"packageManager": "pnpm@7.20.0",
+	"main": "src/canvas-lord.js",
+	"license": "ISC",
+	"exports": {
+		"./typescript": "./typescript/tsconfig.json"
+	},
+	"engines": {
+		"node": "^18",
+		"pnpm": "7"
+	},
+	"scripts": {
+		"transpile": "node transpile.js",
+		"lint": "eslint ."
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/WriteGames/canvas-lord.git"
+	},
+	"author": "Write Games",
+	"devDependencies": {
+		"@vercel/style-guide": "5.1.0",
+		"eslint": "8.56.0",
+		"typescript": "5.3.3"
+	}
+}

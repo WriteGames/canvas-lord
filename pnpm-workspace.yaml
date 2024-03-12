@@ -1,4 +1,5 @@
 packages:
+    - shared-config
     - src
     - transpiler
     - website

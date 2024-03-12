@@ -17,6 +17,7 @@
 	"author": "Write Games",
 	"license": "ISC",
 	"devDependencies": {
+		"@writegames/shared-config": "workspace:*",
 		"canvas": "^2.11.2",
 		"jsdom": "^23.2.0",
 		"typescript": "5.3.3",
