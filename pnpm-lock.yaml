@@ -39,10 +39,12 @@ importers:
   transpiler:
     specifiers:
       '@types/node': 20.11.3
+      '@writegames/shared-config': workspace:*
       typescript: 5.3.3
       vitest: ^1.2.0
     devDependencies:
       '@types/node': 20.11.3
+      '@writegames/shared-config': link:../shared-config
       typescript: 5.3.3
       vitest: 1.2.0_@types+node@20.11.3
 
