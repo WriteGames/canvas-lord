@@ -12,17 +12,7 @@ importers:
       eslint: 8.56.0
       typescript: 5.3.3
 
-  shared-config:
-    specifiers:
-      '@vercel/style-guide': 5.1.0
-      eslint: 8.56.0
-      typescript: 5.3.3
-    devDependencies:
-      '@vercel/style-guide': 5.1.0_xdgzedli73k7lw4xlyzszm74om
-      eslint: 8.56.0
-      typescript: 5.3.3
-
-  src:
+  engine:
     specifiers:
       '@writegames/shared-config': workspace:*
       canvas: ^2.11.2
@@ -35,6 +25,16 @@ importers:
       jsdom: 23.2.0_canvas@2.11.2
       typescript: 5.3.3
       vitest: 1.2.0_jsdom@23.2.0
+
+  shared-config:
+    specifiers:
+      '@vercel/style-guide': 5.1.0
+      eslint: 8.56.0
+      typescript: 5.3.3
+    devDependencies:
+      '@vercel/style-guide': 5.1.0_xdgzedli73k7lw4xlyzszm74om
+      eslint: 8.56.0
+      typescript: 5.3.3
 
   transpiler:
     specifiers:
@@ -61,7 +61,7 @@ importers:
       react-dom: 18.2.0
       typescript: 5.3.3
     dependencies:
-      canvas-lord: link:../src
+      canvas-lord: link:../engine
       next: 14.0.4_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0

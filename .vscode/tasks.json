@@ -3,11 +3,11 @@
 	"tasks": [
 		{
 			"type": "typescript",
-			"tsconfig": "src/tsconfig.json",
+			"tsconfig": "engine/tsconfig.json",
 			"option": "watch",
 			"problemMatcher": ["$tsc-watch"],
 			"group": "build",
-			"label": "tsc: watch - src/tsconfig.json",
+			"label": "tsc: watch - engine/tsconfig.json",
 			"presentation": {
 				"reveal": "always",
 				"panel": "new"

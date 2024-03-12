@@ -1,5 +1,5 @@
 packages:
+    - engine
     - shared-config
-    - src
     - transpiler
     - website
