@@ -1,9 +1,4 @@
 {
 	"extends": "@writegames/shared-config/typescript",
-	"exclude": [
-		"**/*.spec.ts",
-		"**/*.config.ts",
-		"**/*.spec.ts",
-		"**/*.test.ts"
-	]
+	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }
