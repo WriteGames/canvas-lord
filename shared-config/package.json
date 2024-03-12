@@ -3,7 +3,6 @@
 	"version": "1.0.0",
 	"private": true,
 	"packageManager": "pnpm@7.20.0",
-	"main": "src/canvas-lord.js",
 	"license": "ISC",
 	"exports": {
 		"./typescript": "./typescript/tsconfig.json"

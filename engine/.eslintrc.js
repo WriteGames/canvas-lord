@@ -1,6 +1,6 @@
 const { resolve } = require('node:path');
 
-const project = resolve(process.cwd(), 'src/tsconfig.json');
+const project = resolve(process.cwd(), 'engine/tsconfig.json');
 
 const baseESLintConfig = require('../.eslintrc');
 

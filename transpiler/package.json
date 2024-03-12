@@ -2,7 +2,7 @@
 	"name": "canvas-lord-transpiler",
 	"version": "0.0.1",
 	"description": "An entity transpiler",
-	"main": "transpiler.js",
+	"main": "transpile.js",
 	"type": "module",
 	"engines": {
 		"node": "^18",
@@ -14,6 +14,9 @@
 	"keywords": [],
 	"author": "Write Games",
 	"license": "ISC",
+	"dependencies": {
+		"canvas-lord": "workspace:*"
+	},
 	"devDependencies": {
 		"@types/node": "20.11.3",
 		"@writegames/shared-config": "workspace:*",

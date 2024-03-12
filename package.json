@@ -3,14 +3,14 @@
 	"version": "1.0.0",
 	"private": true,
 	"packageManager": "pnpm@7.20.0",
-	"main": "src/canvas-lord.js",
-	"types": "src/global.d.ts",
+	"main": "engine/canvas-lord.js",
+	"types": "engine/global.d.ts",
 	"engines": {
 		"node": "^18",
 		"pnpm": "7"
 	},
 	"scripts": {
-		"transpile": "node transpile.js",
+		"transpile": "pnpm -F canvas-lord-transpiler transpile",
 		"lint": "eslint ."
 	},
 	"repository": {

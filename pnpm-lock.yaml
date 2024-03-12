@@ -40,8 +40,11 @@ importers:
     specifiers:
       '@types/node': 20.11.3
       '@writegames/shared-config': workspace:*
+      canvas-lord: workspace:*
       typescript: 5.3.3
       vitest: ^1.2.0
+    dependencies:
+      canvas-lord: link:../engine
     devDependencies:
       '@types/node': 20.11.3
       '@writegames/shared-config': link:../shared-config
