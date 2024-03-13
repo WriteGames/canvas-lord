@@ -14,13 +14,13 @@ importers:
 
   engine:
     specifiers:
-      '@writegames/shared-config': workspace:*
+      '@writegames.com/style-guide': workspace:*
       canvas: ^2.11.2
       jsdom: ^23.2.0
       typescript: 5.3.3
       vitest: ^1.2.0
     devDependencies:
-      '@writegames/shared-config': link:../shared-config
+      '@writegames.com/style-guide': link:../shared-config
       canvas: 2.11.2
       jsdom: 23.2.0_canvas@2.11.2
       typescript: 5.3.3
@@ -39,7 +39,7 @@ importers:
   transpiler:
     specifiers:
       '@types/node': 20.11.3
-      '@writegames/shared-config': workspace:*
+      '@writegames.com/style-guide': workspace:*
       canvas-lord: workspace:*
       typescript: 5.3.3
       vitest: ^1.2.0
@@ -47,7 +47,7 @@ importers:
       canvas-lord: link:../engine
     devDependencies:
       '@types/node': 20.11.3
-      '@writegames/shared-config': link:../shared-config
+      '@writegames.com/style-guide': link:../shared-config
       typescript: 5.3.3
       vitest: 1.2.0_@types+node@20.11.3
 

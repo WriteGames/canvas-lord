@@ -1,5 +1,5 @@
 {
-	"extends": "@writegames/shared-config/typescript",
+	"extends": "@writegames.com/style-guide/typescript",
 	"compilerOptions": {
 		"outDir": "bin"
 	},
