@@ -125,7 +125,7 @@ export class Player extends Entity {
 			this.coyote = this.coyoteLimit;
 		}
 
-		if (keyJumpPressed) {
+		if (input.keyPressed(jumpKeys)) {
 			// Set jumpInput to the limit!
 			this.jumpInput = this.jumpInputLimit;
 		}
@@ -135,7 +135,7 @@ export class Player extends Entity {
 		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_COYOTE, this.coyote);
 
 		// Try jumping
-		if (input.keyPressed(jumpKeys) && this.jumpInput > 0) {
+		if (canJump && this.jumpInput > 0) {
 			this.yspeed = this.jspeed;
 			this.coyote = 0;
 			this.jumpInput = 0;

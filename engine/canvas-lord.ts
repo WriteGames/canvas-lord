@@ -10,9 +10,13 @@ import {
 	V2Editable,
 } from './util/math.js';
 
-import { type IEntityComponent } from './util/types.js';
+import {
+	type IEntityComponentType,
+	type IEntityComponent,
+} from './util/types.js';
 
 import { Draw, drawable } from './util/draw.js';
+import { type ComponentProps } from './util/components.js';
 
 // TODO: only export these from math.js
 export { v2zero, v2one, Tuple } from './util/math.js';
@@ -1227,9 +1231,13 @@ export interface IEntity {
 	scene: Scene | null;
 	update: (input: Input) => void;
 	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
-	component?: <T extends IEntityComponent>(component: T) => Writeable<T>;
-	components?: IEntityComponent[];
-	systems?: IEntitySystem[];
+	addComponent: <T extends IEntityComponentType>(
+		component: T,
+	) => ComponentProps<T>;
+	component: <T extends IEntityComponentType>(
+		component: T,
+	) => ComponentProps<T>;
+	components: Map<IEntityComponentType, any>[];
 }
 
 export interface IRenderable {
@@ -1243,7 +1251,7 @@ export interface Scene {
 	engine: Engine;
 	entities: Entity[];
 	renderables: Renderable[];
-	componentSystemMap: Map<IEntityComponent, IEntitySystem>;
+	componentSystemMap: Map<IEntityComponentType, IEntitySystem>;
 	messages: Messages;
 	shouldUpdate: boolean;
 	screenPos: V2;
@@ -1261,7 +1269,10 @@ export class Scene {
 	constructor(engine: Engine) {
 		this.engine = engine;
 
-		this.componentSystemMap = new Map<IEntityComponent, IEntitySystem>();
+		this.componentSystemMap = new Map<
+			IEntityComponentType,
+			IEntitySystem
+		>();
 
 		this.entities = [];
 		this.renderables = [];

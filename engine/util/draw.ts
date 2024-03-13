@@ -1,4 +1,5 @@
 import * as Components from './components.js';
+import { type ComponentProps } from './components.js';
 
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 
@@ -56,7 +57,7 @@ export const Draw = {
 	circle: moveCanvas(
 		(
 			ctx: CanvasRenderingContext2D,
-			circle: typeof Components.circle,
+			circle: ComponentProps<typeof Components.circle>,
 			x: number,
 			y: number,
 			radius: number,
@@ -94,7 +95,7 @@ export const Draw = {
 	rect: moveCanvas(
 		(
 			ctx: CanvasRenderingContext2D,
-			rect: typeof Components.rect,
+			rect: ComponentProps<typeof Components.rect>,
 			x: number,
 			y: number,
 			w: number,
@@ -121,7 +122,7 @@ export const Draw = {
 	image: moveCanvas(
 		(
 			ctx: CanvasRenderingContext2D,
-			image: typeof Components.image,
+			image: ComponentProps<typeof Components.image>,
 			drawX: number,
 			drawY: number,
 			sourceX: number,

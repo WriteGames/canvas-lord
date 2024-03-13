@@ -1,4 +1,5 @@
 import * as Components from './components.js';
+// TODO: canvas-lord.ts defines IEntity and the type there is not matching here
 export class Entity {
     components = new Map();
     constructor(x, y) {
@@ -8,11 +9,14 @@ export class Entity {
     }
     addComponent(component) {
         // TODO: we'll want to make sure we use a deepCopy
-        this.components.set(component, Components.copyObject(component));
+        this.components.set(component, Components.copyObject(component.data));
         return this.component(component);
     }
     component(component) {
-        return this.components.get(component);
+        const c = this.components.get(component);
+        if (!c)
+            return undefined;
+        return c;
     }
     get x() {
         return this.component(Components.pos2D)[0];
