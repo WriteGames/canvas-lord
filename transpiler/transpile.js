@@ -1,5 +1,7 @@
 import fs from 'fs';
+// components & systems
 import { testComponent, moveRightSystem, moveLeftSystem } from './in/test.js';
+import { horizontalMovementComponent, verticalMovementComponent2, horizontalMovementSystem, verticalMovementSystem2, moveXSystem, moveYSystem, } from './in/player.js';
 const parseComponent = (component) => {
     return component.data;
 };
@@ -95,17 +97,20 @@ generateEntity({
     components: [testComponent],
     systems: [moveLeftSystem, moveRightSystem],
 });
-import { horizontalMovementComponent, verticalMovementComponent2, horizontalMovementSystem, verticalMovementSystem2,
-// @ts-expect-error
- } from '../engine/player.js';
 generateEntity({
     fileName: 'out/player.js',
     entityName: 'GenPlayer',
     components: [horizontalMovementComponent, verticalMovementComponent2],
     systems: [
         // horizontalMovementSystem,
+        // @ts-expect-error
         horizontalMovementSystem,
+        // @ts-expect-error
         verticalMovementSystem2,
+        // @ts-expect-error
+        moveXSystem,
+        // @ts-expect-error
+        moveYSystem,
     ],
 });
 // TODO: be able to mark systems as functions

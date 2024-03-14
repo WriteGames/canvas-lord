@@ -1,8 +1,18 @@
 import fs from 'fs';
 import * as Components from 'canvas-lord/util/components.js';
-import { testComponent, moveRightSystem, moveLeftSystem } from './in/test.js';
 import { type IEntitySystem } from 'canvas-lord';
 import { type IEntityComponentType } from 'canvas-lord/util/types';
+
+// components & systems
+import { testComponent, moveRightSystem, moveLeftSystem } from './in/test.js';
+import {
+	horizontalMovementComponent,
+	verticalMovementComponent2,
+	horizontalMovementSystem,
+	verticalMovementSystem2,
+	moveXSystem,
+	moveYSystem,
+} from './in/player.js';
 
 interface SystemDataFunc {
 	args: any;
@@ -156,22 +166,20 @@ generateEntity({
 	systems: [moveLeftSystem, moveRightSystem],
 });
 
-import {
-	horizontalMovementComponent,
-	verticalMovementComponent2,
-	horizontalMovementSystem,
-	verticalMovementSystem2,
-	// @ts-expect-error
-} from '../engine/player.js';
-
 generateEntity({
 	fileName: 'out/player.js',
 	entityName: 'GenPlayer',
 	components: [horizontalMovementComponent, verticalMovementComponent2],
 	systems: [
 		// horizontalMovementSystem,
+		// @ts-expect-error
 		horizontalMovementSystem,
+		// @ts-expect-error
 		verticalMovementSystem2,
+		// @ts-expect-error
+		moveXSystem,
+		// @ts-expect-error
+		moveYSystem,
 	],
 });
 
