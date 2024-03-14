@@ -1,4 +1,6 @@
-class GenPlayer extends Entity {
+import { Entity } from 'canvas-lord';
+
+export class GenPlayer extends Entity {
 	jumpActive = false;
 	jumpElapsed = 0;
 	jumpDuration = 30;

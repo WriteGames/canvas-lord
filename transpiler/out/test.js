@@ -1,4 +1,6 @@
-class Test extends Entity {
+import { Entity } from 'canvas-lord';
+
+export class Test extends Entity {
 	speed = 5;
 	
 	update(input) {
