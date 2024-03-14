@@ -31,6 +31,17 @@ interface SystemData {
 
 type SystemDataType = keyof SystemData;
 
+type SystemInput =
+	| {
+			outputType: 'inline';
+			system: IEntitySystem;
+	  }
+	| {
+			outputType: 'function';
+			alias: string;
+			system: IEntitySystem;
+	  };
+
 const parseComponent = (component: IEntityComponentType) => {
 	return component.data;
 };
@@ -115,17 +126,42 @@ const generateEntity = ({
 	fileName: string;
 	entityName: string;
 	components: IEntityComponentType[];
-	systems: IEntitySystem[];
+	systems: SystemInput[];
 }) => {
 	components.forEach((c) => {
 		if (!componentMap.has(c)) componentMap.set(c, parseComponent(c));
 	});
 	systems.forEach((s) => {
-		if (!systemsMap.has(s)) systemsMap.set(s, parseSystem(s));
+		if (!systemsMap.has(s.system))
+			systemsMap.set(s.system, parseSystem(s.system));
 	});
 
-	const update = consolidateSystemItems(systems, 'update');
-	const render = consolidateSystemItems(systems, 'render');
+	const [update, render] = (
+		['update', 'render'] as const
+	).map<SystemDataFuncAcc>((type) => {
+		const item = consolidateSystemItems(
+			systems
+				.filter((s) => s.outputType === 'inline')
+				.map((s) => s.system),
+			type,
+		);
+		// TODO: allow for aliases to work for render
+		if (type === 'update') {
+			const aliases = systems
+				.map((s) => (s.outputType === 'function' ? s.alias : null))
+				.filter(nonNull<string>);
+			item.body = item.body.concat(
+				aliases.map((a) => `\t\tthis.${a}();`),
+			);
+		}
+		return item;
+	}) as [SystemDataFuncAcc, SystemDataFuncAcc];
+
+	// const render = consolidateSystemItems(
+	// 	systems.filter((s) => s.type === 'inline').map((s) => s.system),
+	// 	'render',
+	// );
+	// TODO: render.body.concat();
 
 	const updateArgs = update.args.filter((a) => a !== 'entity').join(', ');
 	const updateBody = update.body.join('\n\t\t\n');
@@ -146,15 +182,29 @@ const generateEntity = ({
 		})
 		.join('\n\t');
 
+	const functions = systems
+		.filter((s) => s.outputType === 'function')
+		.map((s) =>
+			'alias' in s
+				? [s.alias, systemsMap.get(s.system).update.body]
+				: null,
+		)
+		.filter(nonNull<[string, string]>)
+		.map(([alias, body]) => {
+			return `${alias}() {\n${body}\n\t}`;
+		});
+	console.log(functions);
+
 	const entityContents = [
 		propertiesStr,
 		updateBody ? `update(${updateArgs}) {\n${updateBody}\n\t}` : '',
 		renderBody ? `render(${renderArgs}) {\n${renderBody}\n\t}` : '',
+		...functions,
 	]
 		.filter(Boolean)
 		.join('\n\t\n\t');
 
-	const contents = `import { Entity } from 'canvas-lord';\n\nexport class ${entityName} extends Entity {\n\t${entityContents}\n}`;
+	const contents = `import { Entity } from 'canvas-lord/util/entity.js';\n\nexport class ${entityName} extends Entity {\n\t${entityContents}\n}`;
 
 	fs.writeFileSync(fileName, contents);
 };
@@ -163,7 +213,10 @@ generateEntity({
 	fileName: 'out/test.js',
 	entityName: 'Test',
 	components: [testComponent],
-	systems: [moveLeftSystem, moveRightSystem],
+	systems: [
+		{ outputType: 'inline', system: moveLeftSystem },
+		{ outputType: 'inline', system: moveRightSystem },
+	],
 });
 
 generateEntity({
@@ -172,14 +225,29 @@ generateEntity({
 	components: [horizontalMovementComponent, verticalMovementComponent2],
 	systems: [
 		// horizontalMovementSystem,
-		// @ts-expect-error
-		horizontalMovementSystem,
-		// @ts-expect-error
-		verticalMovementSystem2,
-		// @ts-expect-error
-		moveXSystem,
-		// @ts-expect-error
-		moveYSystem,
+		{
+			outputType: 'inline',
+			// @ts-expect-error
+			system: horizontalMovementSystem,
+		},
+		{
+			outputType: 'inline',
+			// @ts-expect-error
+			system: verticalMovementSystem2,
+		},
+		{
+			outputType: 'function',
+			alias: 'moveX',
+			// @ts-expect-error
+			system: moveXSystem,
+		},
+		{
+			outputType: 'function',
+			// TODO: allow for aliases to work for render
+			alias: 'moveY',
+			// @ts-expect-error
+			system: moveYSystem,
+		},
 	],
 });
 

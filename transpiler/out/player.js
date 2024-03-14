@@ -1,4 +1,4 @@
-import { Entity } from 'canvas-lord';
+import { Entity } from 'canvas-lord/util/entity.js';
 
 export class GenPlayer extends Entity {
 	jumpActive = false;
@@ -51,6 +51,12 @@ export class GenPlayer extends Entity {
 		// 	this.yspeed = 1;
 		// }
 		
+		this.moveX();
+		
+		this.moveY();
+	}
+	
+	moveX() {
 		const grounded = this.collide(this.x, this.y + 1);
 		const ledgeBoostHeights = Array.from({ length: 2 }, (_, i) => i + 1);
 		this.xRemainder += this.xspeed;
@@ -76,7 +82,9 @@ export class GenPlayer extends Entity {
 				this.x += sign;
 			}
 		}
-		
+	}
+	
+	moveY() {
 		this.yRemainder += this.yspeed;
 		let moveY = Math.round(this.yRemainder);
 		if (moveY !== 0) {

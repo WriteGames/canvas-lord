@@ -1,4 +1,4 @@
-import { Entity } from 'canvas-lord';
+import { Entity } from 'canvas-lord/util/entity.js';
 
 export class Test extends Entity {
 	speed = 5;
