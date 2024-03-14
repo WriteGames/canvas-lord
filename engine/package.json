@@ -5,6 +5,9 @@
 	"description": "An HTML5 game engine",
 	"main": "canvas-lord.js",
 	"type": "module",
+	"exports": {
+		"./*": "./bin/*"
+	},
 	"engines": {
 		"node": "^18",
 		"pnpm": "^7 || ^8"
