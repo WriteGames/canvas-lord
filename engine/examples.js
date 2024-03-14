@@ -453,6 +453,8 @@ class ComponentScene extends Scene {
 }
 
 class PlayerScene extends Scene {
+	showHitboxes = false;
+
 	constructor(Player, engine, components, logTypes) {
 		super(engine);
 
@@ -567,6 +569,8 @@ class PlayerScene extends Scene {
 		super.update(input);
 
 		updateCamera(this, this.player);
+
+		this.gridOutline.show = this.showHitboxes;
 	}
 }
 
@@ -599,18 +603,27 @@ class Circle extends Entity {
 
 let assetManager;
 export const initGames = (src = '', gamesMap = []) => {
-	const game1 = new Game('basic');
+	// const game1 = new Game('basic');
 	// const game2 = new Game('second');
-	const games = gamesMap.map(({ id }) => new Game(id)).concat(game1);
+	const games = gamesMap.map(({ id }) => new Game(id));
 	assetManager = new AssetManager(`${src}img/`);
 
-	const inspector = new Inspector(game1);
-	inspector.watch('x', {});
-	inspector.watch('y', {});
-	inspector.watch('coyoteLimit', {
-		min: 0,
-		max: 60,
-	});
+	const inspectors = games
+		.map((game, i) => {
+			if (!gamesMap[i].inspector) return;
+			const inspector = new Inspector(game);
+			inspector.watch('showHitbox', {
+				type: 'checkbox',
+			});
+			inspector.watch('x', {});
+			inspector.watch('y', {});
+			inspector.watch('coyoteLimit', {
+				min: 0,
+				max: 60,
+			});
+			return inspector;
+		})
+		.filter(Boolean);
 
 	assetManager.addImage('grid.bmp');
 	assetManager.addImage('radiohead_spritesheet.png');
@@ -679,7 +692,7 @@ export const initGames = (src = '', gamesMap = []) => {
 			contourTracingGame.render();
 		}
 
-		inspector.onUpdate();
+		inspectors.forEach((inspector) => inspector.onUpdate());
 	});
 	assetManager.loadAssets();
 };

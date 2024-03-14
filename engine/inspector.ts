@@ -5,6 +5,7 @@ interface Item {
 	latestInput: string | null;
 	property: string;
 	focused: boolean;
+	options?: InspectorWatchOptions;
 }
 
 export interface Inspector {
@@ -14,6 +15,7 @@ export interface Inspector {
 }
 
 export interface InspectorWatchOptions {
+	type?: 'checkbox' | 'number';
 	min?: number;
 	max?: number;
 }
@@ -38,7 +40,7 @@ export class Inspector {
 
 	watch(property: string, options?: InspectorWatchOptions) {
 		const input = document.createElement('input');
-		input.type = 'number';
+		input.type = options?.type ?? 'number';
 		this.wrapper.append(property, input);
 
 		if (options) {
@@ -51,14 +53,22 @@ export class Inspector {
 			latestInput: null,
 			property,
 			focused: false,
+			options,
 		};
 
-		input.addEventListener('input', (e) => {
-			const { value } = e.target as HTMLInputElement;
-			if (!value) return;
+		if (options?.type === 'checkbox') {
+			input.addEventListener('change', (e) => {
+				const { checked } = e.target as HTMLInputElement;
+				item.latestInput = checked.toString();
+			});
+		} else {
+			input.addEventListener('input', (e) => {
+				const { value } = e.target as HTMLInputElement;
+				if (!value) return;
 
-			item.latestInput = value;
-		});
+				item.latestInput = value;
+			});
+		}
 
 		this.items.push(item);
 	}
@@ -78,12 +88,29 @@ export class Inspector {
 		const otherInputs = this.items.filter((p) => p.latestInput === null);
 
 		updatedInputs.forEach((item) => {
-			const newValue = Number(item.latestInput);
-			if (!isNaN(newValue)) {
+			let newValue;
+			switch (item.options?.type) {
+				case 'checkbox': {
+					if (item.latestInput !== null)
+						newValue = JSON.parse(item.latestInput);
+					item.latestInput = null;
+					break;
+				}
+
+				case 'number':
+				default: {
+					newValue = Number(item.latestInput);
+					if (isNaN(newValue)) {
+						newValue = undefined;
+					}
+					if (!item.focused) item.latestInput = null;
+					break;
+				}
+			}
+			if (newValue !== undefined) {
 				// @ts-expect-error
 				player[item.property] = newValue;
 			}
-			if (!item.focused) item.latestInput = null;
 		});
 
 		otherInputs.forEach((item) => {

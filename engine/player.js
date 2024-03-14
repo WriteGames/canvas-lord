@@ -54,6 +54,8 @@ export const EVENT_TYPE = {
 // World <-> Entity
 
 export class Player extends Entity {
+	showHitbox = false;
+
 	constructor(x, y, assetManager) {
 		super(x, y);
 
@@ -89,6 +91,8 @@ export class Player extends Entity {
 	}
 
 	update(input) {
+		// console.log({ showHitbox: this.showHitbox });
+
 		const grounded = this.collide(this.x, this.y + 1);
 
 		// See if the player is trying to move left or right
@@ -155,6 +159,8 @@ export class Player extends Entity {
 
 		// Handle animation
 		this.updateSprite(xdir);
+
+		this.scene.showHitboxes = this.showHitbox;
 	}
 
 	moveX() {
@@ -313,8 +319,7 @@ export class Player extends Entity {
 
 		if (flipped) ctx.restore();
 
-		const drawHitbox = false;
-		if (drawHitbox === true) {
+		if (this.showHitbox) {
 			ctx.strokeStyle = 'red';
 			ctx.strokeRect(
 				drawX + 0.5,
