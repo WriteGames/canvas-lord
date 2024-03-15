@@ -1203,7 +1203,7 @@ export class GridOutline {
     constructor() {
         this.grid = null;
         this.polygons = [];
-        this.show = true;
+        this.show = false;
         this.renderOutline = true;
         this.outlineColor = 'red';
         this.renderPoints = true;
