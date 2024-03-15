@@ -6,6 +6,7 @@
 	"main": "canvas-lord.js",
 	"type": "module",
 	"exports": {
+		".": "./bin/canvas-lord.js",
 		"./*": "./bin/*"
 	},
 	"engines": {
