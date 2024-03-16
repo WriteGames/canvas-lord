@@ -117,7 +117,7 @@ const createNorm = (norm) => {
     return Tuple(...norm);
 };
 // prettier-ignore
-const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] = [
+export const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] = [
     Tuple(-1, -1),
     Tuple(0, -1),
     Tuple(1, -1),
@@ -322,12 +322,11 @@ export class Game {
         // TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
         this.render();
         this.input = new Input(this);
-        const timestep = 1000 / 60;
         this._lastFrame = 0;
         let deltaTime = 0;
         const maxFrames = 5;
         this.mainLoop = (time) => {
-            let timeStep = 1000 / this.fps;
+            const timeStep = 1000 / this.fps;
             this.frameRequestId = requestAnimationFrame(this.mainLoop);
             deltaTime += time - this._lastFrame;
             this._lastFrame = time;

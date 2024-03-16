@@ -229,7 +229,7 @@ const createNorm = <V extends readonly [number, number]>(norm: V): V => {
 };
 
 // prettier-ignore
-const [
+export const [
 	normLU, normNU, normRU,
 	normLN, normNN, normRN,
 	normLD, normND, normRD,
@@ -594,13 +594,11 @@ export class Game {
 
 		this.input = new Input(this);
 
-		const timestep = 1000 / 60;
-
 		this._lastFrame = 0;
 		let deltaTime = 0;
 		const maxFrames = 5;
 		this.mainLoop = (time): void => {
-			let timeStep = 1000 / this.fps;
+			const timeStep = 1000 / this.fps;
 
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
