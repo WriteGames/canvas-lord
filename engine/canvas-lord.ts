@@ -1251,7 +1251,7 @@ export interface Scene {
 	engine: Engine;
 	entities: Entity[];
 	renderables: Renderable[];
-	componentSystemMap: Map<IEntityComponentType, IEntitySystem>;
+	componentSystemMap: Map<IEntityComponentType, IEntitySystem[]>;
 	messages: Messages;
 	shouldUpdate: boolean;
 	screenPos: V2;
@@ -1269,10 +1269,7 @@ export class Scene {
 	constructor(engine: Engine) {
 		this.engine = engine;
 
-		this.componentSystemMap = new Map<
-			IEntityComponentType,
-			IEntitySystem
-		>();
+		this.componentSystemMap = new Map();
 
 		this.entities = [];
 		this.renderables = [];
@@ -1319,14 +1316,16 @@ export class Scene {
 		// this.renderables = this.renderables.filter(e => e).sort();
 
 		// REVIEW(bret): make sure that this is a stable ordering!
-		this.componentSystemMap.forEach((system, component) => {
-			const { update } = system;
-			if (!update) return;
+		this.componentSystemMap.forEach((systems, component) => {
+			systems.forEach((system) => {
+				const { update } = system;
+				if (!update) return;
 
-			const entities = this.entities.filter((e) =>
-				Boolean(e.component?.(component)),
-			);
-			entities.forEach((entity) => update(entity, input));
+				const entities = this.entities.filter((e) =>
+					Boolean(e.component?.(component)),
+				);
+				entities.forEach((entity) => update(entity, input));
+			});
 		});
 	}
 
@@ -1345,15 +1344,17 @@ export class Scene {
 		// this.ctx.lineWidth = (width * 2 - 1);
 		// this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
 
-		this.componentSystemMap.forEach((system, component) => {
-			const { render } = system;
-			if (!render) return;
+		this.componentSystemMap.forEach((systems, component) => {
+			systems.forEach((system) => {
+				const { render } = system;
+				if (!render) return;
 
-			const entities = this.entities.filter((e) =>
-				Boolean(e.component?.(component)),
-			);
-			entities.forEach((entity) => {
-				render(entity, this.ctx, this.camera);
+				const entities = this.entities.filter((e) =>
+					Boolean(e.component?.(component)),
+				);
+				entities.forEach((entity) => {
+					render(entity, this.ctx, this.camera);
+				});
 			});
 		});
 

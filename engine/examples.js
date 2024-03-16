@@ -432,13 +432,12 @@ class ComponentScene extends Scene {
 	constructor(engine) {
 		super(engine);
 
-		this.componentSystemMap.set(
-			Components.moveEightComponent,
+		this.componentSystemMap.set(Components.moveEightComponent, [
 			Systems.moveEightSystem,
-		);
-		this.componentSystemMap.set(Components.rect, Systems.rectSystem);
-		this.componentSystemMap.set(Components.circle, Systems.circleSystem);
-		this.componentSystemMap.set(Components.image, Systems.imageSystem);
+		]);
+		this.componentSystemMap.set(Components.rect, [Systems.rectSystem]);
+		this.componentSystemMap.set(Components.circle, [Systems.circleSystem]);
+		this.componentSystemMap.set(Components.image, [Systems.imageSystem]);
 
 		this.addEntity(new Square(30, 90)).component(Components.rect).color =
 			'red';
@@ -463,31 +462,26 @@ class PlayerScene extends Scene {
 		{
 			// input-related
 			// velocity clean-up
-			this.componentSystemMap.set(
-				horizontalMovementComponent,
+			this.componentSystemMap.set(horizontalMovementComponent, [
 				horizontalMovementSystem,
-			);
+			]);
 
-			this.componentSystemMap.set(
-				verticalMovementComponent,
+			this.componentSystemMap.set(verticalMovementComponent, [
 				verticalMovementSystem,
-			);
+			]);
 
-			this.componentSystemMap.set(
-				verticalMovementComponent2,
+			this.componentSystemMap.set(verticalMovementComponent2, [
 				verticalMovementSystem2,
-			);
+			]);
 
 			// actual movement
-			this.componentSystemMap.set(
-				baseHorizontalMovementComponent,
+			this.componentSystemMap.set(baseHorizontalMovementComponent, [
 				baseHorizontalMovementSystem,
-			);
+			]);
 
-			this.componentSystemMap.set(
-				baseVerticalMovementComponent,
+			this.componentSystemMap.set(baseVerticalMovementComponent, [
 				baseVerticalMovementSystem,
-			);
+			]);
 		}
 
 		// this.player = this.addEntity(new Player(160, 120));

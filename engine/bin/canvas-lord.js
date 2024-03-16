@@ -867,12 +867,14 @@ export class Scene {
         this.entities.forEach((entity) => entity.update(input));
         // this.renderables = this.renderables.filter(e => e).sort();
         // REVIEW(bret): make sure that this is a stable ordering!
-        this.componentSystemMap.forEach((system, component) => {
-            const { update } = system;
-            if (!update)
-                return;
-            const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
-            entities.forEach((entity) => update(entity, input));
+        this.componentSystemMap.forEach((systems, component) => {
+            systems.forEach((system) => {
+                const { update } = system;
+                if (!update)
+                    return;
+                const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
+                entities.forEach((entity) => update(entity, input));
+            });
         });
     }
     render(ctx) {
@@ -885,13 +887,15 @@ export class Scene {
         // this.ctx.strokeStyle = '#787878';
         // this.ctx.lineWidth = (width * 2 - 1);
         // this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
-        this.componentSystemMap.forEach((system, component) => {
-            const { render } = system;
-            if (!render)
-                return;
-            const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
-            entities.forEach((entity) => {
-                render(entity, this.ctx, this.camera);
+        this.componentSystemMap.forEach((systems, component) => {
+            systems.forEach((system) => {
+                const { render } = system;
+                if (!render)
+                    return;
+                const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
+                entities.forEach((entity) => {
+                    render(entity, this.ctx, this.camera);
+                });
             });
         });
         ctx.drawImage(this.canvas, ...this.screenPos);
