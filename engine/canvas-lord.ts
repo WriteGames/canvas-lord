@@ -1340,22 +1340,22 @@ export class Scene {
 		});
 	}
 
-	render(ctx: CanvasRenderingContext2D): void {
+	render(gameCtx: CanvasRenderingContext2D): void {
+		const ctx = this.ctx ?? gameCtx;
+		const { canvas } = ctx;
 		if (this.backgroundColor) {
-			this.ctx.fillStyle = this.backgroundColor;
-			this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+			ctx.fillStyle = this.backgroundColor;
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
 		}
 
-		this.renderables.forEach((entity) =>
-			entity.render(this.ctx, this.camera),
-		);
+		this.renderables.forEach((entity) => entity.render(ctx, this.camera));
 
 		// const width = 2;
 		// const posOffset = 0.5;
 		// const widthOffset = width;
-		// this.ctx.strokeStyle = '#787878';
-		// this.ctx.lineWidth = (width * 2 - 1);
-		// this.ctx.strokeRect(posOffset, posOffset, this.canvas.width - 1, this.canvas.height - 1);
+		// ctx.strokeStyle = '#787878';
+		// ctx.lineWidth = (width * 2 - 1);
+		// ctx.strokeRect(posOffset, posOffset, canvas.width - 1, canvas.height - 1);
 
 		this.componentSystemMap.forEach((systems, component) => {
 			systems.forEach((system) => {
@@ -1366,12 +1366,12 @@ export class Scene {
 					Boolean(e.component?.(component)),
 				);
 				entities.forEach((entity) => {
-					render(entity, this.ctx, this.camera);
+					render(entity, ctx, this.camera);
 				});
 			});
 		});
 
-		ctx.drawImage(this.canvas, ...this.screenPos);
+		ctx.drawImage(canvas, ...this.screenPos);
 	}
 }
 
