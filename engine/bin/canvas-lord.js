@@ -878,8 +878,10 @@ export class Scene {
         });
     }
     render(ctx) {
-        this.ctx.fillStyle = '#87E1A3';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.backgroundColor) {
+            this.ctx.fillStyle = this.backgroundColor;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
         this.renderables.forEach((entity) => entity.render(this.ctx, this.camera));
         // const width = 2;
         // const posOffset = 0.5;
