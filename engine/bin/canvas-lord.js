@@ -903,7 +903,9 @@ export class Scene {
                 });
             });
         });
-        ctx.drawImage(canvas, ...this.screenPos);
+        if (ctx !== gameCtx) {
+            gameCtx.drawImage(ctx.canvas, ...this.screenPos);
+        }
     }
 }
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
