@@ -81,7 +81,9 @@
 					render,
 				};
 
-				const game = new Game(id, gameLoopSettings);
+				const game = new Game(id, {
+					gameLoopSettings,
+				});
 
 				const drawOverlay = () => {
 					game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';

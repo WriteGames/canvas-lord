@@ -467,6 +467,7 @@ type EventCallback = () => void;
 export interface Game {
 	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
+	fps: number;
 	gameLoopSettings: GameLoopSettings;
 	sceneStack: Scene[][];
 	backgroundColor: CSSColor;
@@ -484,13 +485,18 @@ export interface Game {
 
 export type Engine = Game;
 
+interface InitialSettings {
+	fps: number;
+	gameLoopSettings?: GameLoopSettings;
+}
+
 export class Game {
 	gameLoopSettings: GameLoopSettings = {
 		updateMode: 'focus',
 		renderMode: 'onUpdate',
 	};
 
-	constructor(id: string, gameLoopSettings?: GameLoopSettings) {
+	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
 			`canvas#${id}`,
 		);
@@ -530,7 +536,9 @@ export class Game {
 			return acc;
 		}, {} as typeof this.listeners);
 
-		if (gameLoopSettings) this.gameLoopSettings = gameLoopSettings;
+		this.fps = settings?.fps ?? 60;
+		if (settings?.gameLoopSettings)
+			this.gameLoopSettings = settings.gameLoopSettings;
 
 		this.sceneStack = [];
 
@@ -592,19 +600,21 @@ export class Game {
 		let deltaTime = 0;
 		const maxFrames = 5;
 		this.mainLoop = (time): void => {
+			let timeStep = 1000 / this.fps;
+
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
 			deltaTime += time - this._lastFrame;
 			this._lastFrame = time;
 
-			deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
+			deltaTime = Math.min(deltaTime, timeStep * maxFrames + 0.01);
 
 			// should we send a pre-/post- message in case there are
 			// multiple updates that happen in a single while?
-			while (deltaTime >= timestep) {
+			while (deltaTime >= timeStep) {
 				this.update();
 				this.input.update();
-				deltaTime -= timestep;
+				deltaTime -= timeStep;
 			}
 		};
 

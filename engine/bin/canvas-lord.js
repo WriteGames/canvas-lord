@@ -263,7 +263,7 @@ export class Game {
         updateMode: 'focus',
         renderMode: 'onUpdate',
     };
-    constructor(id, gameLoopSettings) {
+    constructor(id, settings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
             console.error(`No canvas with id "${id}" was able to be found`);
@@ -290,8 +290,9 @@ export class Game {
             acc[val] = new Set();
             return acc;
         }, {});
-        if (gameLoopSettings)
-            this.gameLoopSettings = gameLoopSettings;
+        this.fps = settings?.fps ?? 60;
+        if (settings?.gameLoopSettings)
+            this.gameLoopSettings = settings.gameLoopSettings;
         this.sceneStack = [];
         this.backgroundColor = '#323232';
         // TODO(bret): Might also want to listen for styling changes to the canvas element
@@ -326,16 +327,17 @@ export class Game {
         let deltaTime = 0;
         const maxFrames = 5;
         this.mainLoop = (time) => {
+            let timeStep = 1000 / this.fps;
             this.frameRequestId = requestAnimationFrame(this.mainLoop);
             deltaTime += time - this._lastFrame;
             this._lastFrame = time;
-            deltaTime = Math.min(deltaTime, timestep * maxFrames + 0.01);
+            deltaTime = Math.min(deltaTime, timeStep * maxFrames + 0.01);
             // should we send a pre-/post- message in case there are
             // multiple updates that happen in a single while?
-            while (deltaTime >= timestep) {
+            while (deltaTime >= timeStep) {
                 this.update();
                 this.input.update();
-                deltaTime -= timestep;
+                deltaTime -= timeStep;
             }
         };
         this.eventListeners = [];
