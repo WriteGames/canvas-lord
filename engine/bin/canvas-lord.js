@@ -260,8 +260,8 @@ const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.d
 const gameEvents = ['blur', 'focus', 'update'];
 export class Game {
     gameLoopSettings = {
-        update: 'focus',
-        render: 'onUpdate',
+        updateMode: 'focus',
+        renderMode: 'onUpdate',
     };
     constructor(id, gameLoopSettings) {
         const canvas = document.querySelector(`canvas#${id}`);
@@ -367,7 +367,7 @@ export class Game {
         const startMainLoop = this.startMainLoop.bind(this);
         const killMainLoop = this.killMainLoop.bind(this);
         // Add new callbacks
-        switch (this.gameLoopSettings.update) {
+        switch (this.gameLoopSettings.updateMode) {
             case 'always':
                 startMainLoop();
                 break;
@@ -383,12 +383,12 @@ export class Game {
                 });
                 break;
         }
-        if (this.gameLoopSettings.render === 'onUpdate') {
+        if (this.gameLoopSettings.renderMode === 'onUpdate') {
             this.listeners.update.add(render);
         }
         this._onGameLoopSettingsUpdate = () => {
             // Remove existing callbacks
-            switch (this.gameLoopSettings.update) {
+            switch (this.gameLoopSettings.updateMode) {
                 case 'always':
                     killMainLoop();
                     break;
@@ -404,7 +404,7 @@ export class Game {
                     });
                     break;
             }
-            if (this.gameLoopSettings.render === 'onUpdate') {
+            if (this.gameLoopSettings.renderMode === 'onUpdate') {
                 this.listeners.update.delete(render);
             }
         };

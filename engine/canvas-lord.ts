@@ -447,13 +447,15 @@ type RenderSettings = 'manual' | 'onUpdate';
 
 type GameLoopSettings =
 	| {
-			update: Exclude<UpdateSettings, 'onEvent'>;
-			render: RenderSettings;
+			// everything except 'onEvent'
+			updateMode: Exclude<UpdateSettings, 'onEvent'>;
+			renderMode: RenderSettings;
 	  }
 	| {
-			update: Extract<UpdateSettings, 'onEvent'>;
+			// only 'onEvent'
+			updateMode: Extract<UpdateSettings, 'onEvent'>;
 			updateOn: UpdateOnEvent[];
-			render: RenderSettings;
+			renderMode: RenderSettings;
 	  };
 
 // TODO(bret): 'tabblur', 'tabfocus'
@@ -484,8 +486,8 @@ export type Engine = Game;
 
 export class Game {
 	gameLoopSettings: GameLoopSettings = {
-		update: 'focus',
-		render: 'onUpdate',
+		updateMode: 'focus',
+		renderMode: 'onUpdate',
 	};
 
 	constructor(id: string, gameLoopSettings?: GameLoopSettings) {
@@ -650,7 +652,7 @@ export class Game {
 		const killMainLoop = this.killMainLoop.bind(this);
 
 		// Add new callbacks
-		switch (this.gameLoopSettings.update) {
+		switch (this.gameLoopSettings.updateMode) {
 			case 'always':
 				startMainLoop();
 				break;
@@ -670,13 +672,13 @@ export class Game {
 				break;
 		}
 
-		if (this.gameLoopSettings.render === 'onUpdate') {
+		if (this.gameLoopSettings.renderMode === 'onUpdate') {
 			this.listeners.update.add(render);
 		}
 
 		this._onGameLoopSettingsUpdate = (): void => {
 			// Remove existing callbacks
-			switch (this.gameLoopSettings.update) {
+			switch (this.gameLoopSettings.updateMode) {
 				case 'always':
 					killMainLoop();
 					break;
@@ -696,7 +698,7 @@ export class Game {
 					break;
 			}
 
-			if (this.gameLoopSettings.render === 'onUpdate') {
+			if (this.gameLoopSettings.renderMode === 'onUpdate') {
 				this.listeners.update.delete(render);
 			}
 		};
