@@ -14,7 +14,7 @@ type RawComponent = object | unknown[];
 type InferTuple<T> = T extends readonly [...infer Tuple] ? Tuple : T;
 export const copyObject = <T extends RawComponent, U = InferTuple<T>>(
 	obj: U,
-): U => (Array.isArray(obj) ? ([...obj] as U) : Object.assign({}, obj));
+): U => (Array.isArray(obj) ? ([...obj] as U) : structuredClone(obj));
 
 // TODO: rename to registerComponent? And then do something with that?
 // TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
