@@ -642,12 +642,9 @@ export const initGames = (src = '', gamesMap = []) => {
 				LOG_TYPE.CAN_JUMP,
 			];
 
-			const sceneLeft = new PlayerScene(
-				PlayerClass,
-				game,
-				components,
-				logTypes,
-			);
+			const sceneArgs = [PlayerClass, game, components, logTypes];
+
+			const sceneLeft = new PlayerScene(...sceneArgs);
 			if (splitScreen === true) {
 				sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
 			} else {
@@ -655,11 +652,7 @@ export const initGames = (src = '', gamesMap = []) => {
 			}
 
 			if (splitScreen === true) {
-				const sceneRight = new PlayerScene(
-					PlayerClass,
-					game,
-					components,
-				);
+				const sceneRight = new PlayerScene(...sceneArgs);
 				sceneRight.screenPos[0] = sceneWidth;
 				sceneRight.setCanvasSize(sceneWidth, game.canvas.height);
 				// sceneRight.shouldUpdate = false;
