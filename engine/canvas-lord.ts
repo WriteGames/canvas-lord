@@ -13,21 +13,19 @@ import {
 	scalePos,
 } from './util/math.js';
 
-import {
-	type IEntityComponentType,
-	type IEntityComponent,
-	CSSColor,
-} from './util/types.js';
+import { CSSColor } from './util/types.js';
 
 import { Draw, drawable } from './util/draw.js';
 import { type ComponentProps } from './util/components.js';
 import { type Scene } from './util/scene.js';
 import { type Camera } from './util/camera.js';
+import { type Entity } from './util/entity.js';
 
 // TODO: only export these from math.js
 export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
+export { Entity } from './util/entity.js';
 
 declare global {
 	interface HTMLCanvasElement {
@@ -1155,34 +1153,18 @@ export class Input {
 }
 
 export interface IEntitySystem {
-	update?: (entity: IEntity, input: Input) => void;
+	update?: (entity: Entity, input: Input) => void;
 	render?: (
-		entity: IEntity,
+		entity: Entity,
 		ctx: CanvasRenderingContext2D,
 		camera: Camera,
 	) => void;
-}
-
-export interface IEntity {
-	x: number;
-	y: number;
-	scene: Scene | null;
-	update: (input: Input) => void;
-	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
-	addComponent: <T extends IEntityComponentType>(
-		component: T,
-	) => ComponentProps<T>;
-	component: <T extends IEntityComponentType>(
-		component: T,
-	) => ComponentProps<T>;
-	components: Map<IEntityComponentType, any>[];
 }
 
 export interface IRenderable {
 	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
 }
 
-export type Entity = IEntity;
 export type Renderable = IRenderable;
 
 const pixelCanvas =

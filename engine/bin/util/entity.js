@@ -1,6 +1,6 @@
 import * as Components from './components.js';
-// TODO: canvas-lord.ts defines IEntity and the type there is not matching here
 export class Entity {
+    scene; // NOTE: set by scene
     components = new Map();
     constructor(x, y) {
         this.addComponent(Components.pos2D);
@@ -30,7 +30,7 @@ export class Entity {
     set y(val) {
         this.component(Components.pos2D)[1] = val;
     }
-    update() { }
+    update(input) { }
     render() { }
 }
 //# sourceMappingURL=entity.js.map

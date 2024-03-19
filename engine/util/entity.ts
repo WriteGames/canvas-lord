@@ -1,9 +1,26 @@
+import type { Input, IRenderable } from '../canvas-lord.js';
 import * as Components from './components.js';
 import { type ComponentProps } from './components.js';
+import type { Scene } from './scene.js';
 import type { IEntityComponentType } from './types.js';
 
-// TODO: canvas-lord.ts defines IEntity and the type there is not matching here
-export class Entity {
+export interface IEntity {
+	x: number;
+	y: number;
+	scene: Scene;
+	components: Map<IEntityComponentType, any>;
+	update: (input: Input) => void;
+	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
+	addComponent: <T extends IEntityComponentType>(
+		component: T,
+	) => ReturnType<IEntity['component']>;
+	component: <T extends IEntityComponentType>(
+		component: T,
+	) => ComponentProps<T> | undefined;
+}
+
+export class Entity implements IEntity, IRenderable {
+	scene!: Scene; // NOTE: set by scene
 	components = new Map<IEntityComponentType, any>();
 
 	constructor(x: number, y: number) {
@@ -44,7 +61,7 @@ export class Entity {
 		this.component(Components.pos2D)![1] = val;
 	}
 
-	update() {}
+	update(input: Input) {}
 
 	render() {}
 }

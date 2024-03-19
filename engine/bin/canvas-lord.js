@@ -5,6 +5,7 @@ import { Draw, drawable } from './util/draw.js';
 export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
+export { Entity } from './util/entity.js';
 // NOTE: This should be able to infer the return type...
 Math.clamp = (val, min, max) => {
     if (val < min)
