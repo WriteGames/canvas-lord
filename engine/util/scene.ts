@@ -79,19 +79,41 @@ export class Scene {
 		canvas.height = height;
 	}
 
+	begin(): void {
+		this.#addEntitiesToScene();
+		this.#addRenderablesToScene();
+		// TODO: should we also handle any entities removed? :thinking:
+	}
+
 	addEntity(entity: Entity): Entity {
 		entity.scene = this;
-		this.entities.inScene.push(entity);
+		this.entities.addQueue.push(entity);
 		return entity;
+	}
+
+	#addEntitiesToScene(): void {
+		const newEntities = this.entities.addQueue.splice(0);
+		this.entities.inScene.push(...newEntities);
 	}
 
 	addRenderable(renderable: Renderable): Renderable {
 		// renderable.scene = this;
-		this.renderables.inScene.push(renderable);
+		this.renderables.addQueue.push(renderable);
 		return renderable;
 	}
 
+	#addRenderablesToScene(): void {
+		const newRenderables = this.renderables.addQueue.splice(0);
+		this.renderables.inScene.push(...newRenderables);
+	}
+
+	preUpdate(input: Input): void {
+		this.#addEntitiesToScene();
+		this.#addRenderablesToScene();
+	}
+
 	update(input: Input): void {
+		// TODO: move the following two to game probably
 		if (this.allowRefresh && input.keyPressed('F5')) location.reload();
 
 		if (this.escapeToBlur && input.keyPressed('Escape'))
@@ -99,10 +121,11 @@ export class Scene {
 
 		if (!this.shouldUpdate) return;
 
+		// remove old entities
+
 		this.entities.inScene.forEach((entity) => entity.update(input));
 		// this.renderables = this.renderables.filter(e => e).sort();
 
-		// REVIEW(bret): make sure that this is a stable ordering!
 		this.componentSystemMap.forEach((systems, component) => {
 			systems.forEach((system) => {
 				const { update } = system;
@@ -115,6 +138,8 @@ export class Scene {
 			});
 		});
 	}
+
+	postUpdate(input: Input): void {}
 
 	render(gameCtx: CanvasRenderingContext2D): void {
 		const ctx = this.ctx ?? gameCtx;

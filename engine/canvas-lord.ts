@@ -773,11 +773,14 @@ export class Game {
 		this.sceneStack.push(scenes);
 		scenes.forEach((scene) => {
 			scene.engine = this;
+			scene.begin();
 		});
 	}
 
 	update(): void {
+		this.currentScenes?.forEach((scene) => scene.preUpdate(this.input));
 		this.currentScenes?.forEach((scene) => scene.update(this.input));
+		this.currentScenes?.forEach((scene) => scene.postUpdate(this.input));
 
 		this.sendEvent('update');
 	}
