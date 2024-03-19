@@ -23,4 +23,7 @@ export const scalePos = (p, s) => {
     return Tuple(...p.map((v) => v * s));
 };
 export const posEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+export const equal = (a, b) => {
+    return Math.abs(a - b) < Number.EPSILON;
+};
 //# sourceMappingURL=math.js.map

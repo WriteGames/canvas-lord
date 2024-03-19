@@ -42,6 +42,8 @@ export const v2one = Tuple(1, 1);
 type FuncMapTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => A;
 type FuncMapTupleByScalar = <P extends Tuple>(p: P, s: number) => P;
 
+type FuncCompare<T extends any> = (a: T, b: T) => boolean;
+
 export const addPos: FuncMapTuple = (a, b) => {
 	return Tuple(
 		...(a.map((v, i) => v + (b[i] ?? 0)) as unknown as typeof a),
@@ -68,3 +70,7 @@ export const scalePos: FuncMapTupleByScalar = (p, s) => {
 
 export const posEqual = (a: Tuple, b: Tuple): boolean =>
 	a.length === b.length && a.every((v, i) => v === b[i]);
+
+export const equal: FuncCompare<number> = (a, b) => {
+	return Math.abs(a - b) < Number.EPSILON;
+};

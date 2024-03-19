@@ -1,4 +1,11 @@
-import { addPos, subPos, scalePos, posEqual, addScalar } from './math.js';
+import {
+	addPos,
+	subPos,
+	scalePos,
+	posEqual,
+	addScalar,
+	equal,
+} from './math.js';
 import { describe, expect, test } from 'vitest';
 
 describe('Vector operations', () => {
@@ -117,6 +124,25 @@ describe('Vector operations', () => {
 				expect(scaled).toHaveLength(3);
 				expect(scaled).toEqual([5, 10, 15]);
 			});
+		});
+	});
+});
+
+describe('Scalar operations', () => {
+	describe('equal(a, b)', () => {
+		test('should return true for equal scalars', () => {
+			const isEqual = equal(10, 10);
+			expect(isEqual).toEqual(true);
+		});
+
+		test('should return true for unequal scalars that have a difference lesser than the epsilon', () => {
+			const isEqual = equal(0.1 + 0.2, 0.3);
+			expect(isEqual).toEqual(true);
+		});
+
+		test('should return false for unequal scalars', () => {
+			const isEqual = equal(10, 7);
+			expect(isEqual).toEqual(false);
 		});
 	});
 });
