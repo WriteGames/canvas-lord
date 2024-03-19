@@ -1,5 +1,6 @@
-import { IEntity, Input, Key } from 'canvas-lord';
+import { Input, Key } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components.js';
+import { IEntity } from 'canvas-lord/util/entity';
 import { Logger } from 'canvas-lord/util/logger.js';
 
 export const leftKeys: Key[] = ['ArrowLeft', 'a', 'A'];
@@ -146,6 +147,7 @@ export const verticalMovementComponent2 = Components.createComponent({
 export const verticalMovementSystem2 = {
 	update(entity: PlayerEntity, input: Input) {
 		const vComp = entity.component?.(verticalMovementComponent2);
+		if (!vComp) throw new Error('');
 
 		const grounded = entity.collide(entity.x, entity.y + 1);
 		if (grounded && input.keyPressed(jumpKeys)) {
