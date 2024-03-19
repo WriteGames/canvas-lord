@@ -91,6 +91,10 @@ describe('Vector operations', () => {
 				const isEqual = posEqual([1, 2, 3], [1, 2, 3]);
 				expect(isEqual).toEqual(true);
 			});
+			test('should return true if both vectors are of equal length and shared values are within the epsilon margin of error', () => {
+				const isEqual = posEqual([0.1 + 0.2, 2, 3], [0.3, 2, 3]);
+				expect(isEqual).toEqual(true);
+			});
 
 			test('should return false if the vectors do not match', () => {
 				const isEqual = posEqual([1, 2, 3], [1, 2, 4]);

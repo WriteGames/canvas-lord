@@ -69,7 +69,7 @@ export const scalePos: FuncMapTupleByScalar = (p, s) => {
 };
 
 export const posEqual = (a: Tuple, b: Tuple): boolean =>
-	a.length === b.length && a.every((v, i) => v === b[i]);
+	a.length === b.length && a.every((v, i) => equal(v, b[i] as number));
 
 export const equal: FuncCompare<number> = (a, b) => {
 	return Math.abs(a - b) < Number.EPSILON;
