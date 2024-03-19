@@ -65,6 +65,7 @@ export const Draw = {
 			ctx.translate(0.5, 0.5);
 
 			ctx.beginPath();
+			// TODO: make this be able to be centered :O
 			ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
 
 			switch (circle.type) {
@@ -101,6 +102,7 @@ export const Draw = {
 			w: number,
 			h: number,
 		) => {
+			ctx.translate(0.5, 0.5);
 			const args = [x, y, w, h] as const;
 			switch (rect.type) {
 				case 'fill':

@@ -26,6 +26,7 @@ export const Draw = {
     circle: moveCanvas((ctx, circle, x, y, radius) => {
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
+        // TODO: make this be able to be centered :O
         ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
         switch (circle.type) {
             case 'fill':
@@ -50,6 +51,7 @@ export const Draw = {
         ctx.stroke();
     }),
     rect: moveCanvas((ctx, rect, x, y, w, h) => {
+        ctx.translate(0.5, 0.5);
         const args = [x, y, w, h];
         switch (rect.type) {
             case 'fill':
