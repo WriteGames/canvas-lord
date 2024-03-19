@@ -100,11 +100,11 @@ export const createSceneGrid = (scene, assetManager) => {
 	scene.gridOutline = new GridOutline();
 	scene.gridOutline.computeOutline(scene.grid);
 
-	scene.renderables.push(scene.tileset);
-	// scene.renderables.push(scene.grid);
-	scene.renderables.push(scene.gridOutline);
-	scene.renderables.push(scene.player);
-	scene.renderables.push(scene.logger);
+	scene.addRenderable(scene.tileset);
+	// scene.addRenderable(scene.grid);
+	scene.addRenderable(scene.gridOutline);
+	scene.addRenderable(scene.player);
+	scene.addRenderable(scene.logger);
 };
 
 export const createButtons = (scene, { leftKeys, rightKeys, jumpKeys }) => {
@@ -116,5 +116,5 @@ export const createButtons = (scene, { leftKeys, rightKeys, jumpKeys }) => {
 		}),
 	);
 
-	scene.renderables.push(buttons);
+	scene.addRenderable(buttons);
 };

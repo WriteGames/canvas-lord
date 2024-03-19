@@ -13,8 +13,16 @@ import type { CSSColor, IEntityComponentType } from './types.js';
 export interface Scene {
 	engine: Engine;
 	backgroundColor?: CSSColor;
-	entities: Entity[];
-	renderables: Renderable[];
+	entities: {
+		addQueue: Entity[];
+		inScene: Entity[];
+		removeQueue: Entity[];
+	};
+	renderables: {
+		addQueue: Renderable[];
+		inScene: Renderable[];
+		removeQueue: Renderable[];
+	};
 	componentSystemMap: Map<IEntityComponentType, IEntitySystem[]>;
 	messages: Messages;
 	shouldUpdate: boolean;
@@ -35,8 +43,17 @@ export class Scene {
 
 		this.componentSystemMap = new Map();
 
-		this.entities = [];
-		this.renderables = [];
+		this.entities = {
+			addQueue: [],
+			inScene: [],
+			removeQueue: [],
+		};
+
+		this.renderables = {
+			addQueue: [],
+			inScene: [],
+			removeQueue: [],
+		};
 
 		this.shouldUpdate = true;
 
@@ -64,8 +81,14 @@ export class Scene {
 
 	addEntity(entity: Entity): Entity {
 		entity.scene = this;
-		this.entities.push(entity);
+		this.entities.inScene.push(entity);
 		return entity;
+	}
+
+	addRenderable(renderable: Renderable): Renderable {
+		// renderable.scene = this;
+		this.renderables.inScene.push(renderable);
+		return renderable;
 	}
 
 	update(input: Input): void {
@@ -76,7 +99,7 @@ export class Scene {
 
 		if (!this.shouldUpdate) return;
 
-		this.entities.forEach((entity) => entity.update(input));
+		this.entities.inScene.forEach((entity) => entity.update(input));
 		// this.renderables = this.renderables.filter(e => e).sort();
 
 		// REVIEW(bret): make sure that this is a stable ordering!
@@ -85,7 +108,7 @@ export class Scene {
 				const { update } = system;
 				if (!update) return;
 
-				const entities = this.entities.filter((e) =>
+				const entities = this.entities.inScene.filter((e) =>
 					Boolean(e.component?.(component)),
 				);
 				entities.forEach((entity) => update(entity, input));
@@ -101,7 +124,9 @@ export class Scene {
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 		}
 
-		this.renderables.forEach((entity) => entity.render(ctx, this.camera));
+		this.renderables.inScene.forEach((entity) =>
+			entity.render(ctx, this.camera),
+		);
 
 		// const width = 2;
 		// const posOffset = 0.5;
@@ -115,7 +140,7 @@ export class Scene {
 				const { render } = system;
 				if (!render) return;
 
-				const entities = this.entities.filter((e) =>
+				const entities = this.entities.inScene.filter((e) =>
 					Boolean(e.component?.(component)),
 				);
 				entities.forEach((entity) => {

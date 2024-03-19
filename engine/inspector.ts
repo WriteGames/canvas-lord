@@ -77,7 +77,7 @@ export class Inspector {
 		const scene = this.engine.currentScenes?.[0];
 		if (!scene) return;
 
-		const player = scene.entities?.[0];
+		const player = scene.entities.inScene?.[0];
 		if (!player) return;
 
 		this.items.forEach((item) => {

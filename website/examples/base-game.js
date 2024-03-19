@@ -168,10 +168,10 @@ class PlayerScene extends Scene {
 		this.gridOutline = new GridOutline();
 		this.gridOutline.computeOutline(this.grid);
 
-		this.renderables.push(this.tileset);
-		// this.renderables.push(this.grid);
-		this.renderables.push(this.gridOutline);
-		this.renderables.push(this.player);
+		this.addRenderable(this.tileset);
+		// this.addRenderable(this.grid);
+		this.addRenderable(this.gridOutline);
+		this.addRenderable(this.player);
 	}
 
 	setCanvasSize(width, height) {
