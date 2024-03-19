@@ -48,15 +48,23 @@ export const addPos: FuncMapTuple = (a, b) => {
 	) as unknown as typeof a;
 };
 
+export const addScalar: FuncMapTupleByScalar = (p, s) => {
+	return Tuple(
+		...(p.map((v) => v + s) as unknown as typeof p),
+	) as unknown as typeof p;
+};
+
 export const subPos: FuncMapTuple = (a, b) => {
 	return Tuple(
 		...(a.map((v, i) => v - (b[i] ?? 0)) as unknown as typeof a),
 	) as unknown as typeof a;
 };
+
 export const scalePos: FuncMapTupleByScalar = (p, s) => {
 	return Tuple(
 		...(p.map((v) => v * s) as unknown as typeof p),
 	) as unknown as typeof p;
 };
+
 export const posEqual = (a: Tuple, b: Tuple): boolean =>
 	a.length === b.length && a.every((v, i) => v === b[i]);

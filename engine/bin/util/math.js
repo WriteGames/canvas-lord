@@ -13,6 +13,9 @@ export const v2one = Tuple(1, 1);
 export const addPos = (a, b) => {
     return Tuple(...a.map((v, i) => v + (b[i] ?? 0)));
 };
+export const addScalar = (p, s) => {
+    return Tuple(...p.map((v) => v + s));
+};
 export const subPos = (a, b) => {
     return Tuple(...a.map((v, i) => v - (b[i] ?? 0)));
 };

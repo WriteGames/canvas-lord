@@ -1,4 +1,4 @@
-import { addPos, subPos, scalePos, posEqual } from './math.js';
+import { addPos, subPos, scalePos, posEqual, addScalar } from './math.js';
 import { describe, expect, test } from 'vitest';
 
 describe('Vector operations', () => {
@@ -103,6 +103,14 @@ describe('Vector operations', () => {
 	});
 
 	describe('Vector & Scalar', () => {
+		describe('addScalar(p, s)', () => {
+			test('should return a vector of equal length translated by a scalar', () => {
+				const scaled = addScalar([1, 2, 3], 5);
+				expect(scaled).toHaveLength(3);
+				expect(scaled).toEqual([6, 7, 8]);
+			});
+		});
+
 		describe('scalePos(p, s)', () => {
 			test('should return a vector of equal length scaled by a scalar', () => {
 				const scaled = scalePos([1, 2, 3], 5);
