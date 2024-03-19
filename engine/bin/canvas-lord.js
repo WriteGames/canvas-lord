@@ -3,6 +3,8 @@ import { v2zero, Tuple, hashTuple, addPos, subPos, scalePos, } from './util/math
 import { Draw, drawable } from './util/draw.js';
 // TODO: only export these from math.js
 export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
+export { Scene } from './util/scene.js';
+export { Camera } from './util/camera.js';
 // NOTE: This should be able to infer the return type...
 Math.clamp = (val, min, max) => {
     if (val < min)
@@ -768,134 +770,6 @@ export class Input {
             acc[key] = 0;
             return acc;
         }, {});
-    }
-}
-class Camera extends Array {
-    constructor(x, y) {
-        super();
-        this.push(x, y);
-    }
-    get x() {
-        return this[0];
-    }
-    set x(val) {
-        this[0] = val;
-    }
-    get y() {
-        return this[1];
-    }
-    set y(val) {
-        this[1] = val;
-    }
-}
-class Messages {
-    subscribers;
-    constructor() {
-        this.subscribers = new Map();
-    }
-    subscribe(subscriber, ...messages) {
-        messages.forEach((message) => {
-            if (!this.subscribers.has(message)) {
-                this.subscribers.set(message, []);
-            }
-            const subs = this.subscribers.get(message);
-            subs?.push(subscriber);
-        });
-    }
-    sendMessage(message, payload) {
-        const subs = this.subscribers.get(message);
-        if (!subs) {
-            console.warn(`${message} isn't registered`);
-            return;
-        }
-        subs.forEach((sub) => {
-            const receive = sub.receive;
-            if (!receive) {
-                console.warn(`subscriber doesn't have receive() method`, sub);
-                return;
-            }
-            receive(message, payload);
-        });
-    }
-}
-export class Scene {
-    constructor(engine) {
-        this.engine = engine;
-        this.componentSystemMap = new Map();
-        this.entities = [];
-        this.renderables = [];
-        this.shouldUpdate = true;
-        this.messages = new Messages();
-        this.screenPos = [0, 0];
-        this.camera = new Camera(0, 0);
-        // TODO(bret): Make these false by default
-        this.escapeToBlur = true;
-        this.allowRefresh = true;
-        // this.width = this.height = null;
-        this.boundsX = this.boundsY = null;
-    }
-    // TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
-    setCanvasSize(width, height) {
-        const canvas = (this.canvas = document.createElement('canvas'));
-        const ctx = canvas.getContext('2d');
-        if (ctx)
-            this.ctx = ctx;
-        canvas.width = width;
-        canvas.height = height;
-    }
-    addEntity(entity) {
-        entity.scene = this;
-        this.entities.push(entity);
-        return entity;
-    }
-    update(input) {
-        if (this.allowRefresh && input.keyPressed('F5'))
-            location.reload();
-        if (this.escapeToBlur && input.keyPressed('Escape'))
-            this.engine.canvas.blur();
-        if (!this.shouldUpdate)
-            return;
-        this.entities.forEach((entity) => entity.update(input));
-        // this.renderables = this.renderables.filter(e => e).sort();
-        // REVIEW(bret): make sure that this is a stable ordering!
-        this.componentSystemMap.forEach((systems, component) => {
-            systems.forEach((system) => {
-                const { update } = system;
-                if (!update)
-                    return;
-                const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
-                entities.forEach((entity) => update(entity, input));
-            });
-        });
-    }
-    render(gameCtx) {
-        const ctx = this.ctx ?? gameCtx;
-        const { canvas } = ctx;
-        if (this.backgroundColor) {
-            ctx.fillStyle = this.backgroundColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-        this.renderables.forEach((entity) => entity.render(ctx, this.camera));
-        // const width = 2;
-        // const posOffset = 0.5;
-        // const widthOffset = width;
-        // ctx.strokeStyle = '#787878';
-        // ctx.lineWidth = (width * 2 - 1);
-        // ctx.strokeRect(posOffset, posOffset, canvas.width - 1, canvas.height - 1);
-        this.componentSystemMap.forEach((systems, component) => {
-            systems.forEach((system) => {
-                const { render } = system;
-                if (!render)
-                    return;
-                const entities = this.entities.filter((e) => Boolean(e.component?.(component)));
-                entities.forEach((entity) => {
-                    render(entity, ctx, this.camera);
-                });
-            });
-        });
-        if (ctx !== gameCtx) {
-            gameCtx.drawImage(ctx.canvas, ...this.screenPos);
-        }
     }
 }
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
