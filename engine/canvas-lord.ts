@@ -8,6 +8,9 @@ import {
 	Tuple,
 	hashTuple,
 	V2Editable,
+	addPos,
+	subPos,
+	scalePos,
 } from './util/math.js';
 
 import {
@@ -19,7 +22,7 @@ import { Draw, drawable } from './util/draw.js';
 import { type ComponentProps } from './util/components.js';
 
 // TODO: only export these from math.js
-export { v2zero, v2one, Tuple } from './util/math.js';
+export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
 
 declare global {
 	interface HTMLCanvasElement {
@@ -41,8 +44,6 @@ type Writeable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
 
-type FuncMapTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => A;
-type FuncMapTupleByScalar = <P extends Tuple>(p: P, s: number) => P;
 type FuncReduceTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => number;
 
 type FuncReduceNumber = (acc: number, v: number) => number;
@@ -85,25 +86,7 @@ const indexToPos = (index: number, stride: number): V2 => [
 	Math.floor(index / stride),
 ];
 const posToIndex = ([x, y]: V2, stride: number): number => y * stride + x;
-const posEqual = (a: Tuple, b: Tuple): boolean =>
-	a.length === b.length && a.every((v, i) => v === b[i]);
 
-export const addPos: FuncMapTuple = (a, b) => {
-	return Tuple(
-		...(a.map((v, i) => v + (b[i] ?? 0)) as unknown as typeof a),
-	) as unknown as typeof a;
-};
-
-export const subPos: FuncMapTuple = (a, b) => {
-	return Tuple(
-		...(a.map((v, i) => v - (b[i] ?? 0)) as unknown as typeof a),
-	) as unknown as typeof a;
-};
-export const scalePos: FuncMapTupleByScalar = (p, s) => {
-	return Tuple(
-		...(p.map((v) => v * s) as unknown as typeof p),
-	) as unknown as typeof p;
-};
 export const mapByOffset = <V extends Tuple>(offset: V): ((pos: V) => V) => {
 	return (pos: V): V => addPos(offset, pos);
 };

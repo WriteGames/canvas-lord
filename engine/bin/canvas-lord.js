@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-import { v2zero, Tuple, hashTuple, } from './util/math.js';
+import { v2zero, Tuple, hashTuple, addPos, subPos, scalePos, } from './util/math.js';
 import { Draw, drawable } from './util/draw.js';
 // TODO: only export these from math.js
-export { v2zero, v2one, Tuple } from './util/math.js';
+export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
 // NOTE: This should be able to infer the return type...
 Math.clamp = (val, min, max) => {
     if (val < min)
@@ -24,16 +24,6 @@ const indexToPos = (index, stride) => [
     Math.floor(index / stride),
 ];
 const posToIndex = ([x, y], stride) => y * stride + x;
-const posEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
-export const addPos = (a, b) => {
-    return Tuple(...a.map((v, i) => v + (b[i] ?? 0)));
-};
-export const subPos = (a, b) => {
-    return Tuple(...a.map((v, i) => v - (b[i] ?? 0)));
-};
-export const scalePos = (p, s) => {
-    return Tuple(...p.map((v) => v * s));
-};
 export const mapByOffset = (offset) => {
     return (pos) => addPos(offset, pos);
 };

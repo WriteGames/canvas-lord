@@ -38,3 +38,25 @@ export const Tuple = <V extends Tuple>(...args: V): TupleT<V> => {
 
 export const v2zero = Tuple(0, 0);
 export const v2one = Tuple(1, 1);
+
+type FuncMapTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => A;
+type FuncMapTupleByScalar = <P extends Tuple>(p: P, s: number) => P;
+
+export const addPos: FuncMapTuple = (a, b) => {
+	return Tuple(
+		...(a.map((v, i) => v + (b[i] ?? 0)) as unknown as typeof a),
+	) as unknown as typeof a;
+};
+
+export const subPos: FuncMapTuple = (a, b) => {
+	return Tuple(
+		...(a.map((v, i) => v - (b[i] ?? 0)) as unknown as typeof a),
+	) as unknown as typeof a;
+};
+export const scalePos: FuncMapTupleByScalar = (p, s) => {
+	return Tuple(
+		...(p.map((v) => v * s) as unknown as typeof p),
+	) as unknown as typeof p;
+};
+export const posEqual = (a: Tuple, b: Tuple): boolean =>
+	a.length === b.length && a.every((v, i) => v === b[i]);
