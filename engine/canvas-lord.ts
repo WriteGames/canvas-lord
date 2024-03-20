@@ -4,10 +4,7 @@ import {
 	V2,
 	V3,
 	V4,
-	v2zero,
-	Tuple,
-	hashTuple,
-	V2Editable,
+	type Vector,
 	addPos,
 	subPos,
 	scalePos,
@@ -16,13 +13,12 @@ import {
 import { CSSColor } from './util/types.js';
 
 import { Draw, drawable } from './util/draw.js';
-import { type ComponentProps } from './util/components.js';
 import { type Scene } from './util/scene.js';
 import { type Camera } from './util/camera.js';
 import { type Entity } from './util/entity.js';
 
 // TODO: only export these from math.js
-export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
+export { V2, type Vector, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
 export { Entity } from './util/entity.js';
@@ -47,11 +43,14 @@ type Writeable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
 
-type FuncReduceTuple = <A extends Tuple, B extends Tuple>(a: A, b: B) => number;
+type FuncReduceVector = <A extends Vector, B extends Vector>(
+	a: A,
+	b: B,
+) => number;
 
 type FuncReduceNumber = (acc: number, v: number) => number;
 
-type TupleToObjectTupleHybrid<A extends readonly PropertyKey[]> = Pick<
+type VectorToObjectVectorHybrid<A extends readonly PropertyKey[]> = Pick<
 	{
 		[TIndex in A[number] | keyof A]: number;
 	},
@@ -70,9 +69,9 @@ export const EPSILON = 0.000001;
 const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
 const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
 
-const distance = (...dimensions: Tuple): number =>
+const distance = (...dimensions: Vector): number =>
 	Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
-const distanceSq = (...dimensions: Tuple): number =>
+const distanceSq = (...dimensions: Vector): number =>
 	Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 
 const isDefined = <T>(v: T | undefined): v is T => Boolean(v);
@@ -82,27 +81,26 @@ const interlaceArrays = <T, U>(
 	b: Readonly<U[]>,
 ): Array<T | U> => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
 
-const compareTuple = (a: Tuple, b: Tuple): boolean =>
-	hashTuple(a) === hashTuple(b);
 const indexToPos = (index: number, stride: number): V2 => [
 	index % stride,
 	Math.floor(index / stride),
 ];
 const posToIndex = ([x, y]: V2, stride: number): number => y * stride + x;
 
-export const mapByOffset = <V extends Tuple>(offset: V): ((pos: V) => V) => {
+export const mapByOffset = <V extends Vector>(offset: V): ((pos: V) => V) => {
 	return (pos: V): V => addPos(offset, pos);
 };
-export const mapFindOffset = <V extends Tuple>(origin: V): ((pos: V) => V) => {
+export const mapFindOffset = <V extends Vector>(origin: V): ((pos: V) => V) => {
 	return (pos: V): V => subPos(pos, origin);
 };
-export const flatMapByOffsets = <V extends Tuple>(
+export const flatMapByOffsets = <V extends Vector>(
 	offsets: V[],
 ): ((pos: V) => V[]) => {
 	return (pos: V): V[] => offsets.map((offset) => addPos(offset, pos));
 };
-export const posDistance: FuncReduceTuple = (a, b) => distance(...subPos(b, a));
-export const posDistanceSq: FuncReduceTuple = (a, b) =>
+export const posDistance: FuncReduceVector = (a, b) =>
+	distance(...subPos(b, a));
+export const posDistanceSq: FuncReduceVector = (a, b) =>
 	distanceSq(...subPos(b, a));
 
 // const pathToSegments = (path) =>
@@ -125,14 +123,14 @@ const RAD_540 = 540 * DEG_TO_RAD;
 const RAD_720 = 720 * DEG_TO_RAD;
 
 // const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
-const getAngle: FuncReduceTuple = (a, b) =>
+const getAngle: FuncReduceVector = (a, b) =>
 	Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween: FuncReduceNumber = (a, b) =>
 	((b - a + RAD_540) % RAD_360) - RAD_180;
 
 type Line2D = [V2, V2];
 
-const crossProduct2D: FuncReduceTuple = (a, b) => a[0] * b[1] - a[1] * b[0];
+const crossProduct2D: FuncReduceVector = (a, b) => a[0] * b[1] - a[1] * b[0];
 const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): V2 => {
 	const r = subPos(b, a);
 	const s = subPos(d, c);
@@ -157,7 +155,11 @@ export const getLineSegmentIntersection = (a: Line2D, b: Line2D): V2 | null => {
 		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
 		: null;
 };
-export const isPointOnLine = <V extends Tuple>(point: V, a: V, b: V): boolean =>
+export const isPointOnLine = <V extends Vector>(
+	point: V,
+	a: V,
+	b: V,
+): boolean =>
 	Math.abs(
 		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
 	) < EPSILON;
@@ -167,7 +169,7 @@ const isWithinBounds = ([x, y]: V2, [x1, y1]: V2, [x2, y2]: V2): boolean =>
 	x >= x1 && y >= y1 && x < x2 && y < y2;
 
 export const filterWithinBounds =
-	<V extends Tuple>(a: V, b: V): ((pos: V) => boolean) =>
+	<V extends Vector>(a: V, b: V): ((pos: V) => boolean) =>
 	(pos: V): boolean =>
 		a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
 		b.every((p, i) => (pos[i] ?? Infinity) < p);
@@ -186,9 +188,9 @@ export const isPointInsidePath = (point: V2, path: Path): boolean => {
 
 const createBitEnum = <T extends readonly string[]>(
 	..._names: T
-): TupleToObjectTupleHybrid<T> => {
+): VectorToObjectVectorHybrid<T> => {
 	const names = _names.flat();
-	const bitEnumObj = {} as TupleToObjectTupleHybrid<T>;
+	const bitEnumObj = {} as VectorToObjectVectorHybrid<T>;
 	names.forEach((name, i) => {
 		const val = 1 << i;
 		bitEnumObj[i as keyof typeof bitEnumObj] = val;
@@ -210,27 +212,23 @@ export const [
 	dirLN | dirND, dirRN | dirND,
 ];
 
-const createNorm = <V extends readonly [number, number]>(norm: V): V => {
-	return Tuple(...norm) as unknown as V;
-};
-
 // prettier-ignore
 export const [
 	normLU, normNU, normRU,
 	normLN, normNN, normRN,
 	normLD, normND, normRD,
 ] = [
-		Tuple(-1, -1) as readonly [-1, -1],
-		Tuple(0, -1) as readonly [0, -1],
-		Tuple(1, -1) as readonly [1, -1],
+		[-1, -1] as V2,// as readonly [-1, -1],
+		[0, -1] as V2,// as readonly [0, -1],
+		[1, -1] as V2,// as readonly [1, -1],
 
-		Tuple(-1, 0) as readonly [-1, 0],
-		Tuple(0, 0) as readonly [0, 0],
-		Tuple(1, 0) as readonly [1, 0],
+		[-1, 0] as V2,// as readonly [-1, 0],
+		[0, 0] as V2,// as readonly [0, 0],
+		[1, 0] as V2,// as readonly [1, 0],
 
-		Tuple(-1, 1) as readonly [-1, 1],
-		Tuple(0, 1) as readonly [0, 1],
-		Tuple(1, 1) as readonly [1, 1],
+		[-1, 1] as V2,// as readonly [-1, 1],
+		[0, 1] as V2,// as readonly [0, 1],
+		[1, 1] as V2,// as readonly [1, 1],
 	];
 
 const orthogonalNorms = [normRN, normNU, normLN, normND] as const;
@@ -1343,7 +1341,7 @@ export class Grid {
 		}
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera = v2zero): void {
+	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
 		switch (this.renderMode) {
 			case 0:
 				this.renderOutline(ctx, camera);
@@ -1365,7 +1363,7 @@ export class Grid {
 	}
 }
 
-// TODO(bret): Rewrite these to use tuples once those are implemented :)
+// TODO(bret): Rewrite these to use Vectors once those are implemented :)
 const rotateNormBy45Deg = (
 	curDir: V2CardinalNorm,
 	turns: number,
@@ -1415,10 +1413,10 @@ export const findAllPolygonsInGrid = (
 	const polygons: Polygon[] = [];
 
 	const offsets = {
-		[hashTuple(normNU)]: [normRU, normNU],
-		[hashTuple(normND)]: [normLD, normND],
-		[hashTuple(normRN)]: [normRD, normRN],
-		[hashTuple(normLN)]: [normLU, normLN],
+		[[normNU].join(',')]: [normRU, normNU],
+		[[normND].join(',')]: [normLD, normND],
+		[[normRN].join(',')]: [normRD, normRN],
+		[[normLN].join(',')]: [normLU, normLN],
 	} as const;
 
 	const shapes = findAllShapesInGrid(grid, columns, rows);
@@ -1449,7 +1447,7 @@ export const findAllPolygonsInGrid = (
 				? subPos(points[points.length - 1] as V2, basePos)
 				: [origin, origin];
 
-			const offset: V2Editable = [0, 0];
+			const offset: V2 = [0, 0];
 			switch (curDir) {
 				case normND:
 					offset[0] = origin;
@@ -1472,7 +1470,7 @@ export const findAllPolygonsInGrid = (
 					break;
 			}
 
-			points.push(addPos(basePos, Tuple(...offset)));
+			points.push(addPos(basePos, offset));
 		};
 
 		addPointsToPolygon(points, first, gridType === 1);
@@ -1483,11 +1481,11 @@ export const findAllPolygonsInGrid = (
 			firstIter = false
 		) {
 			const [p1, p2] = (
-				offsets[hashTuple(curDir)] as [V2CardinalNorm, V2CardinalNorm]
+				offsets[curDir.join(',')] as [V2CardinalNorm, V2CardinalNorm]
 			)
 				.map((o) => addPos(next, o))
 				.map((p) => {
-					return isWithinBounds(p, v2zero, [columns, rows])
+					return isWithinBounds(p, V2.zero, [columns, rows])
 						? (grid[posToIndex(p, columns)] as number)
 						: 0;
 				}) as unknown as V2;
@@ -1586,7 +1584,7 @@ const fillShape = (
 
 	let next;
 	while ((next = queue.pop())) {
-		const hash = hashTuple(next);
+		const hash = next.join(',');
 		if (visited.includes(hash)) continue;
 
 		const index = posToIndex(next, stride);
@@ -1602,8 +1600,8 @@ const fillShape = (
 		if (y < rows - 1) queue.push([x, y + 1]);
 	}
 
-	const shapeCells = visited.map((v) =>
-		Tuple(...(v.split(',').map((c) => +c) as [number, number])),
+	const shapeCells = visited.map(
+		(v) => v.split(',').map((c) => +c) as [number, number],
 	);
 
 	const shapeBounds = shapeCells.reduce(
@@ -1661,7 +1659,7 @@ export class GridOutline {
 		this.polygons = findAllPolygonsInGrid(grid);
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: V2 = v2zero): void {
+	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
 		if (!this.show) return;
 
 		// Draw edges
@@ -1671,7 +1669,7 @@ export class GridOutline {
 				ctx.strokeStyle = this.outlineColor;
 				ctx.moveTo(
 					...subPos(
-						addPos(polygon.points[0] as V2, Tuple(0.5, 0.5)),
+						addPos(polygon.points[0] as V2, [0.5, 0.5]),
 						camera,
 					),
 				);
@@ -1749,7 +1747,7 @@ export class Tileset {
 		this.data[y * this.columns + x] = [tileX, tileY];
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera = v2zero): void {
+	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
 		const scale = 1;
 
 		const { image, separation, startX, startY, tileW, tileH } = this;

@@ -1,4 +1,4 @@
-import { v2zero } from 'canvas-lord';
+import { V2 } from 'canvas-lord';
 
 import { Inspector } from 'canvas-lord/inspector';
 
@@ -212,7 +212,7 @@ class Player {
 		}
 	}
 
-	render(ctx, camera = v2zero) {
+	render(ctx, camera = V2.zero) {
 		const flipped = this.facing === -1;
 		const scaleX = flipped ? -1 : 1;
 

@@ -12,8 +12,6 @@ import {
 	reduceBitFlags,
 	Scene,
 	Tileset,
-	Tuple,
-	v2zero,
 	addPos,
 	subPos,
 	dirND,

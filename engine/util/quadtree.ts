@@ -1,4 +1,4 @@
-import { Tuple, V2, V3, addPos, scalePos, subPos, posEqual } from './math.js';
+import { V2, V3, addPos, scalePos, subPos, posEqual } from './math.js';
 
 // TODO: capacity, aka when it splits
 

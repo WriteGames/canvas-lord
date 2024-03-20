@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-import { v2zero, Tuple, hashTuple, addPos, subPos, scalePos, } from './util/math.js';
+import { V2, addPos, subPos, scalePos, } from './util/math.js';
 import { Draw, drawable } from './util/draw.js';
 // TODO: only export these from math.js
-export { v2zero, v2one, Tuple, addPos, subPos, scalePos } from './util/math.js';
+export { V2, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
 export { Entity } from './util/entity.js';
@@ -21,7 +21,6 @@ const distance = (...dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d *
 const distanceSq = (...dimensions) => Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 const isDefined = (v) => Boolean(v);
 const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
-const compareTuple = (a, b) => hashTuple(a) === hashTuple(b);
 const indexToPos = (index, stride) => [
     index % stride,
     Math.floor(index / stride),
@@ -106,20 +105,17 @@ export const [dirLU, dirRU, dirLD, dirRD,] = [
     dirLN | dirNU, dirRN | dirNU,
     dirLN | dirND, dirRN | dirND,
 ];
-const createNorm = (norm) => {
-    return Tuple(...norm);
-};
 // prettier-ignore
 export const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] = [
-    Tuple(-1, -1),
-    Tuple(0, -1),
-    Tuple(1, -1),
-    Tuple(-1, 0),
-    Tuple(0, 0),
-    Tuple(1, 0),
-    Tuple(-1, 1),
-    Tuple(0, 1),
-    Tuple(1, 1),
+    [-1, -1], // as readonly [-1, -1],
+    [0, -1], // as readonly [0, -1],
+    [1, -1], // as readonly [1, -1],
+    [-1, 0], // as readonly [-1, 0],
+    [0, 0], // as readonly [0, 0],
+    [1, 0], // as readonly [1, 0],
+    [-1, 1], // as readonly [-1, 1],
+    [0, 1], // as readonly [0, 1],
+    [1, 1],
 ];
 const orthogonalNorms = [normRN, normNU, normLN, normND];
 const diagonalNorms = [normRU, normLU, normLD, normRD];
@@ -897,7 +893,7 @@ export class Grid {
             }
         }
     }
-    render(ctx, camera = v2zero) {
+    render(ctx, camera = V2.zero) {
         switch (this.renderMode) {
             case 0:
                 this.renderOutline(ctx, camera);
@@ -916,7 +912,7 @@ export class Grid {
         }
     }
 }
-// TODO(bret): Rewrite these to use tuples once those are implemented :)
+// TODO(bret): Rewrite these to use Vectors once those are implemented :)
 const rotateNormBy45Deg = (curDir, turns) => {
     const norms = cardinalNorms; // .flatMap(v => [v, v]);
     const index = cardinalNorms.indexOf(curDir);
@@ -940,10 +936,10 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
     const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
     const polygons = [];
     const offsets = {
-        [hashTuple(normNU)]: [normRU, normNU],
-        [hashTuple(normND)]: [normLD, normND],
-        [hashTuple(normRN)]: [normRD, normRN],
-        [hashTuple(normLN)]: [normLU, normLN],
+        [[normNU].join(',')]: [normRU, normNU],
+        [[normND].join(',')]: [normLD, normND],
+        [[normRN].join(',')]: [normRD, normRN],
+        [[normLN].join(',')]: [normLU, normLN],
     };
     const shapes = findAllShapesInGrid(grid, columns, rows);
     shapes.forEach((shape) => {
@@ -983,14 +979,14 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
                     offset[1] = origin;
                     break;
             }
-            points.push(addPos(basePos, Tuple(...offset)));
+            points.push(addPos(basePos, offset));
         };
         addPointsToPolygon(points, first, gridType === 1);
         for (let next = first, firstIter = true; firstIter || curDir !== normND || next !== first; firstIter = false) {
-            const [p1, p2] = offsets[hashTuple(curDir)]
+            const [p1, p2] = offsets[curDir.join(',')]
                 .map((o) => addPos(next, o))
                 .map((p) => {
-                return isWithinBounds(p, v2zero, [columns, rows])
+                return isWithinBounds(p, V2.zero, [columns, rows])
                     ? grid[posToIndex(p, columns)]
                     : 0;
             });
@@ -1039,7 +1035,7 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
     const visited = [];
     let next;
     while ((next = queue.pop())) {
-        const hash = hashTuple(next);
+        const hash = next.join(',');
         if (visited.includes(hash))
             continue;
         const index = posToIndex(next, stride);
@@ -1057,7 +1053,7 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
         if (y < rows - 1)
             queue.push([x, y + 1]);
     }
-    const shapeCells = visited.map((v) => Tuple(...v.split(',').map((c) => +c)));
+    const shapeCells = visited.map((v) => v.split(',').map((c) => +c));
     const shapeBounds = shapeCells.reduce((acc, cell) => {
         const [x, y] = cell;
         return {
@@ -1092,7 +1088,7 @@ export class GridOutline {
         this.grid = grid;
         this.polygons = findAllPolygonsInGrid(grid);
     }
-    render(ctx, camera = v2zero) {
+    render(ctx, camera = V2.zero) {
         if (!this.show)
             return;
         // Draw edges
@@ -1100,7 +1096,7 @@ export class GridOutline {
             this.polygons.forEach((polygon) => {
                 ctx.beginPath();
                 ctx.strokeStyle = this.outlineColor;
-                ctx.moveTo(...subPos(addPos(polygon.points[0], Tuple(0.5, 0.5)), camera));
+                ctx.moveTo(...subPos(addPos(polygon.points[0], [0.5, 0.5]), camera));
                 polygon.points
                     .slice(1)
                     .map((p) => subPos(p, camera))
@@ -1142,7 +1138,7 @@ export class Tileset {
         // TODO(bret): Make sure it's within the bounds
         this.data[y * this.columns + x] = [tileX, tileY];
     }
-    render(ctx, camera = v2zero) {
+    render(ctx, camera = V2.zero) {
         const scale = 1;
         const { image, separation, startX, startY, tileW, tileH } = this;
         const srcCols = Math.floor(this.image.width / tileW);

@@ -12,8 +12,7 @@ import {
 	reduceBitFlags,
 	Scene,
 	Tileset,
-	Tuple,
-	v2zero,
+	V2,
 	addPos,
 	subPos,
 	dirND,
@@ -193,7 +192,7 @@ class LineSegmentScene extends Scene {
 		this.square = shapes[shapes.length - 1];
 		this.innerSquare = shapes[shapes.length - 2];
 
-		this.windingPoint = v2zero;
+		this.windingPoint = V2.zero;
 		this.windingPointInsideShape = false;
 
 		this.points = shapes.flat();

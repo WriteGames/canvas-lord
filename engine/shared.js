@@ -12,8 +12,6 @@ import {
 	reduceBitFlags,
 	Scene,
 	Tileset,
-	Tuple,
-	v2zero,
 	addPos,
 	subPos,
 	dirND,
@@ -53,12 +51,12 @@ export const initTileset = (assetManager, grid) => {
 	setCloud3(-1, 2);
 
 	const filterWithinGridBounds = filterWithinBounds(
-		Tuple(0, 0),
-		Tuple(grid.columns, grid.rows),
+		[0, 0],
+		[grid.columns, grid.rows],
 	);
 	for (let y = 0; y < grid.rows; ++y) {
 		for (let x = 0; x < grid.columns; ++x) {
-			const pos = Tuple(x, y);
+			const pos = [x, y];
 
 			if (grid.getTile(...pos) === 0) continue;
 

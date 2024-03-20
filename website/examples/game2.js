@@ -1,4 +1,4 @@
-import { v2zero } from 'canvas-lord';
+import { V2 } from 'canvas-lord';
 
 import { initGamesBase, assetManager } from './base-game';
 
@@ -226,7 +226,7 @@ class Player {
 		}
 	}
 
-	render(ctx, camera = v2zero) {
+	render(ctx, camera = V2) {
 		const flipped = this.facing === -1;
 		const scaleX = flipped ? -1 : 1;
 
