@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-import { V2, addPos, subPos, scalePos, } from './util/math.js';
-import { Draw, drawable } from './util/draw.js';
+import { V2, addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, } from './util/math.js';
+import { Grid } from './util/grid.js';
 // TODO: only export these from math.js
 export { V2, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
 export { Entity } from './util/entity.js';
+export { Grid } from './util/grid.js';
 // NOTE: This should be able to infer the return type...
 Math.clamp = (val, min, max) => {
     if (val < min)
@@ -21,11 +22,6 @@ const distance = (...dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d *
 const distanceSq = (...dimensions) => Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 const isDefined = (v) => Boolean(v);
 const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
-const indexToPos = (index, stride) => [
-    index % stride,
-    Math.floor(index / stride),
-];
-const posToIndex = ([x, y], stride) => y * stride + x;
 export const mapByOffset = (offset) => {
     return (pos) => addPos(offset, pos);
 };
@@ -105,20 +101,30 @@ export const [dirLU, dirRU, dirLD, dirRD,] = [
     dirLN | dirNU, dirRN | dirNU,
     dirLN | dirND, dirRN | dirND,
 ];
-// prettier-ignore
-export const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] = [
-    [-1, -1], // as readonly [-1, -1],
-    [0, -1], // as readonly [0, -1],
-    [1, -1], // as readonly [1, -1],
-    [-1, 0], // as readonly [-1, 0],
-    [0, 0], // as readonly [0, 0],
-    [1, 0], // as readonly [1, 0],
-    [-1, 1], // as readonly [-1, 1],
-    [0, 1], // as readonly [0, 1],
-    [1, 1],
-];
-const orthogonalNorms = [normRN, normNU, normLN, normND];
-const diagonalNorms = [normRU, normLU, normLD, normRD];
+let nnn;
+{
+    // prettier-ignore
+    const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] = [
+        [-1, -1],
+        [0, -1],
+        [1, -1],
+        [-1, 0],
+        [0, 0],
+        [1, 0],
+        [-1, 1],
+        [0, 1],
+        [1, 1],
+    ];
+    // prettier-ignore
+    nnn = {
+        LU: normLU, NU: normNU, RU: normRU,
+        LN: normLN, NN: normNN, RN: normRN,
+        LD: normLD, ND: normND, RD: normRD,
+    };
+}
+export const norm = nnn;
+const orthogonalNorms = [norm.RN, norm.NU, norm.LN, norm.ND];
+const diagonalNorms = [norm.RU, norm.LU, norm.LD, norm.RD];
 export const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
 // Starts right, goes counter-clockwise
 export const reduceBitFlags = (acc, val) => acc | val;
@@ -134,16 +140,36 @@ const cardinalNormStrs = [
 ];
 const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str) => CARDINAL_NORM[str];
-export const normToBitFlagMap = new Map();
+class V2Map {
+    #map = new Map();
+    constructor() {
+        this.#map = new Map();
+    }
+    delete(key) {
+        // TODO: remove `as V2`
+        return this.#map.delete(hashPos(key));
+    }
+    get(key) {
+        return this.#map.get(hashPos(key));
+    }
+    has(key) {
+        return this.#map.has(hashPos(key));
+    }
+    set(key, value) {
+        this.#map.set(hashPos(key), value);
+        return this;
+    }
+}
+export const normToBitFlagMap = new V2Map();
 [
-    [normRN, CARDINAL_NORM.RN], // 1
-    [normRU, CARDINAL_NORM.RU], // 2
-    [normNU, CARDINAL_NORM.NU], // 4
-    [normLU, CARDINAL_NORM.LU], // 8
-    [normLN, CARDINAL_NORM.LN], // 16
-    [normLD, CARDINAL_NORM.LD], // 32
-    [normND, CARDINAL_NORM.ND], // 64
-    [normRD, CARDINAL_NORM.RD],
+    [norm.RN, CARDINAL_NORM.RN], // 1
+    [norm.RU, CARDINAL_NORM.RU], // 2
+    [norm.NU, CARDINAL_NORM.NU], // 4
+    [norm.LU, CARDINAL_NORM.LU], // 8
+    [norm.LN, CARDINAL_NORM.LN], // 16
+    [norm.LD, CARDINAL_NORM.LD], // 32
+    [norm.ND, CARDINAL_NORM.ND], // 64
+    [norm.RD, CARDINAL_NORM.RD],
 ].forEach(([dir, bitFlag]) => normToBitFlagMap.set(dir, bitFlag));
 const orTogetherCardinalDirs = (...dirs) => dirs.map(mapStrToCardinalDirBitFlag).reduce(reduceBitFlags, 0);
 export const globalSetTile = (tileset, x, y, bitFlag) => {
@@ -772,146 +798,6 @@ export class Input {
         }, {});
     }
 }
-const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
-    ? new OffscreenCanvas(1, 1)
-    : document.createElement('canvas');
-const _pixelCtx = typeof OffscreenCanvas !== 'undefined'
-    ? pixelCanvas.getContext('2d')
-    : pixelCanvas.getContext('2d');
-if (!_pixelCtx) {
-    throw Error('pixelCtx failed to create');
-}
-const pixelCtx = _pixelCtx;
-export class Grid {
-    constructor(width, height, tileW, tileH) {
-        this.width = width;
-        this.height = height;
-        this.tileW = tileW;
-        this.tileH = tileH;
-        this.columns = Math.ceil(width / tileW);
-        this.rows = Math.ceil(height / tileH);
-        const size = this.columns * this.rows;
-        this.color = 'rgba(255, 0, 0, 0.6)';
-        this.renderMode = 2;
-        this.data = Array.from({ length: size }, (v) => 0);
-    }
-    static fromBitmap(assetManager, src, tileW, tileH) {
-        const image = assetManager.images.get(src);
-        if (!image) {
-            throw new Error('image is not valid');
-        }
-        const width = image.width * tileW;
-        const height = image.height * tileH;
-        const stride = image.width;
-        const grid = new Grid(width, height, tileW, tileH);
-        grid.forEach((_, [x, y]) => {
-            pixelCtx.drawImage(image, -x, -y);
-            const { data } = pixelCtx.getImageData(0, 0, 1, 1);
-            if (data[0] === 0) {
-                grid.setTile(x, y, 1);
-            }
-        });
-        return grid;
-    }
-    static fromBinary(data, tileW, tileH) {
-        const [width, height, ...gridData] = data;
-        const grid = new Grid(width * tileW, height * tileH, tileW, tileH);
-        const stride = grid.columns;
-        gridData
-            .flatMap((b) => b.toString(2).padStart(32, '0').split(''))
-            .forEach((v, i) => {
-            grid.setTile(...indexToPos(i, stride), +v);
-        });
-        return grid;
-    }
-    forEach(callback) {
-        const stride = this.columns;
-        this.data
-            .map((val, i) => [val, indexToPos(i, stride)])
-            .forEach((args) => callback(...args));
-    }
-    inBounds(x, y) {
-        return x >= 0 && y >= 0 && x < this.columns && y < this.rows;
-    }
-    setTile(x, y, value) {
-        if (!this.inBounds(x, y))
-            return;
-        this.data[y * this.columns + x] = value;
-    }
-    getTile(x, y) {
-        if (!this.inBounds(x, y))
-            return 0;
-        return this.data[y * this.columns + x];
-    }
-    renderOutline(ctx, camera) {
-        const stride = this.columns;
-        const width = this.tileW;
-        const height = this.tileH;
-        const [cameraX, cameraY] = camera;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 1;
-        for (let y = 0; y < this.rows; ++y) {
-            for (let x = 0; x < this.columns; ++x) {
-                if (this.data[y * stride + x] === 1) {
-                    const x1 = x * this.tileW + 0.5 - cameraX;
-                    const y1 = y * this.tileH + 0.5 - cameraY;
-                    const x2 = x1 + width - 1;
-                    const y2 = y1 + height - 1;
-                    if (!this.getTile(x - 1, y)) {
-                        Draw.line(ctx, drawable, x1, y1, x1, y2);
-                    }
-                    if (!this.getTile(x + 1, y)) {
-                        Draw.line(ctx, drawable, x2, y1, x2, y2);
-                    }
-                    if (!this.getTile(x, y - 1)) {
-                        Draw.line(ctx, drawable, x1, y1, x2, y1);
-                    }
-                    if (!this.getTile(x, y + 1)) {
-                        Draw.line(ctx, drawable, x1, y2, x2, y2);
-                    }
-                }
-            }
-        }
-    }
-    renderEachCell(ctx, camera, fill = false) {
-        const stride = this.columns;
-        const width = this.tileW - +!fill;
-        const height = this.tileH - +!fill;
-        const [cameraX, cameraY] = camera;
-        if (fill)
-            ctx.fillStyle = this.color;
-        else
-            ctx.strokeStyle = this.color;
-        ctx.lineWidth = 1;
-        const drawRect = (...args) => fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
-        const offset = fill ? 0 : 0.5;
-        for (let y = 0; y < this.rows; ++y) {
-            for (let x = 0; x < this.columns; ++x) {
-                if (this.data[y * stride + x] === 1) {
-                    drawRect(x * this.tileW + offset - cameraX, y * this.tileH + offset - cameraY, width, height);
-                }
-            }
-        }
-    }
-    render(ctx, camera = V2.zero) {
-        switch (this.renderMode) {
-            case 0:
-                this.renderOutline(ctx, camera);
-                break;
-            case 1:
-                this.renderEachCell(ctx, camera);
-                break;
-            case 2: {
-                const temp = this.color;
-                this.color = 'rgba(255, 0, 0, 0.3)';
-                this.renderEachCell(ctx, camera, true);
-                this.color = temp;
-                this.renderEachCell(ctx, camera, false);
-                break;
-            }
-        }
-    }
-}
 // TODO(bret): Rewrite these to use Vectors once those are implemented :)
 const rotateNormBy45Deg = (curDir, turns) => {
     const norms = cardinalNorms; // .flatMap(v => [v, v]);
@@ -936,10 +822,10 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
     const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
     const polygons = [];
     const offsets = {
-        [[normNU].join(',')]: [normRU, normNU],
-        [[normND].join(',')]: [normLD, normND],
-        [[normRN].join(',')]: [normRD, normRN],
-        [[normLN].join(',')]: [normLU, normLN],
+        [hashPos(norm.NU)]: [norm.RU, norm.NU],
+        [hashPos(norm.ND)]: [norm.LD, norm.ND],
+        [hashPos(norm.RN)]: [norm.RD, norm.RN],
+        [hashPos(norm.LN)]: [norm.LU, norm.LN],
     };
     const shapes = findAllShapesInGrid(grid, columns, rows);
     shapes.forEach((shape) => {
@@ -947,7 +833,7 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
         if (first === undefined)
             return;
         const { gridType } = shape;
-        let curDir = normND;
+        let curDir = norm.ND;
         let lastDir = curDir;
         const points = [];
         const polygon = { points };
@@ -962,19 +848,19 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
                 : [origin, origin];
             const offset = [0, 0];
             switch (curDir) {
-                case normND:
+                case norm.ND:
                     offset[0] = origin;
                     offset[1] = lastY;
                     break;
-                case normNU:
+                case norm.NU:
                     offset[0] = m1 - origin;
                     offset[1] = lastY;
                     break;
-                case normRN:
+                case norm.RN:
                     offset[0] = lastX;
                     offset[1] = m1 - origin;
                     break;
-                case normLN:
+                case norm.LN:
                     offset[0] = lastX;
                     offset[1] = origin;
                     break;
@@ -982,8 +868,8 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
             points.push(addPos(basePos, offset));
         };
         addPointsToPolygon(points, first, gridType === 1);
-        for (let next = first, firstIter = true; firstIter || curDir !== normND || next !== first; firstIter = false) {
-            const [p1, p2] = offsets[curDir.join(',')]
+        for (let next = first, firstIter = true; firstIter || !posEqual(curDir, norm.ND) || !posEqual(next, first); firstIter = false) {
+            const [p1, p2] = offsets[hashPos(curDir)]
                 .map((o) => addPos(next, o))
                 .map((p) => {
                 return isWithinBounds(p, V2.zero, [columns, rows])
@@ -1035,7 +921,7 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
     const visited = [];
     let next;
     while ((next = queue.pop())) {
-        const hash = next.join(',');
+        const hash = hashPos(next);
         if (visited.includes(hash))
             continue;
         const index = posToIndex(next, stride);

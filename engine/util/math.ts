@@ -21,10 +21,19 @@ export const V2 = Object.defineProperties(
 	one: V2;
 };
 
-type FuncMapVector = <A extends Vector, B extends Vector>(a: A, b: B) => A;
+type FuncMapVector = <
+	T extends Vector | Readonly<Vector>,
+	A extends T,
+	B extends T,
+>(
+	a: A,
+	b: B,
+) => A;
 type FuncMapVectorByScalar = <P extends Vector>(p: P, s: number) => P;
 
 type FuncCompare<T extends any> = (a: T, b: T) => boolean;
+
+export const hashPos = (pos: Vector | Readonly<Vector>) => pos.join(',');
 
 export const addPos: FuncMapVector = (a, b) => {
 	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
@@ -42,9 +51,19 @@ export const scalePos: FuncMapVectorByScalar = (p, s) => {
 	return p.map((v) => v * s) as unknown as typeof p;
 };
 
-export const posEqual = (a: Vector, b: Vector): boolean =>
+export const posEqual = (
+	a: Vector | Readonly<Vector>,
+	b: Vector | Readonly<Vector>,
+): boolean =>
 	a.length === b.length && a.every((v, i) => equal(v, b[i] as number));
 
 export const equal: FuncCompare<number> = (a, b) => {
 	return Math.abs(a - b) < Number.EPSILON;
 };
+
+export const indexToPos = (index: number, stride: number): V2 => [
+	index % stride,
+	Math.floor(index / stride),
+];
+export const posToIndex = ([x, y]: V2, stride: number): number =>
+	y * stride + x;

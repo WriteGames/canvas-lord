@@ -8,6 +8,7 @@ export const V2 = Object.defineProperties({}, {
         writable: false,
     },
 });
+export const hashPos = (pos) => pos.join(',');
 export const addPos = (a, b) => {
     return a.map((v, i) => v + (b[i] ?? 0));
 };
@@ -24,4 +25,9 @@ export const posEqual = (a, b) => a.length === b.length && a.every((v, i) => equ
 export const equal = (a, b) => {
     return Math.abs(a - b) < Number.EPSILON;
 };
+export const indexToPos = (index, stride) => [
+    index % stride,
+    Math.floor(index / stride),
+];
+export const posToIndex = ([x, y], stride) => y * stride + x;
 //# sourceMappingURL=math.js.map

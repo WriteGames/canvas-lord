@@ -3,7 +3,6 @@ import {
 	cardinalNorms,
 	filterWithinBounds,
 	Game,
-	globalSetTile,
 	Grid,
 	GridOutline,
 	mapByOffset,
@@ -54,6 +53,7 @@ import { Inspector } from './bin/inspector.js';
 
 /* eslint-disable no-undef */
 const initGrid = () => {
+	return;
 	const grid = new Grid(320, 180, 16, 16);
 
 	for (let y = 1; y < grid.rows; ++y) {

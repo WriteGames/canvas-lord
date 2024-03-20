@@ -8,20 +8,25 @@ import {
 	addPos,
 	subPos,
 	scalePos,
+	posToIndex,
+	indexToPos,
+	hashPos,
+	posEqual,
 } from './util/math.js';
 
 import { CSSColor } from './util/types.js';
 
-import { Draw, drawable } from './util/draw.js';
 import { type Scene } from './util/scene.js';
 import { type Camera } from './util/camera.js';
 import { type Entity } from './util/entity.js';
+import { Grid } from './util/grid.js';
 
 // TODO: only export these from math.js
 export { V2, type Vector, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
 export { Entity } from './util/entity.js';
+export { Grid } from './util/grid.js';
 
 declare global {
 	interface HTMLCanvasElement {
@@ -80,12 +85,6 @@ const interlaceArrays = <T, U>(
 	a: Readonly<T[]>,
 	b: Readonly<U[]>,
 ): Array<T | U> => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
-
-const indexToPos = (index: number, stride: number): V2 => [
-	index % stride,
-	Math.floor(index / stride),
-];
-const posToIndex = ([x, y]: V2, stride: number): number => y * stride + x;
 
 export const mapByOffset = <V extends Vector>(offset: V): ((pos: V) => V) => {
 	return (pos: V): V => addPos(offset, pos);
@@ -212,29 +211,42 @@ export const [
 	dirLN | dirND, dirRN | dirND,
 ];
 
-// prettier-ignore
-export const [
-	normLU, normNU, normRU,
-	normLN, normNN, normRN,
-	normLD, normND, normRD,
-] = [
-		[-1, -1] as V2,// as readonly [-1, -1],
-		[0, -1] as V2,// as readonly [0, -1],
-		[1, -1] as V2,// as readonly [1, -1],
+let nnn;
+{
+	// prettier-ignore
+	const [
+		normLU, normNU, normRU,
+		normLN, normNN, normRN,
+		normLD, normND, normRD,
+	] = [
+		[-1, -1] as readonly [-1, -1],
+		[0, -1] as readonly [0, -1],
+		[1, -1] as readonly [1, -1],
 
-		[-1, 0] as V2,// as readonly [-1, 0],
-		[0, 0] as V2,// as readonly [0, 0],
-		[1, 0] as V2,// as readonly [1, 0],
+		[-1, 0] as readonly [-1, 0],
+		[0, 0] as readonly [0, 0],
+		[1, 0] as readonly [1, 0],
 
-		[-1, 1] as V2,// as readonly [-1, 1],
-		[0, 1] as V2,// as readonly [0, 1],
-		[1, 1] as V2,// as readonly [1, 1],
+		[-1, 1] as readonly [-1, 1],
+		[0, 1] as readonly [0, 1],
+		[1, 1] as readonly [1, 1],
 	];
 
-const orthogonalNorms = [normRN, normNU, normLN, normND] as const;
-const diagonalNorms = [normRU, normLU, normLD, normRD] as const;
+	// prettier-ignore
+	nnn = {
+		LU: normLU, NU: normNU, RU: normRU,
+		LN: normLN, NN: normNN, RN: normRN,
+		LD: normLD, ND: normND, RD: normRD,
+	}
+}
+
+export const norm = nnn;
+
+const orthogonalNorms = [norm.RN, norm.NU, norm.LN, norm.ND] as const;
+const diagonalNorms = [norm.RU, norm.LU, norm.LD, norm.RD] as const;
 export const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
 
+// TODO: also allow for non-readonly versions :)
 type V2OrthogonalNorm = (typeof orthogonalNorms)[number];
 type V2DiagonalNorm = (typeof diagonalNorms)[number];
 type V2CardinalNorm = V2OrthogonalNorm | V2DiagonalNorm;
@@ -256,16 +268,38 @@ const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str: CardinalNormStr): number =>
 	CARDINAL_NORM[str];
 
-export const normToBitFlagMap = new Map<V2CardinalNorm, number>();
+class V2Map<K extends V2 | Readonly<V2>, V> {
+	#map = new Map<string, V>();
+
+	constructor() {
+		this.#map = new Map();
+	}
+	delete(key: K): boolean {
+		// TODO: remove `as V2`
+		return this.#map.delete(hashPos(key));
+	}
+	get(key: K): V | undefined {
+		return this.#map.get(hashPos(key));
+	}
+	has(key: K): boolean {
+		return this.#map.has(hashPos(key));
+	}
+	set(key: K, value: V): this {
+		this.#map.set(hashPos(key), value);
+		return this;
+	}
+}
+
+export const normToBitFlagMap = new V2Map<V2CardinalNorm, number>();
 [
-	[normRN, CARDINAL_NORM.RN] as const, // 1
-	[normRU, CARDINAL_NORM.RU] as const, // 2
-	[normNU, CARDINAL_NORM.NU] as const, // 4
-	[normLU, CARDINAL_NORM.LU] as const, // 8
-	[normLN, CARDINAL_NORM.LN] as const, // 16
-	[normLD, CARDINAL_NORM.LD] as const, // 32
-	[normND, CARDINAL_NORM.ND] as const, // 64
-	[normRD, CARDINAL_NORM.RD] as const, // 128
+	[norm.RN, CARDINAL_NORM.RN] as const, // 1
+	[norm.RU, CARDINAL_NORM.RU] as const, // 2
+	[norm.NU, CARDINAL_NORM.NU] as const, // 4
+	[norm.LU, CARDINAL_NORM.LU] as const, // 8
+	[norm.LN, CARDINAL_NORM.LN] as const, // 16
+	[norm.LD, CARDINAL_NORM.LD] as const, // 32
+	[norm.ND, CARDINAL_NORM.ND] as const, // 64
+	[norm.RD, CARDINAL_NORM.RD] as const, // 128
 ].forEach(([dir, bitFlag]) => normToBitFlagMap.set(dir, bitFlag));
 
 const orTogetherCardinalDirs = (...dirs: CardinalNormStr[]): number =>
@@ -1165,204 +1199,6 @@ export interface IRenderable {
 
 export type Renderable = IRenderable;
 
-const pixelCanvas =
-	typeof OffscreenCanvas !== 'undefined'
-		? new OffscreenCanvas(1, 1)
-		: document.createElement('canvas');
-const _pixelCtx =
-	typeof OffscreenCanvas !== 'undefined'
-		? (pixelCanvas as OffscreenCanvas).getContext('2d')
-		: (pixelCanvas as HTMLCanvasElement).getContext('2d');
-if (!_pixelCtx) {
-	throw Error('pixelCtx failed to create');
-}
-const pixelCtx = _pixelCtx;
-
-export interface Grid {
-	width: number;
-	height: number;
-	tileW: number;
-	tileH: number;
-	columns: number;
-	rows: number;
-	color: CSSColor;
-	renderMode: 0 | 1 | 2;
-	data: number[];
-}
-
-export class Grid {
-	constructor(width: number, height: number, tileW: number, tileH: number) {
-		this.width = width;
-		this.height = height;
-		this.tileW = tileW;
-		this.tileH = tileH;
-		this.columns = Math.ceil(width / tileW);
-		this.rows = Math.ceil(height / tileH);
-
-		const size = this.columns * this.rows;
-
-		this.color = 'rgba(255, 0, 0, 0.6)';
-		this.renderMode = 2;
-		this.data = Array.from({ length: size }, (v) => 0);
-	}
-
-	static fromBitmap(
-		assetManager: AssetManager,
-		src: string,
-		tileW: number,
-		tileH: number,
-	): Grid {
-		const image = assetManager.images.get(src);
-		if (!image) {
-			throw new Error('image is not valid');
-		}
-
-		const width = image.width * tileW;
-		const height = image.height * tileH;
-		const stride = image.width;
-
-		const grid = new Grid(width, height, tileW, tileH);
-		grid.forEach((_, [x, y]) => {
-			pixelCtx.drawImage(image, -x, -y);
-			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
-			if (data[0] === 0) {
-				grid.setTile(x, y, 1);
-			}
-		});
-
-		return grid;
-	}
-
-	static fromBinary(
-		data: [number, number, ...number[]],
-		tileW: number,
-		tileH: number,
-	): Grid {
-		const [width, height, ...gridData] = data;
-
-		const grid = new Grid(width * tileW, height * tileH, tileW, tileH);
-
-		const stride = grid.columns;
-		gridData
-			.flatMap((b) => b.toString(2).padStart(32, '0').split(''))
-			.forEach((v, i) => {
-				grid.setTile(...indexToPos(i, stride), +v);
-			});
-
-		return grid;
-	}
-
-	forEach(callback: (val: number, pos: V2) => void): void {
-		const stride = this.columns;
-		this.data
-			.map<[number, V2]>((val, i) => [val, indexToPos(i, stride)])
-			.forEach((args) => callback(...args));
-	}
-
-	inBounds(x: number, y: number): boolean {
-		return x >= 0 && y >= 0 && x < this.columns && y < this.rows;
-	}
-
-	setTile(x: number, y: number, value: number): void {
-		if (!this.inBounds(x, y)) return;
-		this.data[y * this.columns + x] = value;
-	}
-
-	getTile(x: number, y: number): number {
-		if (!this.inBounds(x, y)) return 0;
-		return this.data[y * this.columns + x] as number;
-	}
-
-	renderOutline(ctx: CanvasRenderingContext2D, camera: V2): void {
-		const stride = this.columns;
-		const width = this.tileW;
-		const height = this.tileH;
-
-		const [cameraX, cameraY] = camera;
-
-		ctx.strokeStyle = this.color;
-		ctx.lineWidth = 1;
-
-		for (let y = 0; y < this.rows; ++y) {
-			for (let x = 0; x < this.columns; ++x) {
-				if (this.data[y * stride + x] === 1) {
-					const x1 = x * this.tileW + 0.5 - cameraX;
-					const y1 = y * this.tileH + 0.5 - cameraY;
-					const x2 = x1 + width - 1;
-					const y2 = y1 + height - 1;
-					if (!this.getTile(x - 1, y)) {
-						Draw.line(ctx, drawable, x1, y1, x1, y2);
-					}
-					if (!this.getTile(x + 1, y)) {
-						Draw.line(ctx, drawable, x2, y1, x2, y2);
-					}
-					if (!this.getTile(x, y - 1)) {
-						Draw.line(ctx, drawable, x1, y1, x2, y1);
-					}
-					if (!this.getTile(x, y + 1)) {
-						Draw.line(ctx, drawable, x1, y2, x2, y2);
-					}
-				}
-			}
-		}
-	}
-
-	renderEachCell(
-		ctx: CanvasRenderingContext2D,
-		camera: V2,
-		fill = false,
-	): void {
-		const stride = this.columns;
-		const width = this.tileW - +!fill;
-		const height = this.tileH - +!fill;
-
-		const [cameraX, cameraY] = camera;
-
-		if (fill) ctx.fillStyle = this.color;
-		else ctx.strokeStyle = this.color;
-		ctx.lineWidth = 1;
-
-		const drawRect = (...args: Parameters<typeof ctx.fillRect>): void =>
-			fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
-
-		const offset = fill ? 0 : 0.5;
-
-		for (let y = 0; y < this.rows; ++y) {
-			for (let x = 0; x < this.columns; ++x) {
-				if (this.data[y * stride + x] === 1) {
-					drawRect(
-						x * this.tileW + offset - cameraX,
-						y * this.tileH + offset - cameraY,
-						width,
-						height,
-					);
-				}
-			}
-		}
-	}
-
-	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
-		switch (this.renderMode) {
-			case 0:
-				this.renderOutline(ctx, camera);
-				break;
-
-			case 1:
-				this.renderEachCell(ctx, camera);
-				break;
-
-			case 2: {
-				const temp = this.color;
-				this.color = 'rgba(255, 0, 0, 0.3)';
-				this.renderEachCell(ctx, camera, true);
-				this.color = temp;
-				this.renderEachCell(ctx, camera, false);
-				break;
-			}
-		}
-	}
-}
-
 // TODO(bret): Rewrite these to use Vectors once those are implemented :)
 const rotateNormBy45Deg = (
 	curDir: V2CardinalNorm,
@@ -1413,10 +1249,10 @@ export const findAllPolygonsInGrid = (
 	const polygons: Polygon[] = [];
 
 	const offsets = {
-		[[normNU].join(',')]: [normRU, normNU],
-		[[normND].join(',')]: [normLD, normND],
-		[[normRN].join(',')]: [normRD, normRN],
-		[[normLN].join(',')]: [normLU, normLN],
+		[hashPos(norm.NU)]: [norm.RU, norm.NU],
+		[hashPos(norm.ND)]: [norm.LD, norm.ND],
+		[hashPos(norm.RN)]: [norm.RD, norm.RN],
+		[hashPos(norm.LN)]: [norm.LU, norm.LN],
 	} as const;
 
 	const shapes = findAllShapesInGrid(grid, columns, rows);
@@ -1426,7 +1262,7 @@ export const findAllPolygonsInGrid = (
 
 		const { gridType } = shape;
 
-		let curDir = normND as V2OrthogonalNorm;
+		let curDir = norm.ND as V2OrthogonalNorm;
 		let lastDir = curDir;
 
 		const points: Path = [];
@@ -1449,22 +1285,22 @@ export const findAllPolygonsInGrid = (
 
 			const offset: V2 = [0, 0];
 			switch (curDir) {
-				case normND:
+				case norm.ND:
 					offset[0] = origin;
 					offset[1] = lastY;
 					break;
 
-				case normNU:
+				case norm.NU:
 					offset[0] = m1 - origin;
 					offset[1] = lastY;
 					break;
 
-				case normRN:
+				case norm.RN:
 					offset[0] = lastX;
 					offset[1] = m1 - origin;
 					break;
 
-				case normLN:
+				case norm.LN:
 					offset[0] = lastX;
 					offset[1] = origin;
 					break;
@@ -1477,11 +1313,11 @@ export const findAllPolygonsInGrid = (
 
 		for (
 			let next = first, firstIter = true;
-			firstIter || curDir !== normND || next !== first;
+			firstIter || !posEqual(curDir, norm.ND) || !posEqual(next, first);
 			firstIter = false
 		) {
 			const [p1, p2] = (
-				offsets[curDir.join(',')] as [V2CardinalNorm, V2CardinalNorm]
+				offsets[hashPos(curDir)] as [V2CardinalNorm, V2CardinalNorm]
 			)
 				.map((o) => addPos(next, o))
 				.map((p) => {
@@ -1584,7 +1420,7 @@ const fillShape = (
 
 	let next;
 	while ((next = queue.pop())) {
-		const hash = next.join(',');
+		const hash = hashPos(next);
 		if (visited.includes(hash)) continue;
 
 		const index = posToIndex(next, stride);
