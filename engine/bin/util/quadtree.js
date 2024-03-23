@@ -53,6 +53,7 @@ export class QuadtreeNode {
             throw new Error('cannot split a non-leaf');
         }
         const displacedChildren = this.children;
+        this.totalChildrenCount -= displacedChildren.length;
         this.type = 'node';
         this.children = Array.from({ length: 4 }, (_, i) => {
             const pointsX = [this.posA[0], this.midPoint[0], this.posB[0]];
@@ -65,10 +66,8 @@ export class QuadtreeNode {
             node.setParent(this);
             return node;
         });
+        this.recomputeCounts();
         displacedChildren.forEach((c) => this.addChild(c));
-        if (this.parent) {
-            this.parent.quadChildrenCount -= displacedChildren.length;
-        }
     }
     combine() {
         if (isQuadtreeLeaf(this)) {
@@ -81,10 +80,8 @@ export class QuadtreeNode {
             }
             return quad.children;
         });
-        this.quadChildrenCount -= this.children.length;
-        if (this.parent) {
-            this.parent.quadChildrenCount += this.children.length;
-        }
+        this.quadChildrenCount = 0;
+        this.parent?.recomputeCounts();
     }
     expand() {
         const newRangeX = scalePos(this.rangeX, 2);
@@ -136,6 +133,27 @@ export class QuadtreeNode {
             return false;
         return node.children.includes(child);
     }
+    addUniqueChild(child) {
+        if (this.hasChild(child))
+            return;
+        this.addChild(child);
+    }
+    recomputeCounts() {
+        if (this.type === 'leaf') {
+            throw new Error('only call this for leaf nodes');
+        }
+        const { children } = this;
+        this.quadChildrenCount = children
+            .filter((c) => c.type === 'leaf')
+            .reduce((acc, c) => acc + c.totalChildrenCount, 0);
+        const { totalChildrenCount } = this;
+        this.totalChildrenCount = children.reduce((acc, c) => acc + c.totalChildrenCount, 0);
+        if (totalChildrenCount === this.totalChildrenCount)
+            return;
+        if (this.parent) {
+            this.parent.recomputeCounts();
+        }
+    }
     addChild(child) {
         // TODO: rework this to make sure that we don't ever have an infinitely expanding node
         let node = this.findChildNode(child);
@@ -157,14 +175,8 @@ export class QuadtreeNode {
             return;
         // add child
         node.children.push(child);
-        if (node.parent) {
-            ++node.parent.quadChildrenCount;
-        }
-        let addNode = node;
-        while (addNode) {
-            ++addNode.totalChildrenCount;
-            addNode = addNode.parent;
-        }
+        node.totalChildrenCount = node.children.length;
+        node.parent?.recomputeCounts();
         // split node if ready
         if (node.children.length > node.leafThreshold) {
             node.split();
@@ -176,15 +188,14 @@ export class QuadtreeNode {
             throw new Error('child does not exist in this tree');
         }
         const children = node.children;
+        if (!children.includes(child))
+            return;
+        const before = children.length;
         arrayRemove(children, child);
-        let removeNode = node;
-        while (removeNode) {
-            --removeNode.totalChildrenCount;
-            removeNode = removeNode.parent;
-        }
+        node.totalChildrenCount = node.children.length;
+        node.parent?.recomputeCounts();
         if (node.parent) {
             const parentQuads = node.parent.children;
-            --node.parent.quadChildrenCount;
             const isEligibleToCombine = parentQuads.every((quad) => {
                 return quad.type === 'leaf';
             });

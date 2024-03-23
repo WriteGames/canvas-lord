@@ -116,6 +116,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		}
 
 		const displacedChildren = (this as QuadtreeExternalNode<T>).children;
+		this.totalChildrenCount -= displacedChildren.length;
 
 		this.type = 'node';
 		this.children = Array.from({ length: 4 }, (_, i) => {
@@ -138,10 +139,9 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 			return node;
 		}) as Quadrants<T>;
 
+		this.recomputeCounts();
+
 		displacedChildren.forEach((c) => this.addChild(c));
-		if (this.parent) {
-			this.parent.quadChildrenCount -= displacedChildren.length;
-		}
 	}
 
 	combine() {
@@ -158,10 +158,8 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 				return quad.children;
 			},
 		);
-		this.quadChildrenCount -= this.children.length;
-		if (this.parent) {
-			this.parent.quadChildrenCount += this.children.length;
-		}
+		this.quadChildrenCount = 0;
+		this.parent?.recomputeCounts();
 	}
 
 	expand() {
@@ -228,6 +226,35 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		return node.children.includes(child);
 	}
 
+	addUniqueChild(child: T) {
+		if (this.hasChild(child)) return;
+		this.addChild(child);
+	}
+
+	recomputeCounts() {
+		if (this.type === 'leaf') {
+			throw new Error('only call this for leaf nodes');
+		}
+
+		const { children } = this as QuadtreeInternalNode<T>;
+
+		this.quadChildrenCount = children
+			.filter((c) => c.type === 'leaf')
+			.reduce((acc, c) => acc + c.totalChildrenCount, 0);
+
+		const { totalChildrenCount } = this;
+		this.totalChildrenCount = children.reduce(
+			(acc, c) => acc + c.totalChildrenCount,
+			0,
+		);
+
+		if (totalChildrenCount === this.totalChildrenCount) return;
+
+		if (this.parent) {
+			this.parent.recomputeCounts();
+		}
+	}
+
 	addChild(child: T) {
 		// TODO: rework this to make sure that we don't ever have an infinitely expanding node
 		let node = this.findChildNode(child);
@@ -251,15 +278,8 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 
 		// add child
 		node.children.push(child);
-		if (node.parent) {
-			++node.parent.quadChildrenCount;
-		}
-
-		let addNode: QuadtreeNode<T> | null = node;
-		while (addNode) {
-			++addNode.totalChildrenCount;
-			addNode = addNode.parent;
-		}
+		node.totalChildrenCount = node.children.length;
+		node.parent?.recomputeCounts();
 
 		// split node if ready
 		if (node.children.length > node.leafThreshold) {
@@ -274,17 +294,16 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		}
 
 		const children = node.children;
+		if (!children.includes(child)) return;
+
+		const before = children.length;
 		arrayRemove(children, child);
 
-		let removeNode: QuadtreeNode<T> | null = node;
-		while (removeNode) {
-			--removeNode.totalChildrenCount;
-			removeNode = removeNode.parent;
-		}
+		node.totalChildrenCount = node.children.length;
+		node.parent?.recomputeCounts();
 
 		if (node.parent) {
 			const parentQuads = node.parent.children;
-			--node.parent.quadChildrenCount;
 
 			const isEligibleToCombine = parentQuads.every((quad) => {
 				return quad.type === 'leaf';
