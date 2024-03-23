@@ -139,9 +139,43 @@ export class Scene {
 		});
 	}
 
-	postUpdate(input: Input): void {}
+	removeEntity(entity: Entity): Entity {
+		this.entities.removeQueue.push(entity);
+		return entity;
+	}
+
+	#removeEntitiesFromScene(): void {
+		const oldEntities = this.entities.removeQueue.splice(0);
+		oldEntities.forEach((e) => {
+			const index = this.entities.inScene.indexOf(e);
+			this.entities.inScene.splice(index, 1);
+		});
+	}
+
+	removeRenderable(renderable: Renderable): Renderable {
+		this.renderables.removeQueue.push(renderable);
+		return renderable;
+	}
+
+	#removeRenderablesFromScene(): void {
+		const oldRenderables = this.renderables.removeQueue.splice(0);
+		oldRenderables.forEach((r) => {
+			const index = this.renderables.inScene.indexOf(r);
+			this.renderables.inScene.splice(index, 1);
+		});
+	}
+
+	postUpdate(input: Input): void {
+		this.#removeEntitiesFromScene();
+		this.#removeRenderablesFromScene();
+	}
 
 	render(gameCtx: CanvasRenderingContext2D): void {
+		// TODO: this should maybe be in pre-render?
+		this.renderables.inScene.sort(
+			(a, b) => (b.depth ?? 0) - (a.depth ?? 0),
+		);
+
 		const ctx = this.ctx ?? gameCtx;
 		const { canvas } = ctx;
 		if (this.backgroundColor) {
@@ -165,11 +199,11 @@ export class Scene {
 				const { render } = system;
 				if (!render) return;
 
-				const entities = this.entities.inScene.filter((e) =>
-					Boolean(e.component?.(component)),
+				const entities = this.renderables.inScene.filter((e) =>
+					Boolean((e as Entity).component?.(component)),
 				);
 				entities.forEach((entity) => {
-					render(entity, ctx, this.camera);
+					render(entity as Entity, ctx, this.camera);
 				});
 			});
 		});

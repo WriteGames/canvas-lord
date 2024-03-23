@@ -22,6 +22,7 @@ export interface IEntity {
 export class Entity implements IEntity, IRenderable {
 	scene!: Scene; // NOTE: set by scene
 	components = new Map<IEntityComponentType, any>();
+	depth = 0;
 
 	constructor(x: number, y: number) {
 		this.addComponent(Components.pos2D);

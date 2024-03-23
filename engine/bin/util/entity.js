@@ -2,6 +2,7 @@ import * as Components from './components.js';
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
+    depth = 0;
     constructor(x, y) {
         this.addComponent(Components.pos2D);
         this.x = x;
