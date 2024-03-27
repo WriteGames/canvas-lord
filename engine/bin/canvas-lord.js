@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 import { V2, addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, } from './util/math.js';
 import { Grid } from './util/grid.js';
+export { Draw } from './util/draw.js';
 // TODO: only export these from math.js
 export { V2, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';

@@ -21,6 +21,8 @@ import { type Camera } from './util/camera.js';
 import { type Entity } from './util/entity.js';
 import { Grid } from './util/grid.js';
 
+export { Draw } from './util/draw.js';
+
 // TODO: only export these from math.js
 export { V2, type Vector, addPos, subPos, scalePos } from './util/math.js';
 export { Scene } from './util/scene.js';
