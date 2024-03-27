@@ -12,18 +12,9 @@ import {
 	reduceBitFlags,
 	Scene,
 	Tileset,
-	addPos,
-	subPos,
-	dirND,
-	findAllPolygonsInGrid,
-	drawLine,
-	checkLineSegmentIntersection,
-	getLineSegmentIntersection,
-	isPointOnLine,
-	isPointInsidePath,
 } from 'canvas-lord';
-
 import { Inspector } from 'canvas-lord/inspector';
+
 const initGrid = () => {
 	const grid = new Grid(320, 180, 16, 16);
 
@@ -108,12 +99,12 @@ const initTileset = (grid) => {
 	setCloud3(-1, 2);
 
 	const filterWithinGridBounds = filterWithinBounds(
-		Tuple(0, 0),
-		Tuple(grid.columns, grid.rows),
+		[0, 0],
+		[grid.columns, grid.rows],
 	);
 	for (let y = 0; y < grid.rows; ++y) {
 		for (let x = 0; x < grid.columns; ++x) {
-			const pos = Tuple(x, y);
+			const pos = [x, y];
 
 			if (grid.getTile(...pos) === 0) continue;
 
@@ -215,7 +206,7 @@ export const initGamesBase =
 		assetManager.onLoad(() => {
 			console.log('== AssetManager::onLoad()');
 
-			const splitScreen = true;
+			const splitScreen = false;
 
 			games.forEach((game) => {
 				game.backgroundColor = '#87E1A3';
@@ -223,6 +214,7 @@ export const initGamesBase =
 				const sceneWidth = game.canvas.width / 2;
 
 				const sceneLeft = new PlayerScene(Player, game);
+				sceneLeft.backgroundColor = '#87E1A3';
 				sceneLeft.player.x = 40;
 				if (splitScreen === true) {
 					sceneLeft.setCanvasSize(sceneWidth, game.canvas.height);
@@ -232,6 +224,7 @@ export const initGamesBase =
 
 				if (splitScreen === true) {
 					const sceneRight = new PlayerScene(Player, game);
+					sceneRight.backgroundColor = '#87E1A3';
 					sceneRight.player.x = 40;
 					sceneRight.screenPos[0] = sceneWidth;
 					sceneRight.setCanvasSize(sceneWidth, game.canvas.height);

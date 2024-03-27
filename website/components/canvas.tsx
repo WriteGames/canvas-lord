@@ -1,8 +1,9 @@
 'use client';
 
+import Script from 'next/script';
 import { useEffect, useRef } from 'react';
 
-export const Canvas = ({ id, src }: { id: string; src: string }) => {
+export const Canvas = ({ id, src }: { id: string; src?: string }) => {
 	const ref = useRef(false);
 
 	useEffect(() => {
@@ -15,7 +16,9 @@ export const Canvas = ({ id, src }: { id: string; src: string }) => {
 			initGames(id, 'https://sandbox.canvaslord.com/');
 		};
 
-		void importGame();
+		if (src) {
+			void importGame();
+		}
 	}, []);
 
 	return <canvas id={id} width="320px" height="180px" tabIndex={-1}></canvas>;

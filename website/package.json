@@ -10,6 +10,10 @@
 		"lint": "next lint"
 	},
 	"dependencies": {
+		"@mdx-js/loader": "^3.0.1",
+		"@mdx-js/react": "^3.0.1",
+		"@next/mdx": "^14.1.4",
+		"@types/mdx": "^2.0.12",
 		"canvas-lord": "workspace:*",
 		"next": "14.0.4",
 		"react": "18.2.0",

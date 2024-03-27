@@ -1,7 +1,5 @@
 import { V2 } from 'canvas-lord';
 
-import { Inspector } from 'canvas-lord/inspector';
-
 import { initGamesBase, assetManager } from './base-game';
 
 class Player {
