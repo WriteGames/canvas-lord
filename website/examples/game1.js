@@ -251,5 +251,3 @@ class Player {
 	}
 }
 export const initGames = initGamesBase(Player, ['x', 'y']);
-
-console.log({ initGamesBase, initGames });
