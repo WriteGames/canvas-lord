@@ -10,11 +10,13 @@ export const Canvas = ({
 	src,
 	width,
 	height,
+	pixel = false,
 }: {
 	id: string;
 	src?: string;
 	width: Dimension;
 	height: Dimension;
+	pixel?: boolean;
 }) => {
 	const ref = useRef(false);
 
@@ -39,6 +41,7 @@ export const Canvas = ({
 	return (
 		<canvas
 			id={id}
+			className={pixel ? 'pixel' : ''}
 			width={widthInPx}
 			height={heightInPx}
 			tabIndex={-1}

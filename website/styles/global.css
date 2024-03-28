@@ -86,6 +86,9 @@ canvas {
 	margin: 0 auto;
 	padding: 5px;
 	border: 3px solid #ddd;
+}
+
+.pixel {
 	image-rendering: -moz-crisp-edges;
 	image-rendering: -webkit-crisp-edges;
 	image-rendering: pixelated;
