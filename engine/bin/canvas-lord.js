@@ -495,17 +495,17 @@ export class Game {
         this.listeners[event].forEach((c) => c());
     }
     render() {
-        const { canvas, ctx } = this;
+        const { ctx } = this;
         ctx.fillStyle = this.backgroundColor;
-        ctx.fillRect(0, 0, 640, 360);
+        ctx.fillRect(0, 0, this.width, this.height);
         this.currentScenes?.forEach((scene) => scene.render(ctx));
         // Splitscreen
         if (this.sceneStack[0]?.length === 2) {
             ctx.strokeStyle = '#323232';
             ctx.beginPath();
             ctx.lineWidth = 2;
-            ctx.moveTo(canvas.width / 2, 0.5);
-            ctx.lineTo(canvas.width / 2, 360.5);
+            ctx.moveTo(this.width / 2, 0.5);
+            ctx.lineTo(this.width / 2, 360.5);
             ctx.stroke();
         }
     }

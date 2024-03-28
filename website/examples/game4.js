@@ -2,9 +2,6 @@ import { V2, Draw, scalePos, addPos, subPos } from 'canvas-lord';
 
 import { initGamesBase, assetManager } from './base-game';
 
-const GAME_W = 320;
-const GAME_H = 180;
-
 let progress = 0;
 class Player {
 	constructor(x, y) {
@@ -15,7 +12,10 @@ class Player {
 	update() {}
 
 	render(ctx, camera = V2.zero) {
-		const unit = 30;
+		const GAME_W = ctx.canvas.width;
+		const GAME_H = ctx.canvas.height;
+
+		const unit = 60;
 		const width = unit * 4;
 		const height = unit * 3;
 
@@ -142,5 +142,3 @@ class Player {
 	}
 }
 export const initGames = initGamesBase(Player, ['x', 'y']);
-
-console.log({ initGamesBase, initGames });
