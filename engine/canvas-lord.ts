@@ -1196,7 +1196,7 @@ export interface IEntitySystem {
 }
 
 export interface IRenderable {
-	depth: number;
+	depth?: number;
 	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
 }
 
