@@ -21,7 +21,6 @@ export class Scene {
         // TODO(bret): Make these false by default
         this.escapeToBlur = true;
         this.allowRefresh = true;
-        // this.width = this.height = null;
         this.boundsX = this.boundsY = null;
     }
     // TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
@@ -112,8 +111,13 @@ export class Scene {
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const ctx = this.ctx ?? gameCtx;
         const { canvas } = ctx;
-        if (this.backgroundColor) {
-            ctx.fillStyle = this.backgroundColor;
+        let { backgroundColor } = this;
+        if (this.ctx) {
+            // set to the engine's background color if this is a standalone canvas
+            backgroundColor ??= this.engine.backgroundColor;
+        }
+        if (backgroundColor) {
+            ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         this.renderables.inScene.forEach((entity) => entity.render(ctx, this.camera));

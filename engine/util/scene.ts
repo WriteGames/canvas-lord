@@ -30,8 +30,8 @@ export interface Scene {
 	camera: Camera;
 	escapeToBlur: boolean;
 	allowRefresh: boolean;
-	boundsX: number | null;
-	boundsY: number | null;
+	boundsX: [number, number] | null;
+	boundsY: [number, number] | null;
 
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
@@ -66,7 +66,6 @@ export class Scene {
 		this.escapeToBlur = true;
 		this.allowRefresh = true;
 
-		// this.width = this.height = null;
 		this.boundsX = this.boundsY = null;
 	}
 
@@ -85,7 +84,7 @@ export class Scene {
 		// TODO: should we also handle any entities removed? :thinking:
 	}
 
-	addEntity(entity: Entity): Entity {
+	addEntity<T extends Entity>(entity: T): T {
 		entity.scene = this;
 		this.entities.addQueue.push(entity);
 		return entity;
@@ -96,7 +95,7 @@ export class Scene {
 		this.entities.inScene.push(...newEntities);
 	}
 
-	addRenderable(renderable: Renderable): Renderable {
+	addRenderable<T extends Renderable>(renderable: T): T {
 		// renderable.scene = this;
 		this.renderables.addQueue.push(renderable);
 		return renderable;
@@ -139,7 +138,7 @@ export class Scene {
 		});
 	}
 
-	removeEntity(entity: Entity): Entity {
+	removeEntity<T extends Entity>(entity: T): T {
 		this.entities.removeQueue.push(entity);
 		return entity;
 	}
@@ -152,7 +151,7 @@ export class Scene {
 		});
 	}
 
-	removeRenderable(renderable: Renderable): Renderable {
+	removeRenderable<T extends Renderable>(renderable: T): T {
 		this.renderables.removeQueue.push(renderable);
 		return renderable;
 	}
@@ -178,8 +177,16 @@ export class Scene {
 
 		const ctx = this.ctx ?? gameCtx;
 		const { canvas } = ctx;
-		if (this.backgroundColor) {
-			ctx.fillStyle = this.backgroundColor;
+
+		let { backgroundColor } = this;
+
+		if (this.ctx) {
+			// set to the engine's background color if this is a standalone canvas
+			backgroundColor ??= this.engine.backgroundColor;
+		}
+
+		if (backgroundColor) {
+			ctx.fillStyle = backgroundColor;
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 		}
 
