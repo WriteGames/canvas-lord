@@ -1,4 +1,4 @@
-import { indexToPos, V2 } from './math.js';
+import { indexToPos } from './math.js';
 import { Draw, drawable } from './draw.js';
 // TODO: find a better place for this to live globally
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
@@ -122,7 +122,7 @@ export class Grid {
             }
         }
     }
-    render(ctx, camera = V2.zero) {
+    render(ctx, camera) {
         switch (this.renderMode) {
             case 0:
                 this.renderOutline(ctx, camera);

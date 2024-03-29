@@ -1,4 +1,4 @@
-import type { AssetManager } from '../canvas-lord.js';
+import type { AssetManager, Camera } from '../canvas-lord.js';
 import { indexToPos, V2 } from './math.js';
 import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';
@@ -112,7 +112,7 @@ export class Grid {
 		return this.data[y * this.columns + x] as number;
 	}
 
-	renderOutline(ctx: CanvasRenderingContext2D, camera: V2): void {
+	renderOutline(ctx: CanvasRenderingContext2D, camera: Camera): void {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
@@ -148,7 +148,7 @@ export class Grid {
 
 	renderEachCell(
 		ctx: CanvasRenderingContext2D,
-		camera: V2,
+		camera: Camera,
 		fill = false,
 	): void {
 		const stride = this.columns;
@@ -180,7 +180,7 @@ export class Grid {
 		}
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
+	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
 		switch (this.renderMode) {
 			case 0:
 				this.renderOutline(ctx, camera);
