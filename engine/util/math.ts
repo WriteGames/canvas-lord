@@ -2,7 +2,7 @@ export type V2 = [x: number, y: number];
 export type V3 = [x: number, y: number, z: number];
 export type V4 = [x: number, y: number, z: number, w: number];
 
-export type Vector = V2 | V3 | V4;
+export type Vector = V2 | Readonly<V2> | V3 | Readonly<V3> | V4 | Readonly<V4>;
 
 export const V2 = Object.defineProperties(
 	{},
@@ -21,11 +21,7 @@ export const V2 = Object.defineProperties(
 	one: V2;
 };
 
-type FuncMapVector = <
-	T extends Vector | Readonly<Vector>,
-	A extends T,
-	B extends T,
->(
+type FuncMapVector = <T extends Vector, A extends T, B extends T>(
 	a: A,
 	b: B,
 ) => A;
@@ -33,7 +29,7 @@ type FuncMapVectorByScalar = <P extends Vector>(p: P, s: number) => P;
 
 type FuncCompare<T extends any> = (a: T, b: T) => boolean;
 
-export const hashPos = (pos: Vector | Readonly<Vector>) => pos.join(',');
+export const hashPos = (pos: Vector) => pos.join(',');
 
 export const addPos: FuncMapVector = (a, b) => {
 	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
@@ -51,10 +47,7 @@ export const scalePos: FuncMapVectorByScalar = (p, s) => {
 	return p.map((v) => v * s) as unknown as typeof p;
 };
 
-export const posEqual = (
-	a: Vector | Readonly<Vector>,
-	b: Vector | Readonly<Vector>,
-): boolean =>
+export const posEqual = (a: Vector, b: Vector): boolean =>
 	a.length === b.length && a.every((v, i) => equal(v, b[i] as number));
 
 export const equal: FuncCompare<number> = (a, b) => {
