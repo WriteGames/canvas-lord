@@ -1498,7 +1498,7 @@ export class GridOutline {
 		this.polygons = findAllPolygonsInGrid(grid);
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
+	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
 		if (!this.show) return;
 
 		// Draw edges
@@ -1509,12 +1509,12 @@ export class GridOutline {
 				ctx.moveTo(
 					...subPos(
 						addPos(polygon.points[0] as V2, [0.5, 0.5]),
-						camera,
+						camera as Vector,
 					),
 				);
 				polygon.points
 					.slice(1)
-					.map((p) => subPos(p, camera))
+					.map((p) => subPos(p, camera as Vector))
 					.forEach(([x, y]) => {
 						ctx.lineTo(x + 0.5, y + 0.5);
 					});
@@ -1528,7 +1528,7 @@ export class GridOutline {
 			ctx.fillStyle = this.pointsColor;
 			this.polygons.forEach((polygon) => {
 				polygon.points
-					.map((p) => subPos(p, camera))
+					.map((p) => subPos(p, camera as Vector))
 					.forEach(([x, y]) => {
 						ctx.fillRect(x - 1, y - 1, 3, 3);
 					});
@@ -1586,7 +1586,7 @@ export class Tileset {
 		this.data[y * this.columns + x] = [tileX, tileY];
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera = V2.zero): void {
+	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
 		const scale = 1;
 
 		const { image, separation, startX, startY, tileW, tileH } = this;

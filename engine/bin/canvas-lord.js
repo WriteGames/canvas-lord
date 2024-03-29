@@ -975,7 +975,7 @@ export class GridOutline {
         this.grid = grid;
         this.polygons = findAllPolygonsInGrid(grid);
     }
-    render(ctx, camera = V2.zero) {
+    render(ctx, camera) {
         if (!this.show)
             return;
         // Draw edges
@@ -1025,7 +1025,7 @@ export class Tileset {
         // TODO(bret): Make sure it's within the bounds
         this.data[y * this.columns + x] = [tileX, tileY];
     }
-    render(ctx, camera = V2.zero) {
+    render(ctx, camera) {
         const scale = 1;
         const { image, separation, startX, startY, tileW, tileH } = this;
         const srcCols = Math.floor(this.image.width / tileW);
