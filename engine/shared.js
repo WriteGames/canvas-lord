@@ -77,29 +77,14 @@ export const initTileset = (assetManager, grid) => {
 
 export const createSceneGrid = (scene, assetManager) => {
 	scene.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
-	// scene.grid = Grid.fromBinary([
-	// 	20,
-	// 	12,
-	// 	2048,
-	// 	25165848,
-	// 	125943928,
-	// 	470598016,
-	// 	2021179399,
-	// 	2348906511,
-	// 	402653183,
-	// 	4294901760
-	// ], 16, 16);
-	scene.width = scene.grid.width;
-	scene.height = scene.grid.height;
 
-	scene.boundsX = [0, scene.width];
+	scene.bounds = [0, 0, scene.grid.width, scene.grid.height];
 
 	scene.tileset = initTileset(assetManager, scene.grid);
 	scene.gridOutline = new GridOutline();
 	scene.gridOutline.computeOutline(scene.grid);
 
 	scene.addRenderable(scene.tileset);
-	// scene.addRenderable(scene.grid);
 	scene.addRenderable(scene.gridOutline);
 	scene.addRenderable(scene.player);
 	scene.addRenderable(scene.logger);

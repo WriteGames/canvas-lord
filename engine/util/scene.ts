@@ -30,8 +30,8 @@ export interface Scene {
 	camera: Camera;
 	escapeToBlur: boolean;
 	allowRefresh: boolean;
-	boundsX: [number, number] | null;
-	boundsY: [number, number] | null;
+	// we need a Rect type, maybe class?
+	bounds: [number, number, number, number] | null;
 
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
@@ -66,7 +66,7 @@ export class Scene {
 		this.escapeToBlur = true;
 		this.allowRefresh = true;
 
-		this.boundsX = this.boundsY = null;
+		this.bounds = null;
 	}
 
 	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call

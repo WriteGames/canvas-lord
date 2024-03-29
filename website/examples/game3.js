@@ -176,14 +176,14 @@ class Player {
 
 		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
 		if (
-			scene.boundsX !== null &&
-			(x < scene.boundsX[0] || x + w > scene.boundsX[1])
+			scene.bounds !== null &&
+			(x < scene.bounds[0] || x + w > scene.bounds[0] + scene.bounds[2])
 		)
 			return true;
 
 		if (
-			scene.boundsY !== null &&
-			(y < scene.boundsY[0] || y + h > scene.boundsY[1])
+			scene.bounds !== null &&
+			(y < scene.bounds[1] || y + h > scene.bounds[1] + scene.bounds[3])
 		)
 			return true;
 
@@ -226,7 +226,7 @@ class Player {
 		}
 	}
 
-	render(ctx, camera = V2.zero) {
+	render(ctx, camera) {
 		const flipped = this.facing === -1;
 		const scaleX = flipped ? -1 : 1;
 

@@ -21,7 +21,7 @@ export class Scene {
         // TODO(bret): Make these false by default
         this.escapeToBlur = true;
         this.allowRefresh = true;
-        this.boundsX = this.boundsY = null;
+        this.bounds = null;
     }
     // TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
     setCanvasSize(width, height) {
