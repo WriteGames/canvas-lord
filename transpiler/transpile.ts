@@ -118,12 +118,10 @@ const consolidateSystemItems = (
 };
 
 const generateEntity = ({
-	fileName,
 	entityName,
 	components,
 	systems,
 }: {
-	fileName: string;
 	entityName: string;
 	components: IEntityComponentType[];
 	systems: SystemInput[];
@@ -204,13 +202,26 @@ const generateEntity = ({
 		.filter(Boolean)
 		.join('\n\t\n\t');
 
-	const contents = `import { Entity } from 'canvas-lord/util/entity.js';\n\nexport class ${entityName} extends Entity {\n\t${entityContents}\n}`;
+	const imports = [`import { Entity } from 'canvas-lord/util/entity.js';`];
+	const classDefinition = `export class ${entityName} extends Entity {\n\t${entityContents}\n}`;
 
-	fs.writeFileSync(fileName, contents);
+	return {
+		imports,
+		classDefinition,
+	};
 };
 
-generateEntity({
-	fileName: 'out/test.js',
+const entityToFile = (
+	fileName: string,
+	entityData: ReturnType<typeof generateEntity>,
+) => {
+	fs.writeFileSync(
+		fileName,
+		`${entityData.imports.join('\n')}\n\n${entityData.classDefinition}`,
+	);
+};
+
+const testOutput = generateEntity({
 	entityName: 'Test',
 	components: [testComponent],
 	systems: [
@@ -219,8 +230,9 @@ generateEntity({
 	],
 });
 
-generateEntity({
-	fileName: 'out/player.js',
+entityToFile('out/test.js', testOutput);
+
+const playerOutput = generateEntity({
 	entityName: 'GenPlayer',
 	components: [horizontalMovementComponent, verticalMovementComponent2],
 	systems: [
@@ -250,6 +262,8 @@ generateEntity({
 		},
 	],
 });
+
+entityToFile('out/player.js', playerOutput);
 
 // TODO: be able to mark systems as functions
 //	- any system that is marked as a function would be added as a method of the entity and called `this.moveX()` or w/e
