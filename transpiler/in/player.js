@@ -113,8 +113,6 @@ export const verticalMovementComponent2 = Components.createComponent({
 export const verticalMovementSystem2 = {
     update(entity, input) {
         const vComp = entity.component?.(verticalMovementComponent2);
-        if (!vComp)
-            throw new Error('');
         const grounded = entity.collide(entity.x, entity.y + 1);
         if (grounded && input.keyPressed(jumpKeys)) {
             vComp.jumpElapsed = 0;

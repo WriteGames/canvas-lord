@@ -146,8 +146,9 @@ export const verticalMovementComponent2 = Components.createComponent({
 // could be expanded to a if/else statement (also transform the first chunk into `+=`)
 export const verticalMovementSystem2 = {
 	update(entity: PlayerEntity, input: Input) {
-		const vComp = entity.component?.(verticalMovementComponent2);
-		if (!vComp) throw new Error('');
+		const vComp = entity.component?.(
+			verticalMovementComponent2,
+		) as Components.ComponentProps<typeof verticalMovementComponent2>;
 
 		const grounded = entity.collide(entity.x, entity.y + 1);
 		if (grounded && input.keyPressed(jumpKeys)) {
