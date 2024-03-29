@@ -11,7 +11,7 @@ class Player {
 
 	update() {}
 
-	render(ctx, camera = V2.zero) {
+	render(ctx, camera) {
 		const GAME_W = ctx.canvas.width;
 		const GAME_H = ctx.canvas.height;
 
