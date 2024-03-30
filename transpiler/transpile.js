@@ -53,7 +53,7 @@ const consolidateSystemItems = (systems, type) => {
         body: [],
     });
 };
-const generateEntity = ({ entityName, components, systems, }) => {
+const generateEntity = ({ entityName, components, systems }) => {
     components.forEach((c) => {
         if (!componentMap.has(c))
             componentMap.set(c, parseComponent(c));
@@ -106,7 +106,6 @@ const generateEntity = ({ entityName, components, systems, }) => {
         .map(([alias, body]) => {
         return `${alias}() {\n${body}\n\t}`;
     });
-    console.log(functions);
     const entityContents = [
         propertiesStr,
         updateBody ? `update(${updateArgs}) {\n${updateBody}\n\t}` : '',
@@ -138,7 +137,6 @@ const playerOutput = generateEntity({
     entityName: 'GenPlayer',
     components: [horizontalMovementComponent, verticalMovementComponent2],
     systems: [
-        // horizontalMovementSystem,
         {
             outputType: 'inline',
             // @ts-expect-error
@@ -165,8 +163,142 @@ const playerOutput = generateEntity({
     ],
 });
 entityToFile('out/player.js', playerOutput);
+entityToFile('../website/examples/out/player.js', playerOutput);
 // TODO: be able to mark systems as functions
 //	- any system that is marked as a function would be added as a method of the entity and called `this.moveX()` or w/e
 // TODO: probably remove all logger stuff :)
 // TODO: grouping would be sweet! (ie put all input checks together)
+const platformerTutorial = {
+    name: 'Platformer Tutorial',
+    slug: 'platformer-tutorial',
+    blocks: [
+        {
+            file: 'in/platformer-tut.js',
+        },
+        {
+            file: 'in/player-scene.js',
+        },
+        {
+            file: 'in/player.js',
+        },
+    ],
+    steps: [
+        {
+            name: 'Step One',
+            slug: 'one',
+            dynamic: [
+                {
+                    file: 'in/player.js',
+                    entityName: 'GenPlayer',
+                    components: [
+                        horizontalMovementComponent,
+                        verticalMovementComponent2,
+                    ],
+                    systems: [
+                        {
+                            outputType: 'inline',
+                            system: horizontalMovementSystem,
+                        },
+                        {
+                            outputType: 'inline',
+                            system: verticalMovementSystem2,
+                        },
+                        {
+                            outputType: 'function',
+                            alias: 'moveX',
+                            system: moveXSystem,
+                        },
+                        {
+                            outputType: 'function',
+                            // TODO: allow for aliases to work for render
+                            alias: 'moveY',
+                            system: moveYSystem,
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            name: 'Step Tne',
+            slug: 'two',
+            dynamic: [
+                {
+                    file: 'in/player.js',
+                    entityName: 'GenPlayer',
+                    components: [horizontalMovementComponent],
+                    systems: [
+                        {
+                            outputType: 'inline',
+                            system: horizontalMovementSystem,
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+};
+const makeDir = (dir) => {
+    if (fs.existsSync(dir))
+        return;
+    fs.mkdirSync(dir, { recursive: true });
+};
+const generateTutorial = (tutorial) => {
+    const dest = '../website/out';
+    const folder = `${dest}/${tutorial.slug}`;
+    makeDir(folder);
+    const createTutorialDir = (fileName) => `${folder}/${fileName}`;
+    const { blocks, steps } = tutorial;
+    const dynamic = steps.flatMap((step) => {
+        return step.dynamic.map((d) => d.file);
+    });
+    const staticFiles = blocks.filter(({ file }) => !dynamic.includes(file));
+    staticFiles.forEach(({ file }) => {
+        const contents = fs.readFileSync(file);
+        const fileName = file.split('/').at(-1);
+        fs.writeFileSync(createTutorialDir(fileName), contents);
+    });
+    const dynamicFiles = blocks.filter(({ file }) => dynamic.includes(file));
+    steps.forEach((step) => {
+        const stepDir = createTutorialDir(step.slug);
+        makeDir(stepDir);
+        const createStepPath = (fileName) => `${stepDir}/${fileName}`;
+        step.dynamic.forEach((entityData) => {
+            const _entityData = entityData;
+            const entity = generateEntity({
+                entityName: entityData.entityName,
+                components: _entityData.components,
+                systems: _entityData.systems,
+            });
+            entityToFile(createStepPath('player.js'), entity);
+        });
+    });
+    const genSteps = steps.map((step) => {
+        const files = blocks.map(({ file }) => {
+            const fileName = file.split('/').at(-1);
+            const rootFile = createTutorialDir(fileName);
+            if (fs.existsSync(rootFile))
+                return rootFile;
+            const stepFile = createTutorialDir(`${step.slug}/${fileName}`);
+            if (fs.existsSync(stepFile))
+                return stepFile;
+            return null;
+        });
+        return {
+            name: step.name,
+            files,
+        };
+    });
+    const genTutorial = {
+        steps: genSteps,
+    };
+    fs.writeFileSync(createTutorialDir('data.json'), JSON.stringify(genTutorial));
+    const markdown = fs.readFileSync('in/content.md');
+    fs.writeFileSync(createTutorialDir('content.mdx'), markdown);
+};
+generateTutorial(platformerTutorial);
+/*                                                                  */
+/*                                                                  */
+/*                            SCENE                                 */
+/*                                                                  */
+/*                                                                  */
 //# sourceMappingURL=transpile.js.map
