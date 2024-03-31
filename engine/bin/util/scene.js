@@ -32,11 +32,7 @@ export class Scene {
         canvas.width = width;
         canvas.height = height;
     }
-    begin() {
-        this.#addEntitiesToScene();
-        this.#addRenderablesToScene();
-        // TODO: should we also handle any entities removed? :thinking:
-    }
+    begin() { }
     addEntity(entity) {
         entity.scene = this;
         this.entities.addQueue.push(entity);

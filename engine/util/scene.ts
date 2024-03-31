@@ -78,11 +78,7 @@ export class Scene {
 		canvas.height = height;
 	}
 
-	begin(): void {
-		this.#addEntitiesToScene();
-		this.#addRenderablesToScene();
-		// TODO: should we also handle any entities removed? :thinking:
-	}
+	begin(): void {}
 
 	addEntity<T extends Entity>(entity: T): T {
 		entity.scene = this;
