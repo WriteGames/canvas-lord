@@ -11,7 +11,13 @@ export class PlayerScene extends Scene {
         super(engine);
         this.player = this.addEntity(new Player(40, 144));
         this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
-        this.bounds = [0, 0, this.grid.width, this.grid.height];
+        const padding = this.grid.height;
+        this.bounds = [
+            0,
+            -padding,
+            this.grid.width,
+            this.grid.height + padding,
+        ];
         this.tileset = this.initTileset(this.grid, assetManager);
         this.gridOutline = new GridOutline();
         this.gridOutline.computeOutline(this.grid);

@@ -78,7 +78,8 @@ export const initTileset = (assetManager, grid) => {
 export const createSceneGrid = (scene, assetManager) => {
 	scene.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
 
-	scene.bounds = [0, 0, scene.grid.width, scene.grid.height];
+	const padding = scene.grid.height;
+	scene.bounds = [0, -padding, scene.grid.width, scene.grid.height + padding];
 
 	scene.tileset = initTileset(assetManager, scene.grid);
 	scene.gridOutline = new GridOutline();
