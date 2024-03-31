@@ -486,9 +486,13 @@ export class Game {
         });
     }
     update() {
-        this.currentScenes?.forEach((scene) => scene.preUpdate(this.input));
-        this.currentScenes?.forEach((scene) => scene.update(this.input));
-        this.currentScenes?.forEach((scene) => scene.postUpdate(this.input));
+        const { currentScenes: scenes } = this;
+        if (scenes) {
+            scenes.forEach((scene) => scene.updateLists());
+            scenes.forEach((scene) => scene.preUpdate(this.input));
+            scenes.forEach((scene) => scene.update(this.input));
+            scenes.forEach((scene) => scene.postUpdate(this.input));
+        }
         this.sendEvent('update');
     }
     sendEvent(event) {

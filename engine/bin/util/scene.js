@@ -55,31 +55,6 @@ export class Scene {
         const newRenderables = this.renderables.addQueue.splice(0);
         this.renderables.inScene.push(...newRenderables);
     }
-    preUpdate(input) {
-        this.#addEntitiesToScene();
-        this.#addRenderablesToScene();
-    }
-    update(input) {
-        // TODO: move the following two to game probably
-        if (this.allowRefresh && input.keyPressed('F5'))
-            location.reload();
-        if (this.escapeToBlur && input.keyPressed('Escape'))
-            this.engine.canvas.blur();
-        if (!this.shouldUpdate)
-            return;
-        // remove old entities
-        this.entities.inScene.forEach((entity) => entity.update(input));
-        // this.renderables = this.renderables.filter(e => e).sort();
-        this.componentSystemMap.forEach((systems, component) => {
-            systems.forEach((system) => {
-                const { update } = system;
-                if (!update)
-                    return;
-                const entities = this.entities.inScene.filter((e) => Boolean(e.component?.(component)));
-                entities.forEach((entity) => update(entity, input));
-            });
-        });
-    }
     removeEntity(entity) {
         this.entities.removeQueue.push(entity);
         return entity;
@@ -102,10 +77,35 @@ export class Scene {
             this.renderables.inScene.splice(index, 1);
         });
     }
-    postUpdate(input) {
+    updateLists() {
+        this.#addEntitiesToScene();
         this.#removeEntitiesFromScene();
+        this.#addRenderablesToScene();
         this.#removeRenderablesFromScene();
     }
+    preUpdate(input) { }
+    update(input) {
+        // TODO: move the following two to game probably
+        if (this.allowRefresh && input.keyPressed('F5'))
+            location.reload();
+        if (this.escapeToBlur && input.keyPressed('Escape'))
+            this.engine.canvas.blur();
+        if (!this.shouldUpdate)
+            return;
+        // remove old entities
+        this.entities.inScene.forEach((entity) => entity.update(input));
+        // this.renderables = this.renderables.filter(e => e).sort();
+        this.componentSystemMap.forEach((systems, component) => {
+            systems.forEach((system) => {
+                const { update } = system;
+                if (!update)
+                    return;
+                const entities = this.entities.inScene.filter((e) => Boolean(e.component?.(component)));
+                entities.forEach((entity) => update(entity, input));
+            });
+        });
+    }
+    postUpdate(input) { }
     render(gameCtx) {
         // TODO: this should maybe be in pre-render?
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));

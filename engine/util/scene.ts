@@ -106,10 +106,41 @@ export class Scene {
 		this.renderables.inScene.push(...newRenderables);
 	}
 
-	preUpdate(input: Input): void {
-		this.#addEntitiesToScene();
-		this.#addRenderablesToScene();
+	removeEntity<T extends Entity>(entity: T): T {
+		this.entities.removeQueue.push(entity);
+		return entity;
 	}
+
+	#removeEntitiesFromScene(): void {
+		const oldEntities = this.entities.removeQueue.splice(0);
+		oldEntities.forEach((e) => {
+			const index = this.entities.inScene.indexOf(e);
+			this.entities.inScene.splice(index, 1);
+		});
+	}
+
+	removeRenderable<T extends Renderable>(renderable: T): T {
+		this.renderables.removeQueue.push(renderable);
+		return renderable;
+	}
+
+	#removeRenderablesFromScene(): void {
+		const oldRenderables = this.renderables.removeQueue.splice(0);
+		oldRenderables.forEach((r) => {
+			const index = this.renderables.inScene.indexOf(r);
+			this.renderables.inScene.splice(index, 1);
+		});
+	}
+
+	updateLists(): void {
+		this.#addEntitiesToScene();
+		this.#removeEntitiesFromScene();
+
+		this.#addRenderablesToScene();
+		this.#removeRenderablesFromScene();
+	}
+
+	preUpdate(input: Input): void {}
 
 	update(input: Input): void {
 		// TODO: move the following two to game probably
@@ -138,36 +169,7 @@ export class Scene {
 		});
 	}
 
-	removeEntity<T extends Entity>(entity: T): T {
-		this.entities.removeQueue.push(entity);
-		return entity;
-	}
-
-	#removeEntitiesFromScene(): void {
-		const oldEntities = this.entities.removeQueue.splice(0);
-		oldEntities.forEach((e) => {
-			const index = this.entities.inScene.indexOf(e);
-			this.entities.inScene.splice(index, 1);
-		});
-	}
-
-	removeRenderable<T extends Renderable>(renderable: T): T {
-		this.renderables.removeQueue.push(renderable);
-		return renderable;
-	}
-
-	#removeRenderablesFromScene(): void {
-		const oldRenderables = this.renderables.removeQueue.splice(0);
-		oldRenderables.forEach((r) => {
-			const index = this.renderables.inScene.indexOf(r);
-			this.renderables.inScene.splice(index, 1);
-		});
-	}
-
-	postUpdate(input: Input): void {
-		this.#removeEntitiesFromScene();
-		this.#removeRenderablesFromScene();
-	}
+	postUpdate(input: Input): void {}
 
 	render(gameCtx: CanvasRenderingContext2D): void {
 		// TODO: this should maybe be in pre-render?
