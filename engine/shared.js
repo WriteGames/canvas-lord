@@ -88,7 +88,6 @@ export const createSceneGrid = (scene, assetManager) => {
 	scene.addRenderable(scene.tileset);
 	scene.addRenderable(scene.gridOutline);
 	scene.addRenderable(scene.player);
-	scene.addRenderable(scene.logger);
 };
 
 export const createButtons = (scene, { leftKeys, rightKeys, jumpKeys }) => {
