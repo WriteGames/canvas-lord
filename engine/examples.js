@@ -110,11 +110,6 @@ const initGrid2 = () => {
 	return grid;
 };
 
-const updateCamera = (scene, player) => {
-	const newX = player.x + player.width / 2 - scene.canvas.width / 2;
-	scene.camera.x = Math.clamp(newX, 0, scene.width - scene.canvas.width);
-};
-
 class LineSegmentScene extends Scene {
 	constructor() {
 		super();
@@ -556,16 +551,24 @@ class PlayerScene extends Scene {
 		this.addRenderable(this.logger);
 	}
 
+	updateCamera() {
+		const newX =
+			this.player.x + this.player.width / 2 - this.canvas.width / 2;
+		const x0 = this.bounds[0];
+		const x1 = x0 + this.bounds[2];
+		this.camera.x = Math.clamp(newX, x0, x1 - this.canvas.width);
+	}
+
 	setCanvasSize(width, height) {
 		super.setCanvasSize(width, height);
 
-		updateCamera(this, this.player);
+		this.updateCamera();
 	}
 
 	update(input) {
 		super.update(input);
 
-		updateCamera(this, this.player);
+		this.updateCamera();
 
 		this.gridOutline.show = this.showHitboxes;
 	}

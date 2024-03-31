@@ -61,7 +61,9 @@ export class PlayerScene extends Scene {
     }
     updateCamera() {
         const newX = this.player.x + this.player.width / 2 - this.canvas.width / 2;
-        this.camera.x = Math.clamp(newX, 0, this.bounds[2] - this.canvas.width);
+        const x0 = this.bounds[0];
+        const x1 = x0 + this.bounds[2];
+        this.camera.x = Math.clamp(newX, x0, x1 - this.canvas.width);
     }
     setCanvasSize(width, height) {
         super.setCanvasSize(width, height);
