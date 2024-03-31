@@ -13,6 +13,15 @@ const _pixelCtx =
 	typeof OffscreenCanvas !== 'undefined'
 		? (pixelCanvas as OffscreenCanvas).getContext('2d', options)
 		: (pixelCanvas as HTMLCanvasElement).getContext('2d', options);
+// const pixelCanvas =
+// 	typeof OffscreenCanvas !== 'undefined'
+// 		? new OffscreenCanvas(1, 1)
+// 		: document.createElement('canvas');
+// const options = { willReadFrequently: true };
+// const _pixelCtx =
+// 	typeof OffscreenCanvas !== 'undefined'
+// 		? (pixelCanvas as OffscreenCanvas).getContext('2d', options)
+// 		: (pixelCanvas as HTMLCanvasElement).getContext('2d', options);
 if (!_pixelCtx) {
 	throw Error('pixelCtx failed to create');
 }
@@ -63,7 +72,9 @@ export class Grid {
 
 		const grid = new Grid(width, height, tileW, tileH);
 		grid.forEach((_, [x, y]) => {
+			// @ts-ignore
 			pixelCtx.drawImage(image, -x, -y);
+			// @ts-ignore
 			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
 			if (data[0] === 0) {
 				grid.setTile(x, y, 1);
