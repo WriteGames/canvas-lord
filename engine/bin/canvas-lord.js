@@ -482,6 +482,7 @@ export class Game {
         this.sceneStack.push(scenes);
         scenes.forEach((scene) => {
             scene.engine = this;
+            scene.updateLists();
             scene.begin();
         });
     }
