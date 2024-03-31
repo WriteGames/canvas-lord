@@ -26,7 +26,11 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
 	const { slug } = params;
 
-	const Content = _dynamic(() => import(`@/out/${slug}/content.mdx`), {
+	const Content: React.ComponentType<{
+		components: {
+			[key: string]: React.FC<any>;
+		};
+	}> = _dynamic(() => import(`@/out/${slug}/content.mdx`), {
 		ssr: true,
 	});
 	if (!Content) return null;
