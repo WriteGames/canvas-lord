@@ -16,6 +16,7 @@ import {
 	Tileset,
 	V2,
 } from 'canvas-lord';
+import { Vec2 } from 'canvas-lord/util/math';
 
 export interface PlayerClass extends Entity {
 	width: number;
@@ -83,21 +84,21 @@ export class PlayerScene<P extends PlayerClass> extends Scene {
 		setCloud3(-1, 2);
 
 		const filterWithinGridBounds = filterWithinBounds(
-			[0, 0],
-			[grid.columns, grid.rows],
+			new Vec2(0, 0),
+			new Vec2(grid.columns, grid.rows),
 		);
 		for (let y = 0; y < grid.rows; ++y) {
 			for (let x = 0; x < grid.columns; ++x) {
-				const pos: V2 = [x, y];
+				const pos: Vec2 = new Vec2(x, y);
 
-				if (grid.getTile(...pos) === 0) continue;
+				if (grid.getTile(x, y) === 0) continue;
 
 				const val = cardinalNorms
-					.map(mapByOffset(pos) as () => V2)
+					.map(mapByOffset(pos))
 					.filter(filterWithinGridBounds)
-					.filter((pos) => grid.getTile(...pos))
+					.filter(([x, y]) => grid.getTile(x, y))
 					.map(mapFindOffset(pos))
-					.map<number>((norm) => normToBitFlagMap.get(norm as any)!)
+					.map<number>((norm) => normToBitFlagMap.get(norm)!)
 					.reduce(reduceBitFlags, 0);
 
 				globalSetTile(tileset, x, y, val);

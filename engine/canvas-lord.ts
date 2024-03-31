@@ -12,6 +12,7 @@ import {
 	indexToPos,
 	hashPos,
 	posEqual,
+	Vec2,
 } from './util/math.js';
 
 import { CSSColor } from './util/types.js';
@@ -51,8 +52,8 @@ type Writeable<T> = {
 };
 
 type FuncReduceVector = <A extends Vector, B extends Vector>(
-	a: A,
-	b: B,
+	a: Vec2,
+	b: Vec2,
 ) => number;
 
 type FuncReduceNumber = (acc: number, v: number) => number;
@@ -76,9 +77,9 @@ export const EPSILON = 0.000001;
 const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
 const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
 
-const distance = (...dimensions: Vector): number =>
+const distance = (dimensions: Vec2): number =>
 	Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
-const distanceSq = (...dimensions: Vector): number =>
+const distanceSq = (dimensions: Vec2): number =>
 	Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 
 const isDefined = <T>(v: T | undefined): v is T => Boolean(v);
@@ -88,21 +89,24 @@ const interlaceArrays = <T, U>(
 	b: Readonly<U[]>,
 ): Array<T | U> => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
 
-export const mapByOffset = <V extends Vector>(offset: V): ((pos: V) => V) => {
-	return (pos: V): V => addPos(offset, pos);
+export const mapByOffset = <V extends Vector>(
+	offset: Vec2,
+): ((pos: Vec2) => Vec2) => {
+	return (pos: Vec2): Vec2 => addPos(offset, pos);
 };
-export const mapFindOffset = <V extends Vector>(origin: V): ((pos: V) => V) => {
-	return (pos: V): V => subPos(pos, origin);
+export const mapFindOffset = <V extends Vector>(
+	origin: Vec2,
+): ((pos: Vec2) => Vec2) => {
+	return (pos: Vec2): Vec2 => subPos(pos, origin);
 };
 export const flatMapByOffsets = <V extends Vector>(
-	offsets: V[],
-): ((pos: V) => V[]) => {
-	return (pos: V): V[] => offsets.map((offset) => addPos(offset, pos));
+	offsets: Vec2[],
+): ((pos: Vec2) => Vec2[]) => {
+	return (pos: Vec2): Vec2[] => offsets.map((offset) => addPos(offset, pos));
 };
-export const posDistance: FuncReduceVector = (a, b) =>
-	distance(...subPos(b, a));
+export const posDistance: FuncReduceVector = (a, b) => distance(subPos(b, a));
 export const posDistanceSq: FuncReduceVector = (a, b) =>
-	distanceSq(...subPos(b, a));
+	distanceSq(subPos(b, a));
 
 // const pathToSegments = (path) =>
 // 	path.map((vertex, i, vertices) => [
@@ -132,7 +136,7 @@ const getAngleBetween: FuncReduceNumber = (a, b) =>
 type Line2D = [V2, V2];
 
 const crossProduct2D: FuncReduceVector = (a, b) => a[0] * b[1] - a[1] * b[0];
-const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): V2 => {
+const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
 	const r = subPos(b, a);
 	const s = subPos(d, c);
 
@@ -141,7 +145,7 @@ const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): V2 => {
 	const t = crossProduct2D(subPos(c, a), s) / rxs;
 	const u = crossProduct2D(subPos(a, c), r) / -rxs;
 
-	return [t, u];
+	return new Vec2(t, u);
 };
 export const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
 	const [t, u] = _lineSegmentIntersection(a, b);
@@ -149,7 +153,10 @@ export const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
 	// TODO(bret): Play with these values a bit more
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
 };
-export const getLineSegmentIntersection = (a: Line2D, b: Line2D): V2 | null => {
+export const getLineSegmentIntersection = (
+	a: Line2D,
+	b: Line2D,
+): Vec2 | null => {
 	const [t, u] = _lineSegmentIntersection(a, b);
 
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1
@@ -157,27 +164,30 @@ export const getLineSegmentIntersection = (a: Line2D, b: Line2D): V2 | null => {
 		: null;
 };
 export const isPointOnLine = <V extends Vector>(
-	point: V,
-	a: V,
-	b: V,
+	point: Vec2,
+	a: Vec2,
+	b: Vec2,
 ): boolean =>
 	Math.abs(
 		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
 	) < EPSILON;
 
 // TODO(bret): Would be fun to make this work with any dimensions
-const isWithinBounds = ([x, y]: V2, [x1, y1]: V2, [x2, y2]: V2): boolean =>
-	x >= x1 && y >= y1 && x < x2 && y < y2;
+const isWithinBounds = (
+	[x, y]: Vec2,
+	[x1, y1]: Vec2,
+	[x2, y2]: Vec2,
+): boolean => x >= x1 && y >= y1 && x < x2 && y < y2;
 
 export const filterWithinBounds =
-	<V extends Vector>(a: V, b: V): ((pos: V) => boolean) =>
-	(pos: V): boolean =>
-		a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
-		b.every((p, i) => (pos[i] ?? Infinity) < p);
+	<V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
+	(pos: Vec2): boolean =>
+		a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&
+		b.every((p, i) => ([...pos][i] ?? Infinity) < p);
 
-type Path = V2[];
+type Path = Vec2[];
 
-export const isPointInsidePath = (point: V2, path: Path): boolean => {
+export const isPointInsidePath = (point: Vec2, path: Path): boolean => {
 	const wind = path
 		.map((vertex) => getAngle(point, vertex))
 		.map((angle, i, arr) =>
@@ -221,17 +231,17 @@ let nnn;
 		normLN, normNN, normRN,
 		normLD, normND, normRD,
 	] = [
-		[-1, -1] as readonly [-1, -1],
-		[0, -1] as readonly [0, -1],
-		[1, -1] as readonly [1, -1],
+		new Vec2(-1, -1),
+		new Vec2(0, -1),
+		new Vec2(1, -1),
 
-		[-1, 0] as readonly [-1, 0],
-		[0, 0] as readonly [0, 0],
-		[1, 0] as readonly [1, 0],
+		new Vec2(-1, 0),
+		new Vec2(0, 0),
+		new Vec2(1, 0),
 
-		[-1, 1] as readonly [-1, 1],
-		[0, 1] as readonly [0, 1],
-		[1, 1] as readonly [1, 1],
+		new Vec2(-1, 1),
+		new Vec2(0, 1),
+		new Vec2(1, 1),
 	];
 
 	// prettier-ignore
@@ -270,14 +280,13 @@ const CARDINAL_NORM = createBitEnum(...cardinalNormStrs);
 const mapStrToCardinalDirBitFlag = (str: CardinalNormStr): number =>
 	CARDINAL_NORM[str];
 
-class V2Map<K extends V2 | Readonly<V2>, V> {
+class V2Map<K extends Vec2, V> {
 	#map = new Map<string, V>();
 
 	constructor() {
 		this.#map = new Map();
 	}
 	delete(key: K): boolean {
-		// TODO: remove `as V2`
 		return this.#map.delete(hashPos(key));
 	}
 	get(key: K): V | undefined {
@@ -1279,7 +1288,7 @@ export const findAllPolygonsInGrid = (
 
 		const addPointsToPolygon = (
 			points: Path,
-			pos: V2,
+			pos: Vec2,
 			interior: boolean,
 		): void => {
 			const origin = interior ? 0 : -1;
@@ -1288,7 +1297,7 @@ export const findAllPolygonsInGrid = (
 			const basePos = scalePos(pos, size);
 
 			const [lastX, lastY] = points.length
-				? subPos(points[points.length - 1] as V2, basePos)
+				? subPos(points[points.length - 1]!, basePos)
 				: [origin, origin];
 
 			const offset: V2 = [0, 0];
@@ -1329,18 +1338,18 @@ export const findAllPolygonsInGrid = (
 			)
 				.map((o) => addPos(next, o))
 				.map((p) => {
-					return isWithinBounds(p, V2.zero, [columns, rows])
+					return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
 						? (grid[posToIndex(p, columns)] as number)
 						: 0;
 				}) as unknown as V2;
 
 			if (p2 === gridType) {
 				if (p1 === gridType) {
-					next = addPos(next, curDir as V2);
+					next = addPos(next, curDir);
 					curDir = rotateNormBy90Deg(curDir, 1);
 				}
 
-				next = addPos(next, curDir as V2);
+				next = addPos(next, curDir);
 
 				if (lastDir !== curDir)
 					addPointsToPolygon(points, next, gridType === 1);
@@ -1360,7 +1369,7 @@ export const findAllPolygonsInGrid = (
 
 interface Shape {
 	gridType: number;
-	shapeCells: V2[];
+	shapeCells: Vec2[];
 	minX: number;
 	maxX: number;
 	minY: number;
@@ -1404,14 +1413,14 @@ const findAllShapesInGrid = (
 };
 
 const fillShape = (
-	start: V2,
+	start: Vec2,
 	checked: boolean[],
 	_grid: GridOrData,
 	_columns?: number,
 	_rows?: number,
 ): {
 	gridType: number;
-	shapeCells: V2[];
+	shapeCells: Vec2[];
 	minX: number;
 	maxX: number;
 	minY: number;
@@ -1438,14 +1447,14 @@ const fillShape = (
 		checked[index] = true;
 
 		const [x, y] = next;
-		if (x > 0) queue.push([x - 1, y]);
-		if (x < columns - 1) queue.push([x + 1, y]);
-		if (y > 0) queue.push([x, y - 1]);
-		if (y < rows - 1) queue.push([x, y + 1]);
+		if (x > 0) queue.push(new Vec2(x - 1, y));
+		if (x < columns - 1) queue.push(new Vec2(x + 1, y));
+		if (y > 0) queue.push(new Vec2(x, y - 1));
+		if (y < rows - 1) queue.push(new Vec2(x, y + 1));
 	}
 
 	const shapeCells = visited.map(
-		(v) => v.split(',').map((c) => +c) as [number, number],
+		(v) => new Vec2(...v.split(',').map((c) => +c)),
 	);
 
 	const shapeBounds = shapeCells.reduce(
@@ -1511,12 +1520,10 @@ export class GridOutline {
 			this.polygons.forEach((polygon) => {
 				ctx.beginPath();
 				ctx.strokeStyle = this.outlineColor;
-				ctx.moveTo(
-					...subPos(
-						addPos(polygon.points[0] as V2, [0.5, 0.5]),
-						camera as Vector,
-					),
-				);
+				const start = addPos(polygon.points[0]!, [0.5, 0.5]);
+				const cameraPos = new Vec2(camera[0], camera[1]);
+				const [_x, _y] = subPos(start, cameraPos);
+				ctx.moveTo(_x, _y);
 				polygon.points
 					.slice(1)
 					.map((p) => subPos(p, camera as Vector))

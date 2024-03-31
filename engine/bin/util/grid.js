@@ -49,7 +49,8 @@ export class Grid {
         gridData
             .flatMap((b) => b.toString(2).padStart(32, '0').split(''))
             .forEach((v, i) => {
-            grid.setTile(...indexToPos(i, stride), +v);
+            const [x, y] = indexToPos(i, stride);
+            grid.setTile(x, y, +v);
         });
         return grid;
     }

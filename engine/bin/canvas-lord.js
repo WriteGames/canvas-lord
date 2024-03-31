@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-import { V2, addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, } from './util/math.js';
+import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, } from './util/math.js';
 import { Grid } from './util/grid.js';
 export { Draw } from './util/draw.js';
 // TODO: only export these from math.js
@@ -19,8 +19,8 @@ Math.clamp = (val, min, max) => {
 export const EPSILON = 0.000001;
 const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;
-const distance = (...dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
-const distanceSq = (...dimensions) => Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
+const distance = (dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
+const distanceSq = (dimensions) => Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 const isDefined = (v) => Boolean(v);
 const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
 export const mapByOffset = (offset) => {
@@ -32,8 +32,8 @@ export const mapFindOffset = (origin) => {
 export const flatMapByOffsets = (offsets) => {
     return (pos) => offsets.map((offset) => addPos(offset, pos));
 };
-export const posDistance = (a, b) => distance(...subPos(b, a));
-export const posDistanceSq = (a, b) => distanceSq(...subPos(b, a));
+export const posDistance = (a, b) => distance(subPos(b, a));
+export const posDistanceSq = (a, b) => distanceSq(subPos(b, a));
 // const pathToSegments = (path) =>
 // 	path.map((vertex, i, vertices) => [
 // 		vertex,
@@ -60,7 +60,7 @@ const _lineSegmentIntersection = ([a, b], [c, d]) => {
     const rxs = crossProduct2D(r, s);
     const t = crossProduct2D(subPos(c, a), s) / rxs;
     const u = crossProduct2D(subPos(a, c), r) / -rxs;
-    return [t, u];
+    return new Vec2(t, u);
 };
 export const checkLineSegmentIntersection = (a, b) => {
     const [t, u] = _lineSegmentIntersection(a, b);
@@ -76,8 +76,8 @@ export const getLineSegmentIntersection = (a, b) => {
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions
 const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => x >= x1 && y >= y1 && x < x2 && y < y2;
-export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => (pos[i] ?? -Infinity) >= p) &&
-    b.every((p, i) => (pos[i] ?? Infinity) < p);
+export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&
+    b.every((p, i) => ([...pos][i] ?? Infinity) < p);
 export const isPointInsidePath = (point, path) => {
     const wind = path
         .map((vertex) => getAngle(point, vertex))
@@ -106,15 +106,15 @@ let nnn;
 {
     // prettier-ignore
     const [normLU, normNU, normRU, normLN, normNN, normRN, normLD, normND, normRD,] = [
-        [-1, -1],
-        [0, -1],
-        [1, -1],
-        [-1, 0],
-        [0, 0],
-        [1, 0],
-        [-1, 1],
-        [0, 1],
-        [1, 1],
+        new Vec2(-1, -1),
+        new Vec2(0, -1),
+        new Vec2(1, -1),
+        new Vec2(-1, 0),
+        new Vec2(0, 0),
+        new Vec2(1, 0),
+        new Vec2(-1, 1),
+        new Vec2(0, 1),
+        new Vec2(1, 1),
     ];
     // prettier-ignore
     nnn = {
@@ -147,7 +147,6 @@ class V2Map {
         this.#map = new Map();
     }
     delete(key) {
-        // TODO: remove `as V2`
         return this.#map.delete(hashPos(key));
     }
     get(key) {
@@ -878,7 +877,7 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
             const [p1, p2] = offsets[hashPos(curDir)]
                 .map((o) => addPos(next, o))
                 .map((p) => {
-                return isWithinBounds(p, V2.zero, [columns, rows])
+                return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
                     ? grid[posToIndex(p, columns)]
                     : 0;
             });
@@ -937,15 +936,15 @@ const fillShape = (start, checked, _grid, _columns, _rows) => {
         checked[index] = true;
         const [x, y] = next;
         if (x > 0)
-            queue.push([x - 1, y]);
+            queue.push(new Vec2(x - 1, y));
         if (x < columns - 1)
-            queue.push([x + 1, y]);
+            queue.push(new Vec2(x + 1, y));
         if (y > 0)
-            queue.push([x, y - 1]);
+            queue.push(new Vec2(x, y - 1));
         if (y < rows - 1)
-            queue.push([x, y + 1]);
+            queue.push(new Vec2(x, y + 1));
     }
-    const shapeCells = visited.map((v) => v.split(',').map((c) => +c));
+    const shapeCells = visited.map((v) => new Vec2(...v.split(',').map((c) => +c)));
     const shapeBounds = shapeCells.reduce((acc, cell) => {
         const [x, y] = cell;
         return {
@@ -988,7 +987,10 @@ export class GridOutline {
             this.polygons.forEach((polygon) => {
                 ctx.beginPath();
                 ctx.strokeStyle = this.outlineColor;
-                ctx.moveTo(...subPos(addPos(polygon.points[0], [0.5, 0.5]), camera));
+                const start = addPos(polygon.points[0], [0.5, 0.5]);
+                const cameraPos = new Vec2(camera[0], camera[1]);
+                const [_x, _y] = subPos(start, cameraPos);
+                ctx.moveTo(_x, _y);
                 polygon.points
                     .slice(1)
                     .map((p) => subPos(p, camera))

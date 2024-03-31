@@ -1,4 +1,4 @@
-import { V2, V3, addPos, scalePos, subPos, posEqual } from './math.js';
+import { V2, V3, addPos, scalePos, subPos, posEqual, Vec2 } from './math.js';
 
 // TODO: capacity, aka when it splits
 
@@ -26,8 +26,8 @@ export interface QuadtreeNode<T> {
 	depth: number;
 	posA: V2;
 	posB: V2;
-	radii: V2;
-	midPoint: V2;
+	radii: Vec2;
+	midPoint: Vec2;
 	rangeX: V2;
 	rangeY: V2;
 	itemPosCallback: ItemPositionCallback<T>;
@@ -98,7 +98,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		this.rangeX = rangeX;
 		this.rangeY = rangeY;
 		this.radii = scalePos(
-			[rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]],
+			new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]),
 			0.5,
 		);
 		this.midPoint = addPos(this.posA, this.radii);
@@ -163,8 +163,11 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 	}
 
 	expand() {
+		// @ts-ignore
 		const newRangeX = scalePos(this.rangeX, 2);
+		// @ts-ignore
 		const newRangeY = scalePos(this.rangeY, 2);
+		// @ts-ignore
 		this.recompute(newRangeX, newRangeY);
 
 		if (this.type === 'leaf') return;

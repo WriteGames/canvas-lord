@@ -1,5 +1,5 @@
 import type { AssetManager, Camera } from '../canvas-lord.js';
-import { indexToPos, V2 } from './math.js';
+import { indexToPos, V2, Vec2 } from './math.js';
 import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';
 
@@ -85,16 +85,17 @@ export class Grid {
 		gridData
 			.flatMap((b) => b.toString(2).padStart(32, '0').split(''))
 			.forEach((v, i) => {
-				grid.setTile(...indexToPos(i, stride), +v);
+				const [x, y] = indexToPos(i, stride);
+				grid.setTile(x, y, +v);
 			});
 
 		return grid;
 	}
 
-	forEach(callback: (val: number, pos: V2) => void): void {
+	forEach(callback: (val: number, pos: Vec2) => void): void {
 		const stride = this.columns;
 		this.data
-			.map<[number, V2]>((val, i) => [val, indexToPos(i, stride)])
+			.map<[number, Vec2]>((val, i) => [val, indexToPos(i, stride)])
 			.forEach((args) => callback(...args));
 	}
 

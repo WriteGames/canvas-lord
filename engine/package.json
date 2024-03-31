@@ -25,7 +25,7 @@
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^2.11.2",
 		"jsdom": "^23.2.0",
-		"typescript": "5.3.3",
+		"typescript": "5.4.3",
 		"vitest": "^1.2.0"
 	}
 }

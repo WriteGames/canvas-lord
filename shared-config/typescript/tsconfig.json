@@ -8,6 +8,16 @@
 		"sourceMap": true,
 		"strict": true,
 		"module": "ESNext",
-		"moduleResolution": "Node"
+		"moduleResolution": "Node",
+
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictBindCallApply": true,
+		"strictPropertyInitialization": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		"noImplicitReturns": true,
+		"noUncheckedIndexedAccess": false
 	}
 }

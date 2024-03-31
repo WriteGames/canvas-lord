@@ -1,4 +1,4 @@
-import { addPos, scalePos, posEqual } from './math.js';
+import { addPos, scalePos, posEqual, Vec2 } from './math.js';
 const arrayRemove = (arr, value) => {
     const index = arr.indexOf(value);
     if (index > -1) {
@@ -40,7 +40,7 @@ export class QuadtreeNode {
         this.posB = [x2, y2];
         this.rangeX = rangeX;
         this.rangeY = rangeY;
-        this.radii = scalePos([rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]], 0.5);
+        this.radii = scalePos(new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]), 0.5);
         this.midPoint = addPos(this.posA, this.radii);
     }
     getQuadIndex(pos) {
@@ -84,8 +84,11 @@ export class QuadtreeNode {
         this.parent?.recomputeCounts();
     }
     expand() {
+        // @ts-ignore
         const newRangeX = scalePos(this.rangeX, 2);
+        // @ts-ignore
         const newRangeY = scalePos(this.rangeY, 2);
+        // @ts-ignore
         this.recompute(newRangeX, newRangeY);
         if (this.type === 'leaf')
             return;

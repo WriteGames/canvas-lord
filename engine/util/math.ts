@@ -4,6 +4,130 @@ export type V4 = [x: number, y: number, z: number, w: number];
 
 export type Vector = V2 | Readonly<V2> | V3 | Readonly<V3> | V4 | Readonly<V4>;
 
+const X = 0;
+const Y = 1;
+const Z = 2;
+const W = 3;
+
+export class Vec2 {
+	#values: [number, number] = [0, 0];
+
+	length: 2 = 2;
+
+	constructor(x = 0, y = 0) {
+		this.#values[X] = x;
+		this.#values[Y] = y;
+	}
+
+	get x(): number {
+		return this.#values[X];
+	}
+
+	set x(value: number) {
+		this.#values[X] = value;
+	}
+
+	get y(): number {
+		return this.#values[Y];
+	}
+
+	set y(value: number) {
+		this.#values[Y] = value;
+	}
+
+	get [X](): number {
+		return this.#values[X];
+	}
+
+	set [X](value: number) {
+		this.#values[X] = value;
+	}
+
+	get [Y](): number {
+		return this.#values[Y];
+	}
+
+	set [Y](value: number) {
+		this.#values[Y] = value;
+	}
+
+	map<U>(
+		// TODO: index: 0 | 1 ?
+		callbackfn: (value: number, index: number, array: number[]) => U,
+		thisArg?: any,
+	): [U, U] {
+		return this.#values.map(callbackfn, thisArg) as [U, U];
+	}
+
+	every(
+		predicate: (value: number, index: number, array: number[]) => unknown,
+		thisArg?: any,
+	): boolean {
+		return this.#values.every(predicate, thisArg);
+	}
+
+	join(separator?: string): string {
+		return this.#values.join(separator);
+	}
+
+	[Symbol.iterator]() {
+		return this.#values.values();
+	}
+
+	clone(): Vec2 {
+		return new Vec2(...this);
+	}
+
+	// TODO: add 'self' methods
+	// addSelf(v: Vec2): this {
+	// 	this.#values = this.map((val, i) => val + (v[i] ?? 0));
+	// 	return this;
+	// }
+
+	add(v: Vec2): Vec2 {
+		return Vec2.add(this, v);
+	}
+
+	static add(a: Vec2, b: Vec2): Vec2 {
+		return addPos(a, b);
+	}
+
+	sub(v: Vec2): Vec2 {
+		return Vec2.sub(this, v);
+	}
+
+	static sub(a: Vec2, b: Vec2): Vec2 {
+		return subPos(a, b);
+	}
+
+	equal(v: Vec2): boolean {
+		return Vec2.equal(this, v);
+	}
+
+	static equal(a: Vec2, b: Vec2): boolean {
+		return posEqual(a, b);
+	}
+
+	static get zero(): Vec2 {
+		return new Vec2(0, 0);
+	}
+
+	static get one(): Vec2 {
+		return new Vec2(1, 1);
+	}
+
+	static get right(): Vec2 {
+		return new Vec2(1, 0);
+	}
+
+	static get up(): Vec2 {
+		return new Vec2(0, 1);
+	}
+}
+
+const vec = new Vec2(1, 3);
+const [a, b, c, d, e] = vec;
+
 export const V2 = Object.defineProperties(
 	{},
 	{
@@ -25,38 +149,54 @@ type FuncMapVector = <T extends Vector, A extends T, B extends T>(
 	a: A,
 	b: B,
 ) => A;
-type FuncMapVectorByScalar = <P extends Vector>(p: P, s: number) => P;
+type FuncMapVectorByScalar = <P extends Vector>(
+	p: Vec2 | Vector,
+	s: number,
+) => Vec2;
 
 type FuncCompare<T extends any> = (a: T, b: T) => boolean;
 
-export const hashPos = (pos: Vector) => pos.join(',');
+export const hashPos = (pos: Vector | Vec2) => pos.join(',');
 
-export const addPos: FuncMapVector = (a, b) => {
-	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
+export const addPos = (a: Vector | Vec2, b: Vector | Vec2) => {
+	const bb = [...b];
+	return new Vec2(...(a.map((v, i) => v + (bb[i] ?? 0)) as typeof a));
 };
+
+export const subPos = (a: Vector | Vec2, b: Vector | Vec2) => {
+	const bb = [...b];
+	return new Vec2(...(a.map((v, i) => v - (bb[i] ?? 0)) as typeof a));
+};
+
+// export const addPos: FuncMapVector = (a, b) => {
+// 	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
+// };
 
 export const addScalar: FuncMapVectorByScalar = (p, s) => {
-	return p.map((v) => v + s) as unknown as typeof p;
+	return new Vec2(...p.map((v) => v + s));
 };
 
-export const subPos: FuncMapVector = (a, b) => {
-	return a.map((v, i) => v - (b[i] ?? 0)) as typeof a;
-};
+// export const subPos: FuncMapVector = (a, b) => {
+// 	return a.map((v, i) => v - (b[i] ?? 0)) as typeof a;
+// };
 
 export const scalePos: FuncMapVectorByScalar = (p, s) => {
-	return p.map((v) => v * s) as unknown as typeof p;
+	return new Vec2(...p.map((v) => v * s));
 };
 
-export const posEqual = (a: Vector, b: Vector): boolean =>
-	a.length === b.length && a.every((v, i) => equal(v, b[i] as number));
+export const posEqual = (a: Vector | Vec2, b: Vector | Vec2): boolean => {
+	const aa = [...a];
+	const bb = [...b];
+	return (
+		aa.length === bb.length && aa.every((v, i) => equal(v, bb[i] as number))
+	);
+};
 
 export const equal: FuncCompare<number> = (a, b) => {
 	return Math.abs(a - b) < Number.EPSILON;
 };
 
-export const indexToPos = (index: number, stride: number): V2 => [
-	index % stride,
-	Math.floor(index / stride),
-];
-export const posToIndex = ([x, y]: V2, stride: number): number =>
+export const indexToPos = (index: number, stride: number): Vec2 =>
+	new Vec2(index % stride, Math.floor(index / stride));
+export const posToIndex = ([x, y]: Vec2, stride: number): number =>
 	y * stride + x;
