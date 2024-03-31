@@ -4,9 +4,10 @@ import { Draw, drawable } from './draw.js';
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
     ? new OffscreenCanvas(1, 1)
     : document.createElement('canvas');
+const options = { willReadFrequently: true };
 const _pixelCtx = typeof OffscreenCanvas !== 'undefined'
-    ? pixelCanvas.getContext('2d')
-    : pixelCanvas.getContext('2d');
+    ? pixelCanvas.getContext('2d', options)
+    : pixelCanvas.getContext('2d', options);
 if (!_pixelCtx) {
     throw Error('pixelCtx failed to create');
 }
@@ -22,7 +23,7 @@ export class Grid {
         const size = this.columns * this.rows;
         this.color = 'rgba(255, 0, 0, 0.6)';
         this.renderMode = 2;
-        this.data = Array.from({ length: size }, (v) => 0);
+        this.data = Array.from({ length: size }, () => 0);
     }
     static fromBitmap(assetManager, src, tileW, tileH) {
         const image = assetManager.images.get(src);
