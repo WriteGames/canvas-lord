@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 
 import {
-	V2,
-	V3,
 	V4,
 	type Vector,
 	addPos,
@@ -133,7 +131,7 @@ const getAngle: FuncReduceVector = (a, b) =>
 const getAngleBetween: FuncReduceNumber = (a, b) =>
 	((b - a + RAD_540) % RAD_360) - RAD_180;
 
-type Line2D = [V2, V2];
+type Line2D = [Vec2, Vec2];
 
 const crossProduct2D: FuncReduceVector = (a, b) => a[0] * b[1] - a[1] * b[0];
 const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
@@ -663,6 +661,10 @@ export class Game {
 		this.updateGameLoopSettings(this.gameLoopSettings);
 	}
 
+	load(assetManager: AssetManager) {
+		assetManager.loadAssets();
+	}
+
 	get width(): number {
 		return this.canvas.width;
 	}
@@ -858,12 +860,12 @@ export class Game {
 type InputStatus = 0 | 1 | 2 | 3;
 
 interface Mouse {
-	pos: V2;
-	x: V2[0];
-	y: V2[1];
-	realPos: V2;
-	realX: V2[0];
-	realY: V2[1];
+	pos: Vec2;
+	x: Vec2[0];
+	y: Vec2[1];
+	realPos: Vec2;
+	realX: Vec2[0];
+	realY: Vec2[1];
 	_clicked: InputStatus;
 }
 
@@ -1047,8 +1049,8 @@ export class Input {
 		this.engine = engine;
 
 		const mouse: MousePrototype = {
-			pos: [-1, -1],
-			realPos: [-1, -1],
+			pos: new Vec2(-1, -1),
+			realPos: new Vec2(-1, -1),
 			_clicked: 0,
 		};
 
@@ -1060,18 +1062,14 @@ export class Input {
 			const xName = prefix !== null ? (`${prefix}X` as const) : 'x';
 			const yName = prefix !== null ? (`${prefix}Y` as const) : 'y';
 
-			([xName, yName] as const).forEach((coordName, i) => {
+			([xName, yName] as const).forEach((coordName, i: number) => {
 				Object.defineProperties(mouse, {
 					[coordName]: {
 						get() {
-							return mouse[posName][i];
+							return mouse[posName][i as 0 | 1];
 						},
 						set(val: number) {
-							mouse[posName] = Object.freeze(
-								mouse[posName].map((oldVal, index) =>
-									index === i ? val : oldVal,
-								),
-							) as V2;
+							mouse[posName][i as 0 | 1] = val;
 						},
 					},
 				});
@@ -1300,7 +1298,7 @@ export const findAllPolygonsInGrid = (
 				? subPos(points[points.length - 1]!, basePos)
 				: [origin, origin];
 
-			const offset: V2 = [0, 0];
+			const offset = new Vec2(0, 0);
 			switch (curDir) {
 				case norm.ND:
 					offset[0] = origin;
@@ -1341,7 +1339,7 @@ export const findAllPolygonsInGrid = (
 					return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
 						? (grid[posToIndex(p, columns)] as number)
 						: 0;
-				}) as unknown as V2;
+				});
 
 			if (p2 === gridType) {
 				if (p1 === gridType) {
@@ -1559,7 +1557,7 @@ export interface Tileset {
 
 	image: HTMLImageElement;
 
-	data: Array<V2 | null>;
+	data: Array<Vec2 | null>;
 
 	startX: number;
 	startY: number;
@@ -1595,7 +1593,7 @@ export class Tileset {
 
 	setTile(x: number, y: number, tileX: number, tileY: number): void {
 		// TODO(bret): Make sure it's within the bounds
-		this.data[y * this.columns + x] = [tileX, tileY];
+		this.data[y * this.columns + x] = new Vec2(tileX, tileY);
 	}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera): void {

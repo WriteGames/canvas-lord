@@ -62,5 +62,5 @@ export const initGame =
 
 			inspector.onUpdate();
 		});
-		assetManager.loadAssets();
+		game.load(assetManager);
 	};

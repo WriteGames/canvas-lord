@@ -1,4 +1,4 @@
-import { V2, V3, addPos, scalePos, subPos, posEqual, Vec2 } from './math.js';
+import { V3, addPos, scalePos, subPos, posEqual, Vec2 } from './math.js';
 
 // TODO: capacity, aka when it splits
 
@@ -10,6 +10,8 @@ type Quadrants<T> = [
 ];
 
 type QuadIndex = 0 | 1 | 2 | 3;
+
+type V2 = [x: number, y: number];
 
 type ItemPositionCallback<T> = (item: T) => V2;
 

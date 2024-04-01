@@ -365,6 +365,9 @@ export class Game {
         this.focusElement.addEventListener('focusout', (e) => this.onFocus(false));
         this.updateGameLoopSettings(this.gameLoopSettings);
     }
+    load(assetManager) {
+        assetManager.loadAssets();
+    }
     get width() {
         return this.canvas.width;
     }
@@ -682,8 +685,8 @@ export class Input {
     constructor(engine) {
         this.engine = engine;
         const mouse = {
-            pos: [-1, -1],
-            realPos: [-1, -1],
+            pos: new Vec2(-1, -1),
+            realPos: new Vec2(-1, -1),
             _clicked: 0,
         };
         const defineXYProperties = (mouse, prefix = null) => {
@@ -697,7 +700,7 @@ export class Input {
                             return mouse[posName][i];
                         },
                         set(val) {
-                            mouse[posName] = Object.freeze(mouse[posName].map((oldVal, index) => index === i ? val : oldVal));
+                            mouse[posName][i] = val;
                         },
                     },
                 });
@@ -851,7 +854,7 @@ export const findAllPolygonsInGrid = (_grid, _columns, _rows) => {
             const [lastX, lastY] = points.length
                 ? subPos(points[points.length - 1], basePos)
                 : [origin, origin];
-            const offset = [0, 0];
+            const offset = new Vec2(0, 0);
             switch (curDir) {
                 case norm.ND:
                     offset[0] = origin;
@@ -1030,7 +1033,7 @@ export class Tileset {
     }
     setTile(x, y, tileX, tileY) {
         // TODO(bret): Make sure it's within the bounds
-        this.data[y * this.columns + x] = [tileX, tileY];
+        this.data[y * this.columns + x] = new Vec2(tileX, tileY);
     }
     render(ctx, camera) {
         const scale = 1;

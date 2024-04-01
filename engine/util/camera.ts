@@ -1,4 +1,4 @@
-import type { V2 } from './math';
+import type { Vec2 } from './math';
 
 export interface Camera {
 	[0]: number;
@@ -6,7 +6,7 @@ export interface Camera {
 }
 
 export class Camera extends Array {
-	constructor(x: V2[0], y: V2[1]) {
+	constructor(x: Vec2[0], y: Vec2[1]) {
 		super();
 		this.push(x, y);
 	}

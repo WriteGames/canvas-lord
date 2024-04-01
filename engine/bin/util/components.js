@@ -1,11 +1,11 @@
-import { V2 } from './math.js';
+import { Vec2 } from './math.js';
 export const copyObject = (obj) => (Array.isArray(obj) ? [...obj] : structuredClone(obj));
 // TODO: rename to registerComponent? And then do something with that?
 // TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
 export const createComponent = (initialState) => Object.freeze(copyObject({
     data: initialState,
 }));
-export const pos2D = createComponent(V2.zero);
+export const pos2D = createComponent(Vec2.zero);
 const drawable = {
     angle: 0,
     scaleX: 1,

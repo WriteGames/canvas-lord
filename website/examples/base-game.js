@@ -110,26 +110,7 @@ export let assetManager;
 export const initGamesBase =
 	(Player, properties) =>
 	(id, src = '') => {
-		const game = new Game(id);
-		game.backgroundColor = '#87E1A3';
-
 		assetManager = new AssetManager(`${src}img/`);
-
-		const inspector = new Inspector(game);
-		if (properties.includes('x')) inspector.watch('x', {});
-		if (properties.includes('y')) inspector.watch('y', {});
-		if (properties.includes('coyoteLimit')) {
-			inspector.watch('coyoteLimit', {
-				min: 0,
-				max: 60,
-			});
-		}
-		if (properties.includes('jumpInputLimit')) {
-			inspector.watch('jumpInputLimit', {
-				min: 0,
-				max: 60,
-			});
-		}
 
 		assetManager.addImage('grid.bmp');
 		assetManager.addImage('radiohead_spritesheet.png');
@@ -166,5 +147,24 @@ export const initGamesBase =
 
 			inspector.onUpdate();
 		});
-		assetManager.loadAssets();
+
+		const game = new Game(id);
+		game.backgroundColor = '#87E1A3';
+		const inspector = new Inspector(game);
+		if (properties.includes('x')) inspector.watch('x', {});
+		if (properties.includes('y')) inspector.watch('y', {});
+		if (properties.includes('coyoteLimit')) {
+			inspector.watch('coyoteLimit', {
+				min: 0,
+				max: 60,
+			});
+		}
+		if (properties.includes('jumpInputLimit')) {
+			inspector.watch('jumpInputLimit', {
+				min: 0,
+				max: 60,
+			});
+		}
+
+		game.load(assetManager);
 	};

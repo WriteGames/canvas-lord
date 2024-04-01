@@ -6,7 +6,7 @@ import type {
 	Renderable,
 } from '../canvas-lord.js';
 import { Camera } from './camera.js';
-import type { V2 } from './math.js';
+import { Vec2 } from './math.js';
 import { Messages } from './messages.js';
 import type { CSSColor, IEntityComponentType } from './types.js';
 
@@ -26,7 +26,7 @@ export interface Scene {
 	componentSystemMap: Map<IEntityComponentType, IEntitySystem[]>;
 	messages: Messages;
 	shouldUpdate: boolean;
-	screenPos: V2;
+	screenPos: Vec2;
 	camera: Camera;
 	escapeToBlur: boolean;
 	allowRefresh: boolean;
@@ -59,7 +59,7 @@ export class Scene {
 
 		this.messages = new Messages();
 
-		this.screenPos = [0, 0];
+		this.screenPos = new Vec2(0, 0);
 		this.camera = new Camera(0, 0);
 
 		// TODO(bret): Make these false by default
@@ -214,7 +214,8 @@ export class Scene {
 		});
 
 		if (ctx !== gameCtx) {
-			gameCtx.drawImage(ctx.canvas, ...this.screenPos);
+			const [x, y] = this.screenPos;
+			gameCtx.drawImage(ctx.canvas, x, y);
 		}
 	}
 }

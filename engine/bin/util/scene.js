@@ -1,4 +1,5 @@
 import { Camera } from './camera.js';
+import { Vec2 } from './math.js';
 import { Messages } from './messages.js';
 export class Scene {
     constructor(engine) {
@@ -16,7 +17,7 @@ export class Scene {
         };
         this.shouldUpdate = true;
         this.messages = new Messages();
-        this.screenPos = [0, 0];
+        this.screenPos = new Vec2(0, 0);
         this.camera = new Camera(0, 0);
         // TODO(bret): Make these false by default
         this.escapeToBlur = true;
@@ -135,7 +136,8 @@ export class Scene {
             });
         });
         if (ctx !== gameCtx) {
-            gameCtx.drawImage(ctx.canvas, ...this.screenPos);
+            const [x, y] = this.screenPos;
+            gameCtx.drawImage(ctx.canvas, x, y);
         }
     }
 }

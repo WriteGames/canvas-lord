@@ -1,5 +1,5 @@
 import { IEntityComponentType } from './types.js';
-import { V2 } from './math.js';
+import { Vec2 } from './math.js';
 
 // NOTE: This is necessary since Components.createComponent() returns a Readonly<IEntityComponent> - we can use this to remove Readable<>
 export type ComponentProps<T extends IEntityComponentType> =
@@ -25,7 +25,7 @@ export const createComponent = <T extends RawComponent>(initialState: T) =>
 		}),
 	) as IEntityComponentType<T>;
 
-export const pos2D = createComponent(V2.zero);
+export const pos2D = createComponent(Vec2.zero);
 
 const drawable = {
 	angle: 0,
