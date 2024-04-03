@@ -2,50 +2,36 @@ const X = 0;
 const Y = 1;
 const Z = 2;
 const W = 3;
-export class Vec2 {
-    #values = [0, 0];
+export class Vec2 extends Array {
     length = 2;
     constructor(x = 0, y = 0) {
-        this.#values[X] = x;
-        this.#values[Y] = y;
+        super(x, y);
     }
     get x() {
-        return this.#values[X];
+        return this[X];
     }
     set x(value) {
-        this.#values[X] = value;
+        this[X] = value;
     }
     get y() {
-        return this.#values[Y];
+        return this[Y];
     }
     set y(value) {
-        this.#values[Y] = value;
-    }
-    get [X]() {
-        return this.#values[X];
-    }
-    set [X](value) {
-        this.#values[X] = value;
-    }
-    get [Y]() {
-        return this.#values[Y];
-    }
-    set [Y](value) {
-        this.#values[Y] = value;
+        this[Y] = value;
     }
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {
-        return this.#values.map(callbackfn, thisArg);
+        return super.map(callbackfn, thisArg);
     }
     every(predicate, thisArg) {
-        return this.#values.every(predicate, thisArg);
+        return super.every(predicate, thisArg);
     }
     join(separator) {
-        return this.#values.join(separator);
+        return super.join(separator);
     }
     [Symbol.iterator]() {
-        return this.#values.values();
+        return super.values();
     }
     clone() {
         return new Vec2(...this);

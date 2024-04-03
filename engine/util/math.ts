@@ -9,46 +9,27 @@ const Y = 1;
 const Z = 2;
 const W = 3;
 
-export class Vec2 {
-	#values: [number, number] = [0, 0];
-
+export class Vec2 extends Array<number> {
 	length: 2 = 2;
 
 	constructor(x = 0, y = 0) {
-		this.#values[X] = x;
-		this.#values[Y] = y;
+		super(x, y);
 	}
 
 	get x(): number {
-		return this.#values[X];
+		return this[X];
 	}
 
 	set x(value: number) {
-		this.#values[X] = value;
+		this[X] = value;
 	}
 
 	get y(): number {
-		return this.#values[Y];
+		return this[Y];
 	}
 
 	set y(value: number) {
-		this.#values[Y] = value;
-	}
-
-	get [X](): number {
-		return this.#values[X];
-	}
-
-	set [X](value: number) {
-		this.#values[X] = value;
-	}
-
-	get [Y](): number {
-		return this.#values[Y];
-	}
-
-	set [Y](value: number) {
-		this.#values[Y] = value;
+		this[Y] = value;
 	}
 
 	map<U>(
@@ -56,22 +37,22 @@ export class Vec2 {
 		callbackfn: (value: number, index: number, array: number[]) => U,
 		thisArg?: any,
 	): [U, U] {
-		return this.#values.map(callbackfn, thisArg) as [U, U];
+		return super.map(callbackfn, thisArg) as [U, U];
 	}
 
 	every(
 		predicate: (value: number, index: number, array: number[]) => unknown,
 		thisArg?: any,
 	): boolean {
-		return this.#values.every(predicate, thisArg);
+		return super.every(predicate, thisArg);
 	}
 
 	join(separator?: string): string {
-		return this.#values.join(separator);
+		return super.join(separator);
 	}
 
 	[Symbol.iterator]() {
-		return this.#values.values();
+		return super.values();
 	}
 
 	clone(): Vec2 {
