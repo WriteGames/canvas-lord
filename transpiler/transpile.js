@@ -1,6 +1,6 @@
 import fs from 'fs';
 // components & systems
-import { testComponent, moveRightSystem, moveLeftSystem } from './in/test.js';
+import { testComponent, moveRightSystem, moveLeftSystem, deleteSelfSystem, } from './in/test.js';
 import { horizontalMovementComponent, verticalMovementComponent2, horizontalMovementSystem, verticalMovementSystem2, moveXSystem, moveYSystem, } from './in/player.js';
 const parseComponent = (component) => {
     return component.data;
@@ -130,6 +130,11 @@ const testOutput = generateEntity({
     systems: [
         { outputType: 'inline', system: moveLeftSystem },
         { outputType: 'inline', system: moveRightSystem },
+        {
+            outputType: 'function',
+            alias: 'deleteRoutine',
+            system: deleteSelfSystem,
+        },
     ],
 });
 entityToFile('out/test.js', testOutput);

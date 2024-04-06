@@ -10,7 +10,7 @@ const Z = 2;
 const W = 3;
 
 export class Vec2 extends Array<number> {
-	length: 2 = 2;
+	// length: 2 = 2;
 
 	constructor(x = 0, y = 0) {
 		super(x, y);

@@ -119,7 +119,7 @@ export const initGamesBase =
 		assetManager.onLoad(() => {
 			console.log('== AssetManager::onLoad()');
 
-			const splitScreen = true;
+			const splitScreen = false;
 
 			const sceneLeft = new PlayerScene(Player, game);
 

@@ -19,4 +19,11 @@ export const moveRightSystem = {
         }
     },
 };
+export const deleteSelfSystem = {
+    update(entity, input) {
+        if (input.keyCheck(' ')) {
+            entity.scene.removeEntity(entity);
+        }
+    },
+};
 //# sourceMappingURL=test.js.map

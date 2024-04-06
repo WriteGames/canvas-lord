@@ -4,7 +4,12 @@ import { type IEntitySystem } from 'canvas-lord';
 import { type IEntityComponentType } from 'canvas-lord/util/types';
 
 // components & systems
-import { testComponent, moveRightSystem, moveLeftSystem } from './in/test.js';
+import {
+	testComponent,
+	moveRightSystem,
+	moveLeftSystem,
+	deleteSelfSystem,
+} from './in/test.js';
 import {
 	horizontalMovementComponent,
 	verticalMovementComponent2,
@@ -224,6 +229,11 @@ const testOutput = generateEntity({
 	systems: [
 		{ outputType: 'inline', system: moveLeftSystem },
 		{ outputType: 'inline', system: moveRightSystem },
+		{
+			outputType: 'function',
+			alias: 'deleteRoutine',
+			system: deleteSelfSystem,
+		},
 	],
 });
 

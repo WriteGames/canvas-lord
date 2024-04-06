@@ -21,3 +21,10 @@ export const moveRightSystem = {
 		}
 	},
 };
+export const deleteSelfSystem = {
+	update(entity: Entity, input: Input) {
+		if (input.keyCheck(' ')) {
+			entity.scene.removeEntity(entity);
+		}
+	},
+};
