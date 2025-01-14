@@ -626,11 +626,15 @@ export const initGames = (src = '', gamesMap = []) => {
 		})
 		.filter(Boolean);
 
+	let gamesRendered = false;
 	assetManager.addImage('grid.bmp');
 	assetManager.addImage('radiohead_spritesheet.png');
 	assetManager.addImage('tileset.png');
 	assetManager.onLoad(() => {
 		console.log('== AssetManager::onLoad()');
+
+		if (gamesRendered) return;
+		gamesRendered = true;
 
 		const splitScreen = false;
 
