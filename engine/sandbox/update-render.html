@@ -4,13 +4,29 @@
 		<meta charset="utf-8" />
 		<title>Canvas Lord</title>
 		<style media="screen">
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
 			body {
 				background: #181920;
 				padding: 1rem 0;
 				color: #ddd;
 			}
 
+			.canvas-lord {
+				width: 100%;
+				max-width: 656px;
+				margin: 0 auto;
+				&:focus-within canvas {
+					border-color: #bbf;
+				}
+			}
+
 			canvas {
+				box-sizing: content-box;
 				display: block;
 				width: 100%;
 				max-width: 640px;
@@ -73,12 +89,13 @@
 
 			[...document.querySelectorAll('canvas')].forEach((canvas) => {
 				const { id } = canvas;
-				const [update, render] = id.split('-');
+				const [updateMode, renderMode] = id.split('-');
 
 				const gameLoopSettings = {
-					update,
-					updateOn: update === 'onEvent' ? ['mousemove'] : undefined,
-					render,
+					updateMode,
+					updateOn:
+						updateMode === 'onEvent' ? ['mousemove'] : undefined,
+					renderMode,
 				};
 
 				const game = new Game(id, {
