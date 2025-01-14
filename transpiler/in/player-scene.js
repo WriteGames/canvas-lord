@@ -27,7 +27,7 @@ export class PlayerScene extends Scene {
         this.addRenderable(this.player);
     }
     initTileset(grid, assetManager) {
-        const img = assetManager.images.get('tileset.png');
+        const img = assetManager.sprites.get('tileset.png');
         if (!img)
             throw new Error();
         const tileset = new Tileset(img, grid.width, grid.height, 16, 16);

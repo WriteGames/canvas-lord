@@ -26,7 +26,7 @@ class Player {
 		this.gspeed = 0.12; // gravity
 		this.jspeed = -3.95; // initial jump velocity
 
-		this.image = assetManager.images.get('radiohead_spritesheet.png');
+		this.image = assetManager.sprites.get('radiohead_spritesheet.png');
 
 		this.coyote = 0;
 		this.coyoteLimit = 6;

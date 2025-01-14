@@ -393,23 +393,38 @@ export const globalSetTile = (
 
 type AssetManagerOnLoadCallback = (src: string) => void;
 
+export type Sprite = {
+	fileName: string;
+} & (
+	| {
+			image: null;
+			loaded: false;
+	  }
+	| {
+			image: HTMLImageElement;
+			width: number;
+			height: number;
+			loaded: true;
+	  }
+);
+
 export interface AssetManager {
-	images: Map<string, HTMLImageElement | null>;
-	imagesLoaded: number;
+	sprites: Map<string, Sprite>;
+	spritesLoaded: number;
 	onLoadCallbacks: AssetManagerOnLoadCallback[];
 	prefix: string;
 }
 
 export class AssetManager {
 	constructor(prefix = '') {
-		this.images = new Map();
-		this.imagesLoaded = 0;
+		this.sprites = new Map();
+		this.spritesLoaded = 0;
 		this.onLoadCallbacks = [];
 		this.prefix = prefix;
 	}
 
 	addImage(src: string): void {
-		this.images.set(src, null);
+		this.sprites.set(src, { fileName: src, image: null, loaded: false });
 	}
 
 	loadImage(src: string): void {
@@ -423,19 +438,29 @@ export class AssetManager {
 		}
 		image.onload = (): void => {
 			this.imageLoaded(src);
-			this.images.set(src, image);
+			const sprite = this.sprites.get(src);
+			if (!sprite) {
+				throw new Error(
+					`Loaded image that doesn't exist in map ("${src}" / "${fullPath}")`,
+				);
+			}
+			sprite.loaded = true;
+			if ((sprite.image = image)) {
+				sprite.width = image.width;
+				sprite.height = image.height;
+			}
 		};
 		image.src = fullPath;
 	}
 
 	loadAssets(): void {
-		[...this.images.keys()].forEach((src) => {
+		[...this.sprites.keys()].forEach((src) => {
 			this.loadImage(src);
 		});
 	}
 
 	imageLoaded(src: string): void {
-		if (++this.imagesLoaded === this.images.size) {
+		if (++this.spritesLoaded === this.sprites.size) {
 			window.requestAnimationFrame(() => {
 				this.onLoadCallbacks.forEach((callback) => callback(src));
 			});
@@ -506,6 +531,7 @@ export interface Game {
 	frameRequestId: number;
 	eventListeners: CachedEventListener[];
 	_onGameLoopSettingsUpdate?: EventCallback;
+	assetManager?: AssetManager;
 }
 
 export type Engine = Game;
@@ -513,6 +539,7 @@ export type Engine = Game;
 interface InitialSettings {
 	fps: number;
 	gameLoopSettings?: GameLoopSettings;
+	assetManager?: AssetManager;
 }
 
 export class Game {
@@ -564,6 +591,7 @@ export class Game {
 		this.fps = settings?.fps ?? 60;
 		if (settings?.gameLoopSettings)
 			this.gameLoopSettings = settings.gameLoopSettings;
+		this.assetManager = settings?.assetManager;
 
 		this.sceneStack = [];
 
@@ -1555,7 +1583,7 @@ export interface Tileset {
 	columns: number;
 	rows: number;
 
-	image: HTMLImageElement;
+	sprite: Sprite;
 
 	data: Array<Vec2 | null>;
 
@@ -1566,7 +1594,7 @@ export interface Tileset {
 
 export class Tileset {
 	constructor(
-		image: HTMLImageElement,
+		sprite: Sprite,
 		width: number,
 		height: number,
 		tileW: number,
@@ -1579,7 +1607,7 @@ export class Tileset {
 		this.columns = Math.ceil(width / tileW);
 		this.rows = Math.ceil(height / tileH);
 
-		this.image = image;
+		this.sprite = sprite;
 
 		this.data = Array.from(
 			{ length: this.columns * this.rows },
@@ -1599,10 +1627,19 @@ export class Tileset {
 	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
 		const scale = 1;
 
-		const { image, separation, startX, startY, tileW, tileH } = this;
+		const {
+			sprite: image,
+			separation,
+			startX,
+			startY,
+			tileW,
+			tileH,
+		} = this;
 
-		const srcCols = Math.floor(this.image.width / tileW);
-		const srcRows = Math.floor(this.image.height / tileH);
+		if (!image.image) throw new Error('Tileset is missing an image');
+
+		const srcCols = Math.floor(image.width / tileW);
+		const srcRows = Math.floor(image.height / tileH);
 
 		const [cameraX, cameraY] = camera;
 
@@ -1616,7 +1653,7 @@ export class Tileset {
 					const dstX = x * tileW - cameraX;
 					const dstY = y * tileH - cameraY;
 					ctx.drawImage(
-						image,
+						image.image,
 						srcX,
 						srcY,
 						tileW,

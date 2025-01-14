@@ -229,13 +229,13 @@ export const globalSetTile = (tileset, x, y, bitFlag) => {
 };
 export class AssetManager {
     constructor(prefix = '') {
-        this.images = new Map();
-        this.imagesLoaded = 0;
+        this.sprites = new Map();
+        this.spritesLoaded = 0;
         this.onLoadCallbacks = [];
         this.prefix = prefix;
     }
     addImage(src) {
-        this.images.set(src, null);
+        this.sprites.set(src, { fileName: src, image: null, loaded: false });
     }
     loadImage(src) {
         const image = new Image();
@@ -246,17 +246,25 @@ export class AssetManager {
         }
         image.onload = () => {
             this.imageLoaded(src);
-            this.images.set(src, image);
+            const sprite = this.sprites.get(src);
+            if (!sprite) {
+                throw new Error(`Loaded image that doesn't exist in map ("${src}" / "${fullPath}")`);
+            }
+            sprite.loaded = true;
+            if ((sprite.image = image)) {
+                sprite.width = image.width;
+                sprite.height = image.height;
+            }
         };
         image.src = fullPath;
     }
     loadAssets() {
-        [...this.images.keys()].forEach((src) => {
+        [...this.sprites.keys()].forEach((src) => {
             this.loadImage(src);
         });
     }
     imageLoaded(src) {
-        if (++this.imagesLoaded === this.images.size) {
+        if (++this.spritesLoaded === this.sprites.size) {
             window.requestAnimationFrame(() => {
                 this.onLoadCallbacks.forEach((callback) => callback(src));
             });
@@ -308,6 +316,7 @@ export class Game {
         this.fps = settings?.fps ?? 60;
         if (settings?.gameLoopSettings)
             this.gameLoopSettings = settings.gameLoopSettings;
+        this.assetManager = settings?.assetManager;
         this.sceneStack = [];
         this.backgroundColor = '#323232';
         // TODO(bret): Might also want to listen for styling changes to the canvas element
@@ -1018,14 +1027,14 @@ export class GridOutline {
     }
 }
 export class Tileset {
-    constructor(image, width, height, tileW, tileH) {
+    constructor(sprite, width, height, tileW, tileH) {
         this.width = width;
         this.height = height;
         this.tileW = tileW;
         this.tileH = tileH;
         this.columns = Math.ceil(width / tileW);
         this.rows = Math.ceil(height / tileH);
-        this.image = image;
+        this.sprite = sprite;
         this.data = Array.from({ length: this.columns * this.rows }, (v) => null);
         this.startX = 1;
         this.startY = 1;
@@ -1037,9 +1046,11 @@ export class Tileset {
     }
     render(ctx, camera) {
         const scale = 1;
-        const { image, separation, startX, startY, tileW, tileH } = this;
-        const srcCols = Math.floor(this.image.width / tileW);
-        const srcRows = Math.floor(this.image.height / tileH);
+        const { sprite: image, separation, startX, startY, tileW, tileH, } = this;
+        if (!image.image)
+            throw new Error('Tileset is missing an image');
+        const srcCols = Math.floor(image.width / tileW);
+        const srcRows = Math.floor(image.height / tileH);
         const [cameraX, cameraY] = camera;
         for (let y = 0; y < this.rows; ++y) {
             for (let x = 0; x < this.columns; ++x) {
@@ -1050,7 +1061,7 @@ export class Tileset {
                     const srcY = startY + (separation + tileH) * tileY;
                     const dstX = x * tileW - cameraX;
                     const dstY = y * tileH - cameraY;
-                    ctx.drawImage(image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
+                    ctx.drawImage(image.image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
                 }
             }
         }

@@ -26,7 +26,7 @@ import { ButtonsOverlay } from './bin/util/buttons-overlay.js';
 
 export const initTileset = (assetManager, grid) => {
 	const tileset = new Tileset(
-		assetManager.images.get('tileset.png'),
+		assetManager.sprites.get('tileset.png'),
 		grid.width,
 		grid.height,
 		16,

@@ -605,8 +605,9 @@ let assetManager;
 export const initGames = (src = '', gamesMap = []) => {
 	// const game1 = new Game('basic');
 	// const game2 = new Game('second');
-	const games = gamesMap.map(({ id }) => new Game(id));
 	assetManager = new AssetManager(`${src}img/`);
+	const settings = { assetManager };
+	const games = gamesMap.map(({ id }) => new Game(id, settings));
 
 	const inspectors = games
 		.map((game, i) => {

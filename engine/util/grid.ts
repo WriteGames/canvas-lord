@@ -61,19 +61,19 @@ export class Grid {
 		tileW: number,
 		tileH: number,
 	): Grid {
-		const image = assetManager.images.get(src);
-		if (!image) {
+		const sprite = assetManager.sprites.get(src);
+		if (!sprite?.image) {
 			throw new Error('image is not valid');
 		}
 
-		const width = image.width * tileW;
-		const height = image.height * tileH;
-		const stride = image.width;
+		const width = sprite.width * tileW;
+		const height = sprite.height * tileH;
+		const stride = sprite.width;
 
 		const grid = new Grid(width, height, tileW, tileH);
 		grid.forEach((_, [x, y]) => {
 			// @ts-ignore
-			pixelCtx.drawImage(image, -x, -y);
+			pixelCtx.drawImage(sprite.image, -x, -y);
 			// @ts-ignore
 			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
 			if (data[0] === 0) {

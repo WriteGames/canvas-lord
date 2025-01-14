@@ -22,7 +22,7 @@ export class Player extends Entity {
 		super(x, y);
 
 		this.scene = null;
-		this.image = assetManager.images.get('radiohead_spritesheet.png');
+		this.sprite = assetManager.sprites.get('radiohead_spritesheet.png');
 
 		this.facing = 1;
 
@@ -257,8 +257,8 @@ export class Player extends Entity {
 		const drawX = this.x - camera.x;
 		const drawY = this.y - camera.y;
 
-		const drawW = this.image.width / 4;
-		const drawH = this.image.height;
+		const drawW = this.sprite.width / 4;
+		const drawH = this.sprite.height;
 
 		const offsetX = -10;
 
@@ -268,7 +268,7 @@ export class Player extends Entity {
 		}
 
 		ctx.drawImage(
-			this.image,
+			this.sprite.image,
 			this.frame * 32,
 			0,
 			32,
@@ -403,7 +403,7 @@ export class PlayerWithComponents extends Entity {
 		super(x, y);
 
 		this.scene = null;
-		this.image = assetManager.images.get('radiohead_spritesheet.png');
+		this.sprite = assetManager.sprites.get('radiohead_spritesheet.png');
 
 		this.facing = 1;
 
@@ -438,7 +438,7 @@ export class PlayerWithComponents extends Entity {
 		imageComp.originX = 16;
 		imageComp.frameW = 32;
 		imageComp.frameH = 32;
-		imageComp.imageSrc = assetManager.images.get(
+		imageComp.imageSrc = assetManager.sprites.get(
 			'radiohead_spritesheet.png',
 		);
 	}
@@ -558,8 +558,8 @@ export class PlayerWithComponents extends Entity {
 		const drawX = this.x - camera.x;
 		const drawY = this.y - camera.y;
 
-		const drawW = this.image.width / 4;
-		const drawH = this.image.height;
+		const drawW = this.sprite.width / 4;
+		const drawH = this.sprite.height;
 
 		const offsetX = -10;
 
@@ -569,7 +569,7 @@ export class PlayerWithComponents extends Entity {
 		}
 
 		ctx.drawImage(
-			this.image,
+			this.sprite.image,
 			this.frame * 32,
 			0,
 			32,
