@@ -263,6 +263,12 @@ export class AssetManager {
             this.loadImage(src);
         });
     }
+    reloadAssets() {
+        this.spritesLoaded = 0;
+        [...this.sprites.keys()].forEach((src) => {
+            this.loadImage(src);
+        });
+    }
     imageLoaded(src) {
         if (++this.spritesLoaded === this.sprites.size) {
             window.requestAnimationFrame(() => {
@@ -504,6 +510,10 @@ export class Game {
             scenes.forEach((scene) => scene.preUpdate(this.input));
             scenes.forEach((scene) => scene.update(this.input));
             scenes.forEach((scene) => scene.postUpdate(this.input));
+        }
+        // reload assets
+        if (this.input.keyPressed('F2')) {
+            this.assetManager?.reloadAssets();
         }
         this.sendEvent('update');
     }
