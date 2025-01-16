@@ -47,6 +47,7 @@ const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 		ctx.scale(scaleX, scaleY);
 		ctx.translate(-originX, -originY);
 
+		// TODO: scaleX/scaleY to not apply to x2/y2 on Draw.line
 		callback(ctx, options, x / scaleX, y / scaleY, ...args);
 
 		ctx.restore();

@@ -10,6 +10,9 @@ import { Vec2 } from './math.js';
 import { Messages } from './messages.js';
 import type { CSSColor, IEntityComponentType } from './types.js';
 
+// TODO: it could be good to have a `frame: number` for which frame we're on
+// it would increment, well, every frame :)
+// TODO: should there be one in Game as well?
 export interface Scene {
 	engine: Engine;
 	backgroundColor?: CSSColor;
@@ -30,7 +33,7 @@ export interface Scene {
 	camera: Camera;
 	escapeToBlur: boolean;
 	allowRefresh: boolean;
-	// we need a Rect type, maybe class?
+	// TODO: we need a Rect type, maybe class?
 	bounds: [number, number, number, number] | null;
 
 	canvas: HTMLCanvasElement;
