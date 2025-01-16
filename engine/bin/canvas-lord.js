@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, } from './util/math.js';
+import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './util/math.js';
 import { Grid } from './util/grid.js';
 export { Draw } from './util/draw.js';
 // TODO: only export these from math.js
-export { V2, addPos, subPos, scalePos } from './util/math.js';
+export { V2, addPos, subPos, scalePos, EPSILON, } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
+export * as Collision from './util/collision.js';
 export { Entity } from './util/entity.js';
 export { Grid } from './util/grid.js';
 // NOTE: This should be able to infer the return type...
@@ -16,7 +17,6 @@ Math.clamp = (val, min, max) => {
         return max;
     return val;
 };
-export const EPSILON = 0.000001;
 const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;
 const distance = (dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));

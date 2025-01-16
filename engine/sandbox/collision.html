@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<title>Canvas Lord</title>
+		<style media="screen">
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
+			body {
+				height: 100%;
+				background: #181920;
+				padding: 1rem 0;
+				color: #ddd;
+			}
+
+			.canvas-lord {
+				width: 100%;
+				max-width: 656px;
+				margin: 0 auto;
+				&:focus-within canvas {
+					border-color: #bbf;
+				}
+			}
+
+			canvas {
+				box-sizing: content-box;
+				display: block;
+				width: 100%;
+				max-width: 640px;
+				margin: 0 auto;
+				padding: 5px;
+				border: 3px solid #ddd;
+				image-rendering: -moz-crisp-edges;
+				image-rendering: -webkit-crisp-edges;
+				image-rendering: pixelated;
+				image-rendering: crisp-edges;
+			}
+
+			h2 {
+				text-align: center;
+				margin-block: 2rem 1rem;
+			}
+
+			button {
+				display: block;
+				margin-block: 1rem;
+				margin-inline: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="canvases"></div>
+
+		<script type="module">
+			import {
+				Collision,
+				Draw,
+				Game,
+				Scene,
+			} from '../bin/canvas-lord.js';
+
+			const canvasesDiv = document.getElementById('canvases');
+
+			const variants = [{ update: 'focus', render: 'onUpdate' }];
+
+			variants.forEach(({ update, render }) => {
+				const canvas = document.createElement('canvas');
+				canvas.id = [update, render].join('-');
+				canvas.setAttribute('width', '320px');
+				canvas.setAttribute('height', '180px');
+				canvas.setAttribute('tabindex', '-1');
+
+				canvasesDiv.append(canvas);
+			});
+
+			const drawRect = (ctx, fill, ...args) =>
+				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
+
+			[...document.querySelectorAll('canvas')].forEach((canvas) => {
+				const { id } = canvas;
+				const [updateMode, renderMode] = id.split('-');
+
+				const gameLoopSettings = {
+					updateMode,
+					updateOn:
+						updateMode === 'onEvent' ? ['mousemove'] : undefined,
+					renderMode,
+				};
+
+				const game = new Game(id, {
+					gameLoopSettings,
+				});
+
+				const drawOverlay = () => {
+					game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
+					game.ctx.fillRect(0, 0, 640, 360);
+				};
+
+				game.listeners.blur.add(drawOverlay);
+
+				class UpdateRenderScene extends Scene {
+					updates = 0;
+					renders = 0;
+
+					rect1 = { x: 20, y: 20, w: 20, h: 20, colliding: false };
+					rect2 = { x: 60, y: 10, w: 40, h: 40, colliding: false };
+
+					// rect3 = { x: 20, y: 80, w: 20, h: 20, colliding: false };
+					rect4 = { x: 60, y: 80, w: 40, h: 40, colliding: false };
+
+					circle5 = { x: 190, y: 40, radius: 10, colliding: false };
+					circle6 = { x: 210, y: 30, radius: 20, colliding: false };
+
+					circle8 = { x: 210, y: 100, radius: 20, colliding: false };
+
+					rect9 = { x: 130, y: 135, w: 40, h: 40, colliding: false };
+					circle10 = {
+						x: 190 - 60,
+						y: 40 + 125,
+						radius: 10,
+						colliding: false,
+					};
+
+					constructor() {
+						super();
+						this.updatePos();
+					}
+
+					updatePos(input) {
+						const offsetX = Math.round(
+							-Math.cos(this.updates / 30) * 40,
+						);
+						const offsetY = Math.round(
+							-Math.cos(this.updates / 50) * 30,
+						);
+						this.rect1.x = offsetX + 70;
+						this.rect1.y = offsetY + 20;
+
+						this.circle5.x = offsetX + 220;
+						this.circle5.y = offsetY + 30;
+
+						this.circle10.x = offsetX + 220 - 70;
+						this.circle10.y = offsetY + 30 + 125;
+
+						{
+							const overlap = Collision.collideRectRect(
+								this.rect1,
+								this.rect2,
+							);
+							this.rect1.colliding = overlap;
+							this.rect2.colliding = overlap;
+						}
+
+						if (input) {
+							// const overlap = aabb(this.rect3, this.rect4);
+							// pointInRect(
+							const overlap = Collision.collidePointRect(
+								input.mouse.x,
+								input.mouse.y,
+								this.rect4,
+							);
+							// this.rect3.colliding = overlap;
+							this.rect4.colliding = overlap;
+						}
+
+						{
+							const overlap = Collision.collideCircleCircle(
+								this.circle5,
+								this.circle6,
+							);
+							this.circle5.colliding = overlap;
+							this.circle6.colliding = overlap;
+						}
+
+						if (input) {
+							const overlap = Collision.collidePointCircle(
+								input.mouse.x,
+								input.mouse.y,
+								this.circle8,
+							);
+							this.circle8.colliding = overlap;
+						}
+
+						{
+							const overlap = Collision.collideRectCircle(
+								this.rect9,
+								this.circle10,
+							);
+							this.rect9.colliding = overlap;
+							this.circle10.colliding = overlap;
+						}
+					}
+
+					update(input) {
+						++this.updates;
+						this.updatePos(input);
+					}
+
+					render(ctx) {
+						++this.renders;
+
+						ctx.fillStyle = 'white';
+
+						ctx.strokeStyle = 'white';
+
+						[
+							this.rect1,
+							this.rect2,
+							// this.rect3,
+							this.rect4,
+							this.circle5,
+							this.circle6,
+							this.circle8,
+							this.rect9,
+							this.circle10,
+						].forEach((shape) => {
+							ctx.strokeStyle = shape.colliding ? 'red' : 'lime';
+							if (shape.radius) {
+								Draw.circle(
+									ctx,
+									{ type: 'stroke' },
+									shape.x - shape.radius,
+									shape.y - shape.radius,
+									shape.radius,
+								);
+							} else {
+								drawRect(
+									ctx,
+									false,
+									shape.x + 0.5,
+									shape.y + 0.5,
+									shape.w - 1,
+									shape.h - 1,
+								);
+							}
+						});
+					}
+				}
+
+				const scene = new UpdateRenderScene(game);
+
+				game.pushScene(scene);
+
+				game.render();
+				drawOverlay();
+			});
+		</script>
+	</body>
+</html>

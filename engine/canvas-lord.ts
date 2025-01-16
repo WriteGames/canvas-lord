@@ -11,6 +11,7 @@ import {
 	hashPos,
 	posEqual,
 	Vec2,
+	EPSILON,
 } from './util/math.js';
 
 import { CSSColor } from './util/types.js';
@@ -23,9 +24,17 @@ import { Grid } from './util/grid.js';
 export { Draw } from './util/draw.js';
 
 // TODO: only export these from math.js
-export { V2, type Vector, addPos, subPos, scalePos } from './util/math.js';
+export {
+	V2,
+	type Vector,
+	addPos,
+	subPos,
+	scalePos,
+	EPSILON,
+} from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
+export * as Collision from './util/collision.js';
 export { Entity } from './util/entity.js';
 export { Grid } from './util/grid.js';
 
@@ -69,8 +78,6 @@ Math.clamp = (val, min, max): number => {
 	if (val > max) return max;
 	return val;
 };
-
-export const EPSILON = 0.000001;
 
 const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
 const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;

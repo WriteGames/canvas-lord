@@ -1,3 +1,4 @@
+export const EPSILON = 0.000001;
 const X = 0;
 const Y = 1;
 const Z = 2;

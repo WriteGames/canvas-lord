@@ -1,3 +1,5 @@
+export const EPSILON = 0.000001;
+
 /*export*/ type V2 = [x: number, y: number];
 export type V3 = [x: number, y: number, z: number];
 export type V4 = [x: number, y: number, z: number, w: number];
