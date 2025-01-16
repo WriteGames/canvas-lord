@@ -53,7 +53,20 @@
 		</style>
 	</head>
 	<body>
-		<div id="canvases"></div>
+		<div id="canvases">
+			<canvas
+				id="canvas1"
+				width="320px"
+				height="180px"
+				tabindex="-1"
+			></canvas>
+			<canvas
+				id="canvas2"
+				width="320px"
+				height="180px"
+				tabindex="-1"
+			></canvas>
+		</div>
 
 		<script type="module">
 			import {
@@ -63,37 +76,352 @@
 				Scene,
 			} from '../bin/canvas-lord.js';
 
-			const canvasesDiv = document.getElementById('canvases');
-
-			const variants = [{ update: 'focus', render: 'onUpdate' }];
-
-			variants.forEach(({ update, render }) => {
-				const canvas = document.createElement('canvas');
-				canvas.id = [update, render].join('-');
-				canvas.setAttribute('width', '320px');
-				canvas.setAttribute('height', '180px');
-				canvas.setAttribute('tabindex', '-1');
-
-				canvasesDiv.append(canvas);
-			});
-
 			const drawRect = (ctx, fill, ...args) =>
 				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-			[...document.querySelectorAll('canvas')].forEach((canvas) => {
-				const { id } = canvas;
-				const [updateMode, renderMode] = id.split('-');
+			class PointRectCircleScene extends Scene {
+				updates = 0;
 
-				const gameLoopSettings = {
-					updateMode,
-					updateOn:
-						updateMode === 'onEvent' ? ['mousemove'] : undefined,
-					renderMode,
+				points = [
+					//
+					[80, 30], // top left
+					[80, 100], // middle left
+					[210, 30], // top right
+					[210, 100], // middle right
+					[150, 155], // bottom center
+				];
+
+				rect1 = { x: 20, y: 20, w: 20, h: 20, colliding: false };
+				rect2 = { x: 60, y: 10, w: 40, h: 40, colliding: false };
+
+				rect4 = { x: 60, y: 80, w: 40, h: 40, colliding: false };
+
+				circle5 = { x: 190, y: 40, radius: 10, colliding: false };
+				circle6 = { x: 210, y: 30, radius: 20, colliding: false };
+
+				circle8 = { x: 210, y: 100, radius: 20, colliding: false };
+
+				rect9 = { x: 130, y: 135, w: 40, h: 40, colliding: false };
+				circle10 = {
+					x: 190 - 60,
+					y: 40 + 125,
+					radius: 10,
+					colliding: false,
 				};
 
-				const game = new Game(id, {
-					gameLoopSettings,
-				});
+				constructor() {
+					super();
+					this.updatePos();
+				}
+
+				updatePos(input) {
+					const offsetX = Math.round(
+						-Math.cos(this.updates / 60) * 40,
+					);
+					const offsetY = Math.round(
+						-Math.cos(this.updates / 50) * 30,
+					);
+
+					const [origin1, origin2, origin3, origin4, origin5] =
+						this.points;
+
+					this.rect1.x = offsetX + origin1[0] - (this.rect1.w >> 1);
+					this.rect1.y = offsetY + origin1[1] - (this.rect1.h >> 1);
+
+					this.circle5.x = offsetX + origin3[0];
+					this.circle5.y = offsetY + origin3[1];
+
+					this.circle10.x = offsetX + origin5[0];
+					this.circle10.y = offsetY + origin5[1];
+
+					{
+						const overlap = Collision.collideRectRect(
+							this.rect1,
+							this.rect2,
+						);
+						this.rect1.colliding = overlap;
+						this.rect2.colliding = overlap;
+					}
+
+					if (input) {
+						// const overlap = aabb(this.rect3, this.rect4);
+						// pointInRect(
+						const overlap = Collision.collidePointRect(
+							input.mouse.x,
+							input.mouse.y,
+							this.rect4,
+						);
+						// this.rect3.colliding = overlap;
+						this.rect4.colliding = overlap;
+					}
+
+					{
+						const overlap = Collision.collideCircleCircle(
+							this.circle5,
+							this.circle6,
+						);
+						this.circle5.colliding = overlap;
+						this.circle6.colliding = overlap;
+					}
+
+					if (input) {
+						const overlap = Collision.collidePointCircle(
+							input.mouse.x,
+							input.mouse.y,
+							this.circle8,
+						);
+						this.circle8.colliding = overlap;
+					}
+
+					{
+						const overlap = Collision.collideRectCircle(
+							this.rect9,
+							this.circle10,
+						);
+						this.rect9.colliding = overlap;
+						this.circle10.colliding = overlap;
+					}
+				}
+
+				update(input) {
+					++this.updates;
+					this.updatePos(input);
+				}
+
+				render(ctx) {
+					ctx.fillStyle = 'white';
+
+					ctx.strokeStyle = 'white';
+
+					[
+						this.rect1,
+						this.rect2,
+						// this.rect3,
+						this.rect4,
+						this.circle5,
+						this.circle6,
+						this.circle8,
+						this.rect9,
+						this.circle10,
+					].forEach((shape) => {
+						ctx.strokeStyle = shape.colliding ? 'red' : 'lime';
+						if (shape.radius) {
+							Draw.circle(
+								ctx,
+								{ type: 'stroke' },
+								shape.x - shape.radius,
+								shape.y - shape.radius,
+								shape.radius,
+							);
+						} else {
+							drawRect(
+								ctx,
+								false,
+								shape.x + 0.5,
+								shape.y + 0.5,
+								shape.w - 1,
+								shape.h - 1,
+							);
+						}
+					});
+				}
+			}
+
+			class PointRectCircleScene2 extends Scene {
+				updates = 0;
+
+				points = [
+					//
+					[80, 30], // top left
+					[80, 100], // middle left
+					[210, 30], // top right
+					[210, 100], // middle right
+					[150, 155], // bottom center
+				];
+
+				lines = [];
+
+				rect1 = { x: 20, y: 20, w: 20, h: 20, colliding: false };
+				circle5 = { x: 190, y: 40, radius: 10, colliding: false };
+				line10 = {
+					type: 'line',
+					x1: 0,
+					y1: 0,
+					x2: 0,
+					y2: 0,
+					colliding: false,
+				};
+
+				constructor() {
+					super();
+
+					const inv = 1 / Math.sqrt(2);
+					const lineRadius = 30;
+					const lines = [
+						[-lineRadius, 0, lineRadius, 0],
+						[0, -lineRadius, 0, lineRadius],
+						[-lineRadius, -lineRadius, lineRadius, lineRadius].map(
+							(v) => v * inv,
+						),
+						[lineRadius, -lineRadius, -lineRadius, lineRadius].map(
+							(v) => v * inv,
+						),
+					];
+					this.lines = this.points.map(() => {
+						return lines.map((points) => ({
+							points,
+							colliding: false,
+						}));
+					});
+
+					this.updatePos();
+				}
+
+				updatePos(input) {
+					const offsetX = Math.round(
+						-Math.sin(this.updates / 30) * 40,
+					);
+					const offsetY = Math.round(
+						-Math.sin(this.updates / 50) * 30,
+					);
+
+					const collideAgainstLines = (shape, origin, func) => {
+						shape.colliding = false;
+						const index = this.points.indexOf(origin);
+						const lines = this.lines[index];
+						lines.forEach((line, i) => {
+							const intersect = func(
+								{
+									x1: line.points[0] + origin[0],
+									y1: line.points[1] + origin[1],
+									x2: line.points[2] + origin[0],
+									y2: line.points[3] + origin[1],
+								},
+								shape,
+							);
+							line.colliding = intersect;
+							if (intersect) shape.colliding = true;
+						});
+					};
+
+					{
+						const origin = this.points[0];
+
+						this.rect1.x =
+							offsetX + origin[0] - (this.rect1.w >> 1);
+						this.rect1.y =
+							offsetY + origin[1] - (this.rect1.h >> 1);
+
+						collideAgainstLines(
+							this.rect1,
+							origin,
+							Collision.collideLineRect,
+						);
+					}
+
+					{
+						const origin = this.points[1];
+
+						this.line10.x1 = offsetX + origin[0] + 5;
+						this.line10.y1 = offsetY + origin[1] - 15;
+						this.line10.x2 = offsetX + origin[0] - 5;
+						this.line10.y2 = offsetY + origin[1] + 15;
+
+						collideAgainstLines(
+							this.line10,
+							origin,
+							Collision.collideLineLine,
+						);
+					}
+
+					{
+						const origin = this.points[2];
+
+						this.circle5.x = offsetX + origin[0];
+						this.circle5.y = offsetY + origin[1];
+
+						collideAgainstLines(
+							this.circle5,
+							origin,
+							Collision.collideLineCircle,
+						);
+					}
+
+					if (input) {
+						const origin = this.points[3];
+						const mouse = {
+							pos: input.mouse.pos,
+							colliding: false,
+						};
+
+						collideAgainstLines(mouse, origin, (line, point) => {
+							return Collision.collidePointLine(
+								point.pos.x,
+								point.pos.y,
+								line,
+							);
+						});
+					}
+				}
+
+				update(input) {
+					++this.updates;
+					this.updatePos(input);
+				}
+
+				render(ctx) {
+					ctx.fillStyle = 'white';
+
+					ctx.strokeStyle = 'white';
+
+					[this.rect1, this.circle5, this.line10].forEach((shape) => {
+						ctx.strokeStyle = shape.colliding ? 'red' : 'lime';
+						if (shape.type === 'line') {
+							Draw.line(
+								ctx,
+								{},
+								shape.x1,
+								shape.y1,
+								shape.x2,
+								shape.y2,
+							);
+						} else if (shape.radius) {
+							Draw.circle(
+								ctx,
+								{ type: 'stroke' },
+								shape.x - shape.radius,
+								shape.y - shape.radius,
+								shape.radius,
+							);
+						} else {
+							drawRect(
+								ctx,
+								false,
+								shape.x + 0.5,
+								shape.y + 0.5,
+								shape.w - 1,
+								shape.h - 1,
+							);
+						}
+					});
+
+					this.points.forEach(([x, y], i) => {
+						this.lines[i].forEach((line) => {
+							ctx.strokeStyle = line.colliding ? 'red' : 'lime';
+							Draw.line(
+								ctx,
+								{},
+								...line.points.map(
+									(v, i) => v + (i % 2 === 0 ? x : y),
+								),
+							);
+						});
+					});
+				}
+			}
+
+			const startGame = (id, Scene) => {
+				const game = new Game(id);
 
 				const drawOverlay = () => {
 					game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
@@ -102,152 +430,16 @@
 
 				game.listeners.blur.add(drawOverlay);
 
-				class UpdateRenderScene extends Scene {
-					updates = 0;
-					renders = 0;
-
-					rect1 = { x: 20, y: 20, w: 20, h: 20, colliding: false };
-					rect2 = { x: 60, y: 10, w: 40, h: 40, colliding: false };
-
-					// rect3 = { x: 20, y: 80, w: 20, h: 20, colliding: false };
-					rect4 = { x: 60, y: 80, w: 40, h: 40, colliding: false };
-
-					circle5 = { x: 190, y: 40, radius: 10, colliding: false };
-					circle6 = { x: 210, y: 30, radius: 20, colliding: false };
-
-					circle8 = { x: 210, y: 100, radius: 20, colliding: false };
-
-					rect9 = { x: 130, y: 135, w: 40, h: 40, colliding: false };
-					circle10 = {
-						x: 190 - 60,
-						y: 40 + 125,
-						radius: 10,
-						colliding: false,
-					};
-
-					constructor() {
-						super();
-						this.updatePos();
-					}
-
-					updatePos(input) {
-						const offsetX = Math.round(
-							-Math.cos(this.updates / 30) * 40,
-						);
-						const offsetY = Math.round(
-							-Math.cos(this.updates / 50) * 30,
-						);
-						this.rect1.x = offsetX + 70;
-						this.rect1.y = offsetY + 20;
-
-						this.circle5.x = offsetX + 220;
-						this.circle5.y = offsetY + 30;
-
-						this.circle10.x = offsetX + 220 - 70;
-						this.circle10.y = offsetY + 30 + 125;
-
-						{
-							const overlap = Collision.collideRectRect(
-								this.rect1,
-								this.rect2,
-							);
-							this.rect1.colliding = overlap;
-							this.rect2.colliding = overlap;
-						}
-
-						if (input) {
-							// const overlap = aabb(this.rect3, this.rect4);
-							// pointInRect(
-							const overlap = Collision.collidePointRect(
-								input.mouse.x,
-								input.mouse.y,
-								this.rect4,
-							);
-							// this.rect3.colliding = overlap;
-							this.rect4.colliding = overlap;
-						}
-
-						{
-							const overlap = Collision.collideCircleCircle(
-								this.circle5,
-								this.circle6,
-							);
-							this.circle5.colliding = overlap;
-							this.circle6.colliding = overlap;
-						}
-
-						if (input) {
-							const overlap = Collision.collidePointCircle(
-								input.mouse.x,
-								input.mouse.y,
-								this.circle8,
-							);
-							this.circle8.colliding = overlap;
-						}
-
-						{
-							const overlap = Collision.collideRectCircle(
-								this.rect9,
-								this.circle10,
-							);
-							this.rect9.colliding = overlap;
-							this.circle10.colliding = overlap;
-						}
-					}
-
-					update(input) {
-						++this.updates;
-						this.updatePos(input);
-					}
-
-					render(ctx) {
-						++this.renders;
-
-						ctx.fillStyle = 'white';
-
-						ctx.strokeStyle = 'white';
-
-						[
-							this.rect1,
-							this.rect2,
-							// this.rect3,
-							this.rect4,
-							this.circle5,
-							this.circle6,
-							this.circle8,
-							this.rect9,
-							this.circle10,
-						].forEach((shape) => {
-							ctx.strokeStyle = shape.colliding ? 'red' : 'lime';
-							if (shape.radius) {
-								Draw.circle(
-									ctx,
-									{ type: 'stroke' },
-									shape.x - shape.radius,
-									shape.y - shape.radius,
-									shape.radius,
-								);
-							} else {
-								drawRect(
-									ctx,
-									false,
-									shape.x + 0.5,
-									shape.y + 0.5,
-									shape.w - 1,
-									shape.h - 1,
-								);
-							}
-						});
-					}
-				}
-
-				const scene = new UpdateRenderScene(game);
+				const scene = new Scene(game);
 
 				game.pushScene(scene);
 
 				game.render();
 				drawOverlay();
-			});
+			};
+
+			startGame('canvas1', PointRectCircleScene);
+			startGame('canvas2', PointRectCircleScene2);
 		</script>
 	</body>
 </html>

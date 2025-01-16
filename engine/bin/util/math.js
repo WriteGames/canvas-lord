@@ -20,6 +20,9 @@ export class Vec2 extends Array {
     set y(value) {
         this[Y] = value;
     }
+    get magnitude() {
+        return magnitude2D(this);
+    }
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {
@@ -142,4 +145,5 @@ export const indexToPos = (index, stride) => new Vec2(index % stride, Math.floor
 export const posToIndex = ([x, y], stride) => y * stride + x;
 export const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
 export const dotProduct2D = (a, b) => a[0] * b[0] + a[1] * b[1];
+export const magnitude2D = (v) => Math.sqrt(v.x ** 2 + v.y ** 2);
 //# sourceMappingURL=math.js.map

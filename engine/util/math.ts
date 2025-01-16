@@ -36,6 +36,10 @@ export class Vec2 extends Array<number> {
 		this[Y] = value;
 	}
 
+	get magnitude(): number {
+		return magnitude2D(this);
+	}
+
 	map<U>(
 		// TODO: index: 0 | 1 ?
 		callbackfn: (value: number, index: number, array: number[]) => U,
@@ -227,3 +231,4 @@ export const crossProduct2D: FuncReduceVector = (a, b) =>
 	a[0] * b[1] - a[1] * b[0];
 export const dotProduct2D: FuncReduceVector = (a, b) =>
 	a[0] * b[0] + a[1] * b[1];
+export const magnitude2D = (v: Vec2): number => Math.sqrt(v.x ** 2 + v.y ** 2);
