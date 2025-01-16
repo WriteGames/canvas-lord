@@ -54,6 +54,30 @@ export class Vec2 extends Array {
     static sub(a, b) {
         return subPos(a, b);
     }
+    scale(s) {
+        return Vec2.scale(this, s);
+    }
+    static scale(v, s) {
+        return scalePos(v, s);
+    }
+    invScale(s) {
+        return Vec2.scale(this, 1 / s);
+    }
+    static invScale(v, s) {
+        return scalePos(v, 1 / s);
+    }
+    cross(v) {
+        return Vec2.cross(this, v);
+    }
+    static cross(a, b) {
+        return crossProduct2D(a, b);
+    }
+    dot(v) {
+        return Vec2.dot(this, v);
+    }
+    static dot(a, b) {
+        return dotProduct2D(a, b);
+    }
     equal(v) {
         return Vec2.equal(this, v);
     }
@@ -116,4 +140,6 @@ export const equal = (a, b) => {
 };
 export const indexToPos = (index, stride) => new Vec2(index % stride, Math.floor(index / stride));
 export const posToIndex = ([x, y], stride) => y * stride + x;
+export const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
+export const dotProduct2D = (a, b) => a[0] * b[0] + a[1] * b[1];
 //# sourceMappingURL=math.js.map

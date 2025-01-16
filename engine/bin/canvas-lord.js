@@ -7,6 +7,7 @@ export { V2, addPos, subPos, scalePos, EPSILON, } from './util/math.js';
 export { Scene } from './util/scene.js';
 export { Camera } from './util/camera.js';
 export * as Collision from './util/collision.js';
+export { checkLineSegmentIntersection, getLineSegmentIntersection, } from './util/collision.js';
 export { Entity } from './util/entity.js';
 export { Grid } from './util/grid.js';
 // NOTE: This should be able to infer the return type...
@@ -53,26 +54,6 @@ const RAD_720 = 720 * DEG_TO_RAD;
 // const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
 const getAngle = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween = (a, b) => ((b - a + RAD_540) % RAD_360) - RAD_180;
-const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
-const _lineSegmentIntersection = ([a, b], [c, d]) => {
-    const r = subPos(b, a);
-    const s = subPos(d, c);
-    const rxs = crossProduct2D(r, s);
-    const t = crossProduct2D(subPos(c, a), s) / rxs;
-    const u = crossProduct2D(subPos(a, c), r) / -rxs;
-    return new Vec2(t, u);
-};
-export const checkLineSegmentIntersection = (a, b) => {
-    const [t, u] = _lineSegmentIntersection(a, b);
-    // TODO(bret): Play with these values a bit more
-    return t >= 0 && t <= 1 && u >= 0 && u <= 1;
-};
-export const getLineSegmentIntersection = (a, b) => {
-    const [t, u] = _lineSegmentIntersection(a, b);
-    return t >= 0 && t <= 1 && u >= 0 && u <= 1
-        ? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
-        : null;
-};
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions
 const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => x >= x1 && y >= y1 && x < x2 && y < y2;
@@ -518,6 +499,7 @@ export class Game {
         this.sendEvent('update');
     }
     sendEvent(event) {
+        // TODO: drawOverlay should take in ctx or game
         this.listeners[event].forEach((c) => c());
     }
     render() {

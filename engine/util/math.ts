@@ -1,5 +1,7 @@
 export const EPSILON = 0.000001;
 
+export type Line2D = [Vec2, Vec2];
+
 /*export*/ type V2 = [x: number, y: number];
 export type V3 = [x: number, y: number, z: number];
 export type V4 = [x: number, y: number, z: number, w: number];
@@ -83,6 +85,38 @@ export class Vec2 extends Array<number> {
 		return subPos(a, b);
 	}
 
+	scale(s: number): Vec2 {
+		return Vec2.scale(this, s);
+	}
+
+	static scale(v: Vec2, s: number): Vec2 {
+		return scalePos(v, s);
+	}
+
+	invScale(s: number): Vec2 {
+		return Vec2.scale(this, 1 / s);
+	}
+
+	static invScale(v: Vec2, s: number): Vec2 {
+		return scalePos(v, 1 / s);
+	}
+
+	cross(v: Vec2) {
+		return Vec2.cross(this, v);
+	}
+
+	static cross(a: Vec2, b: Vec2) {
+		return crossProduct2D(a, b);
+	}
+
+	dot(v: Vec2) {
+		return Vec2.dot(this, v);
+	}
+
+	static dot(a: Vec2, b: Vec2) {
+		return dotProduct2D(a, b);
+	}
+
 	equal(v: Vec2): boolean {
 		return Vec2.equal(this, v);
 	}
@@ -137,6 +171,11 @@ type FuncMapVectorByScalar = <P extends Vector>(
 	s: number,
 ) => Vec2;
 
+type FuncReduceVector = <A extends Vector, B extends Vector>(
+	a: Vec2,
+	b: Vec2,
+) => number;
+
 type FuncCompare<T extends any> = (a: T, b: T) => boolean;
 
 export const hashPos = (pos: Vector | Vec2) => pos.join(',');
@@ -183,3 +222,8 @@ export const indexToPos = (index: number, stride: number): Vec2 =>
 	new Vec2(index % stride, Math.floor(index / stride));
 export const posToIndex = ([x, y]: Vec2, stride: number): number =>
 	y * stride + x;
+
+export const crossProduct2D: FuncReduceVector = (a, b) =>
+	a[0] * b[1] - a[1] * b[0];
+export const dotProduct2D: FuncReduceVector = (a, b) =>
+	a[0] * b[0] + a[1] * b[1];
