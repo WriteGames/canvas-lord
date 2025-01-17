@@ -103,7 +103,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 			new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]),
 			0.5,
 		);
-		this.midPoint = addPos(this.posA, this.radii);
+		this.midPoint = new Vec2(...addPos(this.posA, this.radii));
 	}
 
 	getQuadIndex(pos: V2): QuadIndex {

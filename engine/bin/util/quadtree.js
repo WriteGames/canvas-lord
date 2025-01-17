@@ -41,7 +41,7 @@ export class QuadtreeNode {
         this.rangeX = rangeX;
         this.rangeY = rangeY;
         this.radii = scalePos(new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]), 0.5);
-        this.midPoint = addPos(this.posA, this.radii);
+        this.midPoint = new Vec2(...addPos(this.posA, this.radii));
     }
     getQuadIndex(pos) {
         const isRight = pos[0] >= this.midPoint[0];

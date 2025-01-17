@@ -48,10 +48,10 @@ export class Vec2 extends Array<number> {
 		return super.map(callbackfn, thisArg) as [U, U];
 	}
 
-	every(
-		predicate: (value: number, index: number, array: number[]) => unknown,
+	every<S extends number>(
+		predicate: (value: number, index: number, array: number[]) => boolean,
 		thisArg?: any,
-	): boolean {
+	): this is S[] {
 		return super.every(predicate, thisArg);
 	}
 
@@ -166,7 +166,7 @@ export const V2 = Object.defineProperties(
 	one: V2;
 };
 
-type FuncMapVector = <T extends Vector, A extends T, B extends T>(
+type FuncMapVector = <T extends Vector | Vec2, A extends T, B extends T>(
 	a: A,
 	b: B,
 ) => A;
@@ -184,27 +184,17 @@ type FuncCompare<T extends any> = (a: T, b: T) => boolean;
 
 export const hashPos = (pos: Vector | Vec2) => pos.join(',');
 
-export const addPos = (a: Vector | Vec2, b: Vector | Vec2) => {
-	const bb = [...b];
-	return new Vec2(...(a.map((v, i) => v + (bb[i] ?? 0)) as typeof a));
+export const addPos: FuncMapVector = (a, b) => {
+	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
 };
 
-export const subPos = (a: Vector | Vec2, b: Vector | Vec2) => {
-	const bb = [...b];
-	return new Vec2(...(a.map((v, i) => v - (bb[i] ?? 0)) as typeof a));
+export const subPos: FuncMapVector = (a, b) => {
+	return a.map((v, i) => v - (b[i] ?? 0)) as typeof a;
 };
-
-// export const addPos: FuncMapVector = (a, b) => {
-// 	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
-// };
 
 export const addScalar: FuncMapVectorByScalar = (p, s) => {
 	return new Vec2(...p.map((v) => v + s));
 };
-
-// export const subPos: FuncMapVector = (a, b) => {
-// 	return a.map((v, i) => v - (b[i] ?? 0)) as typeof a;
-// };
 
 export const scalePos: FuncMapVectorByScalar = (p, s) => {
 	return new Vec2(...p.map((v) => v * s));

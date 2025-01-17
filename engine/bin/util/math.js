@@ -113,23 +113,23 @@ export const V2 = Object.defineProperties({}, {
     },
 });
 export const hashPos = (pos) => pos.join(',');
+// export const addPos = (a: Vector | Vec2, b: Vector | Vec2) => {
+// 	const bb = [...b];
+// 	return new Vec2(...(a.map((v, i) => v + (bb[i] ?? 0)) as typeof a));
+// };
+// export const subPos = (a: Vector | Vec2, b: Vector | Vec2) => {
+// 	const bb = [...b];
+// 	return new Vec2(...(a.map((v, i) => v - (bb[i] ?? 0)) as typeof a));
+// };
 export const addPos = (a, b) => {
-    const bb = [...b];
-    return new Vec2(...a.map((v, i) => v + (bb[i] ?? 0)));
+    return a.map((v, i) => v + (b[i] ?? 0));
 };
 export const subPos = (a, b) => {
-    const bb = [...b];
-    return new Vec2(...a.map((v, i) => v - (bb[i] ?? 0)));
+    return a.map((v, i) => v - (b[i] ?? 0));
 };
-// export const addPos: FuncMapVector = (a, b) => {
-// 	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
-// };
 export const addScalar = (p, s) => {
     return new Vec2(...p.map((v) => v + s));
 };
-// export const subPos: FuncMapVector = (a, b) => {
-// 	return a.map((v, i) => v - (b[i] ?? 0)) as typeof a;
-// };
 export const scalePos = (p, s) => {
     return new Vec2(...p.map((v) => v * s));
 };
