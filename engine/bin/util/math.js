@@ -113,14 +113,6 @@ export const V2 = Object.defineProperties({}, {
     },
 });
 export const hashPos = (pos) => pos.join(',');
-// export const addPos = (a: Vector | Vec2, b: Vector | Vec2) => {
-// 	const bb = [...b];
-// 	return new Vec2(...(a.map((v, i) => v + (bb[i] ?? 0)) as typeof a));
-// };
-// export const subPos = (a: Vector | Vec2, b: Vector | Vec2) => {
-// 	const bb = [...b];
-// 	return new Vec2(...(a.map((v, i) => v - (bb[i] ?? 0)) as typeof a));
-// };
 export const addPos = (a, b) => {
     return a.map((v, i) => v + (b[i] ?? 0));
 };

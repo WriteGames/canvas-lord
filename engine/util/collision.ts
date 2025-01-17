@@ -9,40 +9,83 @@ import {
 	Line2D,
 } from './math.js';
 
-interface Shape {
-	type: string;
+const types = [
+	'point',
+	'line',
+	'rect',
+	'circle',
+	'triangle',
+	'right-triangle',
+] as const;
+
+type Types = typeof types;
+
+interface BaseShape<T extends Types[number]> {
+	type: T;
 	x: number;
 	y: number;
 }
 
-type Line = Omit<Shape, 'x' | 'y'> & {
-	type: 'line';
+interface Point extends BaseShape<'point'> {}
+
+interface Line extends Omit<BaseShape<'line'>, 'x' | 'y'> {
 	x1: number;
 	y1: number;
 	x2: number;
 	y2: number;
-};
+}
 
-interface Triangle extends Shape {
-	type: 'triangle';
+interface Rect extends BaseShape<'rect'> {
+	w: number;
+	h: number;
+}
+
+interface Circle extends BaseShape<'circle'> {
+	radius: number;
+}
+
+// TODO: right triangle (would be faster than polygon collision)
+
+interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
+	x1: number;
+	y1: number;
 	x2: number;
 	y2: number;
 	x3: number;
 	y3: number;
 }
 
-interface Rect extends Shape {
-	type: 'rect';
+const ORIENTATION = ['NE', 'SE', 'SW', 'NW'] as const;
+interface RightTriangle extends BaseShape<'right-triangle'> {
 	w: number;
 	h: number;
+	orientation: (typeof ORIENTATION)[number];
 }
 
-interface Circle extends Shape {
-	type: 'circle';
-	radius: number;
-}
+type Shape = Point | Line | Rect | Circle | Triangle;
 
 type RawShape<T> = Omit<T, 'type'>;
+
+const isPointInPolygon = (
+	x: number,
+	y: number,
+	polygon: [number, number][],
+) => {
+	let inside = false;
+	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+		const a = polygon[i];
+		const b = polygon[j];
+
+		if (
+			a[1] > y !== b[1] > y &&
+			x < ((b[0] - a[0]) * (y - a[1])) / (b[1] - a[1]) + a[0]
+		)
+			inside = !inside;
+	}
+	return inside;
+};
+
+/// ### Point vs X ###
 
 export const collidePointPoint = (
 	x1: number,
@@ -73,6 +116,59 @@ export const collidePointCircle = (
 	const distanceSq = (c.x - x) ** 2 + (c.y - y) ** 2;
 	return distanceSq <= c.radius ** 2;
 };
+
+const getSideOfLine = (x: number, y: number, lineA: Vec2, lineB: Vec2) => {
+	const d =
+		(lineB.y - lineA.y) * (x - lineA.x) -
+		(lineB.x - lineA.x) * (y - lineA.y);
+	return Math.sign(d);
+};
+
+export const collidePointRightTriangle = (
+	x: number,
+	y: number,
+	rt: RawShape<RightTriangle>,
+) => {
+	if (collidePointRect(x, y, rt)) {
+		const TL = new Vec2(rt.x, rt.y);
+		const TR = new Vec2(rt.x + rt.w, rt.y);
+		const BR = new Vec2(rt.x + rt.w, rt.y + rt.h);
+		const BL = new Vec2(rt.x, rt.y + rt.h);
+		let side;
+		switch (rt.orientation) {
+			case 'NE':
+				side = getSideOfLine(x, y, TL, BR);
+				break;
+			case 'SE':
+				side = getSideOfLine(x, y, TR, BL);
+				break;
+			case 'SW':
+				side = getSideOfLine(x, y, BR, TL);
+				break;
+			case 'NW':
+				side = getSideOfLine(x, y, BL, TR);
+				break;
+			default:
+				throw new Error('need to implement');
+		}
+		return side <= 0;
+	}
+	return false;
+};
+
+export const collidePointTriangle = (
+	x: number,
+	y: number,
+	t: RawShape<Triangle>,
+) => {
+	return isPointInPolygon(x, y, [
+		[t.x1, t.y1],
+		[t.x2, t.y2],
+		[t.x3, t.y3],
+	]);
+};
+
+/// ### Line vs X ###
 
 // TODO: clean these up (would break some non-TS files unfortunately)
 const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
@@ -175,8 +271,6 @@ export const collideLineRect = (l: RawShape<Line>, r: RawShape<Rect>) => {
 	return false;
 };
 
-const getVecLength = (v: Vec2): number => Math.sqrt(v.x ** 2 + v.y ** 2);
-
 const getLineLength = (l: RawShape<Line>): number =>
 	Math.sqrt((l.x1 - l.x2) ** 2 + (l.y1 - l.y2) ** 2);
 
@@ -200,6 +294,42 @@ export const collideLineCircle = (l: RawShape<Line>, c: RawShape<Circle>) => {
 	return circlePos.sub(closest).magnitude <= c.radius;
 };
 
+export const collideLineRightTriangle = (
+	l: RawShape<Line>,
+	rt: RawShape<RightTriangle>,
+) => {
+	throw new Error('Unimplemented');
+};
+
+export const collideLineTriangle = (
+	l: RawShape<Line>,
+	t: RawShape<Triangle>,
+) => {
+	// TODO: test if using barycentric coords would be faster!
+	return (
+		collideLineLine(l, {
+			x1: t.x1,
+			y1: t.y1,
+			x2: t.x2,
+			y2: t.y2,
+		}) ||
+		collideLineLine(l, {
+			x1: t.x2,
+			y1: t.y2,
+			x2: t.x3,
+			y2: t.y3,
+		}) ||
+		collideLineLine(l, {
+			x1: t.x3,
+			y1: t.y3,
+			x2: t.x1,
+			y2: t.y1,
+		})
+	);
+};
+
+/// ### Rect vs X ###
+
 export const collideRectRect = (a: RawShape<Rect>, b: RawShape<Rect>) => {
 	return (
 		a.x + a.w > b.x && a.y + a.h > b.y && a.x < b.x + b.w && a.y < b.y + b.h
@@ -213,10 +343,117 @@ export const collideRectCircle = (r: RawShape<Rect>, c: RawShape<Circle>) => {
 	return distanceSq < c.radius ** 2;
 };
 
+export const collideRectRightTriangle = (
+	r: RawShape<Rect>,
+	rt: RawShape<RightTriangle>,
+) => {
+	// TODO: just intersect each line with the rect
+	throw new Error('Unimplemented');
+};
+
+export const collideRectTriangle = (
+	r: RawShape<Rect>,
+	t: RawShape<Triangle>,
+) => {
+	// TODO: just intersect each line with the rect
+	throw new Error('Unimplemented');
+};
+
+/// ### Circle vs X ###
+
 export const collideCircleCircle = (
 	a: RawShape<Circle>,
 	b: RawShape<Circle>,
 ) => {
 	const distanceSq = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
 	return distanceSq <= (a.radius + b.radius) ** 2;
+};
+
+export const collideCircleRightTriangle = (
+	c: RawShape<Circle>,
+	rt: RawShape<RightTriangle>,
+) => {
+	throw new Error('Unimplemented');
+};
+
+export const collideCircleTriangle = (
+	c: RawShape<Circle>,
+	t: RawShape<Triangle>,
+) => {
+	throw new Error('Unimplemented');
+};
+
+/// ### Right Triangle vs X ###
+export const collideRightTriangleRightTriangle = (
+	r: RawShape<RightTriangle>,
+) => {
+	throw new Error('Unimplemented');
+};
+
+export const collideRightTriangleTriangle = () => {
+	throw new Error('Unimplemented');
+};
+
+/// ### Triangle vs X ###
+
+export const collideTriangleTriangle = () => {
+	throw new Error('Unimplemented');
+};
+
+const collisionMap = {
+	point: {
+		point: (p1: Point, p2: Point) =>
+			collidePointPoint(p1.x, p1.y, p2.x, p2.y),
+		line: (p: Point, l: Line) => collidePointLine(p.x, p.y, l),
+		rect: (p: Point, r: Rect) => collidePointRect(p.x, p.y, r),
+		circle: (p: Point, c: Circle) => collidePointCircle(p.x, p.y, c),
+		'right-triangle': collidePointRightTriangle,
+		triangle: (p: Point, t: Triangle) => collidePointTriangle(p.x, p.y, t),
+	},
+	line: {
+		point: (l: Line, p: Point) => collidePointLine(p.x, p.y, l),
+		line: collideLineLine,
+		rect: collideLineRect,
+		circle: collideLineCircle,
+		'right-triangle': undefined,
+		triangle: collideLineTriangle,
+	},
+	rect: {
+		point: (r: Rect, p: Point) => collidePointRect(p.x, p.y, r),
+		line: (r: Rect, l: Line) => collideLineRect(l, r),
+		rect: collideRectRect,
+		circle: collideRectCircle,
+		'right-triangle': undefined,
+		triangle: collideRectTriangle,
+	},
+	circle: {
+		point: (c: Circle, p: Point) => collidePointCircle(p.x, p.y, c),
+		line: (c: Circle, l: Line) => collideLineCircle(l, c),
+		rect: (c: Circle, r: Rect) => collideRectCircle(r, c),
+		circle: collideCircleCircle,
+		'right-triangle': undefined,
+		triangle: collideCircleTriangle,
+	},
+	'right-triangle': {
+		point: (rt: RightTriangle, p: Point) =>
+			collidePointRightTriangle(p.x, p.y, rt),
+		line: undefined,
+		rect: undefined,
+		circle: undefined,
+		'right-triangle': undefined,
+		triangle: undefined,
+	},
+	triangle: {
+		point: (t: Triangle, p: Point) => collidePointTriangle(p.x, p.y, t),
+		line: (t: Triangle, l: Line) => collideLineTriangle(l, t),
+		rect: (t: Triangle, r: Rect) => collideRectTriangle(r, t),
+		circle: (t: Triangle, c: Circle) => collideCircleTriangle(c, t),
+		'right-triangle': undefined,
+		triangle: collideTriangleTriangle,
+	},
+};
+
+export const collide = (shapeA: Shape, shapeB: Shape) => {
+	// @ts-ignore
+	return collisionMap[shapeA.type][shapeB.type]?.(shapeA, shapeB);
 };
