@@ -62,7 +62,8 @@ interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
 
 // TODO: bounds!
 
-type Shape = Point | Line | Rect | Circle | Triangle;
+// TODO: this is exported for Entity, but do we really want this to be exported?
+export type Shape = Point | Line | Rect | Circle | RightTriangle | Triangle;
 
 type RawShape<T> = Omit<T, 'type'>;
 

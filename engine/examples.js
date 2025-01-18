@@ -353,9 +353,6 @@ class ContourTracingScene extends Scene {
 
 		if (++this.timer < this.timeout) return;
 		this.timer = 0;
-
-		// Do shit
-		console.log('y0oooo');
 	}
 
 	isSolidAt(x, y) {
@@ -505,7 +502,6 @@ class PlayerScene extends Scene {
 		//	- would get all properties by key
 		//	- could pass in an object with an exclude or include array for which keys to care about
 
-		console.log(this.engine);
 		this.logger.watch(LOG_TYPE.FPS, this.engine.frameRate, {
 			visible: logTypes.includes(LOG_TYPE.FPS),
 			renderer: validRenderer,

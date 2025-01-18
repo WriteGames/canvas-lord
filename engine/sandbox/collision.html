@@ -55,13 +55,19 @@
 	<body>
 		<div id="canvases">
 			<canvas
-				id="canvas1"
+				id="entities"
 				width="320px"
 				height="210px"
 				tabindex="-1"
 			></canvas>
 			<canvas
-				id="canvas2"
+				id="shapes"
+				width="320px"
+				height="210px"
+				tabindex="-1"
+			></canvas>
+			<canvas
+				id="lines"
 				width="320px"
 				height="210px"
 				tabindex="-1"
@@ -74,23 +80,26 @@
 				Draw,
 				Game,
 				Scene,
+				Entity,
 			} from '../bin/canvas-lord.js';
 			import { addPos, Vec2 } from '../bin/util/math.js';
 
 			const drawRect = (ctx, fill, ...args) =>
 				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-			const drawTriangle = (ctx, tri) => {
-				Draw.line(ctx, {}, tri.x1, tri.y1, tri.x2, tri.y2);
-				Draw.line(ctx, {}, tri.x2, tri.y2, tri.x3, tri.y3);
-				Draw.line(ctx, {}, tri.x3, tri.y3, tri.x1, tri.y1);
+			const drawTriangle = (ctx, tri, type = 'stroke') => {
+				Draw.polygon(ctx, { type }, 0, 0, [
+					[tri.x1, tri.y1],
+					[tri.x2, tri.y2],
+					[tri.x3, tri.y3],
+				]);
 			};
 
-			const drawRightTriangle = (ctx, rt) => {
-				const TL = new Vec2(rt.x, rt.y);
-				const TR = new Vec2(rt.x + rt.w, rt.y);
-				const BR = new Vec2(rt.x + rt.w, rt.y + rt.h);
-				const BL = new Vec2(rt.x, rt.y + rt.h);
+			const drawRightTriangle = (ctx, rt, x = 0, y = 0, style) => {
+				const TL = new Vec2(x + rt.x, y + rt.y);
+				const TR = new Vec2(x + rt.x + rt.w, y + rt.y);
+				const BR = new Vec2(x + rt.x + rt.w, y + rt.y + rt.h);
+				const BL = new Vec2(x + rt.x, y + rt.y + rt.h);
 				let points;
 				switch (rt.orientation) {
 					case 'NE': {
@@ -113,14 +122,18 @@
 						const msg = `Orientation "${rt.orientation}" not supported`;
 						throw new Error(msg);
 				}
-				drawTriangle(ctx, {
-					x1: points[0].x,
-					y1: points[0].y,
-					x2: points[1].x,
-					y2: points[1].y,
-					x3: points[2].x,
-					y3: points[2].y,
-				});
+				drawTriangle(
+					ctx,
+					{
+						x1: points[0].x,
+						y1: points[0].y,
+						x2: points[1].x,
+						y2: points[1].y,
+						x3: points[2].x,
+						y3: points[2].y,
+					},
+					style,
+				);
 			};
 
 			const COL_GAP = 50;
@@ -219,7 +232,7 @@
 				};
 			};
 
-			class PointRectCircleScene extends Scene {
+			class ShapeCollisionScene extends Scene {
 				updates = 0;
 
 				points = [
@@ -238,8 +251,8 @@
 
 				pairs = [];
 
-				constructor() {
-					super();
+				constructor(engine) {
+					super(engine);
 
 					const types = [
 						'rect',
@@ -410,7 +423,6 @@
 								drawRightTriangle(ctx, shape);
 								break;
 							case 'triangle':
-								// console.log('triangleee');
 								drawTriangle(ctx, shape);
 								break;
 						}
@@ -425,7 +437,7 @@
 				}
 			}
 
-			class PointRectCircleScene2 extends Scene {
+			class LineCollisionScene extends Scene {
 				updates = 0;
 
 				points = [
@@ -434,7 +446,8 @@
 					[COL_1, ROW_2], // middle left
 					[COL_2, ROW_1], // top right
 					[COL_2, ROW_2], // middle right
-					[COL_1, ROW_3], // bottom center
+					[COL_1, ROW_3], // bottom left
+					[COL_2, ROW_3], // bottom right
 				];
 
 				lines = [];
@@ -462,7 +475,15 @@
 					y2: 0,
 					colliding: false,
 				};
-				// TODO: right triangle
+				rightTriangle = {
+					type: 'right-triangle',
+					x: 20,
+					y: 20,
+					w: RADIUS_L,
+					h: RADIUS_L,
+					orientation: 'NW',
+					colliding: false,
+				};
 				triangle = {
 					type: 'triangle',
 					x1: 0,
@@ -474,8 +495,8 @@
 					colliding: false,
 				};
 
-				constructor() {
-					super();
+				constructor(engine) {
+					super(engine);
 
 					const inv = 1 / Math.sqrt(2);
 					const lineRadius = RADIUS_S * 3;
@@ -585,8 +606,23 @@
 						);
 					}
 
-					if (input) {
+					{
 						const origin = this.points[4];
+
+						this.rightTriangle.x =
+							offsetX + origin[0] - (this.rightTriangle.w >> 1);
+						this.rightTriangle.y =
+							offsetY + origin[1] - (this.rightTriangle.h >> 1);
+
+						collideAgainstLines(
+							this.rightTriangle,
+							origin,
+							Collision.collideLineRightTriangle,
+						);
+					}
+
+					if (input) {
+						const origin = this.points[5];
 						const mouse = {
 							pos: input.mouse.pos,
 							colliding: false,
@@ -662,11 +698,257 @@
 
 					ctx.strokeStyle = this.triangle.colliding ? 'red' : 'lime';
 					drawTriangle(ctx, this.triangle);
+					ctx.strokeStyle = this.rightTriangle.colliding
+						? 'red'
+						: 'lime';
+					drawRightTriangle(ctx, this.rightTriangle);
 				}
 			}
 
-			const startGame = (id, Scene) => {
-				const game = new Game(id);
+			class CollisionEntity extends Entity {
+				color = 'yellow';
+
+				constructor(...args) {
+					super(...args);
+				}
+
+				render(ctx) {
+					const x = this.x + this.collider.x;
+					const y = this.y + this.collider.y;
+					ctx.fillStyle = this.color;
+					ctx.strokeStyle = 'red';
+					switch (this.collider.type) {
+						case 'rect': {
+							drawRect(
+								ctx,
+								true,
+								this.x,
+								this.y,
+								this.collider.w,
+								this.collider.h,
+							);
+
+							const w = this.collider.w;
+							const h = this.collider.h;
+							drawRect(ctx, false, x, y, w, h);
+							break;
+						}
+						case 'circle': {
+							Draw.circle(
+								ctx,
+								{ type: 'fill' },
+								this.x - this.collider.radius,
+								this.y - this.collider.radius,
+								this.collider.radius,
+							);
+							Draw.circle(
+								ctx,
+								{ type: 'stroke' },
+								this.x - this.collider.radius + this.collider.x,
+								this.y - this.collider.radius + this.collider.y,
+								this.collider.radius,
+							);
+							break;
+						}
+						case 'right-triangle': {
+							ctx.fillStyle = 'black';
+							drawRightTriangle(
+								ctx,
+								this.collider,
+								this.x,
+								this.y,
+								'fill',
+							);
+							ctx.strokeStyle = 'red';
+							drawRightTriangle(
+								ctx,
+								this.collider,
+								this.x,
+								this.y,
+								'stroke',
+							);
+						}
+					}
+				}
+			}
+
+			class MovingEntity extends CollisionEntity {
+				constructor(x, y) {
+					super(x, y);
+
+					this.vel = new Vec2(3, 2);
+				}
+
+				moveAxis(axis) {
+					let sign = Math.sign(this.vel[axis]);
+					const side = axis === 'x' ? 'w' : 'h';
+					const offset = axis === 'x' ? 0 : 1;
+					const min = this.scene.bounds[offset];
+					const max = this.scene.bounds[offset + 2];
+					for (let i = 0, n = Math.abs(this.vel[axis]); i < n; ++i) {
+						let left = this[axis] + sign;
+						let right = this[axis] + sign;
+						switch (this.collider.type) {
+							case 'rect': {
+								right += this.collider[side];
+								break;
+							}
+							case 'circle': {
+								left -= this.collider.radius;
+								right += this.collider.radius;
+								break;
+							}
+						}
+						const other = this.collideEntity(
+							this.x + (axis === 'x' ? sign : 0),
+							this.y + (axis === 'y' ? sign : 0),
+						);
+						if (other !== null) {
+							this.vel[axis] *= -1;
+							sign *= -1;
+							if (other.vel && this.vel[axis] === other.vel[axis])
+								other.vel[axis] *= -1;
+						}
+
+						if (left < min || right >= max) {
+							this.vel[axis] *= -1;
+							sign *= -1;
+						}
+						this[axis] += sign;
+					}
+				}
+
+				update() {
+					this.color = 'yellow';
+					this.moveAxis('x');
+					this.moveAxis('y');
+				}
+			}
+
+			class SquareEntity extends MovingEntity {
+				collider = {
+					type: 'rect',
+					x: 0,
+					y: 0,
+					w: 20,
+					h: 20,
+				};
+
+				constructor(...args) {
+					super(...args);
+				}
+			}
+
+			class CircleEntity extends MovingEntity {
+				collider = {
+					type: 'circle',
+					x: 0,
+					y: 0,
+					radius: 10,
+				};
+
+				constructor(x, y) {
+					super(x, y);
+					this.x += this.collider.radius;
+					this.y += this.collider.radius;
+				}
+			}
+
+			class RightTriangleEntity extends CollisionEntity {
+				static size = 50;
+
+				collider = {
+					type: 'right-triangle',
+					x: 0,
+					y: 0,
+					w: RightTriangleEntity.size,
+					h: RightTriangleEntity.size,
+				};
+
+				constructor(x, y, orientation) {
+					super(x, y);
+					this.collider.orientation = orientation;
+				}
+			}
+
+			class MouseEntity extends CollisionEntity {
+				collider = {
+					type: 'rect',
+					x: 0,
+					y: 0,
+					w: 10,
+					h: 10,
+				};
+
+				constructor(x, y) {
+					super(x, y);
+
+					this.vel = new Vec2(3, 2);
+				}
+
+				update(input) {
+					this.color = 'yellow';
+					this.x = input.mouse.x;
+					this.y = input.mouse.y;
+					if (this.collide(this.x - 10, this.y - 10)) {
+						this.color = 'orange';
+					}
+				}
+			}
+
+			class EntityCollisionScene extends Scene {
+				constructor(engine) {
+					super(engine);
+
+					const { canvas } = engine;
+					this.bounds = [0, 0, canvas.width, canvas.height];
+
+					if (false) {
+						const mouse = new MouseEntity(0, 0);
+						this.addEntity(mouse);
+						this.addRenderable(mouse);
+					}
+
+					const triLT = new RightTriangleEntity(0, 0, 'SE');
+
+					const triRT = new RightTriangleEntity(
+						this.bounds[2] - RightTriangleEntity.size,
+						0,
+						'SW',
+					);
+
+					const triLB = new RightTriangleEntity(
+						0,
+						this.bounds[3] - RightTriangleEntity.size,
+						'NE',
+					);
+
+					const triRB = new RightTriangleEntity(
+						this.bounds[2] - RightTriangleEntity.size,
+						this.bounds[3] - RightTriangleEntity.size,
+						'NW',
+					);
+
+					[triLT, triRT, triLB, triRB].forEach((tri) => {
+						this.addEntity(tri);
+						this.addRenderable(tri);
+					});
+
+					const shapes = [];
+					shapes.push(new CircleEntity(30, 30));
+					shapes.push(new SquareEntity(120, 40));
+					shapes.push(new CircleEntity(0, 140));
+					shapes.push(new SquareEntity(200, 0));
+					shapes.push(new CircleEntity(200, 170));
+					shapes.forEach((shape) => {
+						this.addEntity(shape);
+						this.addRenderable(shape);
+					});
+				}
+			}
+
+			const startGame = (id, Scene, options = { fps: 60 }) => {
+				const game = new Game(id, options);
 
 				const drawOverlay = () => {
 					game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
@@ -683,8 +965,20 @@
 				drawOverlay();
 			};
 
-			startGame('canvas1', PointRectCircleScene);
-			startGame('canvas2', PointRectCircleScene2);
+			const gameLoopSettings = {
+				updateMode: 'always',
+				renderMode: 'onUpdate',
+			};
+
+			startGame('shapes', ShapeCollisionScene, {
+				gameLoopSettings,
+			});
+			startGame('lines', LineCollisionScene, {
+				gameLoopSettings,
+			});
+			startGame('entities', EntityCollisionScene, {
+				gameLoopSettings,
+			});
 		</script>
 	</body>
 </html>
