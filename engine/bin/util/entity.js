@@ -32,6 +32,6 @@ export class Entity {
         this.component(Components.pos2D)[1] = val;
     }
     update(input) { }
-    render() { }
+    render(ctx) { }
 }
 //# sourceMappingURL=entity.js.map

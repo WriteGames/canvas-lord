@@ -62,7 +62,7 @@ export class Entity implements IEntity, IRenderable {
 		this.component(Components.pos2D)![1] = val;
 	}
 
-	update(input: Input) {}
+	update(input: Input): void {}
 
-	render() {}
+	render(ctx: CanvasRenderingContext2D): void {}
 }
