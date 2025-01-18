@@ -416,6 +416,7 @@ class ContourTracingScene extends Scene {
 }
 
 export const LOG_TYPE = {
+	FPS: 'FPS',
 	JUMP_ELAPSED: 'Jump Elapsed',
 	JUMP_ACTIVE: 'Jump Active', // is technically computed
 	CAN_JUMP: 'Can Jump',
@@ -504,6 +505,11 @@ class PlayerScene extends Scene {
 		//	- would get all properties by key
 		//	- could pass in an object with an exclude or include array for which keys to care about
 
+		console.log(this.engine);
+		this.logger.watch(LOG_TYPE.FPS, this.engine.frameRate, {
+			visible: logTypes.includes(LOG_TYPE.FPS),
+			renderer: validRenderer,
+		});
 		this.logger.watch(LOG_TYPE.JUMP_ACTIVE, true, {
 			visible: logTypes.includes(LOG_TYPE.JUMP_ACTIVE),
 			parser: YesNoLogParser,
@@ -528,6 +534,9 @@ class PlayerScene extends Scene {
 			{
 				receive: (message, payload) => {
 					switch (message) {
+						case EVENT_TYPE.FPS:
+							this.logger.set(LOG_TYPE.FPS, payload);
+							break;
 						case EVENT_TYPE.UPDATE_CAN_JUMP:
 							this.logger.set(LOG_TYPE.CAN_JUMP, payload);
 							break;
@@ -540,6 +549,7 @@ class PlayerScene extends Scene {
 					}
 				},
 			},
+			EVENT_TYPE.FPS,
 			EVENT_TYPE.UPDATE_CAN_JUMP,
 			EVENT_TYPE.UPDATE_COYOTE,
 			EVENT_TYPE.JUMP,
@@ -647,6 +657,7 @@ export const initGames = (src = '', gamesMap = []) => {
 			const components = gamesMap[gameIndex]?.components ?? [];
 			const logTypes = gamesMap[gameIndex]?.logTypes ?? [
 				// CLEANUP: Delete this
+				LOG_TYPE.FPS,
 				LOG_TYPE.COYOTE,
 				LOG_TYPE.CAN_JUMP,
 			];

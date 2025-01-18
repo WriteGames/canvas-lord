@@ -507,7 +507,13 @@ type EventCallback = () => void;
 export interface Game {
 	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
+
 	fps: number;
+	frameIndex: number;
+	recentFrames: number[];
+	frameRate: number;
+	_lastUpdate: number;
+
 	gameLoopSettings: GameLoopSettings;
 	sceneStack: Scene[][];
 	backgroundColor: CSSColor;
@@ -579,6 +585,14 @@ export class Game {
 		}, {} as typeof this.listeners);
 
 		this.fps = settings?.fps ?? 60;
+		const idealDuration = Math.round(1e3 / this.fps);
+		this.recentFrames = Array.from(
+			{ length: this.fps },
+			() => idealDuration,
+		);
+		this.frameIndex = 0;
+		this.frameRate = this.fps;
+
 		if (settings?.gameLoopSettings)
 			this.gameLoopSettings = settings.gameLoopSettings;
 		this.assetManager = settings?.assetManager;
@@ -637,25 +651,43 @@ export class Game {
 
 		this.input = new Input(this);
 
-		this._lastFrame = 0;
+		this._lastFrame = 0; // TODO: rename this - this is actually since last mainLoop() call
 		let deltaTime = 0;
 		const maxFrames = 5;
+		let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
 		this.mainLoop = (time): void => {
-			const timeStep = 1000 / this.fps;
+			const timeStep = 1e3 / this.fps;
 
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
-			deltaTime += time - this._lastFrame;
+			const timeSinceLastFrame = time - this._lastFrame;
+			deltaTime += timeSinceLastFrame;
 			this._lastFrame = time;
 
 			deltaTime = Math.min(deltaTime, timeStep * maxFrames + 0.01);
 
+			const prevFrameIndex = this.frameIndex;
 			// should we send a pre-/post- message in case there are
 			// multiple updates that happen in a single while?
 			while (deltaTime >= timeStep) {
 				this.update();
 				this.input.update();
 				deltaTime -= timeStep;
+				++this.frameIndex;
+			}
+
+			if (prevFrameIndex !== this.frameIndex) {
+				const finishedAt = performance.now();
+				const { duration } = performance.measure('frame', {
+					start: this._lastUpdate,
+				});
+				recentFramesSum += duration;
+				this.recentFrames.push(duration);
+				recentFramesSum -= this.recentFrames.shift() ?? 0;
+				this.frameRate = Math.round(
+					1e3 / (recentFramesSum / this.recentFrames.length),
+				);
+				this._lastUpdate = finishedAt;
 			}
 		};
 
@@ -775,6 +807,7 @@ export class Game {
 
 	startMainLoop(): void {
 		this._lastFrame = performance.now();
+		this._lastUpdate = performance.now();
 		this.frameRequestId = requestAnimationFrame(this.mainLoop);
 
 		// TODO(bret): Do binding
@@ -824,6 +857,8 @@ export class Game {
 		if (this.focus === focus) return;
 		this.focus = focus;
 		this.sendEvent(focus ? 'focus' : 'blur');
+		this._lastFrame = performance.now();
+		this._lastUpdate = performance.now();
 	}
 
 	pushScene(scene: Scene): void {
