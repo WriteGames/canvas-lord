@@ -6,6 +6,7 @@ export const rightKeys = ['ArrowRight', 'd', 'D'];
 export const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
 
 export const EVENT_TYPE = {
+	FPS: 'fps',
 	UPDATE_CAN_JUMP: 'update-can-jump',
 	UPDATE_COYOTE: 'update-coyote',
 	JUMP: 'jump',
@@ -99,6 +100,10 @@ export class Player extends Entity {
 		const canJump = grounded || this.coyote > 0;
 		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_CAN_JUMP, canJump);
 		this.scene.messages.sendMessage(EVENT_TYPE.UPDATE_COYOTE, this.coyote);
+		this.scene.messages.sendMessage(
+			EVENT_TYPE.FPS,
+			this.scene.engine.frameRate,
+		);
 
 		// Try jumping
 		if (canJump && this.jumpInput > 0) {
