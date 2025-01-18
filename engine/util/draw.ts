@@ -33,23 +33,27 @@ const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 	callback: Callback<T, O>,
 ): Callback<T, O> => {
 	return (ctx, options, x, y, ...args: T): void => {
-		const { originX, originY, angle, scaleX, scaleY } = Object.assign(
-			{},
-			drawable,
-			options,
-		);
+		const {
+			offsetX = 0,
+			offsetY = 0,
+			angle = 0,
+			originX = 0,
+			originY = 0,
+			scaleX = 1,
+			scaleY = 1,
+		} = Object.assign({}, drawable, options);
 
 		ctx.save();
-		ctx.translate(originX, originY);
 		ctx.translate(x, y);
-		ctx.rotate((angle / 180) * Math.PI);
-		ctx.translate(-x, -y);
 		ctx.scale(scaleX, scaleY);
-		ctx.translate(-originX, -originY);
-
-		// TODO: scaleX/scaleY to not apply to x2/y2 on Draw.line
-		callback(ctx, options, x / scaleX, y / scaleY, ...args);
-
+		ctx.translate(offsetX, offsetY);
+		if (angle !== 0) {
+			ctx.translate(originX, originY);
+			ctx.rotate((angle / 180) * Math.PI);
+			ctx.translate(-originX, -originY);
+		}
+		ctx.translate(-x, -y);
+		callback(ctx, options, x, y, ...args);
 		ctx.restore();
 	};
 };
