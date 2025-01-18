@@ -511,6 +511,7 @@ export class Game {
             return;
         this.focus = focus;
         this.sendEvent(focus ? 'focus' : 'blur');
+        this._lastFrame = performance.now();
         this._lastUpdate = performance.now();
     }
     pushScene(scene) {

@@ -881,6 +881,7 @@ export class Game {
 		if (this.focus === focus) return;
 		this.focus = focus;
 		this.sendEvent(focus ? 'focus' : 'blur');
+		this._lastFrame = performance.now();
 		this._lastUpdate = performance.now();
 	}
 
