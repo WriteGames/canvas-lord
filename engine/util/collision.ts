@@ -44,7 +44,12 @@ interface Circle extends BaseShape<'circle'> {
 	radius: number;
 }
 
-// TODO: right triangle (would be faster than polygon collision)
+const ORIENTATION = ['NE', 'SE', 'SW', 'NW'] as const;
+interface RightTriangle extends BaseShape<'right-triangle'> {
+	w: number;
+	h: number;
+	orientation: (typeof ORIENTATION)[number];
+}
 
 interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
 	x1: number;
@@ -55,12 +60,7 @@ interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
 	y3: number;
 }
 
-const ORIENTATION = ['NE', 'SE', 'SW', 'NW'] as const;
-interface RightTriangle extends BaseShape<'right-triangle'> {
-	w: number;
-	h: number;
-	orientation: (typeof ORIENTATION)[number];
-}
+// TODO: bounds!
 
 type Shape = Point | Line | Rect | Circle | Triangle;
 
@@ -84,6 +84,43 @@ const isPointInPolygon = (
 	}
 	return inside;
 };
+
+const getSideOfLine = (x: number, y: number, lineA: Vec2, lineB: Vec2) => {
+	const d =
+		(lineB.y - lineA.y) * (x - lineA.x) -
+		(lineB.x - lineA.x) * (y - lineA.y);
+	return Math.sign(d);
+};
+
+// TODO: clean these up (would break some non-TS files unfortunately)
+const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
+	const r = b.sub(a);
+	const s = d.sub(c);
+
+	const rxs = crossProduct2D(r, s);
+
+	const t = crossProduct2D(subPos(c, a), s) / rxs;
+	const u = crossProduct2D(subPos(a, c), r) / -rxs;
+
+	return new Vec2(t, u);
+};
+export const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
+	const [t, u] = _lineSegmentIntersection(a, b);
+	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+};
+export const getLineSegmentIntersection = (
+	a: Line2D,
+	b: Line2D,
+): Vec2 | null => {
+	const [t, u] = _lineSegmentIntersection(a, b);
+
+	return t >= 0 && t <= 1 && u >= 0 && u <= 1
+		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
+		: null;
+};
+
+const getLineLength = (l: RawShape<Line>): number =>
+	Math.sqrt((l.x1 - l.x2) ** 2 + (l.y1 - l.y2) ** 2);
 
 /// ### Point vs X ###
 
@@ -115,13 +152,6 @@ export const collidePointCircle = (
 ) => {
 	const distanceSq = (c.x - x) ** 2 + (c.y - y) ** 2;
 	return distanceSq <= c.radius ** 2;
-};
-
-const getSideOfLine = (x: number, y: number, lineA: Vec2, lineB: Vec2) => {
-	const d =
-		(lineB.y - lineA.y) * (x - lineA.x) -
-		(lineB.x - lineA.x) * (y - lineA.y);
-	return Math.sign(d);
 };
 
 export const collidePointRightTriangle = (
@@ -169,33 +199,6 @@ export const collidePointTriangle = (
 };
 
 /// ### Line vs X ###
-
-// TODO: clean these up (would break some non-TS files unfortunately)
-const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
-	const r = b.sub(a);
-	const s = d.sub(c);
-
-	const rxs = crossProduct2D(r, s);
-
-	const t = crossProduct2D(subPos(c, a), s) / rxs;
-	const u = crossProduct2D(subPos(a, c), r) / -rxs;
-
-	return new Vec2(t, u);
-};
-export const checkLineSegmentIntersection = (a: Line2D, b: Line2D): boolean => {
-	const [t, u] = _lineSegmentIntersection(a, b);
-	return t >= 0 && t <= 1 && u >= 0 && u <= 1;
-};
-export const getLineSegmentIntersection = (
-	a: Line2D,
-	b: Line2D,
-): Vec2 | null => {
-	const [t, u] = _lineSegmentIntersection(a, b);
-
-	return t >= 0 && t <= 1 && u >= 0 && u <= 1
-		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
-		: null;
-};
 
 export const collideLineLine = (l1: RawShape<Line>, l2: RawShape<Line>) => {
 	const A: Line2D = [new Vec2(l1.x1, l1.y1), new Vec2(l1.x2, l1.y2)];
@@ -270,9 +273,6 @@ export const collideLineRect = (l: RawShape<Line>, r: RawShape<Rect>) => {
 		return true;
 	return false;
 };
-
-const getLineLength = (l: RawShape<Line>): number =>
-	Math.sqrt((l.x1 - l.x2) ** 2 + (l.y1 - l.y2) ** 2);
 
 export const collideLineCircle = (l: RawShape<Line>, c: RawShape<Circle>) => {
 	const pointA = new Vec2(l.x1, l.y1);
@@ -400,6 +400,8 @@ export const collideTriangleTriangle = () => {
 	throw new Error('Unimplemented');
 };
 
+/// ### collide() ###
+
 const collisionMap = {
 	point: {
 		point: (p1: Point, p2: Point) =>
@@ -453,6 +455,7 @@ const collisionMap = {
 	},
 };
 
+// TODO: (shapeA, typeA, shapeB, typeB) - that way we don't have to store that data in the shapes themselves! This will make using the Collider classes easier, as they won't have to store that data :)
 export const collide = (shapeA: Shape, shapeB: Shape) => {
 	// @ts-ignore
 	return collisionMap[shapeA.type][shapeB.type]?.(shapeA, shapeB);
