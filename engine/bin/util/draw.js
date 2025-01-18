@@ -28,6 +28,7 @@ export const Draw = {
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
         // TODO: make this be able to be centered :O
+        // It could be good to pass an option that dictates whether or not to center it :)
         ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
         switch (circle.type) {
             case 'fill':
@@ -66,6 +67,28 @@ export const Draw = {
                     ctx.strokeStyle = rect.color;
                     ctx.strokeRect(...args);
                 }
+                break;
+        }
+    }),
+    polygon: moveCanvas((ctx, 
+    // TODO(bret): actually set up the correct type here
+    options, x, y, _points) => {
+        ctx.translate(0.5, 0.5);
+        ctx.beginPath();
+        const n = _points.length;
+        const points = _points.map(([_x, _y]) => [x + _x, y + _y]);
+        ctx.moveTo(...points[n - 1]);
+        for (let i = 0; i < n; ++i) {
+            ctx.lineTo(...points[i]);
+        }
+        switch (options.type) {
+            case 'fill':
+                ctx.fillStyle = options.color;
+                ctx.fill();
+                break;
+            case 'stroke':
+                ctx.strokeStyle = options.color;
+                ctx.stroke();
                 break;
         }
     }),
