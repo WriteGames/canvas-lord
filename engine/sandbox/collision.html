@@ -824,9 +824,13 @@
 								other.vel[axis] *= -1;
 						}
 
-						if (left < min || right >= max) {
-							this.vel[axis] *= -1;
-							sign *= -1;
+						if (left < min) {
+							sign = 1;
+							this.vel[axis] = Math.abs(this.vel[axis]) * sign;
+						}
+						if (right >= max) {
+							sign = -1;
+							this.vel[axis] = Math.abs(this.vel[axis]) * sign;
 						}
 						this[axis] += sign;
 					}
