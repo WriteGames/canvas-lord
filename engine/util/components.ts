@@ -27,6 +27,17 @@ export const createComponent = <T extends RawComponent>(initialState: T) =>
 
 export const pos2D = createComponent(Vec2.zero);
 
+// TODO: export this from a better place lol
+interface DrawOptions {
+	originX?: number;
+	originY?: number;
+	angle?: number;
+	scaleX?: number;
+	scaleY?: number;
+	offsetX?: number;
+	offsetY?: number;
+}
+
 const drawable = {
 	angle: 0,
 	scaleX: 1,
@@ -35,7 +46,7 @@ const drawable = {
 	originY: 0,
 	offsetX: 0,
 	offsetY: 0,
-};
+} as DrawOptions;
 
 const style = {
 	type: 'fill' as 'fill' | 'stroke',
