@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<title>Text</title>
+		<meta name="color-scheme" content="dark light" />
+		<style media="screen">
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
+			body {
+				padding: 1rem 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 1rem;
+			}
+
+			.canvas-lord {
+				width: 100%;
+				max-width: 656px;
+				margin: 0 auto;
+				&:focus-within canvas {
+					border-color: #bbf;
+				}
+			}
+
+			.canvas-lord:has(.inspector) {
+				display: grid;
+				width: 100%;
+			}
+
+			.inspector {
+				text-align: right;
+				display: grid;
+				grid-template-columns: 20ch auto;
+				width: 100%;
+				/* max-width: 640px; */
+				margin: 0 auto;
+				gap: 2px 0.5rem;
+				padding: 0.5rem;
+				border: 3px solid #ddd;
+				border-top: 0;
+			}
+
+			canvas {
+				box-sizing: content-box;
+				display: block;
+				width: 100%;
+				max-width: 640px;
+				margin: 0 auto;
+				padding: 5px;
+				border: 3px solid #ddd;
+				image-rendering: -moz-crisp-edges;
+				image-rendering: -webkit-crisp-edges;
+				image-rendering: pixelated;
+				image-rendering: crisp-edges;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas
+			id="text-standard"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+
+		<script type="module">
+			import {
+				AssetManager,
+				Game,
+				Scene,
+				Entity,
+				Grid,
+				Draw,
+			} from '../bin/canvas-lord.js';
+
+			class TextStandardScene extends Scene {
+				constructor(...args) {
+					super(...args);
+					this.maxWidth = this.engine.canvas.width - 20;
+					this.width = this.engine.canvas.width - 20;
+					this.minWidth = 10;
+					this.inc = 0;
+				}
+
+				update() {
+					this.width =
+						this.minWidth +
+						Math.round(
+							Math.abs(Math.cos(++this.inc / 100)) *
+								(this.maxWidth - this.minWidth),
+						);
+				}
+
+				render(ctx) {
+					ctx.fillStyle = 'white';
+					const textOptions = {
+						type: 'fill',
+						font: 'sans-serif',
+						size: 12,
+					};
+
+					const str = 'This is a whole sentence, we love it!';
+
+					Draw.text(ctx, textOptions, 10, 10, str);
+
+					const height = Draw.text(
+						ctx,
+						{ ...textOptions, width: this.width },
+						10,
+						30,
+						str,
+					);
+
+					ctx.strokeStyle = 'red';
+					Draw.rect(
+						ctx,
+						{ type: 'stroke', color: 'red' },
+						10 - 1,
+						30 - 1,
+						this.width + 2,
+						height + 2,
+					);
+				}
+			}
+
+			const ids = ['text-standard'];
+			const scenes = [TextStandardScene];
+
+			let loaded = false;
+			const assetManager = new AssetManager('../img/');
+			assetManager.addImage('grid.bmp');
+			assetManager.onLoad(() => {
+				if (loaded) return;
+				loaded = true;
+
+				ids.forEach((id, i) => {
+					const game = new Game(id, {
+						assetManager,
+					});
+
+					game.backgroundColor = '#003300';
+
+					const scene = new scenes[i](game);
+					game.pushScene(scene);
+
+					game.render();
+				});
+			});
+			assetManager.loadAssets();
+		</script>
+	</body>
+</html>

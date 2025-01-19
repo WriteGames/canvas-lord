@@ -21,8 +21,9 @@ const moveCanvas = (callback) => {
             ctx.translate(originX, originY);
         }
         ctx.translate(-x, -y);
-        callback(ctx, options, x, y, ...args);
+        const res = callback(ctx, options, x, y, ...args);
         ctx.restore();
+        return res;
     };
 };
 export const Draw = {
@@ -95,26 +96,84 @@ export const Draw = {
         const _height = height ?? imageSrc.height;
         ctx.drawImage(imageSrc, sourceX ?? 0, sourceY ?? 0, _width, _height, drawX, drawY, _width, _height);
     }),
-    text: moveCanvas((ctx, text, x, y, str) => {
-        const { color, type, font = 'sans-serif', size = 10 } = text;
-        let _size = size;
-        if (typeof _size === 'number') {
-            _size = `${_size}px`;
-        }
-        const _font = `${_size} ${font}`;
-        ctx.textBaseline = 'top';
+    // TODO(bret): This breaks if the width is too small :(
+    // TODO(bret): Condense some of this down
+    text: moveCanvas((ctx, text, drawX, drawY, str) => {
+        const { color, type, font = 'sans-serif', size = 10, baseline = 'top', } = text;
+        const _size = typeof size === 'number' ? `${size}px` : size;
+        ctx.font = `${_size} ${font}`;
+        ctx.textBaseline = baseline;
+        let func;
         switch (type) {
             case 'fill':
                 ctx.fillStyle = color;
-                ctx.font = _font;
-                ctx.fillText(str, x, y);
+                func = 'fillText';
                 break;
             case 'stroke':
                 ctx.strokeStyle = color;
-                ctx.font = _font;
-                ctx.strokeText(str, x, y);
+                func = 'strokeText';
                 break;
         }
+        if (!text.width) {
+            ctx[func](str, drawX, drawY);
+            return;
+        }
+        if (text.width <= 0)
+            return 0;
+        const words = str.split(' ').map((str) => ({
+            str,
+            width: ctx.measureText(str).width,
+            x: -1,
+            y: -1,
+        }));
+        const metrics = ctx.measureText('');
+        // TODO: add ability for padding between lines
+        const lineHeightPx = metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+        let wordX = 0;
+        let wordY = 0;
+        let rows = 1;
+        const maxWidth = text.width;
+        const space = ctx.measureText(' ');
+        for (let i = 0; i < words.length; ++i) {
+            const word = words[i];
+            if (wordX && wordX + word.width > maxWidth) {
+                wordX = 0;
+                wordY += lineHeightPx;
+                ++rows;
+            }
+            if (word.width > maxWidth) {
+                for (let j = 1; j < words.length; ++j) {
+                    const str = word.str.substring(0, word.str.length - j);
+                    const metrics = ctx.measureText(str);
+                    if (str.length === 1 || metrics.width <= maxWidth) {
+                        const truncated = word.str.substring(word.str.length - j);
+                        word.str = str;
+                        word.width = metrics.width;
+                        const newWord = {
+                            str: truncated,
+                            width: ctx.measureText(truncated).width,
+                            x: -1,
+                            y: -1,
+                        };
+                        words.splice(i + 1, 0, newWord);
+                        break;
+                    }
+                }
+            }
+            word.x = wordX;
+            word.y = wordY;
+            wordX += word.width + space.width;
+        }
+        for (let i = 0; i < words.length; ++i) {
+            const { x, y, str } = words[i];
+            ctx[func](str, drawX + x, drawY + y);
+        }
+        const m = ctx.measureText('W');
+        const diff = m.fontBoundingBoxDescent +
+            m.fontBoundingBoxAscent -
+            m.actualBoundingBoxDescent -
+            m.actualBoundingBoxAscent;
+        return rows * lineHeightPx - diff;
     }),
 };
 //# sourceMappingURL=draw.js.map
