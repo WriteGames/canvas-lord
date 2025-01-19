@@ -48,9 +48,9 @@ const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 		ctx.scale(scaleX, scaleY);
 		ctx.translate(offsetX, offsetY);
 		if (angle !== 0) {
-			ctx.translate(originX, originY);
-			ctx.rotate((angle / 180) * Math.PI);
 			ctx.translate(-originX, -originY);
+			ctx.rotate((angle / 180) * Math.PI);
+			ctx.translate(originX, originY);
 		}
 		ctx.translate(-x, -y);
 		callback(ctx, options, x, y, ...args);
