@@ -20,8 +20,11 @@ const types = [
 
 type Types = typeof types;
 
+// TODO(Bret): rework this
+export type ColliderTag = string | undefined;
 interface BaseShape<T extends Types[number]> {
 	type: T;
+	tag?: ColliderTag;
 	x: number;
 	y: number;
 }
@@ -65,7 +68,7 @@ interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
 // TODO: this is exported for Entity, but do we really want this to be exported?
 export type Shape = Point | Line | Rect | Circle | RightTriangle | Triangle;
 
-type RawShape<T> = Omit<T, 'type'>;
+type RawShape<T> = Omit<T, 'type' | 'tag'>;
 
 const isPointInPolygon = (
 	x: number,

@@ -705,11 +705,24 @@
 				}
 			}
 
-			class CollisionEntity extends Entity {
-				color = 'yellow';
+			const COLLIDER_TAG = {
+				SLOPE: 'slope',
+				YELLOW: 'yellow',
+				ORANGE: 'orange',
+			};
 
-				constructor(...args) {
-					super(...args);
+			class CollisionEntity extends Entity {
+				constructor(x, y, type) {
+					super(x, y);
+					if (type === COLLIDER_TAG.YELLOW) {
+						this.color = 'yellow';
+					} else if (type === COLLIDER_TAG.ORANGE) {
+						this.color = 'orange';
+					} else if (type === COLLIDER_TAG.SLOPE) {
+						this.color = 'black';
+					} else {
+						this.color = 'magenta';
+					}
 				}
 
 				render(ctx) {
@@ -751,7 +764,7 @@
 							break;
 						}
 						case 'right-triangle': {
-							ctx.fillStyle = 'black';
+							ctx.fillStyle = this.color;
 							drawRightTriangle(
 								ctx,
 								this.collider,
@@ -773,8 +786,8 @@
 			}
 
 			class MovingEntity extends CollisionEntity {
-				constructor(x, y) {
-					super(x, y);
+				constructor(...args) {
+					super(...args);
 
 					this.vel = new Vec2(3, 2);
 				}
@@ -802,6 +815,7 @@
 						const other = this.collideEntity(
 							this.x + (axis === 'x' ? sign : 0),
 							this.y + (axis === 'y' ? sign : 0),
+							[COLLIDER_TAG.SLOPE, this.collider.tag],
 						);
 						if (other !== null) {
 							this.vel[axis] *= -1;
@@ -819,7 +833,6 @@
 				}
 
 				update() {
-					this.color = 'yellow';
 					this.moveAxis('x');
 					this.moveAxis('y');
 				}
@@ -836,6 +849,7 @@
 
 				constructor(...args) {
 					super(...args);
+					this.collider.tag = args[2];
 				}
 			}
 
@@ -847,10 +861,11 @@
 					radius: 10,
 				};
 
-				constructor(x, y) {
-					super(x, y);
+				constructor(...args) {
+					super(...args);
 					this.x += this.collider.radius;
 					this.y += this.collider.radius;
+					this.collider.tag = args[2];
 				}
 			}
 
@@ -865,9 +880,10 @@
 					h: RightTriangleEntity.size,
 				};
 
-				constructor(x, y, orientation) {
-					super(x, y);
+				constructor(x, y, orientation, type) {
+					super(x, y, type);
 					this.collider.orientation = orientation;
+					this.collider.tag = type;
 				}
 			}
 
@@ -887,12 +903,8 @@
 				}
 
 				update(input) {
-					this.color = 'yellow';
 					this.x = input.mouse.x;
 					this.y = input.mouse.y;
-					if (this.collide(this.x - 10, this.y - 10)) {
-						this.color = 'orange';
-					}
 				}
 			}
 
@@ -909,24 +921,32 @@
 						this.addRenderable(mouse);
 					}
 
-					const triLT = new RightTriangleEntity(0, 0, 'SE');
+					const triLT = new RightTriangleEntity(
+						0,
+						0,
+						'SE',
+						COLLIDER_TAG.SLOPE,
+					);
 
 					const triRT = new RightTriangleEntity(
 						this.bounds[2] - RightTriangleEntity.size,
 						0,
 						'SW',
+						COLLIDER_TAG.SLOPE,
 					);
 
 					const triLB = new RightTriangleEntity(
 						0,
 						this.bounds[3] - RightTriangleEntity.size,
 						'NE',
+						COLLIDER_TAG.SLOPE,
 					);
 
 					const triRB = new RightTriangleEntity(
 						this.bounds[2] - RightTriangleEntity.size,
 						this.bounds[3] - RightTriangleEntity.size,
 						'NW',
+						COLLIDER_TAG.SLOPE,
 					);
 
 					[triLT, triRT, triLB, triRB].forEach((tri) => {
@@ -935,11 +955,13 @@
 					});
 
 					const shapes = [];
-					shapes.push(new CircleEntity(30, 30));
-					shapes.push(new SquareEntity(120, 40));
-					shapes.push(new CircleEntity(0, 140));
-					shapes.push(new SquareEntity(200, 0));
-					shapes.push(new CircleEntity(200, 170));
+					shapes.push(new CircleEntity(30, 30, COLLIDER_TAG.ORANGE));
+					shapes.push(new SquareEntity(120, 40, COLLIDER_TAG.YELLOW));
+					shapes.push(new CircleEntity(0, 140, COLLIDER_TAG.ORANGE));
+					shapes.push(new SquareEntity(200, 0, COLLIDER_TAG.YELLOW));
+					shapes.push(
+						new CircleEntity(200, 170, COLLIDER_TAG.ORANGE),
+					);
 					shapes.forEach((shape) => {
 						this.addEntity(shape);
 						this.addRenderable(shape);

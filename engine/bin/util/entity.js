@@ -33,12 +33,13 @@ export class Entity {
     set y(val) {
         this.component(Components.pos2D)[1] = val;
     }
-    collideEntity(x, y) {
+    collideEntity(x, y, tag) {
         if (!this.collider)
             return null;
         // TODO(bret): Remove this hack
         if (this.collider.type === 'line' || this.collider.type === 'triangle')
             return null;
+        const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
         let collide = null;
         for (let i = 0; !collide && i < n; ++i) {
@@ -50,6 +51,8 @@ export class Entity {
             // TODO(bret): Remove this hack
             if (e.collider.type === 'line' || e.collider.type === 'triangle')
                 return null;
+            if (tags.length && !tags.includes(e.collider.tag))
+                continue;
             this.collider.x += x;
             this.collider.y += y;
             e.collider.x += e.x;
@@ -64,12 +67,13 @@ export class Entity {
         }
         return collide;
     }
-    collideEntities(x, y) {
+    collideEntities(x, y, tag) {
         if (!this.collider)
             return [];
         // TODO(bret): Remove this hack
         if (this.collider.type === 'line' || this.collider.type === 'triangle')
             return null;
+        const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
         let collide = [];
         for (let i = 0; i < n; ++i) {
@@ -81,6 +85,8 @@ export class Entity {
             // TODO(bret): Remove this hack
             if (e.collider.type === 'line' || e.collider.type === 'triangle')
                 return null;
+            if (tags.length && !tags.includes(e.collider.type))
+                continue;
             this.collider.x += x;
             this.collider.y += y;
             e.collider.x += e.x;
@@ -95,10 +101,10 @@ export class Entity {
         }
         return collide;
     }
-    collide(x, y) {
+    collide(x, y, tag) {
         if (!this.collider)
             return false;
-        return this.collideEntity(x, y) !== null;
+        return this.collideEntity(x, y, tag) !== null;
     }
     update(input) { }
     render(ctx) { }
