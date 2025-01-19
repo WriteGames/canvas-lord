@@ -22,6 +22,11 @@ if (!_pixelCtx) {
 }
 const pixelCtx = _pixelCtx;
 export class Grid {
+    static RenderMode = {
+        OUTLINE: 0,
+        BOXES_OUTLINE: 1,
+        BOXES: 2,
+    };
     constructor(width, height, tileW, tileH) {
         this.width = width;
         this.height = height;
@@ -137,13 +142,13 @@ export class Grid {
     }
     render(ctx, camera) {
         switch (this.renderMode) {
-            case 0:
+            case Grid.RenderMode.OUTLINE:
                 this.renderOutline(ctx, camera);
                 break;
-            case 1:
+            case Grid.RenderMode.BOXES_OUTLINE:
                 this.renderEachCell(ctx, camera);
                 break;
-            case 2: {
+            case Grid.RenderMode.BOXES: {
                 const temp = this.color;
                 this.color = 'rgba(255, 0, 0, 0.3)';
                 this.renderEachCell(ctx, camera, true);
