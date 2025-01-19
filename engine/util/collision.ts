@@ -95,8 +95,8 @@ const getSideOfLine = (x: number, y: number, lineA: Vec2, lineB: Vec2) => {
 
 // TODO: clean these up (would break some non-TS files unfortunately)
 const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
-	const r = b.sub(a);
-	const s = d.sub(c);
+	const r = subPos(b, a);
+	const s = subPos(d, c);
 
 	const rxs = crossProduct2D(r, s);
 

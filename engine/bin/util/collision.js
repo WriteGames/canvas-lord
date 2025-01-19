@@ -26,8 +26,8 @@ const getSideOfLine = (x, y, lineA, lineB) => {
 };
 // TODO: clean these up (would break some non-TS files unfortunately)
 const _lineSegmentIntersection = ([a, b], [c, d]) => {
-    const r = b.sub(a);
-    const s = d.sub(c);
+    const r = subPos(b, a);
+    const s = subPos(d, c);
     const rxs = crossProduct2D(r, s);
     const t = crossProduct2D(subPos(c, a), s) / rxs;
     const u = crossProduct2D(subPos(a, c), r) / -rxs;
