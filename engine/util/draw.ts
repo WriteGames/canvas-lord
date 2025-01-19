@@ -173,16 +173,18 @@ export const Draw = {
 
 			ctx.imageSmoothingEnabled = false;
 
+			const _width = width ?? imageSrc.width;
+			const _height = height ?? imageSrc.height;
 			ctx.drawImage(
 				imageSrc,
-				sourceX,
-				sourceY,
-				width,
-				height,
+				sourceX ?? 0,
+				sourceY ?? 0,
+				_width,
+				_height,
 				drawX,
 				drawY,
-				width,
-				height,
+				_width,
+				_height,
 			);
 		},
 	),

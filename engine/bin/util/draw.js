@@ -99,7 +99,9 @@ export const Draw = {
         if (!imageSrc)
             return;
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(imageSrc, sourceX, sourceY, width, height, drawX, drawY, width, height);
+        const _width = width ?? imageSrc.width;
+        const _height = height ?? imageSrc.height;
+        ctx.drawImage(imageSrc, sourceX ?? 0, sourceY ?? 0, _width, _height, drawX, drawY, _width, _height);
     }),
 };
 //# sourceMappingURL=draw.js.map
