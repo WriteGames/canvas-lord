@@ -21,6 +21,13 @@ interface DrawOptions {
 	scaleY: number;
 }
 
+interface TextOptions extends DrawOptions {
+	type: 'fill' | 'stroke';
+	font: string;
+	size: string;
+	color: CanvasRenderingContext2D['fillStyle'];
+}
+
 type Callback<T extends unknown[], O extends DrawOptions> = (
 	ctx: CanvasRenderingContext2D,
 	options: O,
@@ -61,7 +68,7 @@ const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 export const Draw = {
 	circle: moveCanvas(
 		(
-			ctx: CanvasRenderingContext2D,
+			ctx,
 			circle: ComponentProps<typeof Components.circle>,
 			x: number,
 			y: number,
@@ -76,16 +83,12 @@ export const Draw = {
 
 			switch (circle.type) {
 				case 'fill':
-					{
-						ctx.fillStyle = circle.color;
-						ctx.fill();
-					}
+					ctx.fillStyle = circle.color;
+					ctx.fill();
 					break;
 				case 'stroke':
-					{
-						ctx.strokeStyle = circle.color;
-						ctx.stroke();
-					}
+					ctx.strokeStyle = circle.color;
+					ctx.stroke();
 					break;
 			}
 		},
@@ -101,7 +104,7 @@ export const Draw = {
 
 	rect: moveCanvas(
 		(
-			ctx: CanvasRenderingContext2D,
+			ctx,
 			rect: ComponentProps<typeof Components.rect>,
 			x: number,
 			y: number,
@@ -112,16 +115,12 @@ export const Draw = {
 			const args = [x, y, w, h] as const;
 			switch (rect.type) {
 				case 'fill':
-					{
-						ctx.fillStyle = rect.color;
-						ctx.fillRect(...args);
-					}
+					ctx.fillStyle = rect.color;
+					ctx.fillRect(...args);
 					break;
 				case 'stroke':
-					{
-						ctx.strokeStyle = rect.color;
-						ctx.strokeRect(...args);
-					}
+					ctx.strokeStyle = rect.color;
+					ctx.strokeRect(...args);
 					break;
 			}
 		},
@@ -159,7 +158,7 @@ export const Draw = {
 
 	image: moveCanvas(
 		(
-			ctx: CanvasRenderingContext2D,
+			ctx,
 			image: ComponentProps<typeof Components.image>,
 			drawX: number,
 			drawY: number,
@@ -186,6 +185,39 @@ export const Draw = {
 				_width,
 				_height,
 			);
+		},
+	),
+
+	text: moveCanvas(
+		(
+			ctx: CanvasRenderingContext2D,
+			text: TextOptions,
+			x: number,
+			y: number,
+			str: string,
+		) => {
+			const { color, type, font = 'sans-serif', size = 10 } = text;
+
+			let _size = size;
+			if (typeof _size === 'number') {
+				_size = `${_size}px`;
+			}
+			const _font = `${_size} ${font}`;
+
+			ctx.textBaseline = 'top';
+
+			switch (type) {
+				case 'fill':
+					ctx.fillStyle = color;
+					ctx.font = _font;
+					ctx.fillText(str, x, y);
+					break;
+				case 'stroke':
+					ctx.strokeStyle = color;
+					ctx.font = _font;
+					ctx.strokeText(str, x, y);
+					break;
+			}
 		},
 	),
 };
