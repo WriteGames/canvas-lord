@@ -30,6 +30,7 @@ interface TextOptions extends DrawOptions {
 	baseline?: CanvasTextBaseline;
 	color: CanvasRenderingContext2D['fillStyle'];
 	width?: number;
+	count?: number;
 }
 
 type Callback<T extends unknown[], O extends DrawOptions> = (
@@ -210,6 +211,7 @@ export const Draw = {
 				font = 'sans-serif',
 				size = 10,
 				baseline = 'top',
+				count,
 			} = text;
 
 			const _size = typeof size === 'number' ? `${size}px` : size;
@@ -239,6 +241,7 @@ export const Draw = {
 			const words = str.split(' ').map((str) => ({
 				str,
 				width: ctx.measureText(str).width,
+				space: true,
 				x: -1,
 				y: -1,
 			}));
@@ -272,9 +275,11 @@ export const Draw = {
 							);
 							word.str = str;
 							word.width = metrics.width;
+							word.space = false;
 							const newWord = {
 								str: truncated,
 								width: ctx.measureText(truncated).width,
+								space: true,
 								x: -1,
 								y: -1,
 							};
@@ -290,9 +295,21 @@ export const Draw = {
 				wordX += word.width + space.width;
 			}
 
-			for (let i = 0; i < words.length; ++i) {
-				const { x, y, str } = words[i];
-				ctx[func](str, drawX + x, drawY + y);
+			let lettersLeft =
+				count !== undefined
+					? Math.clamp(count, 0, str.length)
+					: str.length;
+			for (let i = 0; lettersLeft > 0 && i < words.length; ++i) {
+				const { x, y, str, space } = words[i];
+				const _str =
+					str.length > lettersLeft
+						? str.substring(0, lettersLeft)
+						: str;
+				ctx[func](_str, drawX + x, drawY + y);
+				if (count) {
+					lettersLeft -= str.length;
+					if (space) --lettersLeft;
+				}
 			}
 
 			const m = ctx.measureText('W');

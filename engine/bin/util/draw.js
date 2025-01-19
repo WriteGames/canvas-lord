@@ -99,7 +99,7 @@ export const Draw = {
     // TODO(bret): This breaks if the width is too small :(
     // TODO(bret): Condense some of this down
     text: moveCanvas((ctx, text, drawX, drawY, str) => {
-        const { color, type, font = 'sans-serif', size = 10, baseline = 'top', } = text;
+        const { color, type, font = 'sans-serif', size = 10, baseline = 'top', count, } = text;
         const _size = typeof size === 'number' ? `${size}px` : size;
         ctx.font = `${_size} ${font}`;
         ctx.textBaseline = baseline;
@@ -123,6 +123,7 @@ export const Draw = {
         const words = str.split(' ').map((str) => ({
             str,
             width: ctx.measureText(str).width,
+            space: true,
             x: -1,
             y: -1,
         }));
@@ -149,9 +150,11 @@ export const Draw = {
                         const truncated = word.str.substring(word.str.length - j);
                         word.str = str;
                         word.width = metrics.width;
+                        word.space = false;
                         const newWord = {
                             str: truncated,
                             width: ctx.measureText(truncated).width,
+                            space: true,
                             x: -1,
                             y: -1,
                         };
@@ -164,9 +167,20 @@ export const Draw = {
             word.y = wordY;
             wordX += word.width + space.width;
         }
-        for (let i = 0; i < words.length; ++i) {
-            const { x, y, str } = words[i];
-            ctx[func](str, drawX + x, drawY + y);
+        let lettersLeft = count !== undefined
+            ? Math.clamp(count, 0, str.length)
+            : str.length;
+        for (let i = 0; lettersLeft > 0 && i < words.length; ++i) {
+            const { x, y, str, space } = words[i];
+            const _str = str.length > lettersLeft
+                ? str.substring(0, lettersLeft)
+                : str;
+            ctx[func](_str, drawX + x, drawY + y);
+            if (count) {
+                lettersLeft -= str.length;
+                if (space)
+                    --lettersLeft;
+            }
         }
         const m = ctx.measureText('W');
         const diff = m.fontBoundingBoxDescent +

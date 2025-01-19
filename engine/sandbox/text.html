@@ -109,23 +109,33 @@
 
 					Draw.text(ctx, textOptions, 10, 10, str);
 
-					const height = Draw.text(
-						ctx,
-						{ ...textOptions, width: this.width },
-						10,
-						30,
-						str,
-					);
+					const drawTextWithRect = (x, y, width, count) => {
+						const height = Draw.text(
+							ctx,
+							{ ...textOptions, width, count },
+							x,
+							y,
+							str,
+						);
 
-					ctx.strokeStyle = 'red';
-					Draw.rect(
-						ctx,
-						{ type: 'stroke', color: 'red' },
-						10 - 1,
-						30 - 1,
-						this.width + 2,
-						height + 2,
+						ctx.strokeStyle = 'red';
+						Draw.rect(
+							ctx,
+							{ type: 'stroke', color: 'red' },
+							x - 1,
+							y - 1,
+							width + 2,
+							height + 2,
+						);
+					};
+
+					const count = Math.clamp(
+						Math.floor(this.inc / 5) % (str.length * 1.3),
+						0,
+						str.length,
 					);
+					drawTextWithRect(10, 40, 100, count);
+					drawTextWithRect(10, 96, this.width);
 				}
 			}
 
