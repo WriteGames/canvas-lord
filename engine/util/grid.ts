@@ -90,6 +90,25 @@ export class Grid {
 		return grid;
 	}
 
+	static fromArray(
+		data: number[],
+		width: number,
+		height: number,
+		tileW: number,
+		tileH: number,
+	): Grid {
+		const grid = new Grid(width, height, tileW, tileH);
+		const cellW = width / tileW;
+		for (let i = 0; i < data.length; ++i) {
+			const value = data[i];
+			const x = i % cellW;
+			const y = Math.floor(i / cellW);
+			grid.setTile(x, y, value);
+		}
+		return grid;
+	}
+
+	// TODO: should width/height be their own properties?
 	static fromBinary(
 		data: [number, number, ...number[]],
 		tileW: number,

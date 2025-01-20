@@ -69,6 +69,13 @@
 			tabindex="-1"
 		></canvas>
 		<canvas
+			id="grid-array"
+			width="240px"
+			height="240px"
+			style="max-width: 480px"
+			tabindex="-1"
+		></canvas>
+		<canvas
 			id="grid-binary"
 			width="320px"
 			height="180px"
@@ -118,6 +125,28 @@
 				}
 			}
 
+			class GridArrayScene extends GridScene {
+				constructor(...args) {
+					super(...args);
+
+					const data = [
+						0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0,
+						0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
+						0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1,
+						1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0,
+						1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0,
+						0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0,
+						0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1,
+						1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0,
+						0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1,
+						1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0,
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0,
+					];
+					this.grid = Grid.fromArray(data, 240, 240, 16, 16);
+				}
+			}
+
 			class GridBinaryScene extends GridScene {
 				constructor(...args) {
 					super(...args);
@@ -144,8 +173,18 @@
 				}
 			}
 
-			const ids = ['grid-bitmap', 'grid-binary', 'grid-manual'];
-			const scenes = [GridBitmapScene, GridBinaryScene, GridManualScene];
+			const ids = [
+				'grid-bitmap',
+				'grid-array',
+				'grid-binary',
+				'grid-manual',
+			];
+			const scenes = [
+				GridBitmapScene,
+				GridArrayScene,
+				GridBinaryScene,
+				GridManualScene,
+			];
 
 			let loaded = false;
 			const assetManager = new AssetManager('../img/');
