@@ -240,21 +240,30 @@ export class AssetManager {
         image.src = fullPath;
     }
     loadAssets() {
-        [...this.sprites.keys()].forEach((src) => {
+        const sprites = [...this.sprites.keys()];
+        if (sprites.length === 0)
+            this.emitOnLoad('');
+        sprites.forEach((src) => {
             this.loadImage(src);
+        });
+    }
+    emitOnLoad(src) {
+        window.requestAnimationFrame(() => {
+            this.onLoadCallbacks.forEach((callback) => callback(src));
         });
     }
     reloadAssets() {
         this.spritesLoaded = 0;
-        [...this.sprites.keys()].forEach((src) => {
+        const sprites = [...this.sprites.keys()];
+        if (sprites.length === 0)
+            this.emitOnLoad('');
+        sprites.forEach((src) => {
             this.loadImage(src);
         });
     }
     imageLoaded(src) {
         if (++this.spritesLoaded === this.sprites.size) {
-            window.requestAnimationFrame(() => {
-                this.onLoadCallbacks.forEach((callback) => callback(src));
-            });
+            this.emitOnLoad(src);
         }
     }
     onLoad(callback) {

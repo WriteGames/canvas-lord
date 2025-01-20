@@ -437,23 +437,31 @@ export class AssetManager {
 	}
 
 	loadAssets(): void {
-		[...this.sprites.keys()].forEach((src) => {
+		const sprites = [...this.sprites.keys()];
+		if (sprites.length === 0) this.emitOnLoad('');
+		sprites.forEach((src) => {
 			this.loadImage(src);
+		});
+	}
+
+	emitOnLoad(src: string) {
+		window.requestAnimationFrame(() => {
+			this.onLoadCallbacks.forEach((callback) => callback(src));
 		});
 	}
 
 	reloadAssets(): void {
 		this.spritesLoaded = 0;
-		[...this.sprites.keys()].forEach((src) => {
+		const sprites = [...this.sprites.keys()];
+		if (sprites.length === 0) this.emitOnLoad('');
+		sprites.forEach((src) => {
 			this.loadImage(src);
 		});
 	}
 
 	imageLoaded(src: string): void {
 		if (++this.spritesLoaded === this.sprites.size) {
-			window.requestAnimationFrame(() => {
-				this.onLoadCallbacks.forEach((callback) => callback(src));
-			});
+			this.emitOnLoad(src);
 		}
 	}
 
