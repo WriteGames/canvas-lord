@@ -10,14 +10,6 @@ export * as Collision from './util/collision.js';
 export { checkLineSegmentIntersection, getLineSegmentIntersection, } from './util/collision.js';
 export { Entity } from './util/entity.js';
 export { Grid } from './util/grid.js';
-// NOTE: This should be able to infer the return type...
-Math.clamp = (val, min, max) => {
-    if (val < min)
-        return min;
-    if (val > max)
-        return max;
-    return val;
-};
 const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;
 const distance = (dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));

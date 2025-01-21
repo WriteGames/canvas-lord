@@ -57,6 +57,7 @@ declare global {
 
 	interface Math {
 		clamp: (val: number, min: number, max: number) => number;
+		lerp: (a: number, b: number, t: number) => number;
 	}
 }
 
@@ -77,13 +78,6 @@ type VectorToObjectVectorHybrid<A extends readonly PropertyKey[]> = Pick<
 	},
 	Exclude<keyof A, keyof unknown[]> | A[number]
 >;
-
-// NOTE: This should be able to infer the return type...
-Math.clamp = (val, min, max): number => {
-	if (val < min) return min;
-	if (val > max) return max;
-	return val;
-};
 
 const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
 const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;

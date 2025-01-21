@@ -1,5 +1,20 @@
 export const EPSILON = 0.000001;
 
+// Math prototype fun :~)
+if (typeof Math.clamp === 'undefined') {
+	Math.clamp = (val, min, max) => {
+		if (val < min) return min;
+		if (val > max) return max;
+		return val;
+	};
+}
+
+if (typeof Math.lerp === 'undefined') {
+	Math.lerp = (a, b, t) => {
+		return t * (b - a) + a;
+	};
+}
+
 export type Line2D = [Vec2, Vec2];
 
 /*export*/ type V2 = [x: number, y: number];
