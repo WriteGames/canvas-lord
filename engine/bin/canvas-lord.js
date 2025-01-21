@@ -1056,8 +1056,14 @@ export class Tileset {
         this.separation = options.separation ?? 1;
     }
     setTile(x, y, tileX, tileY) {
-        // TODO(bret): Make sure it's within the bounds
+        if (x < 0 || y < 0 || x >= this.columns || y >= this.rows)
+            return;
         this.data[y * this.columns + x] = new Vec2(tileX, tileY);
+    }
+    getTile(x, y) {
+        if (x < 0 || y < 0 || x >= this.columns || y >= this.rows)
+            return null;
+        return this.data[y * this.columns + x];
     }
     render(ctx, camera) {
         const scale = 1;

@@ -1660,8 +1660,13 @@ export class Tileset {
 	}
 
 	setTile(x: number, y: number, tileX: number, tileY: number): void {
-		// TODO(bret): Make sure it's within the bounds
+		if (x < 0 || y < 0 || x >= this.columns || y >= this.rows) return;
 		this.data[y * this.columns + x] = new Vec2(tileX, tileY);
+	}
+
+	getTile(x: number, y: number): Tileset['data'][number] {
+		if (x < 0 || y < 0 || x >= this.columns || y >= this.rows) return null;
+		return this.data[y * this.columns + x];
 	}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
