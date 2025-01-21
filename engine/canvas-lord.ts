@@ -1625,6 +1625,12 @@ export interface Tileset {
 	separation: number;
 }
 
+export interface TilesetOptions {
+	startX?: number;
+	startY?: number;
+	separation?: number;
+}
+
 export class Tileset {
 	constructor(
 		sprite: Sprite,
@@ -1632,6 +1638,7 @@ export class Tileset {
 		height: number,
 		tileW: number,
 		tileH: number,
+		options: TilesetOptions = {},
 	) {
 		this.width = width;
 		this.height = height;
@@ -1647,9 +1654,9 @@ export class Tileset {
 			(v) => null,
 		);
 
-		this.startX = 1;
-		this.startY = 1;
-		this.separation = 1;
+		this.startX = options.startX ?? 1;
+		this.startY = options.startY ?? 1;
+		this.separation = options.separation ?? 1;
 	}
 
 	setTile(x: number, y: number, tileX: number, tileY: number): void {

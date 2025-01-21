@@ -1042,7 +1042,7 @@ export class GridOutline {
     }
 }
 export class Tileset {
-    constructor(sprite, width, height, tileW, tileH) {
+    constructor(sprite, width, height, tileW, tileH, options = {}) {
         this.width = width;
         this.height = height;
         this.tileW = tileW;
@@ -1051,9 +1051,9 @@ export class Tileset {
         this.rows = Math.ceil(height / tileH);
         this.sprite = sprite;
         this.data = Array.from({ length: this.columns * this.rows }, (v) => null);
-        this.startX = 1;
-        this.startY = 1;
-        this.separation = 1;
+        this.startX = options.startX ?? 1;
+        this.startY = options.startY ?? 1;
+        this.separation = options.separation ?? 1;
     }
     setTile(x, y, tileX, tileY) {
         // TODO(bret): Make sure it's within the bounds
