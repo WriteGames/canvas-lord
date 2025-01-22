@@ -5,6 +5,8 @@ export class Entity {
     components = new Map();
     depth = 0;
     collider = undefined;
+    visible = true;
+    collidable = true;
     constructor(x, y) {
         this.addComponent(Components.pos2D);
         this.x = x;
@@ -33,11 +35,44 @@ export class Entity {
     set y(val) {
         this.component(Components.pos2D)[1] = val;
     }
-    collideEntity(x, y, tag) {
-        if (!this.collider)
+    update(input) { }
+    render(ctx) { }
+    _moveCollider(c, x, y) {
+        switch (c.type) {
+            case 'line':
+                c.x1 += x;
+                c.x2 += x;
+                c.y1 += y;
+                c.y2 += y;
+                break;
+            case 'triangle':
+                c.x1 += x;
+                c.x2 += x;
+                c.x3 += x;
+                c.y1 += y;
+                c.y2 += y;
+                c.y3 += y;
+                break;
+            default:
+                c.x += x;
+                c.y += y;
+        }
+    }
+    _collide(x, y, e) {
+        if (!this.collidable || !this.collider || !e.collidable || !e.collider)
             return null;
-        // TODO(bret): Remove this hack
-        if (this.collider.type === 'line' || this.collider.type === 'triangle')
+        let result = null;
+        this._moveCollider(this.collider, x, y);
+        this._moveCollider(e.collider, e.x, e.y);
+        if (Collision.collide(this.collider, e.collider)) {
+            result = e;
+        }
+        this._moveCollider(this.collider, -x, -y);
+        this._moveCollider(e.collider, -e.x, -e.y);
+        return result;
+    }
+    collideEntity(x, y, tag) {
+        if (!this.collidable || !this.collider)
             return null;
         const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
@@ -46,33 +81,17 @@ export class Entity {
             const e = this.scene.entities.inScene[i];
             if (e === this)
                 continue;
-            if (!e.collider)
+            if (!e.collidable || !e.collider)
                 continue;
-            // TODO(bret): Remove this hack
-            if (e.collider.type === 'line' || e.collider.type === 'triangle')
-                return null;
             if (tags.length && !tags.includes(e.collider.tag))
                 continue;
-            this.collider.x += x;
-            this.collider.y += y;
-            e.collider.x += e.x;
-            e.collider.y += e.y;
-            if (Collision.collide(this.collider, e.collider)) {
-                collide = e;
-            }
-            this.collider.x -= x;
-            this.collider.y -= y;
-            e.collider.x -= e.x;
-            e.collider.y -= e.y;
+            collide = this._collide(x, y, e);
         }
         return collide;
     }
     collideEntities(x, y, tag) {
-        if (!this.collider)
+        if (!this.collidable || !this.collider)
             return [];
-        // TODO(bret): Remove this hack
-        if (this.collider.type === 'line' || this.collider.type === 'triangle')
-            return null;
         const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
         let collide = [];
@@ -80,33 +99,20 @@ export class Entity {
             const e = this.scene.entities.inScene[i];
             if (e === this)
                 continue;
-            if (!e.collider)
+            if (!e.collidable || !e.collider)
                 continue;
-            // TODO(bret): Remove this hack
-            if (e.collider.type === 'line' || e.collider.type === 'triangle')
-                return null;
             if (tags.length && !tags.includes(e.collider.type))
                 continue;
-            this.collider.x += x;
-            this.collider.y += y;
-            e.collider.x += e.x;
-            e.collider.y += e.y;
-            if (Collision.collide(this.collider, e.collider)) {
+            if (this._collide(x, y, e)) {
                 collide.push(e);
             }
-            this.collider.x -= x;
-            this.collider.y -= y;
-            e.collider.x -= e.x;
-            e.collider.y -= e.y;
         }
         return collide;
     }
     collide(x, y, tag) {
-        if (!this.collider)
+        if (!this.collidable || !this.collider)
             return false;
         return this.collideEntity(x, y, tag) !== null;
     }
-    update(input) { }
-    render(ctx) { }
 }
 //# sourceMappingURL=entity.js.map

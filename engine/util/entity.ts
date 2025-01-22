@@ -15,6 +15,8 @@ export interface IEntity {
 	scene: Scene;
 	components: Map<IEntityComponentType, any>;
 	collider: Collider | undefined;
+	visible: boolean;
+	collidable: boolean;
 	update: (input: Input) => void;
 	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
 	addComponent: <T extends IEntityComponentType>(
@@ -23,6 +25,21 @@ export interface IEntity {
 	component: <T extends IEntityComponentType>(
 		component: T,
 	) => ComponentProps<T> | undefined;
+	collideEntity: (
+		x: number,
+		y: number,
+		tag: ColliderTag | ColliderTag[],
+	) => Entity | null;
+	collideEntities: (
+		x: number,
+		y: number,
+		tag: ColliderTag | ColliderTag[],
+	) => Entity[];
+	collide: (
+		x: number,
+		y: number,
+		tag: ColliderTag | ColliderTag[],
+	) => boolean;
 }
 
 export class Entity implements IEntity, IRenderable {
@@ -30,6 +47,8 @@ export class Entity implements IEntity, IRenderable {
 	components = new Map<IEntityComponentType, any>();
 	depth = 0;
 	collider: Collider | undefined = undefined;
+	visible: boolean = true;
+	collidable: boolean = true;
 
 	constructor(x: number, y: number) {
 		this.addComponent(Components.pos2D);
@@ -69,11 +88,52 @@ export class Entity implements IEntity, IRenderable {
 		this.component(Components.pos2D)![1] = val;
 	}
 
-	collideEntity(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collider) return null;
-		// TODO(bret): Remove this hack
-		if (this.collider.type === 'line' || this.collider.type === 'triangle')
+	update(input: Input): void {}
+
+	render(ctx: CanvasRenderingContext2D): void {}
+
+	_moveCollider(c: Collider, x: number, y: number) {
+		switch (c.type) {
+			case 'line':
+				c.x1 += x;
+				c.x2 += x;
+				c.y1 += y;
+				c.y2 += y;
+				break;
+			case 'triangle':
+				c.x1 += x;
+				c.x2 += x;
+				c.x3 += x;
+				c.y1 += y;
+				c.y2 += y;
+				c.y3 += y;
+				break;
+			default:
+				c.x += x;
+				c.y += y;
+		}
+	}
+
+	_collide(x: number, y: number, e: Entity): Entity | null {
+		if (!this.collidable || !this.collider || !e.collidable || !e.collider)
 			return null;
+		let result: Entity | null = null;
+		this._moveCollider(this.collider, x, y);
+		this._moveCollider(e.collider, e.x, e.y);
+		if (Collision.collide(this.collider, e.collider)) {
+			result = e;
+		}
+		this._moveCollider(this.collider, -x, -y);
+		this._moveCollider(e.collider, -e.x, -e.y);
+		return result;
+	}
+
+	collideEntity(
+		x: number,
+		y: number,
+		tag: ColliderTag | ColliderTag[],
+	): Entity | null {
+		if (!this.collidable || !this.collider) return null;
 
 		const tags = tag ? [tag].flat() : [];
 		const n = this.scene.entities.inScene.length;
@@ -81,32 +141,15 @@ export class Entity implements IEntity, IRenderable {
 		for (let i = 0; !collide && i < n; ++i) {
 			const e = this.scene.entities.inScene[i];
 			if (e === this) continue;
-			if (!e.collider) continue;
-			// TODO(bret): Remove this hack
-			if (e.collider.type === 'line' || e.collider.type === 'triangle')
-				return null;
+			if (!e.collidable || !e.collider) continue;
 			if (tags.length && !tags.includes(e.collider.tag)) continue;
-			this.collider.x += x;
-			this.collider.y += y;
-			e.collider.x += e.x;
-			e.collider.y += e.y;
-			if (Collision.collide(this.collider, e.collider)) {
-				collide = e;
-			}
-
-			this.collider.x -= x;
-			this.collider.y -= y;
-			e.collider.x -= e.x;
-			e.collider.y -= e.y;
+			collide = this._collide(x, y, e);
 		}
 		return collide;
 	}
 
 	collideEntities(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collider) return [];
-		// TODO(bret): Remove this hack
-		if (this.collider.type === 'line' || this.collider.type === 'triangle')
-			return null;
+		if (!this.collidable || !this.collider) return [];
 
 		const tags = tag ? [tag].flat() : [];
 		const n = this.scene.entities.inScene.length;
@@ -114,33 +157,17 @@ export class Entity implements IEntity, IRenderable {
 		for (let i = 0; i < n; ++i) {
 			const e = this.scene.entities.inScene[i];
 			if (e === this) continue;
-			if (!e.collider) continue;
-			// TODO(bret): Remove this hack
-			if (e.collider.type === 'line' || e.collider.type === 'triangle')
-				return null;
+			if (!e.collidable || !e.collider) continue;
 			if (tags.length && !tags.includes(e.collider.type)) continue;
-			this.collider.x += x;
-			this.collider.y += y;
-			e.collider.x += e.x;
-			e.collider.y += e.y;
-			if (Collision.collide(this.collider, e.collider)) {
+			if (this._collide(x, y, e)) {
 				collide.push(e);
 			}
-
-			this.collider.x -= x;
-			this.collider.y -= y;
-			e.collider.x -= e.x;
-			e.collider.y -= e.y;
 		}
 		return collide;
 	}
 
 	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collider) return false;
+		if (!this.collidable || !this.collider) return false;
 		return this.collideEntity(x, y, tag) !== null;
 	}
-
-	update(input: Input): void {}
-
-	render(ctx: CanvasRenderingContext2D): void {}
 }
