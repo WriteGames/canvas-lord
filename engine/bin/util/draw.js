@@ -7,10 +7,11 @@ export const drawable = {
     originY: 0,
     offsetX: 0,
     offsetY: 0,
+    alpha: 1,
 };
 const moveCanvas = (callback) => {
     return (ctx, options, x, y, ...args) => {
-        const { offsetX = 0, offsetY = 0, angle = 0, originX = 0, originY = 0, scaleX = 1, scaleY = 1, } = Object.assign({}, drawable, options);
+        const { offsetX = 0, offsetY = 0, angle = 0, originX = 0, originY = 0, scaleX = 1, scaleY = 1, alpha = 1, } = Object.assign({}, drawable, options);
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(scaleX, scaleY);
@@ -20,6 +21,8 @@ const moveCanvas = (callback) => {
             ctx.rotate((angle / 180) * Math.PI);
             ctx.translate(originX, originY);
         }
+        if (alpha < 1)
+            ctx.globalAlpha = Math.max(0, alpha);
         ctx.translate(-x, -y);
         const res = callback(ctx, options, x, y, ...args);
         ctx.restore();

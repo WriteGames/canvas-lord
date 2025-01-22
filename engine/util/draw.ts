@@ -11,6 +11,7 @@ export const drawable = {
 	originY: 0,
 	offsetX: 0,
 	offsetY: 0,
+	alpha: 1,
 };
 
 interface DrawOptions {
@@ -21,6 +22,7 @@ interface DrawOptions {
 	scaleY?: number;
 	offsetX?: number;
 	offsetY?: number;
+	alpha?: number;
 }
 
 interface TextOptions extends DrawOptions {
@@ -53,6 +55,7 @@ const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 			originY = 0,
 			scaleX = 1,
 			scaleY = 1,
+			alpha = 1,
 		} = Object.assign({}, drawable, options);
 
 		ctx.save();
@@ -64,6 +67,8 @@ const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 			ctx.rotate((angle / 180) * Math.PI);
 			ctx.translate(originX, originY);
 		}
+		if (alpha < 1) ctx.globalAlpha = Math.max(0, alpha);
+
 		ctx.translate(-x, -y);
 		const res = callback(ctx, options, x, y, ...args);
 		ctx.restore();
