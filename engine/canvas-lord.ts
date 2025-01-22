@@ -148,7 +148,7 @@ export const isPointOnLine = <V extends Vector>(
 	) < EPSILON;
 
 // TODO(bret): Would be fun to make this work with any dimensions
-const isWithinBounds = (
+export const isWithinBounds = (
 	[x, y]: Vec2,
 	[x1, y1]: Vec2,
 	[x2, y2]: Vec2,

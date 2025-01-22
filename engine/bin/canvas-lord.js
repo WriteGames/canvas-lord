@@ -48,7 +48,7 @@ const getAngle = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween = (a, b) => ((b - a + RAD_540) % RAD_360) - RAD_180;
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions
-const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => x >= x1 && y >= y1 && x < x2 && y < y2;
+export const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => x >= x1 && y >= y1 && x < x2 && y < y2;
 export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&
     b.every((p, i) => ([...pos][i] ?? Infinity) < p);
 export const isPointInsidePath = (point, path) => {

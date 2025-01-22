@@ -16,6 +16,7 @@ const types = [
 	'circle',
 	'triangle',
 	'right-triangle',
+	'grid',
 ] as const;
 
 type Types = typeof types;
@@ -63,10 +64,28 @@ interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
 	y3: number;
 }
 
+interface GridShape extends BaseShape<'grid'> {
+	width: number;
+	height: number;
+	tileW: number;
+	tileH: number;
+	columns: number;
+	rows: number;
+	data: number[];
+	getTile: (x: number, y: number) => number;
+}
+
 // TODO: bounds!
 
 // TODO: this is exported for Entity, but do we really want this to be exported?
-export type Shape = Point | Line | Rect | Circle | RightTriangle | Triangle;
+export type Shape =
+	| Point
+	| Line
+	| Rect
+	| Circle
+	| RightTriangle
+	| Triangle
+	| GridShape;
 
 type RawShape<T> = Omit<T, 'type' | 'tag'>;
 
@@ -233,6 +252,7 @@ export const collidePointTriangle = (
 	y: number,
 	t: RawShape<Triangle>,
 ) => {
+	console.log({ t });
 	return isPointInPolygon(x, y, [
 		[t.x1, t.y1],
 		[t.x2, t.y2],
@@ -400,11 +420,58 @@ export const collideRectTriangle = (
 	t: RawShape<Triangle>,
 ) => {
 	// TODO(bret): revisit
+	const xx = [t.x1, t.x2, t.x3];
+	const yy = [t.y1, t.y2, t.y3];
+	const minX = Math.min(...xx);
+	const maxX = Math.max(...xx);
+	const minY = Math.min(...yy);
+	const maxY = Math.max(...yy);
+	const triRect = {
+		x: minX,
+		y: minY,
+		w: maxX - minX,
+		h: maxY - minY,
+	};
 	return (
-		collideLineRect({ x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }, r) ||
-		collideLineRect({ x1: t.x2, y1: t.y2, x2: t.x3, y2: t.y3 }, r) ||
-		collideLineRect({ x1: t.x3, y1: t.y3, x2: t.x1, y2: t.y1 }, r)
+		collideRectRect(r, triRect) &&
+		(collideLineRect({ x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }, r) ||
+			collideLineRect({ x1: t.x2, y1: t.y2, x2: t.x3, y2: t.y3 }, r) ||
+			collideLineRect({ x1: t.x3, y1: t.y3, x2: t.x1, y2: t.y1 }, r))
 	);
+};
+
+export const collideRectGrid = (r: RawShape<Rect>, g: RawShape<GridShape>) => {
+	// are we within the bounds of the grid???
+
+	const x = r.x - g.x;
+	const y = r.y - g.y;
+
+	const gridRect = {
+		x: g.x,
+		y: g.y,
+		w: g.width,
+		h: g.height,
+	};
+
+	if (!collideRectRect(r, gridRect)) return false;
+
+	const minX = Math.clamp(Math.floor(x / g.tileW), 0, g.columns - 1);
+	const minY = Math.clamp(Math.floor(y / g.tileH), 0, g.rows - 1);
+
+	const maxX = Math.clamp(
+		Math.floor((x + r.w - 1) / g.tileW),
+		0,
+		g.columns - 1,
+	);
+	const maxY = Math.clamp(Math.floor((y + r.h - 1) / g.tileH), 0, g.rows - 1);
+
+	for (let yy = minY; yy <= maxY; ++yy) {
+		for (let xx = minX; xx <= maxX; ++xx) {
+			if (g.getTile(xx, yy) === 1) return true;
+		}
+	}
+
+	return false;
 };
 
 /// ### Circle vs X ###
@@ -495,6 +562,7 @@ const collisionMap = {
 		circle: (p: Point, c: Circle) => collidePointCircle(p.x, p.y, c),
 		'right-triangle': collidePointRightTriangle,
 		triangle: (p: Point, t: Triangle) => collidePointTriangle(p.x, p.y, t),
+		grid: undefined,
 	},
 	line: {
 		point: (l: Line, p: Point) => collidePointLine(p.x, p.y, l),
@@ -503,6 +571,7 @@ const collisionMap = {
 		circle: collideLineCircle,
 		'right-triangle': collideLineRightTriangle,
 		triangle: collideLineTriangle,
+		grid: undefined,
 	},
 	rect: {
 		point: (r: Rect, p: Point) => collidePointRect(p.x, p.y, r),
@@ -511,6 +580,7 @@ const collisionMap = {
 		circle: collideRectCircle,
 		'right-triangle': collideRectRightTriangle,
 		triangle: collideRectTriangle,
+		grid: collideRectGrid,
 	},
 	circle: {
 		point: (c: Circle, p: Point) => collidePointCircle(p.x, p.y, c),
@@ -519,6 +589,7 @@ const collisionMap = {
 		circle: collideCircleCircle,
 		'right-triangle': collideCircleRightTriangle,
 		triangle: collideCircleTriangle,
+		grid: undefined,
 	},
 	'right-triangle': {
 		point: (rt: RightTriangle, p: Point) =>
@@ -529,6 +600,7 @@ const collisionMap = {
 			collideCircleRightTriangle(c, rt),
 		'right-triangle': collideRightTriangleRightTriangle,
 		triangle: collideRightTriangleTriangle,
+		grid: undefined,
 	},
 	triangle: {
 		point: (t: Triangle, p: Point) => collidePointTriangle(p.x, p.y, t),
@@ -538,6 +610,18 @@ const collisionMap = {
 		'right-triangle': (t: Triangle, rt: RightTriangle) =>
 			collideRightTriangleTriangle(rt, t),
 		triangle: collideTriangleTriangle,
+		grid: undefined,
+	},
+	//collideRectGrid
+	grid: {
+		// point: (g: Grid, p: Point) => collidePointTriangle(p.x, p.y, g),
+		// line: (g: Grid, l: Line) => collideLineTriangle(l, g),
+		// rect: (g: Grid, r: Rect) => collideRectTriangle(r, g),
+		// circle: (g: Grid, c: Circle) => collideCircleTriangle(c, g),
+		// 'right-triangle': (g: Grid, rt: RightTriangle) =>
+		// 	collideRightTriangleTriangle(rt, g),
+		// triangle: collideTriangleTriangle,
+		// grid: undefined,
 	},
 };
 
