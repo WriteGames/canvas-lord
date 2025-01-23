@@ -10,7 +10,10 @@ export async function generateStaticParams() {
 	// const posts = await fetch('https://.../posts').then((res) => res.json())
 
 	const outPath = 'out';
-	return (await fs.readdir(outPath))
+	const dirs = await fs.readdir(outPath);
+	console.log('Dirs:', dirs);
+
+	return dirs
 		.filter(async (dir) => {
 			const filePath = path.join(outPath, dir);
 			const stat = await fs.stat(filePath);
