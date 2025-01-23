@@ -385,16 +385,43 @@ export type Sprite = {
 	  }
 );
 
+export type Audio = {
+	fileName: string;
+} & (
+	| {
+			buffer: null;
+			loaded: false;
+	  }
+	| {
+			buffer: AudioBuffer;
+			duration: number;
+			loaded: true;
+	  }
+);
+
 export interface AssetManager {
 	sprites: Map<string, Sprite>;
+	audio: Map<string, Audio>;
 	spritesLoaded: number;
 	onLoadCallbacks: AssetManagerOnLoadCallback[];
 	prefix: string;
 }
 
+export class Sfx {
+	static audioCtx = new AudioContext();
+
+	static play(audio: Audio) {
+		const source = Sfx.audioCtx.createBufferSource();
+		source.buffer = audio.buffer;
+		source.connect(Sfx.audioCtx.destination);
+		source.start();
+	}
+}
+
 export class AssetManager {
 	constructor(prefix = '') {
 		this.sprites = new Map();
+		this.audio = new Map();
 		this.spritesLoaded = 0;
 		this.onLoadCallbacks = [];
 		this.prefix = prefix;
@@ -402,6 +429,34 @@ export class AssetManager {
 
 	addImage(src: string): void {
 		this.sprites.set(src, { fileName: src, image: null, loaded: false });
+	}
+
+	addAudio(src: string): void {
+		this.audio.set(src, {
+			fileName: src,
+			buffer: null,
+			loaded: false,
+		});
+	}
+
+	loadAudio(src: string): void {
+		const fullPath = `${this.prefix}${src}`;
+		fetch(fullPath)
+			.then((res) => res.arrayBuffer())
+			.then((arrayBuffer) => Sfx.audioCtx.decodeAudioData(arrayBuffer))
+			.then((audioBuffer) => {
+				const audio = this.audio.get(src);
+				if (!audio) {
+					throw new Error(
+						`Loaded audio that doesn't exist in map ("${src}" / "${fullPath}")`,
+					);
+				}
+				audio.loaded = true;
+				if ((audio.buffer = audioBuffer)) {
+					audio.duration = audioBuffer.duration;
+				}
+				this.audioLoaded(src);
+			});
 	}
 
 	loadImage(src: string): void {
@@ -414,7 +469,6 @@ export class AssetManager {
 			image.crossOrigin = 'Anonymous';
 		}
 		image.onload = (): void => {
-			this.imageLoaded(src);
 			const sprite = this.sprites.get(src);
 			if (!sprite) {
 				throw new Error(
@@ -426,15 +480,21 @@ export class AssetManager {
 				sprite.width = image.width;
 				sprite.height = image.height;
 			}
+			this.imageLoaded(src);
 		};
 		image.src = fullPath;
 	}
 
 	loadAssets(): void {
 		const sprites = [...this.sprites.keys()];
-		if (sprites.length === 0) this.emitOnLoad('');
+		const audio = [...this.audio.keys()];
+		const assets = [...sprites, ...audio];
+		if (assets.length === 0) this.emitOnLoad('');
 		sprites.forEach((src) => {
 			this.loadImage(src);
+		});
+		audio.forEach((src) => {
+			this.loadAudio(src);
 		});
 	}
 
@@ -454,6 +514,12 @@ export class AssetManager {
 	}
 
 	imageLoaded(src: string): void {
+		if (++this.spritesLoaded === this.sprites.size) {
+			this.emitOnLoad(src);
+		}
+	}
+
+	audioLoaded(src: string): void {
 		if (++this.spritesLoaded === this.sprites.size) {
 			this.emitOnLoad(src);
 		}

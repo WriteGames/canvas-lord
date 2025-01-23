@@ -200,15 +200,49 @@ export const globalSetTile = (tileset, x, y, bitFlag) => {
             break;
     }
 };
+export class Sfx {
+    static audioCtx = new AudioContext();
+    static play(audio) {
+        const source = Sfx.audioCtx.createBufferSource();
+        source.buffer = audio.buffer;
+        source.connect(Sfx.audioCtx.destination);
+        source.start();
+    }
+}
 export class AssetManager {
     constructor(prefix = '') {
         this.sprites = new Map();
+        this.audio = new Map();
         this.spritesLoaded = 0;
         this.onLoadCallbacks = [];
         this.prefix = prefix;
     }
     addImage(src) {
         this.sprites.set(src, { fileName: src, image: null, loaded: false });
+    }
+    addAudio(src) {
+        this.audio.set(src, {
+            fileName: src,
+            buffer: null,
+            loaded: false,
+        });
+    }
+    loadAudio(src) {
+        const fullPath = `${this.prefix}${src}`;
+        fetch(fullPath)
+            .then((res) => res.arrayBuffer())
+            .then((arrayBuffer) => Sfx.audioCtx.decodeAudioData(arrayBuffer))
+            .then((audioBuffer) => {
+            const audio = this.audio.get(src);
+            if (!audio) {
+                throw new Error(`Loaded audio that doesn't exist in map ("${src}" / "${fullPath}")`);
+            }
+            audio.loaded = true;
+            if ((audio.buffer = audioBuffer)) {
+                audio.duration = audioBuffer.duration;
+            }
+            this.audioLoaded(src);
+        });
     }
     loadImage(src) {
         const image = new Image();
@@ -218,7 +252,6 @@ export class AssetManager {
             image.crossOrigin = 'Anonymous';
         }
         image.onload = () => {
-            this.imageLoaded(src);
             const sprite = this.sprites.get(src);
             if (!sprite) {
                 throw new Error(`Loaded image that doesn't exist in map ("${src}" / "${fullPath}")`);
@@ -228,15 +261,21 @@ export class AssetManager {
                 sprite.width = image.width;
                 sprite.height = image.height;
             }
+            this.imageLoaded(src);
         };
         image.src = fullPath;
     }
     loadAssets() {
         const sprites = [...this.sprites.keys()];
-        if (sprites.length === 0)
+        const audio = [...this.audio.keys()];
+        const assets = [...sprites, ...audio];
+        if (assets.length === 0)
             this.emitOnLoad('');
         sprites.forEach((src) => {
             this.loadImage(src);
+        });
+        audio.forEach((src) => {
+            this.loadAudio(src);
         });
     }
     emitOnLoad(src) {
@@ -254,6 +293,11 @@ export class AssetManager {
         });
     }
     imageLoaded(src) {
+        if (++this.spritesLoaded === this.sprites.size) {
+            this.emitOnLoad(src);
+        }
+    }
+    audioLoaded(src) {
         if (++this.spritesLoaded === this.sprites.size) {
             this.emitOnLoad(src);
         }
