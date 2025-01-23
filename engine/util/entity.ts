@@ -12,6 +12,10 @@ type Collider = Collision.Shape;
 export interface IEntity {
 	x: number;
 	y: number;
+	w: number;
+	width: number;
+	h: number;
+	height: number;
 	scene: Scene;
 	components: Map<IEntityComponentType, any>;
 	collider: Collider | undefined;
@@ -86,6 +90,26 @@ export class Entity implements IEntity, IRenderable {
 
 	set y(val) {
 		this.component(Components.pos2D)![1] = val;
+	}
+
+	// TODO(bret): Set up setters for these as well
+	// TODO(bret): Would be good to set up for non-rect shapes :)
+	get width() {
+		if (this.collider && 'w' in this.collider) return this.collider.w;
+		return 0;
+	}
+
+	get w() {
+		return this.width;
+	}
+
+	get height() {
+		if (this.collider && 'h' in this.collider) return this.collider.h;
+		return 0;
+	}
+
+	get h() {
+		return this.height;
 	}
 
 	update(input: Input): void {}
