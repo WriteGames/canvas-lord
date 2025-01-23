@@ -90,14 +90,14 @@ export const Draw = {
                 break;
         }
     }),
-    image: moveCanvas((ctx, image, drawX, drawY, sourceX, sourceY, width, height) => {
+    image: moveCanvas((ctx, image, drawX = 0, drawY = 0, sourceX = 0, sourceY = 0, width, height) => {
         const { imageSrc } = image;
         if (!imageSrc)
             return;
         ctx.imageSmoothingEnabled = false;
         const _width = width ?? imageSrc.width;
         const _height = height ?? imageSrc.height;
-        ctx.drawImage(imageSrc, sourceX ?? 0, sourceY ?? 0, _width, _height, drawX, drawY, _width, _height);
+        ctx.drawImage(imageSrc, sourceX, sourceY, _width, _height, drawX, drawY, _width, _height);
     }),
     // TODO(bret): This breaks if the width is too small :(
     // TODO(bret): Condense some of this down
