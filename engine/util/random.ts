@@ -6,11 +6,11 @@ const xorShift32 = (random: Random) => {
 	return (random.seed = x >>> 0);
 };
 
-interface Random {
+export interface Random {
 	seed: number;
 }
 
-class Random {
+export class Random {
 	constructor(seed: number = Date.now()) {
 		this.seed = seed;
 	}
@@ -41,5 +41,10 @@ class Random {
 
 	angle() {
 		return this.float(360);
+	}
+
+	choose<T>(items: T[]): T {
+		const index = Math.floor(this.range(0, items.length));
+		return items[index];
 	}
 }

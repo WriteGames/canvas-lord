@@ -1,4 +1,3 @@
-"use strict";
 const xorShift32 = (random) => {
     let x = random.seed;
     x ^= x << 13;
@@ -6,7 +5,7 @@ const xorShift32 = (random) => {
     x ^= x << 5;
     return (random.seed = x >>> 0);
 };
-class Random {
+export class Random {
     constructor(seed = Date.now()) {
         this.seed = seed;
     }
@@ -30,6 +29,10 @@ class Random {
     }
     angle() {
         return this.float(360);
+    }
+    choose(items) {
+        const index = Math.floor(this.range(0, items.length));
+        return items[index];
     }
 }
 //# sourceMappingURL=random.js.map
