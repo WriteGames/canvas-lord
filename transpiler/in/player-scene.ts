@@ -19,8 +19,8 @@ import {
 import { Vec2 } from 'canvas-lord/util/math';
 
 export interface PlayerClass extends Entity {
-	width: number;
-	height: number;
+	// width: number;
+	// height: number;
 }
 
 export class PlayerClass extends Entity {}
