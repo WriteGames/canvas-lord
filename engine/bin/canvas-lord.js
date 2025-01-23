@@ -236,6 +236,10 @@ export class AssetManager {
         this.onLoadCallbacks = [];
         this.prefix = prefix;
     }
+    get progress() {
+        const assets = [...this.sprites.keys(), ...this.audio.keys()];
+        return (this.spritesLoaded + this.audioFilesLoaded) / assets.length;
+    }
     addImage(src) {
         this.sprites.set(src, { fileName: src, image: null, loaded: false });
     }
@@ -246,9 +250,9 @@ export class AssetManager {
             loaded: false,
         });
     }
-    loadAudio(src) {
+    async loadAudio(src) {
         const fullPath = `${this.prefix}${src}`;
-        fetch(fullPath)
+        await fetch(fullPath)
             .then((res) => res.arrayBuffer())
             .then((arrayBuffer) => Sfx.audioCtx.decodeAudioData(arrayBuffer))
             .then((audioBuffer) => {
@@ -284,7 +288,7 @@ export class AssetManager {
         };
         image.src = fullPath;
     }
-    loadAssets() {
+    async loadAssets() {
         const sprites = [...this.sprites.keys()];
         const audio = [...this.audio.keys()];
         const assets = [...sprites, ...audio];
@@ -293,9 +297,8 @@ export class AssetManager {
         sprites.forEach((src) => {
             this.loadImage(src);
         });
-        audio.forEach((src) => {
-            this.loadAudio(src);
-        });
+        // audio.forEach((src) => this.loadAudio(src));
+        await Promise.all(audio.map(async (src) => this.loadAudio(src)));
     }
     emitOnLoad(src) {
         window.requestAnimationFrame(() => {

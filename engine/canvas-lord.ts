@@ -399,15 +399,6 @@ export type Audio = {
 	  }
 );
 
-export interface AssetManager {
-	sprites: Map<string, Sprite>;
-	audio: Map<string, Audio>;
-	spritesLoaded: number;
-	audioFilesLoaded: number;
-	onLoadCallbacks: AssetManagerOnLoadCallback[];
-	prefix: string;
-}
-
 export class Sfx {
 	static audioCtx = new AudioContext();
 
@@ -440,6 +431,15 @@ export class Sfx {
 	}
 }
 
+export interface AssetManager {
+	sprites: Map<string, Sprite>;
+	audio: Map<string, Audio>;
+	spritesLoaded: number;
+	audioFilesLoaded: number;
+	onLoadCallbacks: AssetManagerOnLoadCallback[];
+	prefix: string;
+}
+
 export class AssetManager {
 	constructor(prefix = '') {
 		this.sprites = new Map();
@@ -448,6 +448,11 @@ export class AssetManager {
 		this.audioFilesLoaded = 0;
 		this.onLoadCallbacks = [];
 		this.prefix = prefix;
+	}
+
+	get progress(): number {
+		const assets = [...this.sprites.keys(), ...this.audio.keys()];
+		return (this.spritesLoaded + this.audioFilesLoaded) / assets.length;
 	}
 
 	addImage(src: string): void {
@@ -462,9 +467,10 @@ export class AssetManager {
 		});
 	}
 
-	loadAudio(src: string): void {
+	async loadAudio(src: string) {
 		const fullPath = `${this.prefix}${src}`;
-		fetch(fullPath)
+
+		await fetch(fullPath)
 			.then((res) => res.arrayBuffer())
 			.then((arrayBuffer) => Sfx.audioCtx.decodeAudioData(arrayBuffer))
 			.then((audioBuffer) => {
@@ -508,7 +514,7 @@ export class AssetManager {
 		image.src = fullPath;
 	}
 
-	loadAssets(): void {
+	async loadAssets() {
 		const sprites = [...this.sprites.keys()];
 		const audio = [...this.audio.keys()];
 		const assets = [...sprites, ...audio];
@@ -516,9 +522,8 @@ export class AssetManager {
 		sprites.forEach((src) => {
 			this.loadImage(src);
 		});
-		audio.forEach((src) => {
-			this.loadAudio(src);
-		});
+		// audio.forEach((src) => this.loadAudio(src));
+		await Promise.all(audio.map(async (src) => this.loadAudio(src)));
 	}
 
 	emitOnLoad(src: string) {
