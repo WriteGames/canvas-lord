@@ -83,6 +83,12 @@ export class Scene {
 
 	begin(): void {}
 
+	end(): void {}
+
+	pause(): void {}
+
+	resume(): void {}
+
 	addEntity<T extends Entity>(entity: T): T {
 		entity.scene = this;
 		this.entities.addQueue.push(entity);

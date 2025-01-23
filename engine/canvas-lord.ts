@@ -965,7 +965,12 @@ export class Game {
 	}
 
 	pushScenes(...scenes: Scene[]): void {
+		this.currentScenes?.forEach((scene) => {
+			scene.pause();
+		});
+
 		this.sceneStack.push(scenes);
+
 		scenes.forEach((scene) => {
 			scene.engine = this;
 			scene.updateLists();
@@ -974,7 +979,19 @@ export class Game {
 	}
 
 	popScenes(): Scene[] | undefined {
-		return this.sceneStack.pop();
+		this.currentScenes?.forEach((scene) => {
+			// TODO(bret): Should we delete scene.engine?
+			scene.end();
+		});
+
+		const scenes = this.sceneStack.pop();
+
+		this.currentScenes?.forEach((scene) => {
+			scene.updateLists();
+			scene.resume();
+		});
+
+		return scenes;
 	}
 
 	update(): void {

@@ -34,6 +34,9 @@ export class Scene {
         canvas.height = height;
     }
     begin() { }
+    end() { }
+    pause() { }
+    resume() { }
     addEntity(entity) {
         entity.scene = this;
         this.entities.addQueue.push(entity);

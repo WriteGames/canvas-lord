@@ -568,6 +568,9 @@ export class Game {
         this.pushScenes(scene);
     }
     pushScenes(...scenes) {
+        this.currentScenes?.forEach((scene) => {
+            scene.pause();
+        });
         this.sceneStack.push(scenes);
         scenes.forEach((scene) => {
             scene.engine = this;
@@ -576,7 +579,16 @@ export class Game {
         });
     }
     popScenes() {
-        return this.sceneStack.pop();
+        this.currentScenes?.forEach((scene) => {
+            // TODO(bret): Should we delete scene.engine?
+            scene.end();
+        });
+        const scenes = this.sceneStack.pop();
+        this.currentScenes?.forEach((scene) => {
+            scene.updateLists();
+            scene.resume();
+        });
+        return scenes;
     }
     update() {
         const { currentScenes: scenes } = this;
