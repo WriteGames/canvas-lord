@@ -31,8 +31,7 @@ export class Random {
         return this.float(360);
     }
     choose(items) {
-        const index = Math.floor(this.range(0, items.length));
-        return items[index];
+        return items[this.int(items.length)];
     }
 }
 //# sourceMappingURL=random.js.map

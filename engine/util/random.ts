@@ -44,7 +44,6 @@ export class Random {
 	}
 
 	choose<T>(items: T[]): T {
-		const index = Math.floor(this.range(0, items.length));
-		return items[index];
+		return items[this.int(items.length)];
 	}
 }
