@@ -954,6 +954,11 @@ export class Game {
 	// TODO(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus: boolean): void {
 		if (this.focus === focus) return;
+		if (this.focus) {
+			Sfx.audioCtx.suspend();
+		} else {
+			Sfx.audioCtx.resume();
+		}
 		this.focus = focus;
 		this.sendEvent(focus ? 'focus' : 'blur');
 		this._lastFrame = performance.now();

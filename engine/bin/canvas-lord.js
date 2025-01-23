@@ -559,6 +559,12 @@ export class Game {
     onFocus(focus) {
         if (this.focus === focus)
             return;
+        if (this.focus) {
+            Sfx.audioCtx.suspend();
+        }
+        else {
+            Sfx.audioCtx.resume();
+        }
         this.focus = focus;
         this.sendEvent(focus ? 'focus' : 'blur');
         this._lastFrame = performance.now();
