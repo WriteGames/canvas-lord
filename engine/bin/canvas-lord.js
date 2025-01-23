@@ -391,7 +391,7 @@ export class Game {
         return this.canvas.height;
     }
     get currentScenes() {
-        return this.sceneStack[0];
+        return this.sceneStack.at(-1);
     }
     // TODO(bret): We're going to need to make a less clunky interface
     updateGameLoopSettings(newGameLoopSettings) {
@@ -506,6 +506,9 @@ export class Game {
             scene.updateLists();
             scene.begin();
         });
+    }
+    popScenes() {
+        return this.sceneStack.pop();
     }
     update() {
         const { currentScenes: scenes } = this;

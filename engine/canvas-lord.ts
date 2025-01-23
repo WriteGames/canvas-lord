@@ -726,7 +726,7 @@ export class Game {
 	}
 
 	get currentScenes(): Scene[] | undefined {
-		return this.sceneStack[0];
+		return this.sceneStack.at(-1);
 	}
 
 	// TODO(bret): We're going to need to make a less clunky interface
@@ -874,6 +874,10 @@ export class Game {
 			scene.updateLists();
 			scene.begin();
 		});
+	}
+
+	popScenes(): Scene[] | undefined {
+		return this.sceneStack.pop();
 	}
 
 	update(): void {
