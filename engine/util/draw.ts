@@ -29,6 +29,7 @@ interface TextOptions extends DrawOptions {
 	type: 'fill' | 'stroke';
 	font?: string;
 	size?: string | number;
+	align?: CanvasTextAlign;
 	baseline?: CanvasTextBaseline;
 	color: CanvasRenderingContext2D['fillStyle'];
 	width?: number;
@@ -215,13 +216,15 @@ export const Draw = {
 				type,
 				font = 'sans-serif',
 				size = 10,
-				baseline = 'top',
+				align = 'left',
+				baseline = 'top', // TODO(bret): check if this is the default we want :/
 				count,
 			} = text;
 
 			const _size = typeof size === 'number' ? `${size}px` : size;
 			ctx.font = `${_size} ${font}`;
 
+			ctx.textAlign = align;
 			ctx.textBaseline = baseline;
 
 			let func: 'fillText' | 'strokeText';

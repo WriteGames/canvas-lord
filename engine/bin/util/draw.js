@@ -102,9 +102,11 @@ export const Draw = {
     // TODO(bret): This breaks if the width is too small :(
     // TODO(bret): Condense some of this down
     text: moveCanvas((ctx, text, drawX, drawY, str) => {
-        const { color, type, font = 'sans-serif', size = 10, baseline = 'top', count, } = text;
+        const { color, type, font = 'sans-serif', size = 10, align = 'left', baseline = 'top', // TODO(bret): check if this is the default we want :/
+        count, } = text;
         const _size = typeof size === 'number' ? `${size}px` : size;
         ctx.font = `${_size} ${font}`;
+        ctx.textAlign = align;
         ctx.textBaseline = baseline;
         let func;
         switch (type) {
