@@ -403,6 +403,7 @@ export interface AssetManager {
 	sprites: Map<string, Sprite>;
 	audio: Map<string, Audio>;
 	spritesLoaded: number;
+	audioFilesLoaded: number;
 	onLoadCallbacks: AssetManagerOnLoadCallback[];
 	prefix: string;
 }
@@ -410,11 +411,32 @@ export interface AssetManager {
 export class Sfx {
 	static audioCtx = new AudioContext();
 
+	static music = new Map<Audio, AudioBufferSourceNode>();
+
 	static play(audio: Audio) {
 		const source = Sfx.audioCtx.createBufferSource();
 		source.buffer = audio.buffer;
 		source.connect(Sfx.audioCtx.destination);
 		source.start();
+	}
+
+	static loop(audio: Audio) {
+		// TODO(bret): Make sure we're not looping twice!
+		const source = Sfx.audioCtx.createBufferSource();
+		source.buffer = audio.buffer;
+		source.connect(Sfx.audioCtx.destination);
+		source.loop = true;
+		source.start();
+		this.music.set(audio, source);
+	}
+
+	// TODO(bret): Gonna need this to work for all audio, not just for music
+	static stop(audio: Audio) {
+		const source = this.music.get(audio);
+		if (source) {
+			source.stop();
+			this.music.delete(audio);
+		}
 	}
 }
 
@@ -423,6 +445,7 @@ export class AssetManager {
 		this.sprites = new Map();
 		this.audio = new Map();
 		this.spritesLoaded = 0;
+		this.audioFilesLoaded = 0;
 		this.onLoadCallbacks = [];
 		this.prefix = prefix;
 	}
@@ -506,6 +529,7 @@ export class AssetManager {
 
 	reloadAssets(): void {
 		this.spritesLoaded = 0;
+		this.audioFilesLoaded = 0;
 		const sprites = [...this.sprites.keys()];
 		if (sprites.length === 0) this.emitOnLoad('');
 		sprites.forEach((src) => {
@@ -513,16 +537,23 @@ export class AssetManager {
 		});
 	}
 
-	imageLoaded(src: string): void {
-		if (++this.spritesLoaded === this.sprites.size) {
-			this.emitOnLoad(src);
+	_checkAllAssetsLoaded() {
+		if (
+			this.spritesLoaded === this.sprites.size &&
+			this.audioFilesLoaded === this.audio.size
+		) {
+			this.emitOnLoad('');
 		}
 	}
 
+	imageLoaded(src: string): void {
+		++this.spritesLoaded;
+		this._checkAllAssetsLoaded();
+	}
+
 	audioLoaded(src: string): void {
-		if (++this.spritesLoaded === this.sprites.size) {
-			this.emitOnLoad(src);
-		}
+		++this.audioFilesLoaded;
+		this._checkAllAssetsLoaded();
 	}
 
 	onLoad(callback: AssetManagerOnLoadCallback): void {
