@@ -638,6 +638,7 @@ export type Engine = Game;
 
 interface InitialSettings {
 	fps: number;
+	backgroundColor?: string; // TODO(bret): Fix type
 	gameLoopSettings?: GameLoopSettings;
 	assetManager?: AssetManager;
 }
@@ -672,6 +673,13 @@ export class Game {
 		this.canvas = canvas;
 		this.ctx = ctx;
 
+		// render a rectangle ASAP
+		this.backgroundColor = settings?.backgroundColor ?? '#202020';
+		ctx.save();
+		ctx.fillStyle = this.backgroundColor;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.restore();
+
 		this.wrapper = document.createElement('div');
 		this.wrapper.classList.add('canvas-lord');
 
@@ -702,8 +710,6 @@ export class Game {
 		this.assetManager = settings?.assetManager;
 
 		this.sceneStack = [];
-
-		this.backgroundColor = '#323232';
 
 		// TODO(bret): Might also want to listen for styling changes to the canvas element
 		const computeCanvasSize = (canvas: HTMLCanvasElement): void => {
@@ -1036,7 +1042,7 @@ export class Game {
 
 		// Splitscreen
 		if (this.sceneStack[0]?.length === 2) {
-			ctx.strokeStyle = '#323232';
+			ctx.strokeStyle = '#202020';
 			ctx.beginPath();
 			ctx.lineWidth = 2;
 			ctx.moveTo(this.width / 2, 0.5);
