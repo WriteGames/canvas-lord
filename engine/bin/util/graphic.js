@@ -13,6 +13,7 @@ export class Graphic {
     offsetY = 0;
     scrollX = 1;
     scrollY = 1;
+    alpha = 1;
     entity;
     // TODO(bret): What should get scale() return??
     set scale(value) {
@@ -24,6 +25,7 @@ export class Graphic {
     }
     centerOrigin() {
         // TODO(bret): check if invalidated, if so, recalculate!
+        throw new Error('unimplemented');
     }
     centerOO() {
         this.centerOrigin();
