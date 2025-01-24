@@ -29,6 +29,8 @@ export interface IGraphic {
 	scaleY: number;
 	originX: number;
 	originY: number;
+	scrollX: number;
+	scrollY: number;
 	entity: Entity | undefined;
 	centerOrigin: () => void;
 	centerOO: () => void;
@@ -46,6 +48,8 @@ export class Graphic implements IGraphic {
 	// TODO(bret): get rid of these :) they're really just the x/y
 	offsetX = 0;
 	offsetY = 0;
+	scrollX = 1;
+	scrollY = 1;
 	entity: Entity | undefined;
 
 	// TODO(bret): What should get scale() return??
@@ -133,8 +137,8 @@ export class Sprite extends Graphic {
 			sourceW = this.width,
 			sourceH = this.height,
 		} = this;
-		const x = this.x - camera.x + (this.entity?.x ?? 0);
-		const y = this.y - camera.y + (this.entity?.y ?? 0);
+		const x = this.x - camera.x * this.scrollX + (this.entity?.x ?? 0);
+		const y = this.y - camera.y * this.scrollY + (this.entity?.y ?? 0);
 		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
 }
@@ -221,8 +225,8 @@ export class NineSlice extends Graphic {
 	// TODO: hook up moveCanvas
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {
 		const o = this;
-		const x = this.x - camera.x;
-		const y = this.y - camera.y;
+		const x = this.x - camera.x * this.scrollX;
+		const y = this.y - camera.y * this.scrollY;
 		const { tileW: w, tileH: h } = this;
 		const right = x + this.width - w;
 		const bottom = y + this.height - h;

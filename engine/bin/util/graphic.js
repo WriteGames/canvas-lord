@@ -11,6 +11,8 @@ export class Graphic {
     // TODO(bret): get rid of these :) they're really just the x/y
     offsetX = 0;
     offsetY = 0;
+    scrollX = 1;
+    scrollY = 1;
     entity;
     // TODO(bret): What should get scale() return??
     set scale(value) {
@@ -72,8 +74,8 @@ export class Sprite extends Graphic {
     }
     render(ctx, camera) {
         const { sourceX, sourceY, sourceW = this.width, sourceH = this.height, } = this;
-        const x = this.x - camera.x + (this.entity?.x ?? 0);
-        const y = this.y - camera.y + (this.entity?.y ?? 0);
+        const x = this.x - camera.x * this.scrollX + (this.entity?.x ?? 0);
+        const y = this.y - camera.y * this.scrollY + (this.entity?.y ?? 0);
         Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
     }
 }
@@ -153,8 +155,8 @@ export class NineSlice extends Graphic {
     // TODO: hook up moveCanvas
     render(ctx, camera) {
         const o = this;
-        const x = this.x - camera.x;
-        const y = this.y - camera.y;
+        const x = this.x - camera.x * this.scrollX;
+        const y = this.y - camera.y * this.scrollY;
         const { tileW: w, tileH: h } = this;
         const right = x + this.width - w;
         const bottom = y + this.height - h;
