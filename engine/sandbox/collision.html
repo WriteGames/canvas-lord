@@ -2,55 +2,9 @@
 <html lang="en" dir="ltr">
 	<head>
 		<meta charset="utf-8" />
-		<title>Canvas Lord</title>
-		<style media="screen">
-			*,
-			*::before,
-			*::after {
-				box-sizing: border-box;
-			}
-
-			body {
-				height: 100%;
-				background: #181920;
-				padding: 1rem 0;
-				color: #ddd;
-			}
-
-			.canvas-lord {
-				width: 100%;
-				max-width: 656px;
-				margin: 0 auto;
-				&:focus-within canvas {
-					border-color: #bbf;
-				}
-			}
-
-			canvas {
-				box-sizing: content-box;
-				display: block;
-				width: 100%;
-				max-width: 640px;
-				margin: 0 auto;
-				padding: 5px;
-				border: 3px solid #ddd;
-				image-rendering: -moz-crisp-edges;
-				image-rendering: -webkit-crisp-edges;
-				image-rendering: pixelated;
-				image-rendering: crisp-edges;
-			}
-
-			h2 {
-				text-align: center;
-				margin-block: 2rem 1rem;
-			}
-
-			button {
-				display: block;
-				margin-block: 1rem;
-				margin-inline: auto;
-			}
-		</style>
+		<title>[Sandbox] Collision</title>
+		<meta name="color-scheme" content="dark light" />
+		<link rel="stylesheet" href="./css/sandbox.css" media="screen" />
 	</head>
 	<body>
 		<div id="canvases">

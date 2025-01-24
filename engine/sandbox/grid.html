@@ -2,64 +2,9 @@
 <html lang="en" dir="ltr">
 	<head>
 		<meta charset="utf-8" />
-		<title>Platforming Tips & Tricks</title>
+		<title>[Sandbox] Grid</title>
 		<meta name="color-scheme" content="dark light" />
-		<style media="screen">
-			*,
-			*::before,
-			*::after {
-				box-sizing: border-box;
-			}
-
-			body {
-				padding: 1rem 0;
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				gap: 1rem;
-			}
-
-			.canvas-lord {
-				width: 100%;
-				max-width: 656px;
-				margin: 0 auto;
-				&:focus-within canvas {
-					border-color: #bbf;
-				}
-			}
-
-			.canvas-lord:has(.inspector) {
-				display: grid;
-				width: 100%;
-			}
-
-			.inspector {
-				text-align: right;
-				display: grid;
-				grid-template-columns: 20ch auto;
-				width: 100%;
-				/* max-width: 640px; */
-				margin: 0 auto;
-				gap: 2px 0.5rem;
-				padding: 0.5rem;
-				border: 3px solid #ddd;
-				border-top: 0;
-			}
-
-			canvas {
-				box-sizing: content-box;
-				display: block;
-				width: 100%;
-				max-width: 640px;
-				margin: 0 auto;
-				padding: 5px;
-				border: 3px solid #ddd;
-				image-rendering: -moz-crisp-edges;
-				image-rendering: -webkit-crisp-edges;
-				image-rendering: pixelated;
-				image-rendering: crisp-edges;
-			}
-		</style>
+		<link rel="stylesheet" href="./css/sandbox.css" media="screen" />
 	</head>
 	<body>
 		<canvas
