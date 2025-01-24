@@ -1,4 +1,4 @@
-import type { Input, IRenderable } from '../canvas-lord.js';
+import type { Camera, Input, IRenderable } from '../canvas-lord.js';
 import * as Components from './components.js';
 import { type ComponentProps } from './components.js';
 import type { Scene } from './scene.js';
@@ -9,6 +9,9 @@ import { type ColliderTag } from './collision.js';
 // TODO: fix this!
 type Collider = Collision.Shape;
 
+// TODO(bret): Fix this type lol
+type Graphic = IRenderable;
+
 export interface IEntity {
 	x: number;
 	y: number;
@@ -17,6 +20,7 @@ export interface IEntity {
 	h: number;
 	height: number;
 	scene: Scene;
+	graphic: Graphic | undefined;
 	components: Map<IEntityComponentType, any>;
 	collider: Collider | undefined;
 	visible: boolean;
@@ -51,8 +55,20 @@ export class Entity implements IEntity, IRenderable {
 	components = new Map<IEntityComponentType, any>();
 	depth = 0;
 	collider: Collider | undefined = undefined;
-	visible: boolean = true;
-	collidable: boolean = true;
+	visible = true;
+	collidable = true;
+	#graphic = undefined;
+
+	get graphic() {
+		return this.#graphic;
+	}
+
+	set graphic(graphic) {
+		this.#graphic = graphic;
+		// TODO(bret): Fix this!!
+		// @ts-expect-error
+		this.#graphic.entity = this;
+	}
 
 	constructor(x: number, y: number) {
 		this.addComponent(Components.pos2D);
@@ -114,7 +130,11 @@ export class Entity implements IEntity, IRenderable {
 
 	update(input: Input): void {}
 
-	render(ctx: CanvasRenderingContext2D): void {}
+	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+		// TODO(bret): Fix this
+		// @ts-expect-error
+		this.#graphic?.render(ctx, camera);
+	}
 
 	_moveCollider(c: Collider, x: number, y: number) {
 		switch (c.type) {

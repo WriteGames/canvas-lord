@@ -7,6 +7,16 @@ export class Entity {
     collider = undefined;
     visible = true;
     collidable = true;
+    #graphic = undefined;
+    get graphic() {
+        return this.#graphic;
+    }
+    set graphic(graphic) {
+        this.#graphic = graphic;
+        // TODO(bret): Fix this!!
+        // @ts-expect-error
+        this.#graphic.entity = this;
+    }
     constructor(x, y) {
         this.addComponent(Components.pos2D);
         this.x = x;
@@ -54,7 +64,11 @@ export class Entity {
         return this.height;
     }
     update(input) { }
-    render(ctx) { }
+    render(ctx, camera) {
+        // TODO(bret): Fix this
+        // @ts-expect-error
+        this.#graphic?.render(ctx, camera);
+    }
     _moveCollider(c, x, y) {
         switch (c.type) {
             case 'line':
