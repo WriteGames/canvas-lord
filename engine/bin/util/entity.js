@@ -65,9 +65,11 @@ export class Entity {
     }
     update(input) { }
     render(ctx, camera) {
-        // TODO(bret): Fix this
-        // @ts-expect-error
-        this.#graphic?.render(ctx, camera);
+        if (this.visible) {
+            // TODO(bret): Fix this
+            // @ts-expect-error
+            this.#graphic?.render(ctx, camera);
+        }
     }
     _moveCollider(c, x, y) {
         switch (c.type) {

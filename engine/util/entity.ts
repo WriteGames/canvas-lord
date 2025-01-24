@@ -131,9 +131,11 @@ export class Entity implements IEntity, IRenderable {
 	update(input: Input): void {}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
-		// TODO(bret): Fix this
-		// @ts-expect-error
-		this.#graphic?.render(ctx, camera);
+		if (this.visible) {
+			// TODO(bret): Fix this
+			// @ts-expect-error
+			this.#graphic?.render(ctx, camera);
+		}
 	}
 
 	_moveCollider(c: Collider, x: number, y: number) {
