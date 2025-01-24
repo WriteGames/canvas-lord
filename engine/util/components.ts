@@ -54,7 +54,7 @@ const style = {
 };
 
 export const image = createComponent({
-	imageSrc: null as HTMLImageElement | null,
+	imageSrc: null as HTMLCanvasElement | HTMLImageElement | null,
 	frame: 0,
 	frameW: 0,
 	frameH: 0,

@@ -1,6 +1,8 @@
+import type { Input } from '../canvas-lord.js';
 import type { Camera } from './camera.js';
 import { Draw } from './draw.js';
 import { Entity } from './entity.js';
+import { Random } from './random.js';
 
 const tempCanvas = document.createElement('canvas');
 
@@ -74,6 +76,8 @@ export class Graphic implements IGraphic {
 		this.centerOrigin();
 	}
 
+	update(input: Input): void {}
+
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {}
 }
 
@@ -134,7 +138,7 @@ export class Text extends Graphic {
 export class Sprite extends Graphic {
 	asset: SpriteAsset;
 
-	// TODO(bret): remove these and allos Draw.image to make them optional
+	// TODO(bret): remove these and allow Draw.image to make them optional
 	frame: number = 0;
 	frameW: number = 0;
 	frameH: number = 0;
@@ -234,15 +238,20 @@ export class Sprite extends Graphic {
 	}
 }
 
+// TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic {
 	asset: SpriteAsset;
-	imageSrc: HTMLImageElement;
 	width: number;
 	height: number;
 	tileW: number;
 	tileH: number;
 
-	// TODO(bret): remove these and allos Draw.image to make them optional
+	get imageSrc(): HTMLImageElement {
+		if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
+		return this.asset.image;
+	}
+
+	// TODO(bret): remove these and allow Draw.image to make them optional
 	frame: number = 0;
 	frameW: number = 0;
 	frameH: number = 0;
@@ -266,7 +275,6 @@ export class NineSlice extends Graphic {
 
 		super(x, y);
 		this.asset = asset;
-		this.imageSrc = asset.image;
 		this.width = w;
 		this.height = h;
 		this.tileW = asset.image.width / 3;
@@ -353,5 +361,250 @@ export class NineSlice extends Graphic {
 		ctx.translate(x + w, y + h);
 		ctx.fillRect(0, 0, centerW, centerH);
 		ctx.restore();
+	}
+}
+
+interface MinMax<T> {
+	min: T;
+	max: T;
+}
+
+interface StartEnd<T> {
+	start: T;
+	end: T;
+}
+
+interface Particle {
+	x: number;
+	y: number;
+	angle: number;
+	step: number;
+	elapsed: number;
+	duration: number;
+	t: number;
+	type: ParticleType;
+}
+
+interface ParticleType {
+	frames?: number[];
+	alpha?: StartEnd<number>;
+	color?: {
+		ctx: CanvasRenderingContext2D;
+		samples: string[];
+	};
+	angle?: MinMax<number>;
+	distance?: MinMax<number>;
+	duration?: MinMax<number>;
+	particles: Particle[];
+}
+
+type Assignable = Extract<
+	keyof ParticleType,
+	'alpha' | 'color' | 'angle' | 'distance' | 'duration'
+>;
+
+export class Emitter extends Graphic {
+	asset: SpriteAsset;
+
+	// TODO(bret): remove these and allow Draw.image to make them optional
+	frame: number = 0;
+	frameW: number = 0;
+	frameH: number = 0;
+
+	#types = new Map<string, ParticleType>();
+
+	// TODO(bret): remove the seed
+	random = new Random(2378495);
+	imageSrc: HTMLCanvasElement | HTMLImageElement | null = null;
+	blendCanvas: HTMLCanvasElement;
+
+	// get imageSrc(): HTMLImageElement {
+	// 	if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
+	// 	return this.asset.image;
+	// }
+
+	constructor(asset: Sprite | SpriteAsset, x: number, y: number) {
+		super(x, y);
+
+		// TODO(bret): Figure out how we want to handle this
+		if (asset instanceof Sprite) {
+			asset = asset.asset;
+		}
+
+		this.asset = asset;
+		this.blendCanvas = document.createElement('canvas');
+	}
+
+	newType(name: string, frames?: number[]) {
+		this.#types.set(name, { frames, particles: [] });
+	}
+
+	getType(name: string) {
+		const type = this.#types.get(name);
+		if (!type) throw new Error(`${name} is not set`);
+		return type;
+	}
+
+	assignToType<T extends Assignable>(
+		type: ParticleType,
+		field: T,
+		value: ParticleType[T],
+	) {
+		type[field] = Object.assign(type[field] ?? {}, value);
+	}
+
+	setAlpha(name: string, start: number, end: number) {
+		const type = this.getType(name);
+		this.assignToType(type, 'alpha', { start, end });
+		return type;
+	}
+
+	// TODO(bret): Make this better, might need to wait for WebGL/WebGPU
+
+	setColor(
+		name: string,
+		start: string,
+		end: string,
+		resolution: number = 250,
+	) {
+		const type = this.getType(name);
+		let ctx = type.color?.ctx ?? null;
+		if (!type.color) {
+			const canvas = document.createElement('canvas');
+			canvas.width = resolution;
+			canvas.height = 1;
+			ctx = canvas.getContext('2d');
+		}
+		if (!ctx) throw new Error();
+		const gradient = ctx.createLinearGradient(0, 0, resolution, 1);
+		gradient.addColorStop(0, start);
+		gradient.addColorStop(1, end);
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, resolution, 1);
+		const samples = Array.from({ length: resolution }, (_, i) => {
+			const { data } = ctx.getImageData(i, 0, 1, 1);
+			const hex = [...data].map((c) => c.toString(16).padStart(2, '0'));
+			return '#' + hex.join('');
+		});
+		this.assignToType(type, 'color', { ctx, samples });
+		return type;
+	}
+
+	setMotion(
+		name: string,
+		angle: number,
+		distance: number,
+		duration: number,
+		angleRange: number = 0,
+		distanceRange: number = 0,
+		durationRange: number = 0,
+		//ease:Function = null
+	) {
+		const type = this.getType(name);
+		this.assignToType(type, 'angle', {
+			min: angle,
+			max: angle + angleRange,
+		});
+		this.assignToType(type, 'distance', {
+			min: distance,
+			max: distance + distanceRange,
+		});
+		this.assignToType(type, 'duration', {
+			min: duration,
+			max: duration + durationRange,
+		});
+		return type;
+	}
+
+	emit(name: string, x: number, y: number) {
+		const type = this.#types.get(name);
+		if (!type) throw new Error(`${name} is not set`);
+
+		const { random } = this;
+
+		const angle = type.angle
+			? (random.range(type.angle.min, type.angle.max) * Math.PI) / 180.0
+			: 0;
+		const duration = type.duration
+			? random.range(type.duration.min, type.duration.max)
+			: 1;
+		const distance = type.distance
+			? random.range(type.distance.min, type.distance.max)
+			: 1;
+
+		const step = distance / duration;
+
+		const particle: Particle = {
+			x: 0,
+			y: 0,
+			angle,
+			step,
+			elapsed: 0,
+			duration,
+			t: 0,
+			type,
+		};
+		// TODO(bret): Set up particles.toAdd/toDelete & a pool
+		type.particles.push(particle);
+	}
+
+	update() {
+		[...this.#types.entries()].forEach(([name, type]) => {
+			type.particles = type.particles.filter(
+				(particle) => particle.elapsed < particle.duration,
+			);
+			type.particles.forEach((particle) => {
+				particle.x += particle.step * Math.cos(particle.angle);
+				particle.y += particle.step * Math.sin(particle.angle);
+				particle.t = particle.elapsed / particle.duration;
+				++particle.elapsed;
+			});
+		});
+	}
+
+	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+		const x = this.x - camera.x * this.scrollX + (this.entity?.x ?? 0);
+		const y = this.y - camera.y * this.scrollY + (this.entity?.y ?? 0);
+
+		const { image } = this.asset;
+		if (!image) throw new Error();
+
+		const { blendCanvas } = this;
+		blendCanvas.width = image.width;
+		blendCanvas.height = image.height;
+		const { width, height } = blendCanvas;
+		// TODO(bret): We might want to catch this
+		const blendCtx = blendCanvas.getContext('2d');
+		if (!blendCtx) throw new Error();
+
+		[...this.#types.entries()].forEach(([name, type]) => {
+			type.particles.forEach((particle) => {
+				this.alpha = 1;
+				if (particle.type.alpha) {
+					const { start, end } = particle.type.alpha;
+					this.alpha = Math.lerp(start, end, particle.t);
+				}
+
+				if (particle.type.color) {
+					const { samples } = particle.type.color;
+					// TODO(bret): we'll never hit 1.0 :(
+					const i = Math.round(particle.t * samples.length);
+
+					blendCtx.save();
+					blendCtx.clearRect(0, 0, width, height);
+					blendCtx.drawImage(image, 0, 0);
+					blendCtx.globalCompositeOperation = 'source-atop';
+					blendCtx.fillStyle = samples[i];
+					blendCtx.fillRect(0, 0, width, height);
+					blendCtx.restore();
+				}
+
+				this.imageSrc = blendCanvas;
+				// TODO(bret): unhardcode centered particles!
+				const drawX = x + particle.x - (width >> 1);
+				const drawY = y + particle.y - (height >> 1);
+				Draw.image(ctx, this, drawX, drawY);
+			});
+		});
 	}
 }

@@ -94,6 +94,7 @@ export class Scene {
             return;
         // remove old entities
         this.entities.inScene.forEach((entity) => entity.update(input));
+        this.entities.inScene.forEach((entity) => entity.graphic?.update?.(input));
         // this.renderables = this.renderables.filter(e => e).sort();
         this.componentSystemMap.forEach((systems, component) => {
             systems.forEach((system) => {

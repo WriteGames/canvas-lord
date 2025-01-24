@@ -65,9 +65,8 @@ export class Entity {
     }
     update(input) { }
     render(ctx, camera) {
+        // TODO(bret): .visible should probably be on the Graphic, not the Entity itself
         if (this.visible) {
-            // TODO(bret): Fix this
-            // @ts-expect-error
             this.#graphic?.render(ctx, camera);
         }
     }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<title>[Sandbox] Particles</title>
+		<meta name="color-scheme" content="dark light" />
+		<link rel="stylesheet" href="./css/sandbox.css" media="screen" />
+	</head>
+	<body>
+		<canvas
+			id="emitter"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+
+		<script type="module">
+			import {
+				AssetManager,
+				Game,
+				Scene,
+				Entity,
+				Grid,
+				Draw,
+			} from '../bin/canvas-lord.js';
+			import { Sprite, Emitter } from '../bin/util/graphic.js';
+
+			class EmitterEntity extends Entity {
+				constructor(x, y) {
+					super(x, y);
+
+					// const sprite = Sprite.createRect(8, 8, '#888');
+					const sprite = new Sprite(
+						assetManager.sprites.get('particle.png'),
+					);
+
+					const emitter = new Emitter(sprite, 0, 0);
+					this.graphic = emitter;
+
+					// emitter = new Emitter(new BitmapData(3, 3), 3, 3);
+
+					const c = (n) => '#' + n.toString(16).padStart(6, '0');
+
+					emitter.newType('sparkA', [0]);
+					// emitter.setAlpha('sparkA', 1, 0);
+					emitter.setColor('sparkA', 'white', 'yellow');
+					emitter.setMotion('sparkA', 230, 30, 30, 80, 60, 15);
+
+					this.emitter = emitter;
+
+					// emitter.newType("sparkB", [0]);
+					// emitter.setAlpha("sparkB", 1, 0);
+					// emitter.setColor("sparkB", convert(8978431), convert(16777215));
+					// emitter.setMotion("sparkB", 100, 20, 30, 160, 10, 15);
+
+					// this.emitter.emit("sparkB", width - 2, 3);
+				}
+
+				update(input) {
+					this.emitter.emit('sparkA', 0, 3);
+				}
+			}
+
+			class ParticleScene extends Scene {
+				constructor(...args) {
+					super(...args);
+
+					const emitterEntity = new EmitterEntity(640 >> 2, 320 >> 1);
+					this.addEntity(emitterEntity);
+					this.addRenderable(emitterEntity);
+				}
+			}
+
+			const ids = ['emitter'];
+			const scenes = [ParticleScene];
+
+			let loaded = false;
+			const assetManager = new AssetManager('../img/');
+			assetManager.addImage('particle.png');
+			assetManager.onLoad(() => {
+				if (loaded) return;
+				loaded = true;
+
+				ids.forEach((id, i) => {
+					const game = new Game(id, {
+						assetManager,
+						// gameLoopSettings: {
+						// 	updateMode: 'always',
+						// 	renderMode: 'onUpdate',
+						// },
+					});
+
+					const scene = new scenes[i](game);
+					game.pushScene(scene);
+
+					game.render();
+				});
+			});
+			assetManager.loadAssets();
+		</script>
+	</body>
+</html>

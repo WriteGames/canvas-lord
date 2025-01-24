@@ -57,7 +57,7 @@ export class Entity implements IEntity, IRenderable {
 	collider: Collider | undefined = undefined;
 	visible = true;
 	collidable = true;
-	#graphic = undefined;
+	#graphic: Graphic | undefined = undefined;
 
 	get graphic() {
 		return this.#graphic;
@@ -131,9 +131,8 @@ export class Entity implements IEntity, IRenderable {
 	update(input: Input): void {}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+		// TODO(bret): .visible should probably be on the Graphic, not the Entity itself
 		if (this.visible) {
-			// TODO(bret): Fix this
-			// @ts-expect-error
 			this.#graphic?.render(ctx, camera);
 		}
 	}

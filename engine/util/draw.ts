@@ -175,10 +175,10 @@ export const Draw = {
 			image: ComponentProps<typeof Components.image>,
 			drawX: number = 0,
 			drawY: number = 0,
-			sourceX: number = 0,
-			sourceY: number = 0,
-			width: number,
-			height: number,
+			sourceX?: number,
+			sourceY?: number,
+			width?: number,
+			height?: number,
 		) => {
 			const { imageSrc } = image;
 			if (!imageSrc) return;
@@ -189,8 +189,8 @@ export const Draw = {
 			const _height = height ?? imageSrc.height;
 			ctx.drawImage(
 				imageSrc,
-				sourceX,
-				sourceY,
+				sourceX ?? 0,
+				sourceY ?? 0,
 				_width,
 				_height,
 				drawX,
