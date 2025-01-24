@@ -133,7 +133,6 @@ export class Text extends Graphic {
 // TODO(bret): How to tile?
 export class Sprite extends Graphic {
 	asset: SpriteAsset;
-	imageSrc: HTMLImageElement;
 
 	// TODO(bret): remove these and allos Draw.image to make them optional
 	frame: number = 0;
@@ -159,6 +158,11 @@ export class Sprite extends Graphic {
 		return this.height;
 	}
 
+	get imageSrc(): HTMLImageElement {
+		if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
+		return this.asset.image;
+	}
+
 	constructor(
 		asset: SpriteAsset,
 		x = 0,
@@ -168,15 +172,46 @@ export class Sprite extends Graphic {
 		sourceW = undefined,
 		sourceH = undefined,
 	) {
-		if (!asset.image) throw new Error();
 		super(x, y);
 		this.asset = asset;
-		// TODO: need to do this better
-		this.imageSrc = asset.image;
 		this.sourceX = sourceX;
 		this.sourceY = sourceY;
 		this.sourceW = sourceW;
 		this.sourceH = sourceH;
+	}
+
+	static createRect(width: number, height: number, color: string) {
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+
+		const ctx = canvas.getContext('2d');
+		if (!ctx) throw new Error('[Sprite.createRect()] getContext() failed');
+		ctx.fillStyle = color;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		const asset = {
+			// TODO(bret): Could hash these & put them in assetManager :O
+			fileName: [width, height, color].join('-'),
+			image: null,
+			loaded: false,
+		} as SpriteAsset;
+
+		const img = new Image(width, height);
+		img.onload = () => {
+			if ((asset.image = img)) {
+				asset.width = width;
+				asset.height = height;
+				asset.loaded = true;
+			}
+		};
+		img.src = canvas.toDataURL();
+
+		// TODO(bret): This might be dangerous!! It unfortunately is needed for new Sprite() to work :/
+		asset.loaded = true;
+		asset.image = img;
+
+		return new Sprite(asset);
 	}
 
 	centerOrigin() {
