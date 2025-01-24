@@ -300,13 +300,25 @@ export class Emitter extends Graphic {
     assignToType(type, field, value) {
         type[field] = Object.assign(type[field] ?? {}, value);
     }
-    setAlpha(name, start, end) {
+    setAlpha(name, start, end, ease) {
         const type = this.getType(name);
         this.assignToType(type, 'alpha', { start, end });
+        type.alphaEase = ease;
+        return type;
+    }
+    setAngle(name, min, max) {
+        const type = this.getType(name);
+        this.assignToType(type, 'angle', { min, max });
+        return type;
+    }
+    setRotation(name, min, max, ease) {
+        const type = this.getType(name);
+        this.assignToType(type, 'rotation', { min, max });
+        type.rotationEase = ease;
         return type;
     }
     // TODO(bret): Make this better, might need to wait for WebGL/WebGPU
-    setColor(name, start, end, resolution = 250) {
+    setColor(name, start, end, ease, resolution = 250) {
         const type = this.getType(name);
         let ctx = type.color?.ctx ?? null;
         if (!type.color) {
@@ -327,14 +339,14 @@ export class Emitter extends Graphic {
             const hex = [...data].map((c) => c.toString(16).padStart(2, '0'));
             return '#' + hex.join('');
         });
-        this.assignToType(type, 'color', { ctx, samples });
-        return type;
+        type.colorEase = ease;
+        return this.assignToType(type, 'color', { ctx, samples });
     }
-    setMotion(name, angle, distance, duration, angleRange = 0, distanceRange = 0, durationRange = 0) {
+    setMotion(name, moveAngle, distance, duration, moveAngleRange = 0, distanceRange = 0, durationRange = 0, ease) {
         const type = this.getType(name);
-        this.assignToType(type, 'angle', {
-            min: angle,
-            max: angle + angleRange,
+        this.assignToType(type, 'moveAngle', {
+            min: moveAngle,
+            max: moveAngle + moveAngleRange,
         });
         this.assignToType(type, 'distance', {
             min: distance,
@@ -344,6 +356,7 @@ export class Emitter extends Graphic {
             min: duration,
             max: duration + durationRange,
         });
+        type.motionEase = ease;
         return type;
     }
     emit(name, x, y) {
@@ -351,8 +364,16 @@ export class Emitter extends Graphic {
         if (!type)
             throw new Error(`${name} is not set`);
         const { random } = this;
+        const moveAngle = type.moveAngle
+            ? (random.range(type.moveAngle.min, type.moveAngle.max) * Math.PI) /
+                180.0
+            : 0;
         const angle = type.angle
-            ? (random.range(type.angle.min, type.angle.max) * Math.PI) / 180.0
+            ? random.range(type.angle.min, type.angle.max)
+            : 0;
+        const rotation = type.rotation
+            ? random.range(type.rotation.min, type.rotation.max) *
+                this.random.sign()
             : 0;
         const duration = type.duration
             ? random.range(type.duration.min, type.duration.max)
@@ -360,12 +381,18 @@ export class Emitter extends Graphic {
         const distance = type.distance
             ? random.range(type.distance.min, type.distance.max)
             : 1;
-        const step = distance / duration;
+        const endX = x + distance * Math.cos(moveAngle);
+        const endY = y + distance * Math.sin(moveAngle);
         const particle = {
-            x: 0,
-            y: 0,
+            x,
+            y,
+            startX: x,
+            startY: y,
+            endX,
+            endY,
+            startAngle: angle,
             angle,
-            step,
+            rotation,
             elapsed: 0,
             duration,
             t: 0,
@@ -378,9 +405,13 @@ export class Emitter extends Graphic {
         [...this.#types.entries()].forEach(([name, type]) => {
             type.particles = type.particles.filter((particle) => particle.elapsed < particle.duration);
             type.particles.forEach((particle) => {
-                particle.x += particle.step * Math.cos(particle.angle);
-                particle.y += particle.step * Math.sin(particle.angle);
+                const motionT = type.motionEase?.(particle.t) ?? particle.t;
+                particle.x = Math.lerp(particle.startX, particle.endX, motionT);
+                particle.y = Math.lerp(particle.startY, particle.endY, motionT);
                 particle.t = particle.elapsed / particle.duration;
+                const angleT = type.rotationEase?.(particle.t) ?? particle.t;
+                particle.angle =
+                    particle.startAngle + particle.rotation * angleT;
                 ++particle.elapsed;
             });
         });
@@ -409,7 +440,8 @@ export class Emitter extends Graphic {
                 if (particle.type.color) {
                     const { samples } = particle.type.color;
                     // TODO(bret): we'll never hit 1.0 :(
-                    const i = Math.round(particle.t * samples.length);
+                    const colorT = type.colorEase?.(particle.t) ?? particle.t;
+                    const i = Math.round(colorT * (samples.length - 1));
                     blendCtx.save();
                     blendCtx.clearRect(0, 0, width, height);
                     blendCtx.drawImage(image, 0, 0);
@@ -419,9 +451,14 @@ export class Emitter extends Graphic {
                     blendCtx.restore();
                 }
                 this.imageSrc = blendCanvas;
+                const drawX = x + particle.x;
+                const drawY = y + particle.y;
+                this.angle = particle.angle;
                 // TODO(bret): unhardcode centered particles!
-                const drawX = x + particle.x - (width >> 1);
-                const drawY = y + particle.y - (height >> 1);
+                this.offsetX = -(width >> 1);
+                this.originX = this.offsetX;
+                this.offsetY = -(height >> 1);
+                this.originY = this.offsetY;
                 Draw.image(ctx, this, drawX, drawY);
             });
         });

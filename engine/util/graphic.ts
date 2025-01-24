@@ -374,11 +374,18 @@ interface StartEnd<T> {
 	end: T;
 }
 
+type Ease = (t: number) => number;
+
 interface Particle {
 	x: number;
 	y: number;
+	startX: number;
+	startY: number;
+	endX: number;
+	endY: number;
+	startAngle: number;
 	angle: number;
-	step: number;
+	rotation: number;
 	elapsed: number;
 	duration: number;
 	t: number;
@@ -388,19 +395,31 @@ interface Particle {
 interface ParticleType {
 	frames?: number[];
 	alpha?: StartEnd<number>;
+	alphaEase?: Ease;
 	color?: {
 		ctx: CanvasRenderingContext2D;
 		samples: string[];
 	};
+	colorEase?: Ease;
 	angle?: MinMax<number>;
+	rotation?: MinMax<number>;
+	rotationEase?: Ease;
+	moveAngle?: MinMax<number>;
 	distance?: MinMax<number>;
 	duration?: MinMax<number>;
+	motionEase?: Ease;
 	particles: Particle[];
 }
 
 type Assignable = Extract<
 	keyof ParticleType,
-	'alpha' | 'color' | 'angle' | 'distance' | 'duration'
+	| 'alpha'
+	| 'color'
+	| 'angle'
+	| 'rotation'
+	| 'moveAngle'
+	| 'distance'
+	| 'duration'
 >;
 
 export class Emitter extends Graphic {
@@ -453,9 +472,23 @@ export class Emitter extends Graphic {
 		type[field] = Object.assign(type[field] ?? {}, value);
 	}
 
-	setAlpha(name: string, start: number, end: number) {
+	setAlpha(name: string, start: number, end: number, ease: Ease) {
 		const type = this.getType(name);
 		this.assignToType(type, 'alpha', { start, end });
+		type.alphaEase = ease;
+		return type;
+	}
+
+	setAngle(name: string, min: number, max: number) {
+		const type = this.getType(name);
+		this.assignToType(type, 'angle', { min, max });
+		return type;
+	}
+
+	setRotation(name: string, min: number, max: number, ease: Ease) {
+		const type = this.getType(name);
+		this.assignToType(type, 'rotation', { min, max });
+		type.rotationEase = ease;
 		return type;
 	}
 
@@ -465,6 +498,7 @@ export class Emitter extends Graphic {
 		name: string,
 		start: string,
 		end: string,
+		ease: Ease,
 		resolution: number = 250,
 	) {
 		const type = this.getType(name);
@@ -486,24 +520,24 @@ export class Emitter extends Graphic {
 			const hex = [...data].map((c) => c.toString(16).padStart(2, '0'));
 			return '#' + hex.join('');
 		});
-		this.assignToType(type, 'color', { ctx, samples });
-		return type;
+		type.colorEase = ease;
+		return this.assignToType(type, 'color', { ctx, samples });
 	}
 
 	setMotion(
 		name: string,
-		angle: number,
+		moveAngle: number,
 		distance: number,
 		duration: number,
-		angleRange: number = 0,
+		moveAngleRange: number = 0,
 		distanceRange: number = 0,
 		durationRange: number = 0,
-		//ease:Function = null
+		ease: Ease,
 	) {
 		const type = this.getType(name);
-		this.assignToType(type, 'angle', {
-			min: angle,
-			max: angle + angleRange,
+		this.assignToType(type, 'moveAngle', {
+			min: moveAngle,
+			max: moveAngle + moveAngleRange,
 		});
 		this.assignToType(type, 'distance', {
 			min: distance,
@@ -513,6 +547,7 @@ export class Emitter extends Graphic {
 			min: duration,
 			max: duration + durationRange,
 		});
+		type.motionEase = ease;
 		return type;
 	}
 
@@ -522,8 +557,16 @@ export class Emitter extends Graphic {
 
 		const { random } = this;
 
+		const moveAngle = type.moveAngle
+			? (random.range(type.moveAngle.min, type.moveAngle.max) * Math.PI) /
+			  180.0
+			: 0;
 		const angle = type.angle
-			? (random.range(type.angle.min, type.angle.max) * Math.PI) / 180.0
+			? random.range(type.angle.min, type.angle.max)
+			: 0;
+		const rotation = type.rotation
+			? random.range(type.rotation.min, type.rotation.max) *
+			  this.random.sign()
 			: 0;
 		const duration = type.duration
 			? random.range(type.duration.min, type.duration.max)
@@ -532,13 +575,19 @@ export class Emitter extends Graphic {
 			? random.range(type.distance.min, type.distance.max)
 			: 1;
 
-		const step = distance / duration;
+		const endX = x + distance * Math.cos(moveAngle);
+		const endY = y + distance * Math.sin(moveAngle);
 
 		const particle: Particle = {
-			x: 0,
-			y: 0,
+			x,
+			y,
+			startX: x,
+			startY: y,
+			endX,
+			endY,
+			startAngle: angle,
 			angle,
-			step,
+			rotation,
 			elapsed: 0,
 			duration,
 			t: 0,
@@ -554,9 +603,13 @@ export class Emitter extends Graphic {
 				(particle) => particle.elapsed < particle.duration,
 			);
 			type.particles.forEach((particle) => {
-				particle.x += particle.step * Math.cos(particle.angle);
-				particle.y += particle.step * Math.sin(particle.angle);
+				const motionT = type.motionEase?.(particle.t) ?? particle.t;
+				particle.x = Math.lerp(particle.startX, particle.endX, motionT);
+				particle.y = Math.lerp(particle.startY, particle.endY, motionT);
 				particle.t = particle.elapsed / particle.duration;
+				const angleT = type.rotationEase?.(particle.t) ?? particle.t;
+				particle.angle =
+					particle.startAngle + particle.rotation * angleT;
 				++particle.elapsed;
 			});
 		});
@@ -588,7 +641,8 @@ export class Emitter extends Graphic {
 				if (particle.type.color) {
 					const { samples } = particle.type.color;
 					// TODO(bret): we'll never hit 1.0 :(
-					const i = Math.round(particle.t * samples.length);
+					const colorT = type.colorEase?.(particle.t) ?? particle.t;
+					const i = Math.round(colorT * (samples.length - 1));
 
 					blendCtx.save();
 					blendCtx.clearRect(0, 0, width, height);
@@ -600,9 +654,14 @@ export class Emitter extends Graphic {
 				}
 
 				this.imageSrc = blendCanvas;
+				const drawX = x + particle.x;
+				const drawY = y + particle.y;
+				this.angle = particle.angle;
 				// TODO(bret): unhardcode centered particles!
-				const drawX = x + particle.x - (width >> 1);
-				const drawY = y + particle.y - (height >> 1);
+				this.offsetX = -(width >> 1);
+				this.originX = this.offsetX;
+				this.offsetY = -(height >> 1);
+				this.originY = this.offsetY;
 				Draw.image(ctx, this, drawX, drawY);
 			});
 		});

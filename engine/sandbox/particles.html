@@ -42,9 +42,11 @@
 					const c = (n) => '#' + n.toString(16).padStart(6, '0');
 
 					emitter.newType('sparkA', [0]);
-					// emitter.setAlpha('sparkA', 1, 0);
+					emitter.setAlpha('sparkA', 1, 0);
+					emitter.setAngle('sparkA', 0, 360);
+					emitter.setRotation('sparkA', 180, 360);
 					emitter.setColor('sparkA', 'white', 'yellow');
-					emitter.setMotion('sparkA', 230, 30, 30, 80, 60, 15);
+					emitter.setMotion('sparkA', 270 - 45, 60, 60, 90, 60, 30);
 
 					this.emitter = emitter;
 
@@ -54,10 +56,13 @@
 					// emitter.setMotion("sparkB", 100, 20, 30, 160, 10, 15);
 
 					// this.emitter.emit("sparkB", width - 2, 3);
+
+					this.frame = 0;
 				}
 
 				update(input) {
-					this.emitter.emit('sparkA', 0, 3);
+					if (++this.frame % 2 === 0)
+						this.emitter.emit('sparkA', 0, 3);
 				}
 			}
 
@@ -84,10 +89,10 @@
 				ids.forEach((id, i) => {
 					const game = new Game(id, {
 						assetManager,
-						// gameLoopSettings: {
-						// 	updateMode: 'always',
-						// 	renderMode: 'onUpdate',
-						// },
+						gameLoopSettings: {
+							updateMode: 'always',
+							renderMode: 'onUpdate',
+						},
 					});
 
 					const scene = new scenes[i](game);
