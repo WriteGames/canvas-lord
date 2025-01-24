@@ -28,6 +28,7 @@ export class Graphic {
     }
     render(ctx, camera) { }
 }
+// TODO(bret): How to tile?
 export class Sprite extends Graphic {
     asset;
     imageSrc;
@@ -35,6 +36,10 @@ export class Sprite extends Graphic {
     frame = 0;
     frameW = 0;
     frameH = 0;
+    sourceX = 0;
+    sourceY = 0;
+    sourceW;
+    sourceH;
     get width() {
         return this.imageSrc.width;
     }
@@ -47,13 +52,17 @@ export class Sprite extends Graphic {
     get h() {
         return this.height;
     }
-    constructor(asset, x = 0, y = 0) {
+    constructor(asset, x = 0, y = 0, sourceX = 0, sourceY = 0, sourceW = undefined, sourceH = undefined) {
         if (!asset.image)
             throw new Error();
         super(x, y);
         this.asset = asset;
         // TODO: need to do this better
         this.imageSrc = asset.image;
+        this.sourceX = sourceX;
+        this.sourceY = sourceY;
+        this.sourceW = sourceW;
+        this.sourceH = sourceH;
     }
     centerOrigin() {
         this.offsetX = -this.width >> 1;
@@ -62,9 +71,10 @@ export class Sprite extends Graphic {
         this.originY = -this.height >> 1;
     }
     render(ctx, camera) {
+        const { sourceX, sourceY, sourceW = this.width, sourceH = this.height, } = this;
         const x = this.x - camera.x + (this.entity?.x ?? 0);
         const y = this.y - camera.y + (this.entity?.y ?? 0);
-        Draw.image(ctx, this, x, y, 0, 0, this.width, this.height);
+        Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
     }
 }
 export class NineSlice extends Graphic {

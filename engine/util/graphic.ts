@@ -70,6 +70,7 @@ export class Graphic implements IGraphic {
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {}
 }
 
+// TODO(bret): How to tile?
 export class Sprite extends Graphic {
 	asset: SpriteAsset;
 	imageSrc: HTMLImageElement;
@@ -78,6 +79,11 @@ export class Sprite extends Graphic {
 	frame: number = 0;
 	frameW: number = 0;
 	frameH: number = 0;
+
+	sourceX: number = 0;
+	sourceY: number = 0;
+	sourceW: number | undefined;
+	sourceH: number | undefined;
 
 	get width() {
 		return this.imageSrc.width;
@@ -93,12 +99,24 @@ export class Sprite extends Graphic {
 		return this.height;
 	}
 
-	constructor(asset: SpriteAsset, x = 0, y = 0) {
+	constructor(
+		asset: SpriteAsset,
+		x = 0,
+		y = 0,
+		sourceX = 0,
+		sourceY = 0,
+		sourceW = undefined,
+		sourceH = undefined,
+	) {
 		if (!asset.image) throw new Error();
 		super(x, y);
 		this.asset = asset;
 		// TODO: need to do this better
 		this.imageSrc = asset.image;
+		this.sourceX = sourceX;
+		this.sourceY = sourceY;
+		this.sourceW = sourceW;
+		this.sourceH = sourceH;
 	}
 
 	centerOrigin() {
@@ -109,9 +127,15 @@ export class Sprite extends Graphic {
 	}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+		const {
+			sourceX,
+			sourceY,
+			sourceW = this.width,
+			sourceH = this.height,
+		} = this;
 		const x = this.x - camera.x + (this.entity?.x ?? 0);
 		const y = this.y - camera.y + (this.entity?.y ?? 0);
-		Draw.image(ctx, this, x, y, 0, 0, this.width, this.height);
+		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
 }
 
