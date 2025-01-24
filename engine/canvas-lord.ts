@@ -1751,6 +1751,7 @@ export interface Tileset {
 	rows: number;
 
 	sprite: Sprite;
+	entity: Entity | undefined;
 
 	data: Array<Vec2 | null>;
 
@@ -1822,6 +1823,9 @@ export class Tileset {
 
 		const [cameraX, cameraY] = camera;
 
+		const offsetX = this.entity?.x ?? 0;
+		const offsetY = this.entity?.y ?? 0;
+
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				const val = this.data[y * this.columns + x];
@@ -1829,8 +1833,8 @@ export class Tileset {
 					const [tileX, tileY] = val;
 					const srcX = startX + (separation + tileW) * tileX;
 					const srcY = startY + (separation + tileH) * tileY;
-					const dstX = x * tileW - cameraX;
-					const dstY = y * tileH - cameraY;
+					const dstX = x * tileW - cameraX + offsetX;
+					const dstY = y * tileH - cameraY + offsetY;
 					ctx.drawImage(
 						image.image,
 						srcX,
