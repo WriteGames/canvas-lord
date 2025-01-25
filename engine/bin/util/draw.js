@@ -119,9 +119,11 @@ export const Draw = {
         const y = sourceY ?? 0;
         const _width = width ?? imageSrc.width;
         const _height = height ?? imageSrc.height;
+        tempCtx.canvas.width = _width;
+        tempCtx.canvas.height = _height;
         tempCtx.save();
         tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-        tempCtx.drawImage(imageSrc, x, y, _width, _height, drawX, drawY, _width, _height);
+        tempCtx.drawImage(imageSrc, x, y, _width, _height, 0, 0, _width, _height);
         if (image.color) {
             const { blend } = image;
             tempCtx.globalCompositeOperation = blend
@@ -129,14 +131,14 @@ export const Draw = {
                 : 'source-in';
             tempCtx.fillStyle = image.color;
             // TODO(bret): Add ability to resize the rect :O
-            tempCtx.fillRect(drawX, drawY, _width, _height);
+            tempCtx.fillRect(0, 0, _width, _height);
             if (blend) {
                 tempCtx.globalCompositeOperation = 'destination-in';
-                tempCtx.drawImage(imageSrc, x, y, _width, _height, drawX, drawY, _width, _height);
+                tempCtx.drawImage(imageSrc, x, y, _width, _height, 0, 0, _width, _height);
             }
         }
         tempCtx.restore();
-        ctx.drawImage(tempCanvas, 0, 0);
+        ctx.drawImage(tempCanvas, drawX, drawY);
     }),
     // TODO(bret): This breaks if the width is too small :(
     // TODO(bret): Condense some of this down
