@@ -8,7 +8,13 @@
 	</head>
 	<body>
 		<canvas
-			id="emitter"
+			id="graphics"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+		<canvas
+			id="animation"
 			width="320px"
 			height="180px"
 			tabindex="-1"
@@ -25,6 +31,7 @@
 			} from '../bin/canvas-lord.js';
 			import {
 				Sprite,
+				AnimatedSprite,
 				GraphicList,
 				Emitter,
 			} from '../bin/util/graphic.js';
@@ -40,7 +47,7 @@
 					this.rotateSpeed = rotateSpeed;
 				}
 
-				update() {
+				reposition() {
 					const t = (this.inc / 75) * 2 * this.rotateSpeed;
 					const m = this.moveOffset;
 					this.x = this.startX + Math.cos(t / 2) * 2 * m;
@@ -58,6 +65,10 @@
 							gfx.angle -= this.rotateSpeed * 1.75;
 						});
 					}
+				}
+
+				update() {
+					this.reposition();
 
 					++this.inc;
 				}
@@ -114,17 +125,43 @@
 					right.graphic.color = 'red';
 					[left, center, right].forEach((entity) => {
 						entity.graphic.centerOO();
+						entity.reposition();
 						this.addEntity(entity);
 						this.addRenderable(entity);
 					});
 				}
 			}
 
-			const ids = ['emitter'];
-			const scenes = [GraphicScene];
+			class AnimationScene extends Scene {
+				constructor(engine) {
+					super(engine);
+					const entity = new Entity(
+						engine.canvas.width >> 1,
+						engine.canvas.height >> 1,
+					);
+
+					const anim = new AnimatedSprite(
+						assetManager.sprites.get('radiohead_spritesheet.png'),
+						32,
+						32,
+					);
+
+					anim.add('walk', [0, 1, 2, 3], 15);
+					anim.play('walk');
+
+					entity.graphic = anim;
+					entity.graphic.centerOO();
+					this.addEntity(entity);
+					this.addRenderable(entity);
+				}
+			}
+
+			const ids = ['graphics', 'animation'];
+			const scenes = [GraphicScene, AnimationScene];
 
 			let loaded = false;
 			const assetManager = new AssetManager('../img/');
+			assetManager.addImage('radiohead_spritesheet.png');
 			assetManager.addImage('particle.png');
 			assetManager.addImage('particle-2.png');
 			assetManager.addImage('particle-3.png');
