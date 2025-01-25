@@ -68,7 +68,7 @@ export class Entity implements IEntity, IRenderable {
 		if (this.#graphic) this.#graphic.parent = this;
 	}
 
-	constructor(x: number, y: number) {
+	constructor(x: number = 0, y: number = 0) {
 		this.addComponent(Components.pos2D);
 		this.x = x;
 		this.y = y;

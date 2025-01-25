@@ -16,7 +16,7 @@ export class Entity {
         if (this.#graphic)
             this.#graphic.parent = this;
     }
-    constructor(x, y) {
+    constructor(x = 0, y = 0) {
         this.addComponent(Components.pos2D);
         this.x = x;
         this.y = y;
