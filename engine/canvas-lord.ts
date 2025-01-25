@@ -1404,6 +1404,7 @@ export interface IEntitySystem {
 
 export interface IRenderable {
 	depth?: number;
+	parent?: IRenderable | undefined;
 	// TODO(bret): Figure out if we want this to be like this...
 	update?: (input: Input) => void;
 	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;

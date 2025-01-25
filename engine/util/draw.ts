@@ -44,7 +44,8 @@ type Callback<T extends unknown[], O extends DrawOptions> = (
 	...args: T
 ) => void;
 
-const moveCanvas = <T extends unknown[], O extends DrawOptions>(
+// TODO(bret): un-export this!
+export const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 	callback: Callback<T, O>,
 ): Callback<T, O> => {
 	return (ctx, options, x, y, ...args: T): void => {

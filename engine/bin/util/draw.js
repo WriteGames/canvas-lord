@@ -9,7 +9,8 @@ export const drawable = {
     offsetY: 0,
     alpha: 1,
 };
-const moveCanvas = (callback) => {
+// TODO(bret): un-export this!
+export const moveCanvas = (callback) => {
     return (ctx, options, x, y, ...args) => {
         const { offsetX = 0, offsetY = 0, angle = 0, originX = 0, originY = 0, scaleX = 1, scaleY = 1, alpha = 1, } = Object.assign({}, drawable, options);
         ctx.save();

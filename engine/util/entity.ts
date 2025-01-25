@@ -65,9 +65,7 @@ export class Entity implements IEntity, IRenderable {
 
 	set graphic(graphic) {
 		this.#graphic = graphic;
-		// TODO(bret): Fix this!!
-		// @ts-expect-error
-		this.#graphic.entity = this;
+		if (this.#graphic) this.#graphic.parent = this;
 	}
 
 	constructor(x: number, y: number) {

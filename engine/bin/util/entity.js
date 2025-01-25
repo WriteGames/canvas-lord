@@ -13,9 +13,8 @@ export class Entity {
     }
     set graphic(graphic) {
         this.#graphic = graphic;
-        // TODO(bret): Fix this!!
-        // @ts-expect-error
-        this.#graphic.entity = this;
+        if (this.#graphic)
+            this.#graphic.parent = this;
     }
     constructor(x, y) {
         this.addComponent(Components.pos2D);

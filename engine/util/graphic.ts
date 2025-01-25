@@ -1,6 +1,6 @@
 import type { Input } from '../canvas-lord.js';
 import type { Camera } from './camera.js';
-import { Draw } from './draw.js';
+import { moveCanvas, Draw } from './draw.js';
 import { Entity } from './entity.js';
 import { Random } from './random.js';
 
@@ -22,6 +22,13 @@ export type SpriteAsset = {
 	  }
 );
 
+interface GraphicParent {
+	x: number;
+	y: number;
+	update: (input: Input) => void;
+	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+}
+
 export interface IGraphic {
 	x: number;
 	y: number;
@@ -34,9 +41,10 @@ export interface IGraphic {
 	scrollX: number;
 	scrollY: number;
 	alpha: number;
-	entity: Entity | undefined;
+	parent: GraphicParent | undefined;
 	centerOrigin: () => void;
 	centerOO: () => void;
+	update: (input: Input) => void;
 	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
 }
 
@@ -54,7 +62,7 @@ export class Graphic implements IGraphic {
 	scrollX = 1;
 	scrollY = 1;
 	alpha = 1;
-	entity: Entity | undefined;
+	parent: GraphicParent | undefined;
 
 	// TODO(bret): What should get scale() return??
 
@@ -79,6 +87,62 @@ export class Graphic implements IGraphic {
 	update(input: Input): void {}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {}
+}
+
+export class GraphicList extends Graphic {
+	graphics: Graphic[];
+
+	constructor(x = 0, y = 0) {
+		super(x, y);
+
+		this.graphics = [];
+	}
+
+	centerOrigin() {
+		// TODO(bret): what should this actually do?
+		this.graphics.forEach((graphic) => graphic.centerOrigin());
+	}
+
+	add(graphic: Graphic) {
+		if (this.has(graphic)) return;
+
+		graphic.parent = this;
+		this.graphics.push(graphic);
+	}
+
+	has(graphic: Graphic) {
+		const index = this.graphics.indexOf(graphic);
+		return index > -1;
+	}
+
+	remove(graphic: Graphic) {
+		if (!this.has(graphic)) return;
+
+		const index = this.graphics.indexOf(graphic);
+		graphic.parent = undefined;
+		this.graphics.splice(index, 1);
+	}
+
+	update(input: Input) {
+		this.graphics.forEach((graphic) => graphic.update(input));
+	}
+
+	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+		// TODO(bret): Set up transformations here!
+		this.scrollX = this.scrollY = 0;
+		const r = 3;
+		const preX = this.x;
+		const preY = this.y;
+		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
+		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+		this.x = x;
+		this.y = y;
+		moveCanvas(() => {
+			this.graphics.forEach((graphic) => graphic.render(ctx, camera));
+		})(ctx, this, x, y);
+		this.x = preX;
+		this.y = preY;
+	}
 }
 
 const textCanvas = document.createElement('canvas');
@@ -128,8 +192,8 @@ export class Text extends Graphic {
 	}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {
-		const x = this.x - camera.x * this.scrollX + (this.entity?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.entity?.y ?? 0);
+		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
+		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.text(ctx, this, x, y, this.str);
 	}
 }
@@ -232,8 +296,8 @@ export class Sprite extends Graphic {
 			sourceW = this.width,
 			sourceH = this.height,
 		} = this;
-		const x = this.x - camera.x * this.scrollX + (this.entity?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.entity?.y ?? 0);
+		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
+		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
 }
@@ -616,8 +680,8 @@ export class Emitter extends Graphic {
 	}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera) {
-		const x = this.x - camera.x * this.scrollX + (this.entity?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.entity?.y ?? 0);
+		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
+		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 
 		const { image } = this.asset;
 		if (!image) throw new Error();
