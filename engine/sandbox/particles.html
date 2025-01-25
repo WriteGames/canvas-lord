@@ -8,7 +8,19 @@
 	</head>
 	<body>
 		<canvas
-			id="emitter"
+			id="emitter-1"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+		<canvas
+			id="emitter-2"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+		<canvas
+			id="emitter-3"
 			width="320px"
 			height="180px"
 			tabindex="-1"
@@ -26,7 +38,7 @@
 			import { Sprite, Emitter } from '../bin/util/graphic.js';
 
 			class EmitterEntity extends Entity {
-				constructor(x, y) {
+				constructor(x, y, easing) {
 					super(x, y);
 
 					// const sprite = Sprite.createRect(8, 8, '#888');
@@ -46,7 +58,16 @@
 					emitter.setAngle('sparkA', 0, 360);
 					emitter.setRotation('sparkA', 180, 360);
 					emitter.setColor('sparkA', 'white', 'yellow');
-					emitter.setMotion('sparkA', 270 - 45, 60, 60, 90, 60, 30);
+					emitter.setMotion(
+						'sparkA',
+						270 - 45,
+						60,
+						60,
+						90,
+						60,
+						30,
+						easing,
+					);
 
 					this.emitter = emitter;
 
@@ -67,17 +88,41 @@
 			}
 
 			class ParticleScene extends Scene {
-				constructor(...args) {
-					super(...args);
+				constructor(engine, easing) {
+					super(engine);
 
-					const emitterEntity = new EmitterEntity(640 >> 2, 320 >> 1);
+					const emitterEntity = new EmitterEntity(
+						640 >> 2,
+						320 >> 1,
+						easing,
+					);
 					this.addEntity(emitterEntity);
 					this.addRenderable(emitterEntity);
 				}
 			}
 
-			const ids = ['emitter'];
-			const scenes = [ParticleScene];
+			function easeOutBounce(x) {
+				const n1 = 7.5625;
+				const d1 = 2.75;
+
+				if (x < 1 / d1) {
+					return n1 * x * x;
+				} else if (x < 2 / d1) {
+					return n1 * (x -= 1.5 / d1) * x + 0.75;
+				} else if (x < 2.5 / d1) {
+					return n1 * (x -= 2.25 / d1) * x + 0.9375;
+				} else {
+					return n1 * (x -= 2.625 / d1) * x + 0.984375;
+				}
+			}
+
+			function easeInBounce(x) {
+				return 1 - easeOutBounce(1 - x);
+			}
+
+			const ids = ['emitter-1', 'emitter-2', 'emitter-3'];
+			const scenes = [ParticleScene, ParticleScene, ParticleScene];
+			const easing = [undefined, easeOutBounce, easeInBounce];
 
 			let loaded = false;
 			const assetManager = new AssetManager('../img/');
@@ -95,7 +140,7 @@
 						},
 					});
 
-					const scene = new scenes[i](game);
+					const scene = new scenes[i](game, easing[i]);
 					game.pushScene(scene);
 
 					game.render();
