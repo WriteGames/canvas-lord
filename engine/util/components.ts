@@ -36,6 +36,8 @@ interface DrawOptions {
 	scaleY?: number;
 	offsetX?: number;
 	offsetY?: number;
+	color?: string;
+	blend?: boolean;
 }
 
 const drawable = {

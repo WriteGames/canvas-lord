@@ -130,6 +130,8 @@ export class Sprite extends Graphic {
     sourceY = 0;
     sourceW;
     sourceH;
+    color;
+    blend;
     get width() {
         return this.imageSrc.width;
     }
@@ -204,6 +206,8 @@ export class NineSlice extends Graphic {
     height;
     tileW;
     tileH;
+    color;
+    blend;
     get imageSrc() {
         if (!this.asset.image)
             throw new Error("asset.image hasn't loaded yet");
@@ -484,6 +488,7 @@ export class Emitter extends Graphic {
                     const { start, end } = particle.type.alpha;
                     this.alpha = Math.lerp(start, end, particle.t);
                 }
+                // TODO(bret): Draw.image now supports blending colors, might wanna switch this over!
                 if (particle.type.color) {
                     const { samples } = particle.type.color;
                     // TODO(bret): we'll never hit 1.0 :(

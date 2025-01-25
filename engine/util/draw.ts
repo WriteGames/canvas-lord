@@ -44,6 +44,19 @@ type Callback<T extends unknown[], O extends DrawOptions> = (
 	...args: T
 ) => void;
 
+let tempCanvas: HTMLCanvasElement;
+let tempCtx: CanvasRenderingContext2D;
+const initTempCanvas = (ctx: CanvasRenderingContext2D) => {
+	if (tempCanvas) return;
+	tempCanvas = document.createElement('canvas');
+	tempCanvas.width = ctx.canvas.width;
+	tempCanvas.height = ctx.canvas.height;
+
+	const _ctx = tempCanvas.getContext('2d');
+	if (!_ctx) throw new Error();
+	tempCtx = _ctx;
+};
+
 // TODO(bret): un-export this!
 export const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 	callback: Callback<T, O>,
@@ -88,6 +101,8 @@ export const Draw = {
 			y: number,
 			radius: number,
 		) => {
+			initTempCanvas(ctx);
+
 			ctx.translate(0.5, 0.5);
 
 			ctx.beginPath();
@@ -109,6 +124,8 @@ export const Draw = {
 	),
 
 	line: moveCanvas((ctx, options, x1, y1, x2: number, y2: number) => {
+		initTempCanvas(ctx);
+
 		ctx.translate(0.5, 0.5);
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
@@ -125,6 +142,8 @@ export const Draw = {
 			w: number,
 			h: number,
 		) => {
+			initTempCanvas(ctx);
+
 			ctx.translate(0.5, 0.5);
 			const args = [x, y, w, h] as const;
 			switch (rect.type) {
@@ -149,6 +168,8 @@ export const Draw = {
 			y,
 			_points: [number, number][],
 		) => {
+			initTempCanvas(ctx);
+
 			ctx.translate(0.5, 0.5);
 			ctx.beginPath();
 			const n = _points.length;
@@ -181,17 +202,24 @@ export const Draw = {
 			width?: number,
 			height?: number,
 		) => {
+			initTempCanvas(ctx);
+
 			const { imageSrc } = image;
 			if (!imageSrc) return;
 
+			// TODO(bret): Expose this at the image level (and default to a global setting in Game!)
 			ctx.imageSmoothingEnabled = false;
 
+			const x = sourceX ?? 0;
+			const y = sourceY ?? 0;
 			const _width = width ?? imageSrc.width;
 			const _height = height ?? imageSrc.height;
-			ctx.drawImage(
+			tempCtx.save();
+			tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+			tempCtx.drawImage(
 				imageSrc,
-				sourceX ?? 0,
-				sourceY ?? 0,
+				x,
+				y,
 				_width,
 				_height,
 				drawX,
@@ -199,6 +227,33 @@ export const Draw = {
 				_width,
 				_height,
 			);
+
+			if (image.color) {
+				const { blend } = image;
+				tempCtx.globalCompositeOperation = blend
+					? 'multiply'
+					: 'source-in';
+				tempCtx.fillStyle = image.color;
+				// TODO(bret): Add ability to resize the rect :O
+				tempCtx.fillRect(drawX, drawY, _width, _height);
+				if (blend) {
+					tempCtx.globalCompositeOperation = 'destination-in';
+					tempCtx.drawImage(
+						imageSrc,
+						x,
+						y,
+						_width,
+						_height,
+						drawX,
+						drawY,
+						_width,
+						_height,
+					);
+				}
+			}
+			tempCtx.restore();
+
+			ctx.drawImage(tempCanvas, 0, 0);
 		},
 	),
 
@@ -212,6 +267,8 @@ export const Draw = {
 			drawY: number,
 			str: string,
 		) => {
+			initTempCanvas(ctx);
+
 			const {
 				color,
 				type,

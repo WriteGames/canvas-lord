@@ -48,6 +48,11 @@ export interface IGraphic {
 	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
 }
 
+interface ISpriteLike {
+	color?: string;
+	blend?: boolean;
+}
+
 export class Graphic implements IGraphic {
 	x: number;
 	y: number;
@@ -199,7 +204,7 @@ export class Text extends Graphic {
 }
 
 // TODO(bret): How to tile?
-export class Sprite extends Graphic {
+export class Sprite extends Graphic implements ISpriteLike {
 	asset: SpriteAsset;
 
 	// TODO(bret): remove these and allow Draw.image to make them optional
@@ -211,6 +216,9 @@ export class Sprite extends Graphic {
 	sourceY: number = 0;
 	sourceW: number | undefined;
 	sourceH: number | undefined;
+
+	color?: string;
+	blend?: boolean;
 
 	get width() {
 		return this.imageSrc.width;
@@ -303,12 +311,15 @@ export class Sprite extends Graphic {
 }
 
 // TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
-export class NineSlice extends Graphic {
+export class NineSlice extends Graphic implements ISpriteLike {
 	asset: SpriteAsset;
 	width: number;
 	height: number;
 	tileW: number;
 	tileH: number;
+
+	color?: string;
+	blend?: boolean;
 
 	get imageSrc(): HTMLImageElement {
 		if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
@@ -702,6 +713,7 @@ export class Emitter extends Graphic {
 					this.alpha = Math.lerp(start, end, particle.t);
 				}
 
+				// TODO(bret): Draw.image now supports blending colors, might wanna switch this over!
 				if (particle.type.color) {
 					const { samples } = particle.type.color;
 					// TODO(bret): we'll never hit 1.0 :(

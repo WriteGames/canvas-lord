@@ -9,6 +9,19 @@ export const drawable = {
     offsetY: 0,
     alpha: 1,
 };
+let tempCanvas;
+let tempCtx;
+const initTempCanvas = (ctx) => {
+    if (tempCanvas)
+        return;
+    tempCanvas = document.createElement('canvas');
+    tempCanvas.width = ctx.canvas.width;
+    tempCanvas.height = ctx.canvas.height;
+    const _ctx = tempCanvas.getContext('2d');
+    if (!_ctx)
+        throw new Error();
+    tempCtx = _ctx;
+};
 // TODO(bret): un-export this!
 export const moveCanvas = (callback) => {
     return (ctx, options, x, y, ...args) => {
@@ -32,6 +45,7 @@ export const moveCanvas = (callback) => {
 };
 export const Draw = {
     circle: moveCanvas((ctx, circle, x, y, radius) => {
+        initTempCanvas(ctx);
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
         // TODO: make this be able to be centered :O
@@ -49,6 +63,7 @@ export const Draw = {
         }
     }),
     line: moveCanvas((ctx, options, x1, y1, x2, y2) => {
+        initTempCanvas(ctx);
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -56,6 +71,7 @@ export const Draw = {
         ctx.stroke();
     }),
     rect: moveCanvas((ctx, rect, x, y, w, h) => {
+        initTempCanvas(ctx);
         ctx.translate(0.5, 0.5);
         const args = [x, y, w, h];
         switch (rect.type) {
@@ -72,6 +88,7 @@ export const Draw = {
     polygon: moveCanvas((ctx, 
     // TODO(bret): actually set up the correct type here
     options, x, y, _points) => {
+        initTempCanvas(ctx);
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
         const n = _points.length;
@@ -92,17 +109,39 @@ export const Draw = {
         }
     }),
     image: moveCanvas((ctx, image, drawX = 0, drawY = 0, sourceX, sourceY, width, height) => {
+        initTempCanvas(ctx);
         const { imageSrc } = image;
         if (!imageSrc)
             return;
+        // TODO(bret): Expose this at the image level (and default to a global setting in Game!)
         ctx.imageSmoothingEnabled = false;
+        const x = sourceX ?? 0;
+        const y = sourceY ?? 0;
         const _width = width ?? imageSrc.width;
         const _height = height ?? imageSrc.height;
-        ctx.drawImage(imageSrc, sourceX ?? 0, sourceY ?? 0, _width, _height, drawX, drawY, _width, _height);
+        tempCtx.save();
+        tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(imageSrc, x, y, _width, _height, drawX, drawY, _width, _height);
+        if (image.color) {
+            const { blend } = image;
+            tempCtx.globalCompositeOperation = blend
+                ? 'multiply'
+                : 'source-in';
+            tempCtx.fillStyle = image.color;
+            // TODO(bret): Add ability to resize the rect :O
+            tempCtx.fillRect(drawX, drawY, _width, _height);
+            if (blend) {
+                tempCtx.globalCompositeOperation = 'destination-in';
+                tempCtx.drawImage(imageSrc, x, y, _width, _height, drawX, drawY, _width, _height);
+            }
+        }
+        tempCtx.restore();
+        ctx.drawImage(tempCanvas, 0, 0);
     }),
     // TODO(bret): This breaks if the width is too small :(
     // TODO(bret): Condense some of this down
     text: moveCanvas((ctx, text, drawX, drawY, str) => {
+        initTempCanvas(ctx);
         const { color, type, font = 'sans-serif', size = 10, align = 'left', baseline = 'top', // TODO(bret): check if this is the default we want :/
         count, } = text;
         const _size = typeof size === 'number' ? `${size}px` : size;
