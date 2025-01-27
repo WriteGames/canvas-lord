@@ -12,6 +12,7 @@ export const drawable = {
 	offsetX: 0,
 	offsetY: 0,
 	alpha: 1,
+	color: undefined,
 };
 
 interface DrawOptions {
@@ -23,6 +24,7 @@ interface DrawOptions {
 	offsetX?: number;
 	offsetY?: number;
 	alpha?: number;
+	color?: CanvasRenderingContext2D['fillStyle'];
 }
 
 interface TextOptions extends DrawOptions {
@@ -126,6 +128,7 @@ export const Draw = {
 	line: moveCanvas((ctx, options, x1, y1, x2: number, y2: number) => {
 		initTempCanvas(ctx);
 
+		if (options.color) ctx.strokeStyle = options.color;
 		ctx.translate(0.5, 0.5);
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
@@ -300,7 +303,9 @@ export const Draw = {
 			}
 
 			if (!text.width) {
-				ctx[func](str, drawX, drawY);
+				let _str = str;
+				if (count !== undefined) _str = str.slice(0, count);
+				ctx[func](_str, drawX, drawY);
 				return;
 			}
 
