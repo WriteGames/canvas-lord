@@ -252,7 +252,6 @@ export const collidePointTriangle = (
 	y: number,
 	t: RawShape<Triangle>,
 ) => {
-	console.log({ t });
 	return isPointInPolygon(x, y, [
 		[t.x1, t.y1],
 		[t.x2, t.y2],

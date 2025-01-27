@@ -157,41 +157,12 @@ export class Entity implements IEntity, IRenderable {
 		}
 	}
 
-	_collide(x: number, y: number, e: Entity): Entity | null {
-		if (!this.collidable || !this.collider || !e.collidable || !e.collider)
-			return null;
-		let result: Entity | null = null;
-		this._moveCollider(this.collider, x, y);
-		this._moveCollider(e.collider, e.x, e.y);
-		if (Collision.collide(this.collider, e.collider)) {
-			result = e;
-		}
-		this._moveCollider(this.collider, -x, -y);
-		this._moveCollider(e.collider, -e.x, -e.y);
-		return result;
-	}
-
-	collideEntity(
+	_collide(
 		x: number,
 		y: number,
 		tag: ColliderTag | ColliderTag[],
-	): Entity | null {
-		if (!this.collidable || !this.collider) return null;
-
-		const tags = tag ? [tag].flat() : [];
-		const n = this.scene.entities.inScene.length;
-		let collide = null;
-		for (let i = 0; !collide && i < n; ++i) {
-			const e = this.scene.entities.inScene[i];
-			if (e === this) continue;
-			if (!e.collidable || !e.collider) continue;
-			if (tags.length && !tags.includes(e.collider.tag)) continue;
-			collide = this._collide(x, y, e);
-		}
-		return collide;
-	}
-
-	collideEntities(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
+		earlyOut: boolean,
+	): Entity[] {
 		if (!this.collidable || !this.collider) return [];
 
 		const tags = tag ? [tag].flat() : [];
@@ -201,12 +172,32 @@ export class Entity implements IEntity, IRenderable {
 			const e = this.scene.entities.inScene[i];
 			if (e === this) continue;
 			if (!e.collidable || !e.collider) continue;
-			if (tags.length && !tags.includes(e.collider.type)) continue;
-			if (this._collide(x, y, e)) {
-				collide.push(e);
-			}
+			if (tags.length && !tags.includes(e.collider.tag)) continue;
+
+			this._moveCollider(this.collider, x, y);
+			this._moveCollider(e.collider, e.x, e.y);
+			const collision = Collision.collide(this.collider, e.collider);
+			const result = collision ? e : null;
+			this._moveCollider(this.collider, -x, -y);
+			this._moveCollider(e.collider, -e.x, -e.y);
+			if (result === null) continue;
+
+			collide.push(result);
+			if (earlyOut) break;
 		}
 		return collide;
+	}
+
+	collideEntity(
+		x: number,
+		y: number,
+		tag: ColliderTag | ColliderTag[],
+	): Entity | null {
+		return this._collide(x, y, tag, true)[0] ?? null;
+	}
+
+	collideEntities(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
+		return this._collide(x, y, tag, false);
 	}
 
 	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {

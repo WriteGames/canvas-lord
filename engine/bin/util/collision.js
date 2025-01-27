@@ -123,7 +123,6 @@ export const collidePointRightTriangle = (x, y, rt) => {
     return false;
 };
 export const collidePointTriangle = (x, y, t) => {
-    console.log({ t });
     return isPointInPolygon(x, y, [
         [t.x1, t.y1],
         [t.x2, t.y2],

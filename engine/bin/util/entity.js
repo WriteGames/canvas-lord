@@ -90,38 +90,7 @@ export class Entity {
                 c.y += y;
         }
     }
-    _collide(x, y, e) {
-        if (!this.collidable || !this.collider || !e.collidable || !e.collider)
-            return null;
-        let result = null;
-        this._moveCollider(this.collider, x, y);
-        this._moveCollider(e.collider, e.x, e.y);
-        if (Collision.collide(this.collider, e.collider)) {
-            result = e;
-        }
-        this._moveCollider(this.collider, -x, -y);
-        this._moveCollider(e.collider, -e.x, -e.y);
-        return result;
-    }
-    collideEntity(x, y, tag) {
-        if (!this.collidable || !this.collider)
-            return null;
-        const tags = tag ? [tag].flat() : [];
-        const n = this.scene.entities.inScene.length;
-        let collide = null;
-        for (let i = 0; !collide && i < n; ++i) {
-            const e = this.scene.entities.inScene[i];
-            if (e === this)
-                continue;
-            if (!e.collidable || !e.collider)
-                continue;
-            if (tags.length && !tags.includes(e.collider.tag))
-                continue;
-            collide = this._collide(x, y, e);
-        }
-        return collide;
-    }
-    collideEntities(x, y, tag) {
+    _collide(x, y, tag, earlyOut) {
         if (!this.collidable || !this.collider)
             return [];
         const tags = tag ? [tag].flat() : [];
@@ -133,13 +102,27 @@ export class Entity {
                 continue;
             if (!e.collidable || !e.collider)
                 continue;
-            if (tags.length && !tags.includes(e.collider.type))
+            if (tags.length && !tags.includes(e.collider.tag))
                 continue;
-            if (this._collide(x, y, e)) {
-                collide.push(e);
-            }
+            this._moveCollider(this.collider, x, y);
+            this._moveCollider(e.collider, e.x, e.y);
+            const collision = Collision.collide(this.collider, e.collider);
+            const result = collision ? e : null;
+            this._moveCollider(this.collider, -x, -y);
+            this._moveCollider(e.collider, -e.x, -e.y);
+            if (result === null)
+                continue;
+            collide.push(result);
+            if (earlyOut)
+                break;
         }
         return collide;
+    }
+    collideEntity(x, y, tag) {
+        return this._collide(x, y, tag, true)[0] ?? null;
+    }
+    collideEntities(x, y, tag) {
+        return this._collide(x, y, tag, false);
     }
     collide(x, y, tag) {
         if (!this.collidable || !this.collider)
