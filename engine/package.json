@@ -16,7 +16,8 @@
 	"scripts": {
 		"compile": "tsc --p tsconfig.json",
 		"test": "vitest --pool=forks",
-		"watch": "tsc --w --p tsconfig.json"
+		"watch": "tsc --w --p tsconfig.json",
+		"bump-version": "node scripts/bump-version.js"
 	},
 	"keywords": [],
 	"author": "Write Games",
