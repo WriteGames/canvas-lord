@@ -1038,7 +1038,9 @@ export class Game {
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, this.width, this.height);
 
-		this.currentScenes?.forEach((scene) => scene.render(ctx));
+		this.sceneStack.forEach((scenes) => {
+			scenes.forEach((scene) => scene.render(ctx));
+		});
 
 		// Splitscreen
 		if (this.sceneStack[0]?.length === 2) {
