@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './util/math.js';
 import { Grid } from './util/grid.js';

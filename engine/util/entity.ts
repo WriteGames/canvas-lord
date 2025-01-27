@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import type { Camera, Input, IRenderable } from '../canvas-lord.js';
 import * as Components from './components.js';
 import { type ComponentProps } from './components.js';

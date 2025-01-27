@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import { IEntityComponentType } from './types.js';
 import { Vec2 } from './math.js';
 

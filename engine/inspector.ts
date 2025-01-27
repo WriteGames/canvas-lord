@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import { Engine } from './canvas-lord.js';
 
 interface Item {

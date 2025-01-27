@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import type { Vec2 } from './math';
 
 export interface Camera {

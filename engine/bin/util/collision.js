@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import { Vec2, EPSILON, addPos, scalePos, subPos, crossProduct2D, dotProduct2D, } from './math.js';
 const types = [
     'point',

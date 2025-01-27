@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import * as Components from './components.js';
 import { type ComponentProps } from './components.js';
 

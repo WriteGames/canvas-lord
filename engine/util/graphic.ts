@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 import type { Input } from '../canvas-lord.js';
 import type { Camera } from './camera.js';
 import { moveCanvas, Draw } from './draw.js';
