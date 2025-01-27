@@ -132,13 +132,9 @@
 				}
 			}
 
-			class AnimationScene extends Scene {
-				constructor(engine) {
-					super(engine);
-					const entity = new Entity(
-						engine.canvas.width >> 1,
-						engine.canvas.height >> 1,
-					);
+			class RadioHead extends Entity {
+				constructor(x, y) {
+					super(x, y);
 
 					const anim = new AnimatedSprite(
 						assetManager.sprites.get('radiohead_spritesheet.png'),
@@ -149,10 +145,34 @@
 					anim.add('walk', [0, 1, 2, 3], 15);
 					anim.play('walk');
 
-					entity.graphic = anim;
-					entity.graphic.centerOO();
-					this.addEntity(entity);
-					this.addRenderable(entity);
+					this.graphic = anim;
+					this.graphic.centerOO();
+				}
+			}
+
+			class AnimationScene extends Scene {
+				constructor(engine) {
+					super(engine);
+					const xx = 16;
+					const radioHead1 = new RadioHead(
+						(engine.canvas.width >> 1) - xx,
+						engine.canvas.height >> 1,
+					);
+					const radioHead2 = new RadioHead(
+						(engine.canvas.width >> 1) + xx,
+						engine.canvas.height >> 1,
+					);
+
+					// this is so hacky, please don't do this!
+					radioHead2.update = (input) => {
+						// testing to make sure it doesn't restart
+						radioHead2.graphic.play('walk');
+					};
+
+					[radioHead1, radioHead2].forEach((entity) => {
+						this.addEntity(entity);
+						this.addRenderable(entity);
+					});
 				}
 			}
 

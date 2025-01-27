@@ -255,7 +255,10 @@ export class AnimatedSprite extends Graphic {
         };
         this.animations.set(name, animation);
     }
+    // TODO(bret): Revisit this, we might want a `restart = false` override
     play(name) {
+        if (name === this.currentAnimation?.name)
+            return;
         this.inc = 0;
         this.currentAnimation =
             name !== undefined ? this.animations.get(name) : name;
