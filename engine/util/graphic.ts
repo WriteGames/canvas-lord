@@ -410,7 +410,12 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	update() {
 		if (this.currentAnimation) {
 			const { frames, frameRate } = this.currentAnimation;
-			this.frame = Math.floor(this.inc / frameRate) % frames.length;
+			this.frame = Math.floor(this.inc / frameRate);
+			if (this.currentAnimation.loop) {
+				this.frame %= frames.length;
+			} else {
+				this.frame = Math.min(this.frame, frames.length - 1);
+			}
 			this.frameId = frames[this.frame];
 			++this.inc;
 		}

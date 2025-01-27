@@ -133,8 +133,12 @@
 			}
 
 			class RadioHead extends Entity {
-				constructor(x, y) {
+				constructor(x, y, options = {}, label = '') {
 					super(x, y);
+
+					const { loop = true } = options;
+
+					this.label = label;
 
 					const anim = new AnimatedSprite(
 						assetManager.sprites.get('radiohead_spritesheet.png'),
@@ -142,11 +146,29 @@
 						32,
 					);
 
-					anim.add('walk', [0, 1, 2, 3], 15);
+					anim.add('walk', [0, 1, 2, 3], 15, loop);
 					anim.play('walk');
 
 					this.graphic = anim;
 					this.graphic.centerOO();
+				}
+
+				render(ctx, camera) {
+					super.render(ctx, camera);
+
+					[
+						`loop: ${this.graphic.currentAnimation?.loop}`,
+						//
+						this.label,
+					].forEach((str, i) => {
+						Draw.text(
+							ctx,
+							{ type: 'fill', color: 'white', align: 'center' },
+							this.x,
+							this.y - 8 - 10 * (i + 1),
+							str,
+						);
+					});
 				}
 			}
 
@@ -154,14 +176,19 @@
 				constructor(engine) {
 					super(engine);
 					const xx = 16;
-					const radioHead1 = new RadioHead(
-						(engine.canvas.width >> 1) - xx,
-						engine.canvas.height >> 1,
-					);
+					const centerX = engine.canvas.width >> 1;
+					const centerY = engine.canvas.height >> 1;
+
+					const radioHead1 = new RadioHead(0, centerY);
 					const radioHead2 = new RadioHead(
-						(engine.canvas.width >> 1) + xx,
-						engine.canvas.height >> 1,
+						0,
+						centerY,
+						{},
+						'.play() repeat',
 					);
+					const radioHead3 = new RadioHead(0, centerY, {
+						loop: false,
+					});
 
 					// this is so hacky, please don't do this!
 					radioHead2.update = (input) => {
@@ -169,7 +196,17 @@
 						radioHead2.graphic.play('walk');
 					};
 
-					[radioHead1, radioHead2].forEach((entity) => {
+					const titles = ['Anim', 'update -> .play()'];
+
+					const radioHeads = [radioHead1, radioHead2, radioHead3];
+					const padding = 50;
+					// TODO(bret): This is handy math! Move it to math.ts
+					const offsetX = padding * ((radioHeads.length - 1) / 2);
+					radioHeads.forEach((entity, i) => {
+						entity.x = centerX - offsetX + padding * i;
+					});
+
+					[...radioHeads].forEach((entity) => {
 						this.addEntity(entity);
 						this.addRenderable(entity);
 					});
