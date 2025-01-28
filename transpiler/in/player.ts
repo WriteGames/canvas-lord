@@ -3,9 +3,9 @@ import * as Components from 'canvas-lord/util/components.js';
 import { IEntity } from 'canvas-lord/util/entity';
 import { Logger } from 'canvas-lord/util/logger.js';
 
-export const leftKeys: Key[] = ['ArrowLeft', 'a', 'A'];
-export const rightKeys: Key[] = ['ArrowRight', 'd', 'D'];
-export const jumpKeys: Key[] = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
+export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
+export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];
+export const jumpKeys: Key[] = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
 
 export const EVENT_TYPE = {
 	UPDATE_CAN_JUMP: 'update-can-jump',

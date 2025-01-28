@@ -1,3 +1,4 @@
+import { Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components.js';
 export const testComponent = Components.createComponent({
     speed: 5,
@@ -6,7 +7,7 @@ export const testComponent = Components.createComponent({
 export const moveLeftSystem = {
     update(entity, input) {
         const component = entity.component?.(testComponent);
-        if (input.keyCheck('ArrowLeft')) {
+        if (input.keyCheck(Keys.ArrowLeft)) {
             entity.x -= component.speed;
         }
     },
@@ -14,14 +15,14 @@ export const moveLeftSystem = {
 export const moveRightSystem = {
     update(entity, input) {
         const component = entity.component?.(testComponent);
-        if (input.keyCheck('ArrowRight')) {
+        if (input.keyCheck(Keys.ArrowRight)) {
             entity.x += component.speed;
         }
     },
 };
 export const deleteSelfSystem = {
     update(entity, input) {
-        if (input.keyCheck(' ')) {
+        if (input.keyCheck(Keys.Space)) {
             entity.scene.removeEntity(entity);
         }
     },

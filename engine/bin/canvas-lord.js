@@ -4,7 +4,7 @@ import { Input } from './util/input.js';
 import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './util/math.js';
 import { Grid } from './util/grid.js';
 export { Draw } from './util/draw.js';
-export { Input } from './util/input.js';
+export { Input, Keys } from './util/input.js';
 // TODO: only export these from math.js
 export { V2, addPos, subPos, scalePos, EPSILON, } from './util/math.js';
 export { Scene } from './util/scene.js';
@@ -612,7 +612,7 @@ export class Game {
         return scenes;
     }
     update() {
-        if (this.input.keyPressed('`')) {
+        if (this.input.keyPressed('Backquote')) {
             this.debug = !this.debug;
         }
         const { currentScenes: scenes } = this;

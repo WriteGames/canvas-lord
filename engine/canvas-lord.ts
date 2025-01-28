@@ -26,7 +26,7 @@ import { type Entity } from './util/entity.js';
 import { Grid } from './util/grid.js';
 
 export { Draw } from './util/draw.js';
-export { Input, type Key } from './util/input.js';
+export { Input, Keys, type Key } from './util/input.js';
 
 // TODO: only export these from math.js
 export {
@@ -1020,7 +1020,7 @@ export class Game {
 	}
 
 	update(): void {
-		if (this.input.keyPressed('`')) {
+		if (this.input.keyPressed('Backquote')) {
 			this.debug = !this.debug;
 		}
 
