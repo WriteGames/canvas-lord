@@ -168,6 +168,36 @@ export class Scene {
         if (this.engine.debug) {
             const canvasW = this.engine.canvas.width;
             const canvasH = this.engine.canvas.height;
+            const drawRect = (x, y, width, height, type, color) => {
+                const rect = { x, y, width, height };
+                Draw.rect(ctx, { type, color, ...rect }, rect.x, rect.y, rect.width, rect.height);
+            };
+            if (this.bounds) {
+                const bounds = [...this.bounds];
+                bounds[0] -= camera.x;
+                bounds[1] -= camera.y;
+                drawRect(...bounds, 'stroke', 'yellow');
+                if (camera.x < bounds[0]) {
+                    const w = -camera.x;
+                    drawRect(0, 0, w, canvasH, 'fill', '#ffff0022');
+                }
+                if (camera.y < bounds[1]) {
+                    const x1 = Math.max(0, bounds[0]);
+                    const x2 = Math.min(canvasW, bounds[0] + bounds[2]);
+                    const h = -camera.y;
+                    drawRect(x1, 0, x2 - x1, h, 'fill', '#ffff0022');
+                }
+                if (camera.x + canvasW >= bounds[2]) {
+                    const x = bounds[2] - camera.x;
+                    drawRect(x, 0, canvasW - x, canvasH, 'fill', '#ffff0022');
+                }
+                if (camera.y + canvasH >= bounds[3]) {
+                    const x1 = Math.max(0, bounds[0]);
+                    const x2 = Math.min(canvasW, bounds[0] + bounds[2]);
+                    const y = bounds[3] - camera.y;
+                    drawRect(x1, y, x2 - x1, canvasH - y, 'fill', '#ffff0022');
+                }
+            }
             const rect = { x: 0, y: 0, width: canvasW, height: canvasH };
             Draw.rect(ctx, { type: 'fill', color: '#20202055', ...rect }, rect.x, rect.y, rect.width, rect.height);
             this.entities.inScene.forEach((e) => {
