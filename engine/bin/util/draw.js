@@ -122,6 +122,8 @@ export const Draw = {
         const y = sourceY ?? 0;
         const _width = width ?? imageSrc.width;
         const _height = height ?? imageSrc.height;
+        if (_width <= 0 || _height <= 0)
+            return;
         tempCtx.canvas.width = _width;
         tempCtx.canvas.height = _height;
         tempCtx.save();
