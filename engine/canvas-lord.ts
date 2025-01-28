@@ -739,8 +739,12 @@ export class Game {
 			defineUnwritableProperty(canvas, '_actualWidth', width);
 			defineUnwritableProperty(canvas, '_actualHeight', height);
 
-			defineUnwritableProperty(canvas, '_offsetX', paddingLeft);
-			defineUnwritableProperty(canvas, '_offsetY', paddingTop);
+			// TODO(bret): Fix this for different boxSizings
+			const offsetX = borderLeft + paddingLeft;
+			const offsetY = borderTop + paddingTop;
+
+			defineUnwritableProperty(canvas, '_offsetX', offsetX);
+			defineUnwritableProperty(canvas, '_offsetY', offsetY);
 
 			defineUnwritableProperty(
 				canvas,
@@ -936,18 +940,18 @@ export class Game {
 			this.input.onKeyUp(e as KeyboardEvent);
 
 		this.addEventListener(this.canvas, 'mousedown', onMouseDown);
-		this.addEventListener(this.canvas, 'mouseup', onMouseUp);
+		this.addEventListener(window, 'mouseup', onMouseUp);
 
 		// TODO(bret): Find out if we need useCapture here & above
+		// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
 		[
-			'mousedown',
-			'mouseup',
-			'mouseenter',
-			'mousemove',
-			'mouseexit',
-		].forEach((event) => {
-			// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
-			this.addEventListener(this.canvas, event, onMouseMove);
+			['mousedown', this.canvas] as const,
+			['mouseup', this.canvas] as const,
+			['mouseenter', this.canvas] as const,
+			['mousemove', window] as const,
+			['mouseexit', this.canvas] as const,
+		].forEach(([event, element]) => {
+			this.addEventListener(element, event, onMouseMove);
 		});
 
 		this.addEventListener(this.focusElement, 'keydown', onKeyDown, false);
@@ -1302,8 +1306,11 @@ export class Input {
 
 		const { canvas } = this.engine;
 
-		this.mouse.realX = e.offsetX - canvas._offsetX;
-		this.mouse.realY = e.offsetY - canvas._offsetY;
+		const realX = e.clientX + Math.round(window.scrollX);
+		const realY = e.clientY + Math.round(window.scrollY);
+
+		this.mouse.realX = realX - canvas.offsetLeft - canvas._offsetX;
+		this.mouse.realY = realY - canvas.offsetTop - canvas._offsetY;
 
 		this.mouse.x = Math.floor(this.mouse.realX / canvas._scaleX);
 		this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
