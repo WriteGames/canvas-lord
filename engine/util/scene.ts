@@ -2,7 +2,6 @@
 import type {
 	Engine,
 	Entity,
-	Input,
 	IEntitySystem,
 	Renderable,
 } from '../canvas-lord.js';
@@ -10,6 +9,7 @@ import { Draw } from './draw.js';
 import { Camera } from './camera.js';
 import { Vec2 } from './math.js';
 import { Messages } from './messages.js';
+import type { Input } from './input.js';
 import type { CSSColor, IEntityComponentType } from './types.js';
 
 interface Debug {
