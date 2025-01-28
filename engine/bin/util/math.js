@@ -39,6 +39,14 @@ export class Vec2 extends Array {
     get magnitude() {
         return magnitude2D(this);
     }
+    set(v) {
+        this.x = v.x;
+        this.y = v.y;
+    }
+    setXY(x, y) {
+        this.x = x;
+        this.y = y;
+    }
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {
