@@ -140,6 +140,7 @@ export class Entity implements IEntity, IRenderable {
 	renderCollider(ctx: CanvasRenderingContext2D, camera: Camera): void {
 		if (!this.collider) return;
 
+		const color = this.collidable ? 'red' : 'gray';
 		switch (this.collider.type) {
 			case 'rect':
 				const rect = {
@@ -150,18 +151,18 @@ export class Entity implements IEntity, IRenderable {
 				};
 				Draw.rect(
 					ctx,
-					{ type: 'stroke', color: 'red', ...rect },
+					{ type: 'stroke', color, ...rect },
 					rect.x,
 					rect.y,
-					rect.width,
-					rect.height,
+					rect.width - 1,
+					rect.height - 1,
 				);
 				break;
 			case 'triangle':
 				Draw.polygon(
 					ctx,
 					// @ts-ignore
-					{ type: 'stroke', color: 'red' },
+					{ type: 'stroke', color },
 					this.x - camera.x,
 					this.y - camera.y,
 					[
@@ -170,6 +171,12 @@ export class Entity implements IEntity, IRenderable {
 						[this.collider.x3, this.collider.y3],
 					],
 				);
+				break;
+			case 'grid':
+				// @ts-ignore
+				this.collider.color = color;
+				// @ts-ignore
+				this.collider.renderOutline(ctx, camera, this.x, this.y);
 				break;
 			// default:
 			// 	console.warn('not supported');

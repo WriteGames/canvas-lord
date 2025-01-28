@@ -151,21 +151,27 @@ export class Grid {
 		return this.data[y * this.columns + x] as number;
 	}
 
-	renderOutline(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	renderOutline(
+		ctx: CanvasRenderingContext2D,
+		camera: Camera,
+		offsetX = 0,
+		offsetY = 0,
+	): void {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
 
 		const [cameraX, cameraY] = camera;
 
+		ctx.save();
 		ctx.strokeStyle = this.color;
 		ctx.lineWidth = 1;
 
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				if (this.data[y * stride + x] === 1) {
-					const x1 = x * this.tileW + 0.5 - cameraX;
-					const y1 = y * this.tileH + 0.5 - cameraY;
+					const x1 = x * this.tileW - cameraX + offsetX;
+					const y1 = y * this.tileH - cameraY + offsetY;
 					const x2 = x1 + width - 1;
 					const y2 = y1 + height - 1;
 					if (!this.getTile(x - 1, y)) {
@@ -183,6 +189,7 @@ export class Grid {
 				}
 			}
 		}
+		ctx.restore();
 	}
 
 	renderEachCell(

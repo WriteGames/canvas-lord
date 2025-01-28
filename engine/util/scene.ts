@@ -252,6 +252,10 @@ export class Scene {
 
 			this.entities.inScene.forEach((e) => {
 				e.renderCollider(ctx, this.camera);
+			});
+
+			// show origins
+			this.entities.inScene.forEach((e) => {
 				const r = 3;
 				Draw.circle(
 					ctx,

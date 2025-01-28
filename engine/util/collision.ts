@@ -27,6 +27,7 @@ export type ColliderTag = string | undefined;
 interface BaseShape<T extends Types[number]> {
 	type: T;
 	tag?: ColliderTag;
+	collidable: boolean;
 	x: number;
 	y: number;
 }
@@ -88,7 +89,7 @@ export type Shape =
 	| Triangle
 	| GridShape;
 
-type RawShape<T> = Omit<T, 'type' | 'tag'>;
+type RawShape<T> = Omit<T, 'type' | 'tag' | 'collidable'>;
 
 const isPointInPolygon = (
 	x: number,
@@ -305,7 +306,14 @@ export const collideLineRect = (l: RawShape<Line>, r: RawShape<Rect>) => {
 
 	const right = r.x + r.w;
 	const bottom = r.y + r.h;
-	const edge: Line = { type: 'line', x1: r.x, y1: r.y, x2: r.x, y2: r.y };
+	const edge: Line = {
+		type: 'line',
+		x1: r.x,
+		y1: r.y,
+		x2: r.x,
+		y2: r.y,
+		collidable: true,
+	};
 	const edgeT: Line = {
 		...edge,
 		x2: right,

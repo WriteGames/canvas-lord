@@ -155,6 +155,9 @@ export class Scene {
             Draw.rect(ctx, { type: 'fill', color: '#20202055', ...rect }, rect.x, rect.y, rect.width, rect.height);
             this.entities.inScene.forEach((e) => {
                 e.renderCollider(ctx, this.camera);
+            });
+            // show origins
+            this.entities.inScene.forEach((e) => {
                 const r = 3;
                 Draw.circle(ctx, { type: 'fill', color: 'lime', radius: r }, e.x - r - camera.x, e.y - r - camera.y, r);
             });

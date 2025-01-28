@@ -164,7 +164,14 @@ export const collideLineRect = (l, r) => {
         return true;
     const right = r.x + r.w;
     const bottom = r.y + r.h;
-    const edge = { type: 'line', x1: r.x, y1: r.y, x2: r.x, y2: r.y };
+    const edge = {
+        type: 'line',
+        x1: r.x,
+        y1: r.y,
+        x2: r.x,
+        y2: r.y,
+        collidable: true,
+    };
     const edgeT = {
         ...edge,
         x2: right,
