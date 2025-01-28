@@ -6,6 +6,7 @@ import type {
 	IEntitySystem,
 	Renderable,
 } from '../canvas-lord.js';
+import { Draw } from './draw.js';
 import { Camera } from './camera.js';
 import { Vec2 } from './math.js';
 import { Messages } from './messages.js';
@@ -157,7 +158,10 @@ export class Scene {
 
 		if (!this.shouldUpdate) return;
 
-		// remove old entities
+		if (this.engine.debug) {
+			//
+			return;
+		}
 
 		this.entities.inScene.forEach((entity) => entity.update(input));
 		this.entities.inScene.forEach((entity) =>
@@ -229,6 +233,34 @@ export class Scene {
 		if (ctx !== gameCtx) {
 			const [x, y] = this.screenPos;
 			gameCtx.drawImage(ctx.canvas, x, y);
+		}
+
+		const { camera } = this;
+
+		if (this.engine.debug) {
+			const canvasW = this.engine.canvas.width;
+			const canvasH = this.engine.canvas.height;
+			const rect = { x: 0, y: 0, width: canvasW, height: canvasH };
+			Draw.rect(
+				ctx,
+				{ type: 'fill', color: '#20202055', ...rect },
+				rect.x,
+				rect.y,
+				rect.width,
+				rect.height,
+			);
+
+			this.entities.inScene.forEach((e) => {
+				e.renderCollider(ctx, this.camera);
+				const r = 3;
+				Draw.circle(
+					ctx,
+					{ type: 'fill', color: 'lime', radius: r },
+					e.x - r - camera.x,
+					e.y - r - camera.y,
+					r,
+				);
+			});
 		}
 	}
 }

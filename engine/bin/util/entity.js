@@ -1,5 +1,6 @@
 import * as Components from './components.js';
 import * as Collision from './collision.js';
+import { Draw } from './draw.js';
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
@@ -67,6 +68,32 @@ export class Entity {
         // TODO(bret): .visible should probably be on the Graphic, not the Entity itself
         if (this.visible) {
             this.#graphic?.render(ctx, camera);
+        }
+    }
+    renderCollider(ctx, camera) {
+        if (!this.collider)
+            return;
+        switch (this.collider.type) {
+            case 'rect':
+                const rect = {
+                    x: this.x + this.collider.x - camera.x,
+                    y: this.y + this.collider.y - camera.y,
+                    width: this.collider.w,
+                    height: this.collider.h,
+                };
+                Draw.rect(ctx, { type: 'stroke', color: 'red', ...rect }, rect.x, rect.y, rect.width, rect.height);
+                break;
+            case 'triangle':
+                Draw.polygon(ctx, 
+                // @ts-ignore
+                { type: 'stroke', color: 'red' }, this.x - camera.x, this.y - camera.y, [
+                    [this.collider.x1, this.collider.y1],
+                    [this.collider.x2, this.collider.y2],
+                    [this.collider.x3, this.collider.y3],
+                ]);
+                break;
+            // default:
+            // 	console.warn('not supported');
         }
     }
     _moveCollider(c, x, y) {

@@ -633,6 +633,7 @@ export interface Game {
 	eventListeners: CachedEventListener[];
 	_onGameLoopSettingsUpdate?: EventCallback;
 	assetManager?: AssetManager;
+	debug: boolean;
 }
 
 export type Engine = Game;
@@ -649,6 +650,7 @@ export class Game {
 		updateMode: 'focus',
 		renderMode: 'onUpdate',
 	};
+	debug = false;
 
 	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
@@ -1012,6 +1014,10 @@ export class Game {
 	}
 
 	update(): void {
+		if (this.input.keyPressed('`')) {
+			this.debug = !this.debug;
+		}
+
 		const { currentScenes: scenes } = this;
 		if (scenes) {
 			scenes.forEach((scene) => scene.updateLists());
@@ -1039,6 +1045,7 @@ export class Game {
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, this.width, this.height);
 
+		// TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
 		this.sceneStack.forEach((scenes) => {
 			scenes.forEach((scene) => scene.render(ctx));
 		});
@@ -1757,7 +1764,8 @@ export interface Tileset {
 	rows: number;
 
 	sprite: Sprite;
-	entity: Entity | undefined;
+	// TODO(bret): Update this to use Graphic's Parent
+	parent: Entity | undefined;
 
 	data: Array<Vec2 | null>;
 
@@ -1829,8 +1837,8 @@ export class Tileset {
 
 		const [cameraX, cameraY] = camera;
 
-		const offsetX = this.entity?.x ?? 0;
-		const offsetY = this.entity?.y ?? 0;
+		const offsetX = this.parent?.x ?? 0;
+		const offsetY = this.parent?.y ?? 0;
 
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
