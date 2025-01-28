@@ -50,6 +50,7 @@ export interface IEntity {
 		y: number,
 		tag: ColliderTag | ColliderTag[],
 	) => boolean;
+	collideMouse: (x: number, y: number) => boolean;
 }
 
 export class Entity implements IEntity, IRenderable {
@@ -251,5 +252,24 @@ export class Entity implements IEntity, IRenderable {
 	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
 		if (!this.collider) return false;
 		return this.collideEntity(x, y, tag) !== null;
+	}
+
+	collideMouse(x: number, y: number) {
+		if (!this.collider) return false;
+
+		const { input } = this.scene.engine;
+
+		const mouseX = input.mouse.x + this.scene.camera.x;
+		const mouseY = input.mouse.y + this.scene.camera.y;
+
+		return Collision.collide(
+			{
+				type: 'point',
+				x: mouseX - x,
+				y: mouseY - y,
+				collidable: true,
+			},
+			this.collider,
+		);
 	}
 }
