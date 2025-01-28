@@ -94,7 +94,22 @@ export class Scene {
         if (!this.shouldUpdate)
             return;
         if (this.engine.debug) {
-            //
+            this.debug ??= this.createDebug();
+            const { dragStart, cameraDelta } = this.debug;
+            if (input.mousePressed()) {
+                dragStart.x = input.mouse.x;
+                dragStart.y = input.mouse.y;
+            }
+            if (input.mouseCheck() || input.mouseReleased()) {
+                cameraDelta.x = input.mouse.x - dragStart.x;
+                cameraDelta.y = input.mouse.y - dragStart.y;
+            }
+            if (input.mouseReleased()) {
+                this.debug.camera.x -= cameraDelta.x;
+                this.debug.camera.y -= cameraDelta.y;
+                cameraDelta.x = 0;
+                cameraDelta.y = 0;
+            }
             return;
         }
         this.entities.inScene.forEach((entity) => entity.update(input));
@@ -116,7 +131,13 @@ export class Scene {
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const ctx = this.ctx ?? gameCtx;
         const { canvas } = ctx;
-        let { backgroundColor } = this;
+        let { camera, backgroundColor } = this;
+        if (this.engine.debug) {
+            this.debug ??= this.createDebug();
+            camera = new Camera(camera.x, camera.y);
+            camera.x += this.debug.camera.x - this.debug.cameraDelta.x;
+            camera.y += this.debug.camera.y - this.debug.cameraDelta.y;
+        }
         if (this.ctx) {
             // set to the engine's background color if this is a standalone canvas
             backgroundColor ??= this.engine.backgroundColor;
@@ -125,7 +146,7 @@ export class Scene {
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        this.renderables.inScene.forEach((entity) => entity.render(ctx, this.camera));
+        this.renderables.inScene.forEach((entity) => entity.render(ctx, camera));
         // const width = 2;
         // const posOffset = 0.5;
         // const widthOffset = width;
@@ -139,7 +160,7 @@ export class Scene {
                     return;
                 const entities = this.renderables.inScene.filter((e) => Boolean(e.component?.(component)));
                 entities.forEach((entity) => {
-                    render(entity, ctx, this.camera);
+                    render(entity, ctx, camera);
                 });
             });
         });
@@ -147,14 +168,13 @@ export class Scene {
             const [x, y] = this.screenPos;
             gameCtx.drawImage(ctx.canvas, x, y);
         }
-        const { camera } = this;
         if (this.engine.debug) {
             const canvasW = this.engine.canvas.width;
             const canvasH = this.engine.canvas.height;
             const rect = { x: 0, y: 0, width: canvasW, height: canvasH };
             Draw.rect(ctx, { type: 'fill', color: '#20202055', ...rect }, rect.x, rect.y, rect.width, rect.height);
             this.entities.inScene.forEach((e) => {
-                e.renderCollider(ctx, this.camera);
+                e.renderCollider(ctx, camera);
             });
             // show origins
             this.entities.inScene.forEach((e) => {
@@ -162,6 +182,13 @@ export class Scene {
                 Draw.circle(ctx, { type: 'fill', color: 'lime', radius: r }, e.x - r - camera.x, e.y - r - camera.y, r);
             });
         }
+    }
+    createDebug() {
+        return {
+            dragStart: new Vec2(),
+            camera: new Vec2(),
+            cameraDelta: new Vec2(),
+        };
     }
 }
 //# sourceMappingURL=scene.js.map
