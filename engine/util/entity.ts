@@ -204,7 +204,7 @@ export class Entity implements IEntity, IRenderable {
 		tag: ColliderTag | ColliderTag[],
 		earlyOut: boolean,
 	): Entity[] {
-		if (!this.collidable || !this.collider) return [];
+		if (!this.collider) return [];
 
 		const tags = tag ? [tag].flat() : [];
 		const n = this.scene.entities.inScene.length;
@@ -242,7 +242,7 @@ export class Entity implements IEntity, IRenderable {
 	}
 
 	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collidable || !this.collider) return false;
+		if (!this.collider) return false;
 		return this.collideEntity(x, y, tag) !== null;
 	}
 }

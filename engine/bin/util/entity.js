@@ -118,7 +118,7 @@ export class Entity {
         }
     }
     _collide(x, y, tag, earlyOut) {
-        if (!this.collidable || !this.collider)
+        if (!this.collider)
             return [];
         const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
@@ -152,7 +152,7 @@ export class Entity {
         return this._collide(x, y, tag, false);
     }
     collide(x, y, tag) {
-        if (!this.collidable || !this.collider)
+        if (!this.collider)
             return false;
         return this.collideEntity(x, y, tag) !== null;
     }
