@@ -1075,7 +1075,7 @@ interface Mouse {
 	realPos: Vec2;
 	realX: Vec2[0];
 	realY: Vec2[1];
-	_clicked: InputStatus;
+	_clicked: [InputStatus, InputStatus, InputStatus, InputStatus, InputStatus];
 }
 
 // TODO(bret): Will need to allow for evt.key & evt.which
@@ -1260,7 +1260,7 @@ export class Input {
 		const mouse: MousePrototype = {
 			pos: new Vec2(-1, -1),
 			realPos: new Vec2(-1, -1),
-			_clicked: 0,
+			_clicked: [0, 0, 0, 0, 0],
 		};
 
 		const defineXYProperties = (
@@ -1294,7 +1294,10 @@ export class Input {
 	}
 
 	update(): void {
-		this.mouse._clicked &= ~1;
+		for (let i = 0; i < 5; ++i) {
+			this.mouse._clicked[i] &= ~1;
+		}
+
 		_keys.forEach((key) => {
 			this.keys[key] &= ~1;
 		});
@@ -1320,8 +1323,8 @@ export class Input {
 		if (document.activeElement !== this.engine.focusElement) return;
 
 		e.preventDefault();
-		if (!this.mouseCheck()) {
-			this.mouse._clicked = 3;
+		if (!this.mouseCheck(e.button)) {
+			this.mouse._clicked[e.button] = 3;
 		}
 
 		return false;
@@ -1331,8 +1334,8 @@ export class Input {
 		if (document.activeElement !== this.engine.focusElement) return;
 
 		e.preventDefault();
-		if (this.mouseCheck()) {
-			this.mouse._clicked = 1;
+		if (this.mouseCheck(e.button)) {
+			this.mouse._clicked[e.button] = 1;
 		}
 
 		return false;
@@ -1375,16 +1378,16 @@ export class Input {
 		return value === 1;
 	}
 
-	mousePressed(): boolean {
-		return this._checkPressed(this.mouse._clicked);
+	mousePressed(button: number = 0): boolean {
+		return this._checkPressed(this.mouse._clicked[button]);
 	}
 
-	mouseCheck(): boolean {
-		return this._checkHeld(this.mouse._clicked);
+	mouseCheck(button: number = 0): boolean {
+		return this._checkHeld(this.mouse._clicked[button]);
 	}
 
-	mouseReleased(): boolean {
-		return this._checkReleased(this.mouse._clicked);
+	mouseReleased(button: number = 0): boolean {
+		return this._checkReleased(this.mouse._clicked[button]);
 	}
 
 	keyPressed(key: Key | Key[]): boolean {

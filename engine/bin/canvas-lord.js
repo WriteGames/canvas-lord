@@ -819,7 +819,7 @@ export class Input {
         const mouse = {
             pos: new Vec2(-1, -1),
             realPos: new Vec2(-1, -1),
-            _clicked: 0,
+            _clicked: [0, 0, 0, 0, 0],
         };
         const defineXYProperties = (mouse, prefix = null) => {
             const posName = prefix !== null ? `${prefix}Pos` : 'pos';
@@ -844,7 +844,9 @@ export class Input {
         this.clear();
     }
     update() {
-        this.mouse._clicked &= ~1;
+        for (let i = 0; i < 5; ++i) {
+            this.mouse._clicked[i] &= ~1;
+        }
         _keys.forEach((key) => {
             this.keys[key] &= ~1;
         });
@@ -865,8 +867,8 @@ export class Input {
         if (document.activeElement !== this.engine.focusElement)
             return;
         e.preventDefault();
-        if (!this.mouseCheck()) {
-            this.mouse._clicked = 3;
+        if (!this.mouseCheck(e.button)) {
+            this.mouse._clicked[e.button] = 3;
         }
         return false;
     }
@@ -874,8 +876,8 @@ export class Input {
         if (document.activeElement !== this.engine.focusElement)
             return;
         e.preventDefault();
-        if (this.mouseCheck()) {
-            this.mouse._clicked = 1;
+        if (this.mouseCheck(e.button)) {
+            this.mouse._clicked[e.button] = 1;
         }
         return false;
     }
@@ -909,14 +911,14 @@ export class Input {
     _checkReleased(value) {
         return value === 1;
     }
-    mousePressed() {
-        return this._checkPressed(this.mouse._clicked);
+    mousePressed(button = 0) {
+        return this._checkPressed(this.mouse._clicked[button]);
     }
-    mouseCheck() {
-        return this._checkHeld(this.mouse._clicked);
+    mouseCheck(button = 0) {
+        return this._checkHeld(this.mouse._clicked[button]);
     }
-    mouseReleased() {
-        return this._checkReleased(this.mouse._clicked);
+    mouseReleased(button = 0) {
+        return this._checkReleased(this.mouse._clicked[button]);
     }
     keyPressed(key) {
         if (Array.isArray(key))

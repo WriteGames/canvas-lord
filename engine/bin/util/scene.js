@@ -96,19 +96,16 @@ export class Scene {
         if (this.engine.debug) {
             this.debug ??= this.createDebug();
             const { dragStart, cameraDelta } = this.debug;
-            if (input.mousePressed()) {
-                dragStart.x = input.mouse.x;
-                dragStart.y = input.mouse.y;
+            if (input.mousePressed(1)) {
+                dragStart.set(input.mouse.pos);
             }
-            if (input.mouseCheck() || input.mouseReleased()) {
-                cameraDelta.x = input.mouse.x - dragStart.x;
-                cameraDelta.y = input.mouse.y - dragStart.y;
+            if (input.mouseCheck(1) || input.mouseReleased(1)) {
+                cameraDelta.set(dragStart.sub(input.mouse.pos));
             }
-            if (input.mouseReleased()) {
-                this.debug.camera.x -= cameraDelta.x;
-                this.debug.camera.y -= cameraDelta.y;
-                cameraDelta.x = 0;
-                cameraDelta.y = 0;
+            if (input.mouseReleased(1)) {
+                this.debug.camera.x += cameraDelta.x;
+                this.debug.camera.y += cameraDelta.y;
+                cameraDelta.setXY(0, 0);
             }
             return;
         }
@@ -135,8 +132,8 @@ export class Scene {
         if (this.engine.debug) {
             this.debug ??= this.createDebug();
             camera = new Camera(camera.x, camera.y);
-            camera.x += this.debug.camera.x - this.debug.cameraDelta.x;
-            camera.y += this.debug.camera.y - this.debug.cameraDelta.y;
+            camera.x += this.debug.camera.x + this.debug.cameraDelta.x;
+            camera.y += this.debug.camera.y + this.debug.cameraDelta.y;
         }
         if (this.ctx) {
             // set to the engine's background color if this is a standalone canvas
