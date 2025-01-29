@@ -3,6 +3,7 @@
 import { Input } from './util/input.js';
 import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './util/math.js';
 import { Grid } from './util/grid.js';
+import { Debug } from './util/debug.js';
 export { Draw } from './util/draw.js';
 export { Input, Keys } from './util/input.js';
 // TODO: only export these from math.js
@@ -348,7 +349,6 @@ export class Game {
         updateMode: 'focus',
         renderMode: 'onUpdate',
     };
-    debug = false;
     constructor(id, settings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
@@ -390,6 +390,7 @@ export class Game {
         if (settings?.gameLoopSettings)
             this.gameLoopSettings = settings.gameLoopSettings;
         this.assetManager = settings?.assetManager;
+        this.debug = new Debug(this);
         this.sceneStack = [];
         // TODO(bret): Might also want to listen for styling changes to the canvas element
         const computeCanvasSize = (canvas) => {
@@ -611,20 +612,28 @@ export class Game {
         });
         return scenes;
     }
+    updateScenes(scenes) {
+        if (!scenes)
+            return;
+        scenes.forEach((scene) => scene.updateLists());
+        scenes.forEach((scene) => scene.preUpdate(this.input));
+        scenes.forEach((scene) => scene.update(this.input));
+        scenes.forEach((scene) => scene.postUpdate(this.input));
+    }
     update() {
+        const { debug } = this;
         if (this.input.keyPressed('Backquote')) {
-            this.debug = !this.debug;
-        }
-        const { currentScenes: scenes } = this;
-        if (scenes) {
-            scenes.forEach((scene) => scene.updateLists());
-            scenes.forEach((scene) => scene.preUpdate(this.input));
-            scenes.forEach((scene) => scene.update(this.input));
-            scenes.forEach((scene) => scene.postUpdate(this.input));
+            this.debug.toggle();
         }
         // reload assets
         if (this.input.keyPressed('F2')) {
             this.assetManager?.reloadAssets();
+        }
+        if (debug.enabled) {
+            debug.update(this.input);
+        }
+        else {
+            this.updateScenes(this.currentScenes);
         }
         this.sendEvent('update');
     }
@@ -632,10 +641,9 @@ export class Game {
         // TODO: drawOverlay should take in ctx or game
         this.listeners[event].forEach((c) => c());
     }
-    render() {
-        const { ctx } = this;
-        ctx.fillStyle = this.backgroundColor;
-        ctx.fillRect(0, 0, this.width, this.height);
+    renderScenes(ctx, scenes) {
+        if (!scenes)
+            return;
         // TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
         this.sceneStack.forEach((scenes) => {
             scenes.forEach((scene) => scene.render(ctx));
@@ -648,6 +656,18 @@ export class Game {
             ctx.moveTo(this.width / 2, 0.5);
             ctx.lineTo(this.width / 2, 360.5);
             ctx.stroke();
+        }
+    }
+    render() {
+        const { ctx } = this;
+        ctx.fillStyle = this.backgroundColor;
+        ctx.fillRect(0, 0, this.width, this.height);
+        const { debug } = this;
+        if (!this.debug.enabled) {
+            this.renderScenes(ctx, []);
+        }
+        else {
+            debug.render(ctx);
         }
     }
 }

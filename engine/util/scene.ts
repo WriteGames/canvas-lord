@@ -12,12 +12,6 @@ import { Messages } from './messages.js';
 import type { Input } from './input.js';
 import type { CSSColor, IEntityComponentType } from './types.js';
 
-interface Debug {
-	dragStart: Vec2;
-	camera: Vec2;
-	cameraDelta: Vec2;
-}
-
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
 // TODO: should there be one in Game as well?
@@ -46,7 +40,6 @@ export interface Scene {
 
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
-	debug?: Debug;
 }
 
 export class Scene implements Scene {
@@ -165,25 +158,6 @@ export class Scene implements Scene {
 
 		if (!this.shouldUpdate) return;
 
-		if (this.engine.debug) {
-			this.debug ??= this.createDebug();
-
-			const { dragStart, cameraDelta } = this.debug;
-
-			if (input.mousePressed(1)) {
-				dragStart.set(input.mouse.pos);
-			}
-			if (input.mouseCheck(1) || input.mouseReleased(1)) {
-				cameraDelta.set(dragStart.sub(input.mouse.pos));
-			}
-			if (input.mouseReleased(1)) {
-				this.debug.camera.x += cameraDelta.x;
-				this.debug.camera.y += cameraDelta.y;
-				cameraDelta.setXY(0, 0);
-			}
-			return;
-		}
-
 		this.entities.inScene.forEach((entity) => entity.update(input));
 		this.entities.inScene.forEach((entity) =>
 			entity.graphic?.update?.(input),
@@ -214,13 +188,8 @@ export class Scene implements Scene {
 		const ctx = this.ctx ?? gameCtx;
 		const { canvas } = ctx;
 
-		let { camera, backgroundColor } = this;
-		if (this.engine.debug) {
-			this.debug ??= this.createDebug();
-			camera = new Camera(camera.x, camera.y);
-			camera.x += this.debug.camera.x + this.debug.cameraDelta.x;
-			camera.y += this.debug.camera.y + this.debug.cameraDelta.y;
-		}
+		const { camera } = this;
+		let { backgroundColor } = this;
 
 		if (this.ctx) {
 			// set to the engine's background color if this is a standalone canvas
@@ -261,91 +230,5 @@ export class Scene implements Scene {
 			const [x, y] = this.screenPos;
 			gameCtx.drawImage(ctx.canvas, x, y);
 		}
-
-		if (this.engine.debug) {
-			const canvasW = this.engine.canvas.width;
-			const canvasH = this.engine.canvas.height;
-
-			const drawRect = (
-				x: number,
-				y: number,
-				width: number,
-				height: number,
-				type: 'fill' | 'stroke',
-				color: string,
-			) => {
-				const rect = { x, y, width, height };
-				Draw.rect(
-					ctx,
-					{ type, color, ...rect },
-					rect.x,
-					rect.y,
-					rect.width,
-					rect.height,
-				);
-			};
-
-			if (this.bounds) {
-				const bounds = [...this.bounds] as typeof this.bounds;
-				bounds[0] -= camera.x;
-				bounds[1] -= camera.y;
-				drawRect(...bounds, 'stroke', 'yellow');
-
-				if (camera.x < bounds[0]) {
-					const w = -camera.x;
-					drawRect(0, 0, w, canvasH, 'fill', '#ffff0022');
-				}
-				if (camera.y < bounds[1]) {
-					const x1 = Math.max(0, bounds[0]);
-					const x2 = Math.min(canvasW, bounds[0] + bounds[2]);
-					const h = -camera.y;
-					drawRect(x1, 0, x2 - x1, h, 'fill', '#ffff0022');
-				}
-				if (camera.x + canvasW >= bounds[2]) {
-					const x = bounds[2] - camera.x;
-					drawRect(x, 0, canvasW - x, canvasH, 'fill', '#ffff0022');
-				}
-				if (camera.y + canvasH >= bounds[3]) {
-					const x1 = Math.max(0, bounds[0]);
-					const x2 = Math.min(canvasW, bounds[0] + bounds[2]);
-					const y = bounds[3] - camera.y;
-					drawRect(x1, y, x2 - x1, canvasH - y, 'fill', '#ffff0022');
-				}
-			}
-
-			const rect = { x: 0, y: 0, width: canvasW, height: canvasH };
-			Draw.rect(
-				ctx,
-				{ type: 'fill', color: '#20202055', ...rect },
-				rect.x,
-				rect.y,
-				rect.width,
-				rect.height,
-			);
-
-			this.entities.inScene.forEach((e) => {
-				e.renderCollider(ctx, camera);
-			});
-
-			// show origins
-			this.entities.inScene.forEach((e) => {
-				const r = 3;
-				Draw.circle(
-					ctx,
-					{ type: 'fill', color: 'lime', radius: r },
-					e.x - r - camera.x,
-					e.y - r - camera.y,
-					r,
-				);
-			});
-		}
-	}
-
-	createDebug(): Debug {
-		return {
-			dragStart: new Vec2(),
-			camera: new Vec2(),
-			cameraDelta: new Vec2(),
-		};
 	}
 }

@@ -20,10 +20,12 @@ import {
 
 import { CSSColor } from './util/types.js';
 
-import { type Scene } from './util/scene.js';
-import { type Camera } from './util/camera.js';
-import { type Entity } from './util/entity.js';
+import type { Scene } from './util/scene.js';
+import type { Camera } from './util/camera.js';
+import type { Entity } from './util/entity.js';
 import { Grid } from './util/grid.js';
+import { Draw } from './util/draw.js';
+import { Debug } from './util/debug.js';
 
 export { Draw } from './util/draw.js';
 export { Input, Keys, type Key } from './util/input.js';
@@ -635,7 +637,7 @@ export interface Game {
 	eventListeners: CachedEventListener[];
 	_onGameLoopSettingsUpdate?: EventCallback;
 	assetManager?: AssetManager;
-	debug: boolean;
+	debug: Debug;
 }
 
 export type Engine = Game;
@@ -652,7 +654,6 @@ export class Game {
 		updateMode: 'focus',
 		renderMode: 'onUpdate',
 	};
-	debug = false;
 
 	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
@@ -713,6 +714,8 @@ export class Game {
 		if (settings?.gameLoopSettings)
 			this.gameLoopSettings = settings.gameLoopSettings;
 		this.assetManager = settings?.assetManager;
+
+		this.debug = new Debug(this);
 
 		this.sceneStack = [];
 
@@ -1019,22 +1022,30 @@ export class Game {
 		return scenes;
 	}
 
-	update(): void {
-		if (this.input.keyPressed('Backquote')) {
-			this.debug = !this.debug;
-		}
+	updateScenes(scenes?: Scene[]): void {
+		if (!scenes) return;
+		scenes.forEach((scene) => scene.updateLists());
+		scenes.forEach((scene) => scene.preUpdate(this.input));
+		scenes.forEach((scene) => scene.update(this.input));
+		scenes.forEach((scene) => scene.postUpdate(this.input));
+	}
 
-		const { currentScenes: scenes } = this;
-		if (scenes) {
-			scenes.forEach((scene) => scene.updateLists());
-			scenes.forEach((scene) => scene.preUpdate(this.input));
-			scenes.forEach((scene) => scene.update(this.input));
-			scenes.forEach((scene) => scene.postUpdate(this.input));
+	update(): void {
+		const { debug } = this;
+
+		if (this.input.keyPressed('Backquote')) {
+			this.debug.toggle();
 		}
 
 		// reload assets
 		if (this.input.keyPressed('F2')) {
 			this.assetManager?.reloadAssets();
+		}
+
+		if (debug.enabled) {
+			debug.update(this.input);
+		} else {
+			this.updateScenes(this.currentScenes);
 		}
 
 		this.sendEvent('update');
@@ -1045,11 +1056,8 @@ export class Game {
 		this.listeners[event].forEach((c) => c());
 	}
 
-	render(): void {
-		const { ctx } = this;
-
-		ctx.fillStyle = this.backgroundColor;
-		ctx.fillRect(0, 0, this.width, this.height);
+	renderScenes(ctx: CanvasRenderingContext2D, scenes?: Scene[]): void {
+		if (!scenes) return;
 
 		// TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
 		this.sceneStack.forEach((scenes) => {
@@ -1064,6 +1072,20 @@ export class Game {
 			ctx.moveTo(this.width / 2, 0.5);
 			ctx.lineTo(this.width / 2, 360.5);
 			ctx.stroke();
+		}
+	}
+
+	render(): void {
+		const { ctx } = this;
+
+		ctx.fillStyle = this.backgroundColor;
+		ctx.fillRect(0, 0, this.width, this.height);
+
+		const { debug } = this;
+		if (!this.debug.enabled) {
+			this.renderScenes(ctx, []);
+		} else {
+			debug.render(ctx);
 		}
 	}
 }
