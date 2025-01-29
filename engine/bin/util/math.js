@@ -75,11 +75,23 @@ export class Vec2 extends Array {
     static add(a, b) {
         return addPos(a, b);
     }
+    plus(v) {
+        return this.add(v);
+    }
+    static plus(a, b) {
+        return Vec2.add(a, b);
+    }
     sub(v) {
         return Vec2.sub(this, v);
     }
     static sub(a, b) {
         return subPos(a, b);
+    }
+    minus(v) {
+        return this.sub(v);
+    }
+    static minus(a, b) {
+        return Vec2.sub(a, b);
     }
     scale(s) {
         return Vec2.scale(this, s);

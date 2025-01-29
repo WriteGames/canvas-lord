@@ -107,12 +107,28 @@ export class Vec2 extends Array<number> {
 		return addPos(a, b);
 	}
 
+	plus(v: Vec2): Vec2 {
+		return this.add(v);
+	}
+
+	static plus(a: Vec2, b: Vec2): Vec2 {
+		return Vec2.add(a, b);
+	}
+
 	sub(v: Vec2): Vec2 {
 		return Vec2.sub(this, v);
 	}
 
 	static sub(a: Vec2, b: Vec2): Vec2 {
 		return subPos(a, b);
+	}
+
+	minus(v: Vec2): Vec2 {
+		return this.sub(v);
+	}
+
+	static minus(a: Vec2, b: Vec2): Vec2 {
+		return Vec2.sub(a, b);
 	}
 
 	scale(s: number): Vec2 {
