@@ -1397,7 +1397,7 @@ export class GridOutline {
 				ctx.moveTo(_x, _y);
 				polygon.points
 					.slice(1)
-					.map((p) => subPos(p, camera as Vector))
+					.map((p) => subPos(p, camera))
 					.forEach(([x, y]) => {
 						ctx.lineTo(x + 0.5, y + 0.5);
 					});
@@ -1411,7 +1411,7 @@ export class GridOutline {
 			ctx.fillStyle = this.pointsColor;
 			this.polygons.forEach((polygon) => {
 				polygon.points
-					.map((p) => subPos(p, camera as Vector))
+					.map((p) => subPos(p, camera))
 					.forEach(([x, y]) => {
 						ctx.fillRect(x - 1, y - 1, 3, 3);
 					});
