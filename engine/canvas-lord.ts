@@ -1,6 +1,4 @@
 /* Canvas Lord v0.4.4 */
-/* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-
 import { Engine } from './core/engine.js';
 import {
 	V4,
@@ -704,5 +702,3 @@ export class GridOutline {
 		}
 	}
 }
-
-/* eslint-enable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
