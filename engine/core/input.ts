@@ -1,5 +1,5 @@
 import type { Engine } from './engine.js';
-import { Vec2 } from '../util/math.js';
+import { Vec2 } from '../math/index.js';
 
 type InputStatus = 0 | 1 | 2 | 3;
 

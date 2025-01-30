@@ -36,7 +36,7 @@
 				Scene,
 				Entity,
 			} from '../bin/canvas-lord.js';
-			import { addPos, Vec2 } from '../bin/util/math.js';
+			import { addPos, Vec2 } from '../bin/math/index.js';
 
 			const drawRect = (ctx, fill, ...args) =>
 				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);

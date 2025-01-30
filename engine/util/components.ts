@@ -1,6 +1,6 @@
 /* Canvas Lord v0.4.4 */
 import { IEntityComponentType } from './types.js';
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 
 // NOTE: This is necessary since Components.createComponent() returns a Readonly<IEntityComponent> - we can use this to remove Readable<>
 export type ComponentProps<T extends IEntityComponentType> =

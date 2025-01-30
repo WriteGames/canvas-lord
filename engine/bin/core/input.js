@@ -1,4 +1,4 @@
-import { Vec2 } from '../util/math.js';
+import { Vec2 } from '../math/index.js';
 // TODO(bret): Could be nice to do a custom binding, so:
 // AltLeft/AltRight also activate Alt
 // Digit1/Numpad1 also activate some "Generic1"

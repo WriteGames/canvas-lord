@@ -1,4 +1,4 @@
 /* Canvas Lord v0.4.4 */
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 export const Camera = Vec2;
 //# sourceMappingURL=camera.js.map

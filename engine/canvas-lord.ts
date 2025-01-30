@@ -12,7 +12,7 @@ import {
 	posEqual,
 	Vec2,
 	EPSILON,
-} from './util/math.js';
+} from './math/index.js';
 
 import { CSSColor } from './util/types.js';
 
@@ -27,7 +27,7 @@ export { Input, Keys, type Key } from './core/input.js';
 export { Entity } from './core/entity.js';
 export { Scene } from './core/scene.js';
 
-// TODO: only export these from math.js
+// TODO: only export these from math/index.js
 export {
 	V2,
 	type Vector,
@@ -35,7 +35,8 @@ export {
 	subPos,
 	scalePos,
 	EPSILON,
-} from './util/math.js';
+} from './math/index.js';
+
 export { Draw } from './util/draw.js';
 export { Camera } from './util/camera.js';
 export * as Collision from './util/collision.js';

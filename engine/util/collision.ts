@@ -8,7 +8,7 @@ import {
 	crossProduct2D,
 	dotProduct2D,
 	Line2D,
-} from './math.js';
+} from '../math/index.js';
 
 const types = [
 	'point',

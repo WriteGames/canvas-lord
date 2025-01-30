@@ -1,7 +1,7 @@
 import type { Engine } from '../core/engine.js';
 import type { Input } from '../core/input.js';
 import type { Scene } from '../core/scene.js';
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 import { Camera } from './camera.js';
 import { Draw } from './draw.js';
 

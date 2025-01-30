@@ -4,7 +4,7 @@ import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import type { Camera } from './camera.js';
 import { moveCanvas, Draw } from './draw.js';
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 import { Random } from './random.js';
 
 const tempCanvas = document.createElement('canvas');

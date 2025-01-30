@@ -174,4 +174,4 @@ export const posToIndex = ([x, y], stride) => y * stride + x;
 export const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
 export const dotProduct2D = (a, b) => a[0] * b[0] + a[1] * b[1];
 export const magnitude2D = (v) => Math.sqrt(v.x ** 2 + v.y ** 2);
-//# sourceMappingURL=math.js.map
+//# sourceMappingURL=index.js.map

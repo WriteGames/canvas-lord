@@ -1,4 +1,4 @@
-import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './util/math.js';
+import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './math/index.js';
 import { Grid } from './util/grid.js';
 // exports
 export * from './core/asset-manager.js';
@@ -6,8 +6,8 @@ export * from './core/engine.js';
 export { Input, Keys } from './core/input.js';
 export { Entity } from './core/entity.js';
 export { Scene } from './core/scene.js';
-// TODO: only export these from math.js
-export { V2, addPos, subPos, scalePos, EPSILON, } from './util/math.js';
+// TODO: only export these from math/index.js
+export { V2, addPos, subPos, scalePos, EPSILON, } from './math/index.js';
 export { Draw } from './util/draw.js';
 export { Camera } from './util/camera.js';
 export * as Collision from './util/collision.js';

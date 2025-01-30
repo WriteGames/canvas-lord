@@ -2,8 +2,8 @@
 import type { Engine } from './engine.js';
 import type { Entity } from './entity.js';
 import type { Input } from './input.js';
+import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
-import { Vec2 } from '../util/math.js';
 import { Messages } from '../util/messages.js';
 import type {
 	IEntitySystem,

@@ -1,5 +1,5 @@
 /* Canvas Lord v0.4.4 */
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 
 // TODO(bret): Expand on this!
 export interface Camera extends Vec2 {}

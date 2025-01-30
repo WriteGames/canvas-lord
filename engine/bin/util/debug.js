@@ -1,4 +1,4 @@
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 import { Camera } from './camera.js';
 import { Draw } from './draw.js';
 export class Debug {

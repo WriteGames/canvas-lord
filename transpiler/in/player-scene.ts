@@ -16,7 +16,7 @@ import {
 	Tileset,
 	V2,
 } from 'canvas-lord';
-import { Vec2 } from 'canvas-lord/util/math';
+import { Vec2 } from 'canvas-lord/math/index';
 
 export interface PlayerClass extends Entity {
 	// width: number;

@@ -1,4 +1,4 @@
-import { indexToPos } from './math.js';
+import { indexToPos } from '../math/index.js';
 import { Draw, drawable } from './draw.js';
 // TODO: find a better place for this to live globally
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'

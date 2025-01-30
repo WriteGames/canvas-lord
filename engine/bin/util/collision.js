@@ -1,5 +1,5 @@
 /* Canvas Lord v0.4.4 */
-import { Vec2, EPSILON, addPos, scalePos, subPos, crossProduct2D, dotProduct2D, } from './math.js';
+import { Vec2, EPSILON, addPos, scalePos, subPos, crossProduct2D, dotProduct2D, } from '../math/index.js';
 const types = [
     'point',
     'line',
