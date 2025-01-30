@@ -19,6 +19,10 @@ const style = {
     type: 'fill',
     color: 'white',
 };
+export const staticImage = createComponent({
+    imageSrc: null,
+    ...drawable,
+});
 export const image = createComponent({
     imageSrc: null,
     frame: 0,

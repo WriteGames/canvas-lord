@@ -56,6 +56,11 @@ const style = {
 	color: 'white',
 };
 
+export const staticImage = createComponent({
+	imageSrc: null as HTMLCanvasElement | HTMLImageElement | null,
+	...drawable,
+});
+
 export const image = createComponent({
 	imageSrc: null as HTMLCanvasElement | HTMLImageElement | null,
 	frame: 0,

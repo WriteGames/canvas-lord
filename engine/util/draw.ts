@@ -198,7 +198,7 @@ export const Draw = {
 	image: moveCanvas(
 		(
 			ctx,
-			image: ComponentProps<typeof Components.image>,
+			image: ComponentProps<typeof Components.staticImage>,
 			drawX: number = 0,
 			drawY: number = 0,
 			sourceX?: number,
