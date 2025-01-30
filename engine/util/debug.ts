@@ -1,4 +1,5 @@
 import type { Engine } from '../core/engine.js';
+import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import type { Scene } from '../core/scene.js';
 import { Vec2 } from '../math/index.js';
@@ -12,6 +13,8 @@ interface DebugSceneData {
 	dragStart: Vec2;
 	camera: Vec2;
 	cameraDelta: Vec2;
+
+	selectedEntities: Entity[];
 }
 
 export interface Debug {
@@ -67,6 +70,7 @@ export class Debug implements Debug {
 					camera: new Vec2(),
 					cameraDelta: new Vec2(),
 					dragStart: new Vec2(),
+					selectedEntities: [],
 				};
 				this.sceneData.set(scene, sceneData);
 				scene.camera = scene.camera.clone();
@@ -77,23 +81,98 @@ export class Debug implements Debug {
 
 			// TODO(bret): Multi-scene support for this!
 			// aka if (mouseInScene) { ... }
-			if (input.mousePressed(1)) {
-				dragStart.set(input.mouse.pos);
-			}
-			if (input.mouseCheck(1) || input.mouseReleased(1)) {
-				cameraDelta.set(dragStart.sub(input.mouse.pos));
-			}
-			if (input.mouseReleased(1)) {
-				sceneData.camera.x += cameraDelta.x;
-				sceneData.camera.y += cameraDelta.y;
-				cameraDelta.setXY(0, 0);
+			if (true) {
+				if (input.mousePressed(0)) {
+					const entities = scene.entities.inScene.filter((e) => {
+						return e.collideMouse(e.x, e.y);
+					});
+					sceneData.selectedEntities = entities;
+				}
+				if (input.mousePressed(2)) {
+					sceneData.selectedEntities = [];
+				}
+
+				if (input.mousePressed(1)) {
+					dragStart.set(input.mouse.pos);
+				}
+				if (input.mouseCheck(1) || input.mouseReleased(1)) {
+					cameraDelta.set(dragStart.sub(input.mouse.pos));
+				}
+				if (input.mouseReleased(1)) {
+					sceneData.camera.x += cameraDelta.x;
+					sceneData.camera.y += cameraDelta.y;
+					cameraDelta.setXY(0, 0);
+				}
 			}
 
 			scene.camera.set(originalCamera.add(camera).add(cameraDelta));
 		});
 	}
 
-	renderDebug(ctx: CanvasRenderingContext2D, scene: Scene): void {
+	renderEntityDebug(
+		ctx: CanvasRenderingContext2D,
+		entity: Entity,
+		y = 0,
+	): void {
+		const padding = 8;
+		const w = 192;
+		const h = 28;
+
+		const drawX = this.engine.canvas.width - w - 8;
+		const drawY = 8 + y;
+
+		const rect = { x: drawX, y: drawY, width: w, height: h };
+		Draw.rect(
+			ctx,
+			{
+				type: 'fill',
+				color: '#101010',
+				// @ts-ignore
+				alpha: 0.5,
+				...rect,
+			},
+			rect.x,
+			rect.y,
+			rect.width,
+			rect.height,
+		);
+		Draw.rect(
+			ctx,
+			{
+				type: 'stroke',
+				color: 'white',
+				// @ts-ignore
+				alpha: 0.5,
+				...rect,
+			},
+			rect.x,
+			rect.y,
+			rect.width,
+			rect.height,
+		);
+
+		const drawText = (
+			x: number,
+			y: number,
+			str: string,
+			align?: 'left' | 'right',
+		) => {
+			Draw.text(
+				ctx,
+				{ type: 'fill', color: 'white', size: 16, align },
+				x,
+				y,
+				str,
+			);
+		};
+
+		drawText(drawX + padding, drawY + padding, entity.constructor.name);
+
+		const posStr = `(${entity.x}, ${entity.y})`;
+		drawText(drawX + w - padding, drawY + padding, posStr, 'right');
+	}
+
+	renderSceneDebug(ctx: CanvasRenderingContext2D, scene: Scene): void {
 		if (!this.enabled) return;
 
 		const debugData = this.sceneData.get(scene);
@@ -181,12 +260,22 @@ export class Debug implements Debug {
 				r,
 			);
 		});
+
+		debugData.selectedEntities.forEach((e, i) => {
+			// render again why not
+			// TODO(bret): Would be best to clear out behind entity and then select it
+
+			e.render(ctx, scene.camera);
+
+			this.renderEntityDebug(ctx, e, 34 * i);
+		});
 	}
 
 	render(ctx: CanvasRenderingContext2D) {
-		this.engine.renderScenes(ctx, this.engine.currentScenes);
+		if (!this.enabled) return;
+
 		this.engine.currentScenes?.forEach((scene) => {
-			this.renderDebug(ctx, scene);
+			this.renderSceneDebug(ctx, scene);
 		});
 	}
 }
