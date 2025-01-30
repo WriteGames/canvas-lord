@@ -1,6 +1,6 @@
-import * as Components from './components.js';
-import * as Collision from './collision.js';
-import { Draw } from './draw.js';
+import * as Components from '../util/components.js';
+import * as Collision from '../util/collision.js';
+import { Draw } from '../util/draw.js';
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();

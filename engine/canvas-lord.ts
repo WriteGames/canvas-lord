@@ -1,7 +1,9 @@
 /* Canvas Lord v0.4.4 */
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
 
-import { Input } from './util/input.js';
+import { Input } from './core/input.js';
+import type { Scene } from './core/scene.js';
+import type { Entity } from './core/entity.js';
 import {
 	V4,
 	type Vector,
@@ -20,15 +22,14 @@ import {
 
 import { CSSColor } from './util/types.js';
 
-import type { Scene } from './util/scene.js';
 import type { Camera } from './util/camera.js';
-import type { Entity } from './util/entity.js';
 import { Grid } from './util/grid.js';
 import { Draw } from './util/draw.js';
 import { Debug } from './util/debug.js';
 
-export { Draw } from './util/draw.js';
-export { Input, Keys, type Key } from './util/input.js';
+export { Input, Keys, type Key } from './core/input.js';
+export { Entity } from './core/entity.js';
+export { Scene } from './core/scene.js';
 
 // TODO: only export these from math.js
 export {
@@ -39,14 +40,13 @@ export {
 	scalePos,
 	EPSILON,
 } from './util/math.js';
-export { Scene } from './util/scene.js';
+export { Draw } from './util/draw.js';
 export { Camera } from './util/camera.js';
 export * as Collision from './util/collision.js';
 export {
 	checkLineSegmentIntersection,
 	getLineSegmentIntersection,
 } from './util/collision.js';
-export { Entity } from './util/entity.js';
 export { Grid } from './util/grid.js';
 
 declare global {

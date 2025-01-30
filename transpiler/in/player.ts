@@ -1,6 +1,6 @@
-import { Input, type Key } from 'canvas-lord/util/input.js';
+import { IEntity } from 'canvas-lord/core/entity';
+import { Input, type Key } from 'canvas-lord/core/input.js';
 import * as Components from 'canvas-lord/util/components.js';
-import { IEntity } from 'canvas-lord/util/entity';
 import { Logger } from 'canvas-lord/util/logger.js';
 
 export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];

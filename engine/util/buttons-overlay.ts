@@ -1,5 +1,5 @@
 /* Canvas Lord v0.4.4 */
-import { Input, Key } from './input.js';
+import { Input, Key } from '../core/input.js';
 
 interface ButtonsOverlayKeys {
 	left: Key[];

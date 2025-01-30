@@ -1,5 +1,5 @@
 import type { Engine } from '../canvas-lord.js';
-import { Vec2 } from './math.js';
+import { Vec2 } from '../util/math.js';
 
 type InputStatus = 0 | 1 | 2 | 3;
 

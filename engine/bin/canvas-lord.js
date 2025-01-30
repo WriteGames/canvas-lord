@@ -1,18 +1,18 @@
 /* Canvas Lord v0.4.4 */
 /* eslint-disable @typescript-eslint/no-unused-vars -- until exports are set up, many of these items are not being used */
-import { Input } from './util/input.js';
+import { Input } from './core/input.js';
 import { addPos, subPos, scalePos, posToIndex, indexToPos, hashPos, posEqual, Vec2, EPSILON, } from './util/math.js';
 import { Grid } from './util/grid.js';
 import { Debug } from './util/debug.js';
-export { Draw } from './util/draw.js';
-export { Input, Keys } from './util/input.js';
+export { Input, Keys } from './core/input.js';
+export { Entity } from './core/entity.js';
+export { Scene } from './core/scene.js';
 // TODO: only export these from math.js
 export { V2, addPos, subPos, scalePos, EPSILON, } from './util/math.js';
-export { Scene } from './util/scene.js';
+export { Draw } from './util/draw.js';
 export { Camera } from './util/camera.js';
 export * as Collision from './util/collision.js';
 export { checkLineSegmentIntersection, getLineSegmentIntersection, } from './util/collision.js';
-export { Entity } from './util/entity.js';
 export { Grid } from './util/grid.js';
 const reduceSum = (acc, v) => acc + v;
 const reduceProduct = (acc, v) => acc * v;

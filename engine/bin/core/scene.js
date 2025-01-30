@@ -1,6 +1,6 @@
-import { Camera } from './camera.js';
-import { Vec2 } from './math.js';
-import { Messages } from './messages.js';
+import { Camera } from '../util/camera.js';
+import { Vec2 } from '../util/math.js';
+import { Messages } from '../util/messages.js';
 export class Scene {
     constructor(engine) {
         this.engine = engine;
