@@ -3,6 +3,7 @@ import { Camera } from './camera.js';
 import { Draw } from './draw.js';
 export class Debug {
     #enabled = false;
+    // TODO(bret): differentiate between "enabled" and "open"
     get enabled() {
         return this.#enabled;
     }
@@ -24,6 +25,11 @@ export class Debug {
         this.sceneData.clear();
     }
     update(input) {
+        if (input.keyPressed('Backquote')) {
+            this.toggle();
+        }
+        if (!this.enabled)
+            return;
         this.engine.currentScenes?.forEach((scene) => {
             let sceneData = this.sceneData.get(scene);
             if (!sceneData) {

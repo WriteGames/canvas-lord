@@ -23,6 +23,7 @@ export interface Debug {
 export class Debug implements Debug {
 	#enabled = false;
 
+	// TODO(bret): differentiate between "enabled" and "open"
 	get enabled() {
 		return this.#enabled;
 	}
@@ -51,6 +52,12 @@ export class Debug implements Debug {
 	}
 
 	update(input: Input) {
+		if (input.keyPressed('Backquote')) {
+			this.toggle();
+		}
+
+		if (!this.enabled) return;
+
 		this.engine.currentScenes?.forEach((scene) => {
 			let sceneData = this.sceneData.get(scene);
 			if (!sceneData) {

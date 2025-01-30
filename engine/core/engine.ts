@@ -471,18 +471,13 @@ export class Game {
 	update(): void {
 		const { debug } = this;
 
-		if (this.input.keyPressed('Backquote')) {
-			this.debug.toggle();
-		}
-
 		// reload assets
 		if (this.input.keyPressed('F2')) {
 			this.assetManager?.reloadAssets();
 		}
 
-		if (debug.enabled) {
-			debug.update(this.input);
-		} else {
+		debug.update(this.input);
+		if (!debug.enabled) {
 			this.updateScenes(this.currentScenes);
 		}
 
@@ -520,10 +515,7 @@ export class Game {
 		ctx.fillRect(0, 0, this.width, this.height);
 
 		const { debug } = this;
-		if (!this.debug.enabled) {
-			this.renderScenes(ctx, []);
-		} else {
-			debug.render(ctx);
-		}
+		this.renderScenes(ctx, []);
+		if (this.debug.enabled) debug.render(ctx);
 	}
 }
