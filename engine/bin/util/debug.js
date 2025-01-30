@@ -1,7 +1,7 @@
 import { Vec2 } from '../math/index.js';
 import { Camera } from './camera.js';
 import { Draw } from './draw.js';
-import { Sprite, Tileset } from './graphic.js';
+import { AnimatedSprite, Sprite, Tileset, } from '../graphic/index.js';
 const entityRenderH = 28 + 50 + 160;
 export class Debug {
     #enabled = false;
@@ -34,6 +34,31 @@ export class Debug {
             this.hiddenCanvas = canvas;
             this.hiddenCtx = ctx;
         }
+    }
+    // TODO: gonna need to release this!
+    getGraphic(type, options) {
+        let graphic;
+        switch (type) {
+            case Sprite:
+                graphic = this.graphic.sprite ??= new Sprite(
+                // @ts-expect-error
+                options.asset);
+                break;
+            case Tileset:
+                graphic = this.graphic.sprite ??= new Sprite(
+                // @ts-expect-error
+                options.asset);
+                break;
+            case AnimatedSprite:
+                graphic = this.graphic.animatedSprite ??= new AnimatedSprite(
+                // @ts-expect-error
+                options.asset, 100, 100);
+                break;
+            // TODO(bret): NineSlice, Emitter
+            default:
+                throw new Error('unsupported');
+        }
+        graphic.reset();
     }
     toggle() {
         this.enabled ? this.close() : this.open();
@@ -210,55 +235,55 @@ export class Debug {
         const posStr = `(${entity.x}, ${entity.y})`;
         drawText(drawX + w - padding, drawY + padding, posStr, 'right');
         const { graphic } = entity;
-        if (graphic) {
-            let assetStr = null;
-            // @ts-ignore
-            if ('asset' in graphic)
-                assetStr = graphic.asset.fileName;
-            // @ts-ignore
-            if ('sprite' in graphic)
-                assetStr = graphic.sprite.fileName;
-            if (assetStr)
-                assetStr = `("${assetStr}")`;
-            const graphicStr = [graphic.constructor.name, assetStr].join(' ');
-            drawText(drawX + padding, drawY + padding + 30, graphicStr);
-            let rectStr = '???';
-            if (graphic instanceof Sprite) {
-                if (graphic.sourceW) {
-                    rectStr = `Size: ${graphic.sourceW}x${graphic.sourceH} | Offset: (${graphic.sourceX}, ${graphic.sourceY})`;
-                }
-                else {
-                    rectStr = `Size: ${graphic.width}x${graphic.height}`;
-                }
+        if (!graphic)
+            return;
+        let assetStr = null;
+        // @ts-ignore
+        if ('asset' in graphic)
+            assetStr = graphic.asset.fileName;
+        // @ts-ignore
+        if ('sprite' in graphic)
+            assetStr = graphic.sprite.fileName;
+        if (assetStr)
+            assetStr = `("${assetStr}")`;
+        const graphicStr = [graphic.constructor.name, assetStr].join(' ');
+        drawText(drawX + padding, drawY + padding + 30, graphicStr);
+        let rectStr = '???';
+        if (graphic instanceof Sprite) {
+            if (graphic.sourceW) {
+                rectStr = `Size: ${graphic.sourceW}x${graphic.sourceH} | Offset: (${graphic.sourceX}, ${graphic.sourceY})`;
             }
-            drawText(drawX + padding, drawY + padding + 50, rectStr);
-            if (graphic instanceof Sprite) {
-                const x = drawX + w / 2;
-                const y = drawY + padding + padding + 70;
-                this.renderGraphicWithRect(ctx, graphic, x, y, {
-                    x: graphic.sourceX,
-                    y: graphic.sourceY,
-                    w: graphic.sourceW ?? graphic.width,
-                    h: graphic.sourceH ?? graphic.height,
-                });
+            else {
+                rectStr = `Size: ${graphic.width}x${graphic.height}`;
             }
-            else if (graphic instanceof Tileset) {
-                const x = drawX + w / 2;
-                const y = drawY + padding + padding + 70;
-                this.renderGraphicWithRect(ctx, graphic, x, y);
-            }
-            // TODO(bret): this is soooo dangerous, it gets set in renderGraphicWithRect!!
-            if (this.graphic) {
-                // @ts-expect-error
-                this.graphic.sprite.x = 0;
-                // @ts-expect-error
-                this.graphic.sprite.y = 0;
-                // @ts-expect-error
-                this.graphic.sprite?.render?.(this.ctx, {
-                    x: -(drawX + w / 6),
-                    y: -(drawY + padding + padding + 70),
-                });
-            }
+        }
+        drawText(drawX + padding, drawY + padding + 50, rectStr);
+        if (graphic instanceof Sprite) {
+            const x = drawX + w / 2;
+            const y = drawY + padding + padding + 70;
+            this.renderGraphicWithRect(ctx, graphic, x, y, {
+                x: graphic.sourceX,
+                y: graphic.sourceY,
+                w: graphic.sourceW ?? graphic.width,
+                h: graphic.sourceH ?? graphic.height,
+            });
+        }
+        else if (graphic instanceof Tileset) {
+            const x = drawX + w / 2;
+            const y = drawY + padding + padding + 70;
+            this.renderGraphicWithRect(ctx, graphic, x, y);
+        }
+        // TODO(bret): this is soooo dangerous, it gets set in renderGraphicWithRect!!
+        if (this.graphic) {
+            // @ts-expect-error
+            this.graphic.sprite.x = 0;
+            // @ts-expect-error
+            this.graphic.sprite.y = 0;
+            // @ts-expect-error
+            this.graphic.sprite?.render?.(this.ctx, {
+                x: -(drawX + w / 6),
+                y: -(drawY + padding + padding + 70),
+            });
         }
     }
     renderSceneDebug(ctx, scene) {
