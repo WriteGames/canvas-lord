@@ -8,6 +8,15 @@ const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.d
 });
 // TODO(bret): 'tabblur', 'tabfocus'
 const gameEvents = ['blur', 'focus', 'update'];
+const defaultSettings = {
+    fps: 60,
+    backgroundColor: '#202020',
+    gameLoopSettings: {
+        updateMode: 'focus',
+        renderMode: 'onUpdate',
+    },
+    devMode: true, // TODO(bret): Set this to false someday probably
+};
 export class Game {
     gameLoopSettings = {
         updateMode: 'focus',
@@ -29,8 +38,11 @@ export class Game {
         }
         this.canvas = canvas;
         this.ctx = ctx;
+        // apply defaults to game settings
+        const engineSettings = Object.assign({}, defaultSettings, settings);
+        engineSettings.gameLoopSettings = Object.assign({}, defaultSettings.gameLoopSettings, settings?.gameLoopSettings);
         // render a rectangle ASAP
-        this.backgroundColor = settings?.backgroundColor ?? '#202020';
+        this.backgroundColor = engineSettings.backgroundColor;
         ctx.save();
         ctx.fillStyle = this.backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -46,15 +58,19 @@ export class Game {
             acc[val] = new Set();
             return acc;
         }, {});
-        this.fps = settings?.fps ?? 60;
+        this.fps = Math.round(engineSettings.fps);
+        if (this.fps <= 0)
+            throw new Error('Invalid FPS');
         const idealDuration = Math.round(1e3 / this.fps);
         this.recentFrames = Array.from({ length: this.fps }, () => idealDuration);
         this.frameIndex = 0;
         this.frameRate = this.fps;
-        if (settings?.gameLoopSettings)
-            this.gameLoopSettings = settings.gameLoopSettings;
-        this.assetManager = settings?.assetManager;
-        this.debug = new Debug(this);
+        if (engineSettings.gameLoopSettings) {
+            this.gameLoopSettings = engineSettings.gameLoopSettings;
+        }
+        this.assetManager = engineSettings.assetManager;
+        if (engineSettings.devMode)
+            this.debug = new Debug(this);
         this.sceneStack = [];
         // TODO(bret): Might also want to listen for styling changes to the canvas element
         const computeCanvasSize = (canvas) => {
@@ -290,8 +306,8 @@ export class Game {
         if (this.input.keyPressed('F2')) {
             this.assetManager?.reloadAssets();
         }
-        debug.update(this.input);
-        if (!debug.enabled) {
+        debug?.update(this.input);
+        if (!debug?.enabled) {
             this.updateScenes(this.currentScenes);
         }
         this.sendEvent('update');
@@ -323,7 +339,7 @@ export class Game {
         ctx.fillRect(0, 0, this.width, this.height);
         const { debug } = this;
         this.renderScenes(ctx, []);
-        if (this.debug.enabled)
+        if (debug?.enabled)
             debug.render(ctx);
     }
 }

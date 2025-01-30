@@ -1,13 +1,9 @@
 import { AssetManager, Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import type { Scene } from './scene.js';
-import { Draw } from '../util/draw.js';
 import { Debug } from '../util/debug.js';
 
-import { CSSColor } from '../util/types.js';
-
-import type { Camera } from '../util/camera.js';
-import { Grid } from '../util/grid.js';
+import { CSSColor, RequiredAndOmit } from '../util/types.js';
 
 const defineUnwritableProperty: <T>(
 	obj: T,
@@ -75,7 +71,7 @@ export interface Game {
 	eventListeners: CachedEventListener[];
 	_onGameLoopSettingsUpdate?: EventCallback;
 	assetManager?: AssetManager;
-	debug: Debug;
+	debug?: Debug;
 }
 
 export type Engine = Game;
@@ -85,7 +81,21 @@ interface InitialSettings {
 	backgroundColor?: string; // TODO(bret): Fix type
 	gameLoopSettings?: GameLoopSettings;
 	assetManager?: AssetManager;
+	// TODO(bret): Should we make this non-optional? Or at least do so for Write Games?
+	devMode?: boolean;
 }
+
+type Settings = RequiredAndOmit<InitialSettings, 'assetManager'>;
+
+const defaultSettings: Settings = {
+	fps: 60,
+	backgroundColor: '#202020',
+	gameLoopSettings: {
+		updateMode: 'focus',
+		renderMode: 'onUpdate',
+	},
+	devMode: true, // TODO(bret): Set this to false someday probably
+};
 
 export class Game {
 	gameLoopSettings: GameLoopSettings = {
@@ -117,8 +127,20 @@ export class Game {
 		this.canvas = canvas;
 		this.ctx = ctx;
 
+		// apply defaults to game settings
+		const engineSettings: Settings = Object.assign(
+			{},
+			defaultSettings,
+			settings,
+		);
+		engineSettings.gameLoopSettings = Object.assign(
+			{},
+			defaultSettings.gameLoopSettings,
+			settings?.gameLoopSettings,
+		);
+
 		// render a rectangle ASAP
-		this.backgroundColor = settings?.backgroundColor ?? '#202020';
+		this.backgroundColor = engineSettings.backgroundColor;
 		ctx.save();
 		ctx.fillStyle = this.backgroundColor;
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -140,7 +162,8 @@ export class Game {
 			return acc;
 		}, {} as typeof this.listeners);
 
-		this.fps = settings?.fps ?? 60;
+		this.fps = Math.round(engineSettings.fps);
+		if (this.fps <= 0) throw new Error('Invalid FPS');
 		const idealDuration = Math.round(1e3 / this.fps);
 		this.recentFrames = Array.from(
 			{ length: this.fps },
@@ -149,11 +172,12 @@ export class Game {
 		this.frameIndex = 0;
 		this.frameRate = this.fps;
 
-		if (settings?.gameLoopSettings)
-			this.gameLoopSettings = settings.gameLoopSettings;
-		this.assetManager = settings?.assetManager;
+		if (engineSettings.gameLoopSettings) {
+			this.gameLoopSettings = engineSettings.gameLoopSettings;
+		}
+		this.assetManager = engineSettings.assetManager;
 
-		this.debug = new Debug(this);
+		if (engineSettings.devMode) this.debug = new Debug(this);
 
 		this.sceneStack = [];
 
@@ -476,8 +500,8 @@ export class Game {
 			this.assetManager?.reloadAssets();
 		}
 
-		debug.update(this.input);
-		if (!debug.enabled) {
+		debug?.update(this.input);
+		if (!debug?.enabled) {
 			this.updateScenes(this.currentScenes);
 		}
 
@@ -516,6 +540,6 @@ export class Game {
 
 		const { debug } = this;
 		this.renderScenes(ctx, []);
-		if (this.debug.enabled) debug.render(ctx);
+		if (debug?.enabled) debug.render(ctx);
 	}
 }

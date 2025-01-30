@@ -22,6 +22,9 @@ declare global {
 	}
 }
 
+export type RequiredAndOmit<T, O extends keyof T> = Required<Omit<T, O>> &
+	Pick<T, O>;
+
 export type IEntityComponentType<T = any> = {
 	data: T;
 	__IEntityComponent: symbol;
