@@ -13,7 +13,7 @@ import {
 	normToBitFlagMap,
 	reduceBitFlags,
 } from 'canvas-lord/math/misc';
-import { Tileset } from 'canvas-lord/util/graphic';
+import { Tileset } from 'canvas-lord/graphic';
 import { Grid, GridOutline } from 'canvas-lord/util/grid';
 
 export interface PlayerClass extends Entity {

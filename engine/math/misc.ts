@@ -8,7 +8,7 @@ import {
 	Vec2,
 	type Vector,
 } from './index.js';
-import { Tileset } from '../util/graphic.js';
+import { Tileset } from '../graphic/index.js';
 
 type Writeable<T> = {
 	-readonly [P in keyof T]: T[P];

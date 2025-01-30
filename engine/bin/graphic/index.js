@@ -1,6 +1,6 @@
-import { moveCanvas, Draw } from './draw.js';
 import { Vec2 } from '../math/index.js';
-import { Random } from './random.js';
+import { moveCanvas, Draw } from '../util/draw.js';
+import { Random } from '../util/random.js';
 const tempCanvas = document.createElement('canvas');
 export class Graphic {
     x;
@@ -690,4 +690,4 @@ export class Tileset {
         }
     }
 }
-//# sourceMappingURL=graphic.js.map
+//# sourceMappingURL=index.js.map
