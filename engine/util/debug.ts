@@ -8,7 +8,7 @@ import { Draw } from './draw.js';
 import {
 	AnimatedSprite,
 	Graphic,
-	GraphicList,
+	type GraphicClass,
 	Sprite,
 	Tileset,
 } from '../graphic/index.js';
@@ -39,8 +39,6 @@ export interface Debug {
 }
 
 const entityRenderH = 28 + 50 + 160;
-
-type GraphicClass = typeof Sprite | typeof Tileset | typeof AnimatedSprite;
 
 export class Debug implements Debug {
 	#enabled = false;

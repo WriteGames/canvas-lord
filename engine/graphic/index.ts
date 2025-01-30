@@ -8,6 +8,16 @@ import { Sprite } from './sprite.js';
 import { Text } from './text.js';
 import { Tileset } from './tileset.js';
 
+export type GraphicClass =
+	| typeof AnimatedSprite
+	| typeof Emitter
+	| typeof Graphic
+	| typeof GraphicList
+	| typeof NineSlice
+	| typeof Sprite
+	| typeof Text
+	| typeof Tileset;
+
 export {
 	AnimatedSprite,
 	Emitter,
