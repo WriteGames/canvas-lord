@@ -130,6 +130,21 @@ export const collidePointTriangle = (x, y, t) => {
         [t.x3, t.y3],
     ]);
 };
+export const collidePointGrid = (x, y, g) => {
+    const gridRect = {
+        x: g.x,
+        y: g.y,
+        w: g.width,
+        h: g.height,
+    };
+    if (!collidePointRect(x, y, gridRect))
+        return false;
+    const xx = Math.floor(x / g.tileW);
+    const yy = Math.floor(y / g.tileH);
+    console.assert(xx === Math.clamp(xx, 0, g.columns - 1));
+    console.assert(yy === Math.clamp(yy, 0, g.rows - 1));
+    return g.getTile(xx, yy) === 1;
+};
 /// ### Line vs X ###
 export const collideLineLine = (l1, l2) => {
     const A = [new Vec2(l1.x1, l1.y1), new Vec2(l1.x2, l1.y2)];
@@ -287,6 +302,7 @@ export const collideRectGrid = (r, g) => {
     };
     if (!collideRectRect(r, gridRect))
         return false;
+    // TODO(bret): uncertain if a clamp here is correct
     const minX = Math.clamp(Math.floor(x / g.tileW), 0, g.columns - 1);
     const minY = Math.clamp(Math.floor(y / g.tileH), 0, g.rows - 1);
     const maxX = Math.clamp(Math.floor((x + r.w - 1) / g.tileW), 0, g.columns - 1);
@@ -354,7 +370,7 @@ const collisionMap = {
         circle: (p, c) => collidePointCircle(p.x, p.y, c),
         'right-triangle': collidePointRightTriangle,
         triangle: (p, t) => collidePointTriangle(p.x, p.y, t),
-        grid: undefined,
+        grid: (p, g) => collidePointGrid(p.x, p.y, g),
     },
     line: {
         point: (l, p) => collidePointLine(p.x, p.y, l),
@@ -403,14 +419,14 @@ const collisionMap = {
     },
     //collideRectGrid
     grid: {
-    // point: (g: Grid, p: Point) => collidePointTriangle(p.x, p.y, g),
-    // line: (g: Grid, l: Line) => collideLineTriangle(l, g),
-    // rect: (g: Grid, r: Rect) => collideRectTriangle(r, g),
-    // circle: (g: Grid, c: Circle) => collideCircleTriangle(c, g),
-    // 'right-triangle': (g: Grid, rt: RightTriangle) =>
-    // 	collideRightTriangleTriangle(rt, g),
-    // triangle: collideTriangleTriangle,
-    // grid: undefined,
+        point: (g, p) => collidePointGrid(p.x, p.y, g),
+        // line: (g: GridShape, l: Line) => collideLineTriangle(l, g),
+        rect: (g, r) => collideRectGrid(r, g),
+        // circle: (g: GridShape, c: Circle) => collideCircleTriangle(c, g),
+        // 'right-triangle': (g: GridShape, rt: RightTriangle) =>
+        // 	collideRightTriangleTriangle(rt, g),
+        // triangle: collideTriangleTriangle,
+        // grid: undefined,
     },
 };
 // TODO: (shapeA, typeA, shapeB, typeB) - that way we don't have to store that data in the shapes themselves! This will make using the Collider classes easier, as they won't have to store that data :)

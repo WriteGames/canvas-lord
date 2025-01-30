@@ -261,6 +261,26 @@ export const collidePointTriangle = (
 	]);
 };
 
+export const collidePointGrid = (
+	x: number,
+	y: number,
+	g: RawShape<GridShape>,
+) => {
+	const gridRect = {
+		x: g.x,
+		y: g.y,
+		w: g.width,
+		h: g.height,
+	};
+	if (!collidePointRect(x, y, gridRect)) return false;
+
+	const xx = Math.floor(x / g.tileW);
+	const yy = Math.floor(y / g.tileH);
+	console.assert(xx === Math.clamp(xx, 0, g.columns - 1));
+	console.assert(yy === Math.clamp(yy, 0, g.rows - 1));
+	return g.getTile(xx, yy) === 1;
+};
+
 /// ### Line vs X ###
 
 export const collideLineLine = (l1: RawShape<Line>, l2: RawShape<Line>) => {
@@ -463,6 +483,7 @@ export const collideRectGrid = (r: RawShape<Rect>, g: RawShape<GridShape>) => {
 
 	if (!collideRectRect(r, gridRect)) return false;
 
+	// TODO(bret): uncertain if a clamp here is correct
 	const minX = Math.clamp(Math.floor(x / g.tileW), 0, g.columns - 1);
 	const minY = Math.clamp(Math.floor(y / g.tileH), 0, g.rows - 1);
 
@@ -570,7 +591,7 @@ const collisionMap = {
 		circle: (p: Point, c: Circle) => collidePointCircle(p.x, p.y, c),
 		'right-triangle': collidePointRightTriangle,
 		triangle: (p: Point, t: Triangle) => collidePointTriangle(p.x, p.y, t),
-		grid: undefined,
+		grid: (p: Point, g: GridShape) => collidePointGrid(p.x, p.y, g),
 	},
 	line: {
 		point: (l: Line, p: Point) => collidePointLine(p.x, p.y, l),
@@ -622,11 +643,11 @@ const collisionMap = {
 	},
 	//collideRectGrid
 	grid: {
-		// point: (g: Grid, p: Point) => collidePointTriangle(p.x, p.y, g),
-		// line: (g: Grid, l: Line) => collideLineTriangle(l, g),
-		// rect: (g: Grid, r: Rect) => collideRectTriangle(r, g),
-		// circle: (g: Grid, c: Circle) => collideCircleTriangle(c, g),
-		// 'right-triangle': (g: Grid, rt: RightTriangle) =>
+		point: (g: GridShape, p: Point) => collidePointGrid(p.x, p.y, g),
+		// line: (g: GridShape, l: Line) => collideLineTriangle(l, g),
+		rect: (g: GridShape, r: Rect) => collideRectGrid(r, g),
+		// circle: (g: GridShape, c: Circle) => collideCircleTriangle(c, g),
+		// 'right-triangle': (g: GridShape, rt: RightTriangle) =>
 		// 	collideRightTriangleTriangle(rt, g),
 		// triangle: collideTriangleTriangle,
 		// grid: undefined,
