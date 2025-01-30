@@ -13,12 +13,27 @@ export class Debug {
         this.engine = engine;
         this.sceneData = new Map();
         this.graphic = {};
-        const canvas = new OffscreenCanvas(1, 1);
-        const ctx = canvas.getContext('2d');
-        if (!ctx)
-            throw new Error();
-        this.canvas = canvas;
-        this.ctx = ctx;
+        {
+            const canvas = document.createElement('canvas');
+            canvas.width = engine.canvas.width;
+            canvas.height = engine.canvas.height;
+            canvas.style.width = `${canvas.width}px`;
+            canvas.style.height = `${canvas.height}px`;
+            const ctx = canvas.getContext('2d');
+            if (!ctx)
+                throw new Error();
+            this.canvas = canvas;
+            this.ctx = ctx;
+            this.engine.canvas.after(canvas);
+        }
+        {
+            const canvas = new OffscreenCanvas(1, 1);
+            const ctx = canvas.getContext('2d');
+            if (!ctx)
+                throw new Error();
+            this.hiddenCanvas = canvas;
+            this.hiddenCtx = ctx;
+        }
     }
     toggle() {
         this.enabled ? this.close() : this.open();
@@ -98,17 +113,17 @@ export class Debug {
             tempSprite.sourceH = undefined;
             tempSprite.alpha = 1.0;
             const canvasPadding = 10;
-            const { canvas } = this;
+            const { hiddenCanvas: canvas } = this;
             canvas.width = tempSprite.width + canvasPadding * 2;
             canvas.height = tempSprite.height + canvasPadding * 2;
-            this.ctx.save();
+            this.hiddenCtx.save();
             const maxImageW = canvas.width - canvasPadding * 2;
             const maxImageH = canvas.height - canvasPadding * 2;
-            this.ctx.fillStyle = 'black';
-            this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-            this.ctx.translate(canvasPadding, canvasPadding);
-            this.ctx.fillStyle = 'black';
-            this.ctx.fillRect(0, 0, tempSprite.width, tempSprite.height);
+            this.hiddenCtx.fillStyle = 'black';
+            this.hiddenCtx.fillRect(0, 0, canvas.width, canvas.height);
+            this.hiddenCtx.translate(canvasPadding, canvasPadding);
+            this.hiddenCtx.fillStyle = 'black';
+            this.hiddenCtx.fillRect(0, 0, tempSprite.width, tempSprite.height);
             const rect = highlightRect ?? {
                 x: 0,
                 y: 0,
@@ -118,12 +133,12 @@ export class Debug {
             if (highlightRect) {
                 tempSprite.alpha = 0.5;
                 // @ts-expect-error
-                tempSprite.render(this.ctx);
+                tempSprite.render(this.hiddenCtx);
                 // Draw full-alpha rect
-                this.ctx.globalCompositeOperation = 'destination-out';
-                this.ctx.fillStyle = 'black';
-                this.ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-                this.ctx.globalCompositeOperation = 'source-over';
+                this.hiddenCtx.globalCompositeOperation = 'destination-out';
+                this.hiddenCtx.fillStyle = 'black';
+                this.hiddenCtx.fillRect(rect.x, rect.y, rect.w, rect.h);
+                this.hiddenCtx.globalCompositeOperation = 'source-over';
             }
             tempSprite.x = rect.x;
             tempSprite.y = rect.y;
@@ -133,13 +148,13 @@ export class Debug {
             tempSprite.sourceH = rect.h;
             tempSprite.alpha = 1.0;
             // @ts-expect-error
-            tempSprite.render(this.ctx, Vec2.zero);
+            tempSprite.render(this.hiddenCtx, Vec2.zero);
             const lineW = 3;
             const lineP = lineW + 1;
             const offset = lineP * 0.5;
-            this.ctx.lineWidth = lineW;
-            this.ctx.strokeStyle = 'white';
-            this.ctx.strokeRect(rect.x - offset + 0.5, rect.y - offset + 0.5, rect.w ? rect.w + lineP - 1 : 0, rect.h ? rect.h + lineP - 1 : 0);
+            this.hiddenCtx.lineWidth = lineW;
+            this.hiddenCtx.strokeStyle = 'white';
+            this.hiddenCtx.strokeRect(rect.x - offset + 0.5, rect.y - offset + 0.5, rect.w ? rect.w + lineP - 1 : 0, rect.h ? rect.h + lineP - 1 : 0);
             let drawW = tempSprite.width;
             let drawH = tempSprite.height;
             const maxWidth = 128 - canvasPadding * 2;
@@ -164,12 +179,12 @@ export class Debug {
             ctx.strokeStyle = '#ffffff66';
             ctx.strokeRect(...drawRect);
             ctx.restore();
-            this.ctx.restore();
+            this.hiddenCtx.restore();
         }
     }
     renderEntityDebug(ctx, entity, y = 0) {
         const padding = 8;
-        const w = 240;
+        const w = 480 - padding * 2;
         const h = entityRenderH;
         const drawX = this.engine.canvas.width - w - 8;
         const drawY = 8 + y;
@@ -232,6 +247,18 @@ export class Debug {
                 const y = drawY + padding + padding + 70;
                 this.renderGraphicWithRect(ctx, graphic, x, y);
             }
+            // TODO(bret): this is soooo dangerous, it gets set in renderGraphicWithRect!!
+            if (this.graphic) {
+                // @ts-expect-error
+                this.graphic.sprite.x = 0;
+                // @ts-expect-error
+                this.graphic.sprite.y = 0;
+                // @ts-expect-error
+                this.graphic.sprite?.render?.(this.ctx, {
+                    x: -(drawX + w / 6),
+                    y: -(drawY + padding + padding + 70),
+                });
+            }
         }
     }
     renderSceneDebug(ctx, scene) {
@@ -292,12 +319,17 @@ export class Debug {
             // render again why not
             // TODO(bret): Would be best to clear out behind entity and then select it
             e.render(ctx, scene.camera);
-            this.renderEntityDebug(ctx, e, (entityRenderH + 6) * i);
+            this.renderEntityDebug(this.ctx, e, (entityRenderH + 6) * i);
         });
     }
     render(ctx) {
-        if (!this.enabled)
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (!this.enabled) {
+            // TODO(bret): Draw inactive?
+            // TODO(bret): Can the panel update while the game is running?
+            // so many questions!
             return;
+        }
         this.engine.currentScenes?.forEach((scene) => {
             this.renderSceneDebug(ctx, scene);
         });
