@@ -367,7 +367,7 @@ const generateTutorial = (tutorial: typeof platformerTutorial) => {
 
 	const staticFiles = blocks.filter(({ file }) => !dynamic.includes(file));
 	staticFiles.forEach(({ file }) => {
-		const contents = fs.readFileSync(file);
+		const contents = fs.readFileSync(file, 'utf8');
 		const fileName = file.split('/').at(-1) as string;
 		fs.writeFileSync(createTutorialDir(fileName), contents);
 	});
@@ -415,7 +415,7 @@ const generateTutorial = (tutorial: typeof platformerTutorial) => {
 		JSON.stringify(genTutorial),
 	);
 
-	const markdown = fs.readFileSync('in/content.md');
+	const markdown = fs.readFileSync('in/content.md', 'utf8');
 	fs.writeFileSync(createTutorialDir('content.mdx'), markdown);
 };
 
