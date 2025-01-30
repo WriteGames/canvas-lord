@@ -1,6 +1,13 @@
 /* Canvas Lord v0.4.4 */
 export const EPSILON = 0.000001;
 
+declare global {
+	interface Math {
+		clamp: (val: number, min: number, max: number) => number;
+		lerp: (a: number, b: number, t: number) => number;
+	}
+}
+
 // Math prototype fun :~)
 if (typeof Math.clamp === 'undefined') {
 	Math.clamp = (val, min, max) => {

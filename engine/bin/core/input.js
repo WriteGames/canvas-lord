@@ -180,7 +180,7 @@ export class Input {
         if (document.activeElement !== this.engine.focusElement)
             return;
         e.preventDefault();
-        let { code } = e;
+        const { code } = e;
         if (code in this.keys && !this.keyCheck(code)) {
             this.keys[code] = 3;
         }

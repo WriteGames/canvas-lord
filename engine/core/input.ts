@@ -226,7 +226,7 @@ export class Input {
 		if (document.activeElement !== this.engine.focusElement) return;
 
 		e.preventDefault();
-		let { code } = e as { code: Key };
+		const { code } = e as { code: Key };
 		if (code in this.keys && !this.keyCheck(code)) {
 			this.keys[code] = 3;
 		}

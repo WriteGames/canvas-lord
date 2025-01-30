@@ -1,5 +1,5 @@
+import { Entity } from './bin/core/entity.js';
 import * as Components from './bin/util/components.js';
-import { Entity } from './bin/util/entity.js';
 
 export const leftKeys = ['ArrowLeft', 'a', 'A'];
 export const rightKeys = ['ArrowRight', 'd', 'D'];

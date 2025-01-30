@@ -1,27 +1,15 @@
+import { AssetManager, Game, Tileset } from './bin/canvas-lord.js';
+
 import {
-	AssetManager,
 	cardinalNorms,
 	filterWithinBounds,
-	Game,
 	globalSetTile,
-	Grid,
-	GridOutline,
 	mapByOffset,
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-	Scene,
-	Tileset,
-	addPos,
-	subPos,
-	dirND,
-	findAllPolygonsInGrid,
-	checkLineSegmentIntersection,
-	getLineSegmentIntersection,
-	isPointOnLine,
-	isPointInsidePath,
-} from './bin/canvas-lord.js';
-
+} from './bin/math/misc.js';
+import { Grid, GridOutline } from './bin/util/grid.js';
 import { ButtonsOverlay } from './bin/util/buttons-overlay.js';
 
 export const initTileset = (assetManager, grid) => {

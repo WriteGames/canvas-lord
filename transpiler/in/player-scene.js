@@ -1,5 +1,9 @@
-import { cardinalNorms, Entity, filterWithinBounds, globalSetTile, Grid, GridOutline, mapByOffset, mapFindOffset, normToBitFlagMap, reduceBitFlags, Scene, Tileset, } from 'canvas-lord';
+import { Entity } from 'canvas-lord/core/entity';
+import { Scene } from 'canvas-lord/core/scene';
 import { Vec2 } from 'canvas-lord/math/index';
+import { cardinalNorms, filterWithinBounds, globalSetTile, mapByOffset, mapFindOffset, normToBitFlagMap, reduceBitFlags, } from 'canvas-lord/math/misc';
+import { Tileset } from 'canvas-lord/util/graphic';
+import { Grid, GridOutline } from 'canvas-lord/util/grid';
 export class PlayerClass extends Entity {
 }
 export class PlayerScene extends Scene {

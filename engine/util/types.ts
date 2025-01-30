@@ -1,8 +1,27 @@
+/* Canvas Lord v0.4.4 */
+
+import type { Engine } from '../core/engine';
 import type { Entity } from '../core/entity';
 import type { Input } from '../core/input';
 import type { Camera } from './camera';
 
-/* Canvas Lord v0.4.4 */
+declare global {
+	interface HTMLCanvasElement {
+		_engine: Engine;
+		_actualWidth: number;
+		_actualHeight: number;
+		_offsetX: number;
+		_offsetY: number;
+		_scaleX: number;
+		_scaleY: number;
+	}
+
+	interface Math {
+		clamp: (val: number, min: number, max: number) => number;
+		lerp: (a: number, b: number, t: number) => number;
+	}
+}
+
 export type IEntityComponentType<T = any> = {
 	data: T;
 	__IEntityComponent: symbol;
