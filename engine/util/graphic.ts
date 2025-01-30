@@ -94,7 +94,7 @@ export class Graphic implements IGraphic {
 
 	update(input: Input): void {}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {}
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {}
 }
 
 export class GraphicList extends Graphic {
@@ -135,7 +135,7 @@ export class GraphicList extends Graphic {
 		this.graphics.forEach((graphic) => graphic.update(input));
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		// TODO(bret): Set up transformations here!
 		this.scrollX = this.scrollY = 0;
 		const r = 3;
@@ -199,7 +199,7 @@ export class Text extends Graphic {
 		textCtx.restore();
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.text(ctx, this, x, y, this.str);
@@ -300,7 +300,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		this.originY = -this.height >> 1;
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		const {
 			sourceX,
 			sourceY,
@@ -424,7 +424,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		}
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		const { frameId, frameW, frameH } = this;
 		this.framesPerRow = this.imageSrc.width / frameW;
 
@@ -517,7 +517,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 	}
 
 	// TODO: hook up moveCanvas
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		const o = this;
 		const x = this.x - camera.x * this.scrollX;
 		const y = this.y - camera.y * this.scrollY;
@@ -810,7 +810,7 @@ export class Emitter extends Graphic {
 		});
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera) {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 
@@ -927,7 +927,7 @@ export class Tileset {
 		return this.data[y * this.columns + x];
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero): void {
 		const scale = 1;
 
 		const {

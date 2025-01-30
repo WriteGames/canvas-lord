@@ -33,7 +33,7 @@ export class Graphic {
         this.centerOrigin();
     }
     update(input) { }
-    render(ctx, camera) { }
+    render(ctx, camera = Vec2.zero) { }
 }
 export class GraphicList extends Graphic {
     graphics;
@@ -65,7 +65,7 @@ export class GraphicList extends Graphic {
     update(input) {
         this.graphics.forEach((graphic) => graphic.update(input));
     }
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         // TODO(bret): Set up transformations here!
         this.scrollX = this.scrollY = 0;
         const r = 3;
@@ -114,7 +114,7 @@ export class Text extends Graphic {
         this.offsetY = -height / 2;
         textCtx.restore();
     }
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
         Draw.text(ctx, this, x, y, this.str);
@@ -193,7 +193,7 @@ export class Sprite extends Graphic {
         this.originX = -this.width >> 1;
         this.originY = -this.height >> 1;
     }
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         const { sourceX, sourceY, sourceW = this.width, sourceH = this.height, } = this;
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
@@ -288,7 +288,7 @@ export class AnimatedSprite extends Graphic {
             ++this.inc;
         }
     }
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         const { frameId, frameW, frameH } = this;
         this.framesPerRow = this.imageSrc.width / frameW;
         const sourceX = (frameId % this.framesPerRow) * frameW;
@@ -378,7 +378,7 @@ export class NineSlice extends Graphic {
         this.patternC = patternC;
     }
     // TODO: hook up moveCanvas
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         const o = this;
         const x = this.x - camera.x * this.scrollX;
         const y = this.y - camera.y * this.scrollY;
@@ -566,7 +566,7 @@ export class Emitter extends Graphic {
             });
         });
     }
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
         const { image } = this.asset;
@@ -639,7 +639,7 @@ export class Tileset {
             return null;
         return this.data[y * this.columns + x];
     }
-    render(ctx, camera) {
+    render(ctx, camera = Vec2.zero) {
         const scale = 1;
         const { sprite: image, separation, startX, startY, tileW, tileH, } = this;
         if (!image.image)
