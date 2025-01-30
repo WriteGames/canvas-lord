@@ -1,5 +1,5 @@
-import * as Components from '../util/components.js';
 import * as Collision from '../util/collision.js';
+import * as Components from '../util/components.js';
 import { Draw } from '../util/draw.js';
 export class Entity {
     scene; // NOTE: set by scene

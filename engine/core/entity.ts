@@ -1,12 +1,13 @@
 /* Canvas Lord v0.4.4 */
-import type { Camera, Input, IRenderable } from '../canvas-lord.js';
-import * as Components from '../util/components.js';
-import { type ComponentProps } from '../util/components.js';
+import type { Input } from './input.js';
 import type { Scene } from './scene.js';
-import type { IEntityComponentType } from '../util/types.js';
+import type { Camera } from '../util/camera.js';
 import * as Collision from '../util/collision.js';
 import { type ColliderTag } from '../util/collision.js';
+import * as Components from '../util/components.js';
+import { type ComponentProps } from '../util/components.js';
 import { Draw } from '../util/draw.js';
+import type { IRenderable, IEntityComponentType } from '../util/types.js';
 
 // TODO: fix this!
 type Collider = Collision.Shape;

@@ -1,5 +1,5 @@
 /* Canvas Lord v0.4.4 */
-import { IEntitySystem } from '../canvas-lord.js';
+import { IEntitySystem } from './types.js';
 import { Draw } from './draw.js';
 import { image } from './components.js';
 

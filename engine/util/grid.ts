@@ -1,5 +1,6 @@
 /* Canvas Lord v0.4.4 */
-import type { AssetManager, Camera } from '../canvas-lord.js';
+import type { AssetManager } from '../core/asset-manager.js';
+import type { Camera } from './camera.js';
 import { indexToPos, V2, Vec2 } from './math.js';
 import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';

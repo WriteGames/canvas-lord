@@ -1,7 +1,10 @@
 /* Canvas Lord v0.4.4 */
+import { ImageAsset } from '../core/asset-manager.js';
+import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import type { Camera } from './camera.js';
 import { moveCanvas, Draw } from './draw.js';
+import { Vec2 } from './math.js';
 import { Random } from './random.js';
 
 const tempCanvas = document.createElement('canvas');
@@ -205,7 +208,7 @@ export class Text extends Graphic {
 
 // TODO(bret): How to tile?
 export class Sprite extends Graphic implements ISpriteLike {
-	asset: SpriteAsset;
+	asset: ImageAsset;
 
 	// TODO(bret): remove these and allow Draw.image to make them optional
 	frame: number = 0;
@@ -240,7 +243,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 	}
 
 	constructor(
-		asset: SpriteAsset,
+		asset: ImageAsset,
 		x = 0,
 		y = 0,
 		sourceX = 0,
@@ -271,7 +274,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 			fileName: [width, height, color].join('-'),
 			image: null,
 			loaded: false,
-		} as SpriteAsset;
+		} as ImageAsset;
 
 		const img = new Image(width, height);
 		img.onload = () => {
@@ -318,7 +321,7 @@ interface Animation {
 }
 
 export class AnimatedSprite extends Graphic implements ISpriteLike {
-	asset: SpriteAsset;
+	asset: ImageAsset;
 
 	// TODO(bret): remove these and allow Draw.image to make them optional
 	frame: number = 0;
@@ -357,7 +360,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		return this.asset.image;
 	}
 
-	constructor(asset: SpriteAsset, frameW: number, frameH: number) {
+	constructor(asset: ImageAsset, frameW: number, frameH: number) {
 		super();
 		this.asset = asset;
 
@@ -435,7 +438,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 // TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic implements ISpriteLike {
-	asset: SpriteAsset;
+	asset: ImageAsset;
 	width: number;
 	height: number;
 	tileW: number;
@@ -462,13 +465,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 	patternC!: CanvasPattern;
 
 	// TODO(bret): Allow for custom tileW/tileH, along with non-uniform sizes
-	constructor(
-		asset: SpriteAsset,
-		x: number,
-		y: number,
-		w: number,
-		h: number,
-	) {
+	constructor(asset: ImageAsset, x: number, y: number, w: number, h: number) {
 		if (!asset.image) throw new Error();
 
 		super(x, y);
@@ -621,7 +618,7 @@ type Assignable = Extract<
 >;
 
 export class Emitter extends Graphic {
-	asset: SpriteAsset;
+	asset: ImageAsset;
 
 	// TODO(bret): remove these and allow Draw.image to make them optional
 	frame: number = 0;
@@ -640,7 +637,7 @@ export class Emitter extends Graphic {
 	// 	return this.asset.image;
 	// }
 
-	constructor(asset: Sprite | SpriteAsset, x: number, y: number) {
+	constructor(asset: Sprite | ImageAsset, x: number, y: number) {
 		super(x, y);
 
 		// TODO(bret): Figure out how we want to handle this
@@ -864,5 +861,116 @@ export class Emitter extends Graphic {
 				Draw.image(ctx, this, drawX, drawY);
 			});
 		});
+	}
+}
+
+export interface Tileset {
+	width: number;
+	height: number;
+	tileW: number;
+	tileH: number;
+	columns: number;
+	rows: number;
+
+	sprite: SpriteAsset;
+	// TODO(bret): Update this to use Graphic's Parent
+	parent: Entity | undefined;
+
+	data: Array<Vec2 | null>;
+
+	startX: number;
+	startY: number;
+	separation: number;
+}
+
+export interface TilesetOptions {
+	startX?: number;
+	startY?: number;
+	separation?: number;
+}
+
+export class Tileset {
+	constructor(
+		sprite: ImageAsset,
+		width: number,
+		height: number,
+		tileW: number,
+		tileH: number,
+		options: TilesetOptions = {},
+	) {
+		this.width = width;
+		this.height = height;
+		this.tileW = tileW;
+		this.tileH = tileH;
+		this.columns = Math.ceil(width / tileW);
+		this.rows = Math.ceil(height / tileH);
+
+		this.sprite = sprite;
+
+		this.data = Array.from(
+			{ length: this.columns * this.rows },
+			(v) => null,
+		);
+
+		this.startX = options.startX ?? 1;
+		this.startY = options.startY ?? 1;
+		this.separation = options.separation ?? 1;
+	}
+
+	setTile(x: number, y: number, tileX: number, tileY: number): void {
+		if (x < 0 || y < 0 || x >= this.columns || y >= this.rows) return;
+		this.data[y * this.columns + x] = new Vec2(tileX, tileY);
+	}
+
+	getTile(x: number, y: number): Tileset['data'][number] {
+		if (x < 0 || y < 0 || x >= this.columns || y >= this.rows) return null;
+		return this.data[y * this.columns + x];
+	}
+
+	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+		const scale = 1;
+
+		const {
+			sprite: image,
+			separation,
+			startX,
+			startY,
+			tileW,
+			tileH,
+		} = this;
+
+		if (!image.image) throw new Error('Tileset is missing an image');
+
+		const srcCols = Math.floor(image.width / tileW);
+		const srcRows = Math.floor(image.height / tileH);
+
+		const [cameraX, cameraY] = camera;
+
+		const offsetX = this.parent?.x ?? 0;
+		const offsetY = this.parent?.y ?? 0;
+
+		for (let y = 0; y < this.rows; ++y) {
+			for (let x = 0; x < this.columns; ++x) {
+				const val = this.data[y * this.columns + x];
+				if (val) {
+					const [tileX, tileY] = val;
+					const srcX = startX + (separation + tileW) * tileX;
+					const srcY = startY + (separation + tileH) * tileY;
+					const dstX = x * tileW - cameraX + offsetX;
+					const dstY = y * tileH - cameraY + offsetY;
+					ctx.drawImage(
+						image.image,
+						srcX,
+						srcY,
+						tileW,
+						tileH,
+						dstX,
+						dstY,
+						tileW * scale,
+						tileH * scale,
+					);
+				}
+			}
+		}
 	}
 }

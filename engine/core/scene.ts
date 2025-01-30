@@ -1,11 +1,16 @@
 /* Canvas Lord v0.4.4 */
-import type { Engine, IEntitySystem, Renderable } from '../canvas-lord.js';
+import type { Engine } from './engine.js';
 import type { Entity } from './entity.js';
 import type { Input } from './input.js';
 import { Camera } from '../util/camera.js';
 import { Vec2 } from '../util/math.js';
 import { Messages } from '../util/messages.js';
-import type { CSSColor, IEntityComponentType } from '../util/types.js';
+import type {
+	IEntitySystem,
+	Renderable,
+	CSSColor,
+	IEntityComponentType,
+} from '../util/types.js';
 
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)

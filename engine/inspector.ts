@@ -1,5 +1,5 @@
 /* Canvas Lord v0.4.4 */
-import { Engine } from './canvas-lord.js';
+import type { Engine } from './core/engine.js';
 
 interface Item {
 	input: HTMLInputElement;
