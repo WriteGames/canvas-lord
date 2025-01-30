@@ -1,5 +1,5 @@
 /* Canvas Lord v0.4.4 */
-import { ImageAsset } from '../core/asset-manager.js';
+import type { ImageAsset } from '../core/asset-manager.js';
 import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import type { Camera } from './camera.js';
@@ -8,22 +8,6 @@ import { Vec2 } from '../math/index.js';
 import { Random } from './random.js';
 
 const tempCanvas = document.createElement('canvas');
-
-// TODO(bret): Remove this (it's also in canvas-lord.ts)
-export type SpriteAsset = {
-	fileName: string;
-} & (
-	| {
-			image: null;
-			loaded: false;
-	  }
-	| {
-			image: HTMLImageElement;
-			width: number;
-			height: number;
-			loaded: true;
-	  }
-);
 
 interface GraphicParent {
 	x: number;
@@ -49,6 +33,7 @@ export interface IGraphic {
 	centerOO: () => void;
 	update: (input: Input) => void;
 	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+	reset: () => void;
 }
 
 interface ISpriteLike {
@@ -95,6 +80,19 @@ export class Graphic implements IGraphic {
 	update(input: Input): void {}
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {}
+
+	reset() {
+		this.x = 0;
+		this.y = 0;
+		this.alpha = 1;
+		this.angle = 0;
+		this.offsetX = 0;
+		this.offsetY = 0;
+		this.scaleX = 0;
+		this.scaleY = 0;
+		this.scrollX = 1;
+		this.scrollY = 1;
+	}
 }
 
 export class GraphicList extends Graphic {
@@ -210,11 +208,6 @@ export class Text extends Graphic {
 export class Sprite extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
 
-	// TODO(bret): remove these and allow Draw.image to make them optional
-	frame: number = 0;
-	frameW: number = 0;
-	frameH: number = 0;
-
 	sourceX: number = 0;
 	sourceY: number = 0;
 	sourceW: number | undefined;
@@ -311,6 +304,18 @@ export class Sprite extends Graphic implements ISpriteLike {
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
+
+	reset() {
+		super.reset();
+
+		this.sourceX = 0;
+		this.sourceY = 0;
+		this.sourceW = undefined;
+		this.sourceH = undefined;
+
+		this.color = undefined;
+		this.blend = undefined;
+	}
 }
 
 interface Animation {
@@ -323,7 +328,8 @@ interface Animation {
 export class AnimatedSprite extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
 
-	// TODO(bret): remove these and allow Draw.image to make them optional
+	inc = 0;
+
 	frame: number = 0;
 	frameId: number = 0;
 	frameW: number = 0;
@@ -408,8 +414,6 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.originY = -this.frameH >> 1;
 	}
 
-	inc = 0;
-
 	update() {
 		if (this.currentAnimation) {
 			const { frames, frameRate } = this.currentAnimation;
@@ -434,6 +438,30 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.image(ctx, this, x, y, sourceX, sourceY, frameW, frameH);
 	}
+
+	reset() {
+		super.reset();
+
+		this.inc = 0;
+
+		// TODO(bret): remove these and allow Draw.image to make them optional
+		this.frame = 0;
+		this.frameId = 0;
+		this.frameW = 0;
+		this.frameH = 0;
+		this.framesPerRow = 0;
+
+		this.sourceX = 0;
+		this.sourceY = 0;
+		this.sourceW = undefined;
+		this.sourceH = undefined;
+
+		this.color = undefined;
+		this.blend = undefined;
+
+		this.animations.clear();
+		this.currentAnimation = undefined;
+	}
 }
 
 // TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
@@ -451,11 +479,6 @@ export class NineSlice extends Graphic implements ISpriteLike {
 		if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
 		return this.asset.image;
 	}
-
-	// TODO(bret): remove these and allow Draw.image to make them optional
-	frame: number = 0;
-	frameW: number = 0;
-	frameH: number = 0;
 
 	// TODO(bret): See if we can remove this - they get set in recalculate()
 	patternT!: CanvasPattern;
@@ -619,11 +642,6 @@ type Assignable = Extract<
 
 export class Emitter extends Graphic {
 	asset: ImageAsset;
-
-	// TODO(bret): remove these and allow Draw.image to make them optional
-	frame: number = 0;
-	frameW: number = 0;
-	frameH: number = 0;
 
 	#types = new Map<string, ParticleType>();
 
@@ -821,7 +839,7 @@ export class Emitter extends Graphic {
 		blendCanvas.width = image.width;
 		blendCanvas.height = image.height;
 		const { width, height } = blendCanvas;
-		// TODO(bret): We might want to catch this
+		// TODO(bret): We might want to cache this
 		const blendCtx = blendCanvas.getContext('2d');
 		if (!blendCtx) throw new Error();
 
@@ -872,7 +890,7 @@ export interface Tileset {
 	columns: number;
 	rows: number;
 
-	sprite: SpriteAsset;
+	sprite: ImageAsset;
 	// TODO(bret): Update this to use Graphic's Parent
 	parent: Entity | undefined;
 

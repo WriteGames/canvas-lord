@@ -34,6 +34,18 @@ export class Graphic {
     }
     update(input) { }
     render(ctx, camera = Vec2.zero) { }
+    reset() {
+        this.x = 0;
+        this.y = 0;
+        this.alpha = 1;
+        this.angle = 0;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.scaleX = 0;
+        this.scaleY = 0;
+        this.scrollX = 1;
+        this.scrollY = 1;
+    }
 }
 export class GraphicList extends Graphic {
     graphics;
@@ -123,10 +135,6 @@ export class Text extends Graphic {
 // TODO(bret): How to tile?
 export class Sprite extends Graphic {
     asset;
-    // TODO(bret): remove these and allow Draw.image to make them optional
-    frame = 0;
-    frameW = 0;
-    frameH = 0;
     sourceX = 0;
     sourceY = 0;
     sourceW;
@@ -199,10 +207,19 @@ export class Sprite extends Graphic {
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
         Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
     }
+    reset() {
+        super.reset();
+        this.sourceX = 0;
+        this.sourceY = 0;
+        this.sourceW = undefined;
+        this.sourceH = undefined;
+        this.color = undefined;
+        this.blend = undefined;
+    }
 }
 export class AnimatedSprite extends Graphic {
     asset;
-    // TODO(bret): remove these and allow Draw.image to make them optional
+    inc = 0;
     frame = 0;
     frameId = 0;
     frameW = 0;
@@ -273,7 +290,6 @@ export class AnimatedSprite extends Graphic {
         this.originX = -this.frameW >> 1;
         this.originY = -this.frameH >> 1;
     }
-    inc = 0;
     update() {
         if (this.currentAnimation) {
             const { frames, frameRate } = this.currentAnimation;
@@ -297,6 +313,24 @@ export class AnimatedSprite extends Graphic {
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
         Draw.image(ctx, this, x, y, sourceX, sourceY, frameW, frameH);
     }
+    reset() {
+        super.reset();
+        this.inc = 0;
+        // TODO(bret): remove these and allow Draw.image to make them optional
+        this.frame = 0;
+        this.frameId = 0;
+        this.frameW = 0;
+        this.frameH = 0;
+        this.framesPerRow = 0;
+        this.sourceX = 0;
+        this.sourceY = 0;
+        this.sourceW = undefined;
+        this.sourceH = undefined;
+        this.color = undefined;
+        this.blend = undefined;
+        this.animations.clear();
+        this.currentAnimation = undefined;
+    }
 }
 // TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic {
@@ -312,10 +346,6 @@ export class NineSlice extends Graphic {
             throw new Error("asset.image hasn't loaded yet");
         return this.asset.image;
     }
-    // TODO(bret): remove these and allow Draw.image to make them optional
-    frame = 0;
-    frameW = 0;
-    frameH = 0;
     // TODO(bret): See if we can remove this - they get set in recalculate()
     patternT;
     patternL;
@@ -416,10 +446,6 @@ export class NineSlice extends Graphic {
 }
 export class Emitter extends Graphic {
     asset;
-    // TODO(bret): remove these and allow Draw.image to make them optional
-    frame = 0;
-    frameW = 0;
-    frameH = 0;
     #types = new Map();
     // TODO(bret): remove the seed
     random = new Random(2378495);
@@ -576,7 +602,7 @@ export class Emitter extends Graphic {
         blendCanvas.width = image.width;
         blendCanvas.height = image.height;
         const { width, height } = blendCanvas;
-        // TODO(bret): We might want to catch this
+        // TODO(bret): We might want to cache this
         const blendCtx = blendCanvas.getContext('2d');
         if (!blendCtx)
             throw new Error();
