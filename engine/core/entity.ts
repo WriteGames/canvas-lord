@@ -5,9 +5,9 @@ import type { Camera } from '../util/camera.js';
 import { Collider } from '../collider/collider.js';
 import * as Collide from '../collider/collide.js';
 import { PointCollider, type ColliderTag } from '../collider/index.js';
+import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 import { type ComponentProps } from '../util/components.js';
-import { Draw } from '../util/draw.js';
 import type { IRenderable, IEntityComponentType } from '../util/types.js';
 
 // TODO(bret): Fix this type lol
@@ -57,9 +57,20 @@ export class Entity implements IEntity, IRenderable {
 	scene!: Scene; // NOTE: set by scene
 	components = new Map<IEntityComponentType, any>();
 	depth = 0;
-	collider: Collider | undefined = undefined;
+	#collider: Collider | undefined = undefined;
 	visible = true;
 	#graphic: Graphic | undefined = undefined;
+
+	get collider() {
+		return this.#collider;
+	}
+
+	set collider(value) {
+		// TODO(bret): Might be good to do this, not sure yet
+		// this.#collider?.assignParent(null);
+		this.#collider = value;
+		this.#collider?.assignParent(this);
+	}
 
 	get graphic() {
 		return this.#graphic;
@@ -141,17 +152,13 @@ export class Entity implements IEntity, IRenderable {
 		}
 	}
 
-	renderCollider(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	renderCollider(
+		ctx: CanvasRenderingContext2D,
+		camera: Camera = Vec2.zero,
+	): void {
 		if (!this.collider) return;
 
-		const drawX = this.x - camera.x;
-		const drawY = this.y - camera.y;
-		this.collider.render?.(ctx, drawX, drawY);
-	}
-
-	_moveCollider(c: Collider, x: number, y: number) {
-		c.x += x;
-		c.y += y;
+		this.collider.render?.(ctx, -camera.x, -camera.y);
 	}
 
 	_collide(
@@ -171,12 +178,8 @@ export class Entity implements IEntity, IRenderable {
 			if (!e.collider?.collidable) continue;
 			if (tags.length && !tags.includes(e.collider.tag)) continue;
 
-			this._moveCollider(this.collider, x, y);
-			this._moveCollider(e.collider, e.x, e.y);
 			const collision = Collide.collide(this.collider, e.collider);
 			const result = collision ? e : null;
-			this._moveCollider(this.collider, -x, -y);
-			this._moveCollider(e.collider, -e.x, -e.y);
 			if (result === null) continue;
 
 			collide.push(result);

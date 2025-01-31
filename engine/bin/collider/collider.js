@@ -6,6 +6,7 @@ export class Collider {
     collidable = true;
     x;
     y;
+    parent; // NOTE(bret): This gets set via Entity
     static #optionsCollidable = {
         type: 'stroke',
         color: 'red',
@@ -22,6 +23,9 @@ export class Collider {
     constructor(x = 0, y = 0) {
         this.x = x;
         this.y = y;
+    }
+    assignParent(parent) {
+        this.parent = parent;
     }
     collide(other) {
         collide(this, other);

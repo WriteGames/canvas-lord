@@ -1,14 +1,24 @@
 import * as Collide from '../collider/collide.js';
 import { PointCollider } from '../collider/index.js';
+import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 const mouseCollider = new PointCollider();
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
     depth = 0;
-    collider = undefined;
+    #collider = undefined;
     visible = true;
     #graphic = undefined;
+    get collider() {
+        return this.#collider;
+    }
+    set collider(value) {
+        // TODO(bret): Might be good to do this, not sure yet
+        // this.#collider?.assignParent(null);
+        this.#collider = value;
+        this.#collider?.assignParent(this);
+    }
     get graphic() {
         return this.#graphic;
     }
@@ -72,16 +82,10 @@ export class Entity {
             this.#graphic?.render(ctx, camera);
         }
     }
-    renderCollider(ctx, camera) {
+    renderCollider(ctx, camera = Vec2.zero) {
         if (!this.collider)
             return;
-        const drawX = this.x - camera.x;
-        const drawY = this.y - camera.y;
-        this.collider.render?.(ctx, drawX, drawY);
-    }
-    _moveCollider(c, x, y) {
-        c.x += x;
-        c.y += y;
+        this.collider.render?.(ctx, -camera.x, -camera.y);
     }
     _collide(x, y, tag, earlyOut) {
         if (!this.collider)
@@ -97,12 +101,8 @@ export class Entity {
                 continue;
             if (tags.length && !tags.includes(e.collider.tag))
                 continue;
-            this._moveCollider(this.collider, x, y);
-            this._moveCollider(e.collider, e.x, e.y);
             const collision = Collide.collide(this.collider, e.collider);
             const result = collision ? e : null;
-            this._moveCollider(this.collider, -x, -y);
-            this._moveCollider(e.collider, -e.x, -e.y);
             if (result === null)
                 continue;
             collide.push(result);

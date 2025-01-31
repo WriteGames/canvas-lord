@@ -18,6 +18,41 @@ export class LineCollider extends Collider implements ILineCollider {
 	x2: number;
 	y2: number;
 
+	get start() {
+		return {
+			x: this.xStart,
+			left: this.xStart,
+			right: this.xStart,
+			y: this.yStart,
+			top: this.yStart,
+			bottom: this.yStart,
+		};
+	}
+	get end() {
+		return {
+			x: this.xEnd,
+			left: this.xEnd,
+			right: this.xEnd,
+			y: this.yEnd,
+			top: this.yEnd,
+			bottom: this.yEnd,
+		};
+	}
+
+	get xStart() {
+		return this.x1 + this.parent.x;
+	}
+	get yStart() {
+		return this.y1 + this.parent.y;
+	}
+
+	get xEnd() {
+		return this.x2 + this.parent.x;
+	}
+	get yEnd() {
+		return this.y2 + this.parent.y;
+	}
+
 	constructor(x1: number, y1: number, x2: number, y2: number, x = 0, y = 0) {
 		super(x, y);
 		this.x1 = x1;

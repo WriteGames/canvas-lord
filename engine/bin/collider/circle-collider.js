@@ -1,6 +1,7 @@
 /* Canvas Lord v0.4.4 */
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
+import { Vec2 } from '../math/index.js';
 // TODO(bret): getter for width/height :O
 export class CircleCollider extends Collider {
     type = 'circle';
@@ -10,6 +11,15 @@ export class CircleCollider extends Collider {
     }
     set r(value) {
         this.radius = value;
+    }
+    get center() {
+        return new Vec2(this.centerX, this.centerY);
+    }
+    get centerX() {
+        return this.x + this.parent.x;
+    }
+    get centerY() {
+        return this.y + this.parent.y;
     }
     constructor(r, x = 0, y = 0) {
         super(x, y);
@@ -21,7 +31,7 @@ export class CircleCollider extends Collider {
         Draw.circle(ctx, {
             type: 'stroke',
             color: 'red',
-        }, x, y, this.r);
+        }, x + this.centerX - this.r, y + this.centerY - this.r, this.r);
     }
 }
 //# sourceMappingURL=circle-collider.js.map

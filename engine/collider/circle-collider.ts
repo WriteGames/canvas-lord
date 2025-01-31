@@ -1,6 +1,7 @@
 /* Canvas Lord v0.4.4 */
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
+import { Vec2 } from '../math/index.js';
 
 interface ICircleCollider {
 	type: 'circle';
@@ -19,6 +20,16 @@ export class CircleCollider extends Collider implements ICircleCollider {
 		this.radius = value;
 	}
 
+	get center() {
+		return new Vec2(this.centerX, this.centerY);
+	}
+	get centerX() {
+		return this.x + this.parent.x;
+	}
+	get centerY() {
+		return this.y + this.parent.y;
+	}
+
 	constructor(r: number, x = 0, y = 0) {
 		super(x, y);
 		if (r < 0) throw new Error('Invalid radius');
@@ -32,8 +43,8 @@ export class CircleCollider extends Collider implements ICircleCollider {
 				type: 'stroke',
 				color: 'red',
 			},
-			x,
-			y,
+			x + this.centerX - this.r,
+			y + this.centerY - this.r,
 			this.r,
 		);
 	}

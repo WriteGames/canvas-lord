@@ -8,6 +8,9 @@ export class RightTriangleCollider extends Collider {
     height;
     #orientation;
     #points;
+    get points() {
+        return this.#points;
+    }
     get orientation() {
         return this.#orientation;
     }
@@ -32,19 +35,31 @@ export class RightTriangleCollider extends Collider {
         this.width = w;
         this.height = h;
         this.#orientation = orientation;
+    }
+    assignParent(parent) {
+        super.assignParent(parent);
         this.#computePoints();
     }
     get left() {
-        return this.x;
+        return this.x + this.parent.x;
     }
     get right() {
-        return this.x + this.w - 1;
+        return this.x + this.parent.x + this.w - 1;
     }
     get top() {
-        return this.y;
+        return this.y + this.parent.y;
     }
     get bottom() {
-        return this.y + this.h - 1;
+        return this.y + this.parent.y + this.h - 1;
+    }
+    get p1() {
+        return this.#points[0];
+    }
+    get p2() {
+        return this.#points[1];
+    }
+    get p3() {
+        return this.#points[2];
     }
     get x1() {
         return this.#points[0][0];
@@ -72,45 +87,31 @@ export class RightTriangleCollider extends Collider {
         let points;
         switch (this.orientation) {
             case 'NE': {
-                points = [
-                    [TL[0], TL[1]],
-                    [BR[0], BR[1]],
-                    [BL[0], BL[1]],
-                ];
+                points = [TL, BR, BL];
                 break;
             }
             case 'SE': {
-                points = [
-                    [TR[0], TR[1]],
-                    [BL[0], BL[1]],
-                    [TL[0], TL[1]],
-                ];
+                points = [TR, BL, TL];
                 break;
             }
             case 'SW': {
-                points = [
-                    [BR[0], BR[1]],
-                    [TL[0], TL[1]],
-                    [TR[0], TR[1]],
-                ];
+                points = [BR, TL, TR];
                 break;
             }
             case 'NW': {
-                points = [
-                    [BL[0], BL[1]],
-                    [TR[0], TR[1]],
-                    [BR[0], BR[1]],
-                ];
+                points = [BL, TR, BR];
                 break;
             }
             default:
-                const msg = `Orientation "${this.orientation}" not supported`;
-                throw new Error(msg);
+                throw new Error(`Invalid orientation (${this.orientation})`);
         }
         this.#points = points;
     }
     render(ctx, x = 0, y = 0) {
-        Draw.polygon(ctx, this.options, x + this.x, y + this.y, this.#points);
+        // TODO(bret): Fix this
+        Draw.polygon(ctx, this.options, x, y, 
+        // @ts-expect-error
+        this.#points);
     }
 }
 //# sourceMappingURL=right-triangle-collider.js.map

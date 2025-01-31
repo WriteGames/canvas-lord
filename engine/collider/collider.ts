@@ -1,4 +1,5 @@
 /* Canvas Lord v0.4.4 */
+import type { Entity } from '../core/entity.js';
 import { type DrawOptions } from '../util/draw.js';
 import { collide } from './collide.js';
 
@@ -12,10 +13,13 @@ export type ColliderType =
 	| 'grid';
 export type ColliderTag = string | undefined;
 
+type ColliderParent = Entity;
+
 interface ICollider {
 	type: ColliderType;
 	tag?: ColliderTag;
 	collidable: boolean;
+	parent: ColliderParent;
 
 	x: number;
 	y: number;
@@ -31,6 +35,7 @@ export abstract class Collider implements ICollider {
 	collidable = true;
 	x: number;
 	y: number;
+	parent!: ColliderParent; // NOTE(bret): This gets set via Entity
 
 	static #optionsCollidable: DrawOptions = {
 		type: 'stroke',
@@ -51,6 +56,10 @@ export abstract class Collider implements ICollider {
 	constructor(x = 0, y = 0) {
 		this.x = x;
 		this.y = y;
+	}
+
+	assignParent(parent: ColliderParent) {
+		this.parent = parent;
 	}
 
 	collide(other: Collider) {

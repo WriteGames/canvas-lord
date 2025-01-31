@@ -1,5 +1,6 @@
 /* Canvas Lord v0.4.4 */
 import { Collider } from './collider.js';
+import { Vec2 } from '../math/index.js';
 import { Draw } from '../util/draw.js';
 export class PolygonCollider extends Collider {
     type = 'polygon';
@@ -17,6 +18,14 @@ export class PolygonCollider extends Collider {
             });
         }
         return lines;
+    }
+    get edges() {
+        const lines = this.lines;
+        return lines.map(({ x1, y1, x2, y2 }) => new Vec2(x2 - x1, y2 - y1));
+    }
+    get axes() {
+        const edges = this.edges;
+        return edges.map(([_x, _y]) => new Vec2(-_y, _x));
     }
     // TODO(bret): throw error if points are invalid
     constructor(points, x = 0, y = 0) {

@@ -17,6 +17,18 @@ export class RectCollider extends Collider {
     set h(value) {
         this.height = value;
     }
+    get left() {
+        return this.parent.x + this.x;
+    }
+    get right() {
+        return this.parent.x + this.x + this.w - 1;
+    }
+    get top() {
+        return this.parent.y + this.y;
+    }
+    get bottom() {
+        return this.parent.y + this.y + this.h - 1;
+    }
     constructor(w, h, x = 0, y = 0) {
         super(x, y);
         if (w < 0)
@@ -26,8 +38,8 @@ export class RectCollider extends Collider {
         this.width = w;
         this.height = h;
     }
-    render(ctx, x, y) {
-        Draw.rect(ctx, this.options, x + this.x, y + this.y, this.w, this.h);
+    render(ctx, x = 0, y = 0) {
+        Draw.rect(ctx, this.options, x + this.left, y + this.top, this.w, this.h);
     }
 }
 //# sourceMappingURL=rect-collider.js.map
