@@ -13,10 +13,10 @@ export class PointCollider extends Collider implements IPointCollider {
 		return this.parent.x + this.x;
 	}
 	get right() {
-		return this.parent.y + this.x;
+		return this.parent.x + this.x;
 	}
 	get top() {
-		return this.parent.x + this.y;
+		return this.parent.y + this.y;
 	}
 	get bottom() {
 		return this.parent.y + this.y;
@@ -27,6 +27,6 @@ export class PointCollider extends Collider implements IPointCollider {
 	}
 
 	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
-		Draw.circle(ctx, this.options, x + this.x, y + this.y, 1);
+		Draw.circle(ctx, this.options, x + this.left, y + this.top, 1);
 	}
 }

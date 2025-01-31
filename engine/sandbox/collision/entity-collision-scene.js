@@ -14,11 +14,11 @@ import { Keys } from '/bin/core/input.js';
 const drawRect = (ctx, fill, ...args) =>
 	fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-const drawPolygon = (ctx, tri, color, type = 'stroke', map = false) => {
-	let points = [...tri.points];
-	if (map) points = points.map(([x, y]) => [x + tri.x, y + tri.y]);
+const drawPolygon = (ctx, polygon, color, type = 'stroke', map = false) => {
+	let verts = [...polygon.vertices];
+	// if (map) verts = verts.map(([x, y]) => [x + polygon.x, y + polygon.y]);
 
-	Draw.polygon(ctx, { type, color }, 0, 0, points);
+	Draw.polygon(ctx, { type, color }, 0, 0, verts);
 };
 
 const drawRightTriangle = (ctx, rt, color, x = 0, y = 0, style) => {
@@ -50,7 +50,7 @@ const drawRightTriangle = (ctx, rt, color, x = 0, y = 0, style) => {
 	}
 	drawPolygon(
 		ctx,
-		{ x: 0, y: 0, points: points.map(({ x, y }) => [x, y]) },
+		{ x: 0, y: 0, vertices: points.map(({ x, y }) => [x, y]) },
 		color,
 		style,
 	);
@@ -61,6 +61,7 @@ const COLLIDER_TAG = {
 	YELLOW: 'yellow',
 	ORANGE: 'orange',
 	MOUSE: 'mouse',
+	BG: 'background',
 };
 
 class CollisionEntity extends Entity {
@@ -68,16 +69,26 @@ class CollisionEntity extends Entity {
 
 	constructor(x, y, type) {
 		super(x, y);
-		if (type === COLLIDER_TAG.YELLOW) {
-			this.color = 'yellow';
-		} else if (type === COLLIDER_TAG.ORANGE) {
-			this.color = 'orange';
-		} else if (type === COLLIDER_TAG.SLOPE) {
-			this.color = 'black';
-		} else if (type === COLLIDER_TAG.MOUSE) {
-			this.color = 'green';
-		} else {
-			this.color = 'magenta';
+		switch (type) {
+			case COLLIDER_TAG.YELLOW:
+				this.color = 'yellow';
+				break;
+			case COLLIDER_TAG.ORANGE:
+				this.color = 'orange';
+				break;
+			case COLLIDER_TAG.SLOPE:
+				this.color = 'black';
+				break;
+			case COLLIDER_TAG.MOUSE:
+				this.color = 'green';
+				break;
+			case COLLIDER_TAG.BG:
+				this.color = '#10101066';
+				this.color = '#88008822';
+				break;
+			default:
+				this.color = 'magenta';
+				break;
 		}
 	}
 
@@ -114,6 +125,31 @@ class CollisionEntity extends Entity {
 				);
 				break;
 			}
+			case 'point': {
+				const radius = 10;
+				Draw.circle(
+					ctx,
+					{ ...this, type: 'fill', color },
+					this.x - radius,
+					this.y - radius,
+					radius,
+				);
+				break;
+			}
+			case 'line': {
+				ctx.save();
+				ctx.lineWidth = 10;
+				Draw.line(
+					ctx,
+					{ ...this, color },
+					this.collider.xStart,
+					this.collider.yStart,
+					this.collider.xEnd,
+					this.collider.yEnd,
+				);
+				ctx.restore();
+				break;
+			}
 			case 'right-triangle': {
 				drawRightTriangle(
 					ctx,
@@ -126,11 +162,7 @@ class CollisionEntity extends Entity {
 				break;
 			}
 			case 'polygon': {
-				this.collider.x = this.x;
-				this.collider.y = this.y;
-				drawPolygon(ctx, this.collider, color, 'fill', true);
-				this.collider.x = 0;
-				this.collider.y = 0;
+				drawPolygon(ctx, this.collider, color, 'fill');
 				break;
 			}
 		}
@@ -245,6 +277,14 @@ class RightTriangleEntity extends CollisionEntity {
 	}
 }
 
+class BackgroundCollider extends CollisionEntity {
+	constructor(x, y, collider) {
+		super(x, y, COLLIDER_TAG.BG);
+		this.collider = collider;
+		this.collider.tag = COLLIDER_TAG.BG;
+	}
+}
+
 class MouseEntity extends CollisionEntity {
 	// TODO(bret): PointCollider :)
 
@@ -283,6 +323,38 @@ export class EntityCollisionScene extends Scene {
 
 		const { canvas } = engine;
 		this.bounds = [0, 0, canvas.width, canvas.height];
+
+		const rectBG = new BackgroundCollider(40, 30, new RectCollider(50, 50));
+		const circleBG = new BackgroundCollider(
+			140,
+			30,
+			new CircleCollider(25),
+		);
+		const pointBG = new BackgroundCollider(115, 70, new PointCollider());
+		[rectBG, circleBG, pointBG].forEach((bg) => {
+			this.addEntity(bg);
+			this.addRenderable(bg);
+		});
+		const lineBG = new BackgroundCollider(
+			185,
+			40,
+			new LineCollider(50, 0, 0, 30),
+		);
+		const polygonBG = new BackgroundCollider(
+			100,
+			100,
+			new PolygonCollider([
+				[0, 0],
+				[120, 30],
+				[100, 70],
+				[50, 100],
+			]),
+		);
+		// TODO: GridCollider
+		[rectBG, circleBG, pointBG, lineBG, polygonBG].forEach((bg) => {
+			this.addEntity(bg);
+			this.addRenderable(bg);
+		});
 
 		const triLT = new RightTriangleEntity(0, 0, 'SE', COLLIDER_TAG.SLOPE);
 

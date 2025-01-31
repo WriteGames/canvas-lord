@@ -62,10 +62,10 @@ export class LineCollider extends Collider implements ILineCollider {
 	}
 
 	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
-		const x1 = x + this.x + this.x1;
-		const y1 = y + this.y + this.y1;
-		const x2 = x + this.x + this.x2;
-		const y2 = y + this.y + this.y2;
+		const x1 = x + this.xStart;
+		const y1 = y + this.yStart;
+		const x2 = x + this.xEnd;
+		const y2 = y + this.yEnd;
 		Draw.line(ctx, this.options, x1, y1, x2, y2);
 	}
 }

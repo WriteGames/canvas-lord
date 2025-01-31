@@ -20,18 +20,27 @@ interface Line {
 export class PolygonCollider extends Collider implements IPolygonCollider {
 	type = 'polygon' as const;
 
-	points: Points;
+	#points: Points;
+
+	get vertices(): Points {
+		return this.#points.map((p) => {
+			return [
+				p[0] + this.x + this.parent.x,
+				p[1] + this.y + this.parent.y,
+			];
+		}) as Points;
+	}
 
 	get lines() {
 		const lines: Line[] = [];
-		const { points } = this;
+		const points = this.#points;
 		const n = points.length;
 		for (let i = 0, j = n - 1; i < n; j = i++) {
 			lines.push({
-				x1: this.x + points[j][0],
-				y1: this.y + points[j][1],
-				x2: this.x + points[i][0],
-				y2: this.y + points[i][1],
+				x1: this.x + this.parent.x + points[j][0],
+				y1: this.y + this.parent.y + points[j][1],
+				x2: this.x + this.parent.x + points[i][0],
+				y2: this.y + this.parent.y + points[i][1],
 			});
 		}
 		return lines;
@@ -51,10 +60,12 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 	constructor(points: Points, x = 0, y = 0) {
 		super(x, y);
 
-		this.points = points;
+		this.#points = points;
 	}
 
 	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
-		Draw.polygon(ctx, this.options, x + this.x, y + this.y, this.points);
+		const drawX = x + this.parent.x;
+		const drawY = y + this.parent.y;
+		Draw.polygon(ctx, this.options, drawX, drawY, this.#points);
 	}
 }
