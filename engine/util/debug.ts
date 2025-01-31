@@ -407,6 +407,34 @@ export class Debug implements Debug {
 				y: -(drawY + padding + padding + 70),
 			});
 		}
+
+		drawText(
+			drawX + padding,
+			drawY + padding + 250,
+			`Collider: ${entity.collider?.type ?? 'none'}`,
+		);
+
+		if (entity.collider) {
+			const tag = entity.collider.tag;
+			drawText(
+				drawX + padding,
+				drawY + padding + 270,
+				`Tag: ${tag ? `"${tag}"` : '[none]'}`,
+			);
+
+			drawText(
+				drawX + padding,
+				drawY + padding + 290,
+				JSON.stringify({
+					x: entity.collider.x,
+					y: entity.collider.y,
+					points:
+						'points' in entity.collider
+							? entity.collider.points
+							: null,
+				}),
+			);
+		}
 	}
 
 	renderSceneDebug(ctx: CanvasRenderingContext2D, scene: Scene): void {
@@ -491,7 +519,7 @@ export class Debug implements Debug {
 			const r = 3;
 			Draw.circle(
 				ctx,
-				{ type: 'fill', color: 'lime', radius: r },
+				{ type: 'fill', color: 'lime' },
 				e.x - r - camera.x,
 				e.y - r - camera.y,
 				r,

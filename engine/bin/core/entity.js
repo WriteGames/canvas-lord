@@ -1,13 +1,13 @@
-import * as Collision from '../util/collision.js';
+import * as Collide from '../collider/collide.js';
+import { PointCollider } from '../collider/index.js';
 import * as Components from '../util/components.js';
-import { Draw } from '../util/draw.js';
+const mouseCollider = new PointCollider();
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
     depth = 0;
     collider = undefined;
     visible = true;
-    collidable = true;
     #graphic = undefined;
     get graphic() {
         return this.#graphic;
@@ -49,6 +49,7 @@ export class Entity {
     // TODO(bret): Would be good to set up for non-rect shapes :)
     get width() {
         if (this.collider && 'w' in this.collider)
+            // TODO(bret): fix "as number"
             return this.collider.w;
         return 0;
     }
@@ -57,6 +58,7 @@ export class Entity {
     }
     get height() {
         if (this.collider && 'h' in this.collider)
+            // TODO(bret): fix "as number"
             return this.collider.h;
         return 0;
     }
@@ -73,56 +75,13 @@ export class Entity {
     renderCollider(ctx, camera) {
         if (!this.collider)
             return;
-        const color = this.collidable ? 'red' : 'gray';
-        switch (this.collider.type) {
-            case 'rect':
-                const rect = {
-                    x: this.x + this.collider.x - camera.x,
-                    y: this.y + this.collider.y - camera.y,
-                    width: this.collider.w,
-                    height: this.collider.h,
-                };
-                Draw.rect(ctx, { type: 'stroke', color, ...rect }, rect.x, rect.y, rect.width - 1, rect.height - 1);
-                break;
-            case 'triangle':
-                Draw.polygon(ctx, 
-                // @ts-ignore
-                { type: 'stroke', color }, this.x - camera.x, this.y - camera.y, [
-                    [this.collider.x1, this.collider.y1],
-                    [this.collider.x2, this.collider.y2],
-                    [this.collider.x3, this.collider.y3],
-                ]);
-                break;
-            case 'grid':
-                // @ts-ignore
-                this.collider.color = color;
-                // @ts-ignore
-                this.collider.renderOutline(ctx, camera, this.x, this.y);
-                break;
-            // default:
-            // 	console.warn('not supported');
-        }
+        const drawX = this.x - camera.x;
+        const drawY = this.y - camera.y;
+        this.collider.render?.(ctx, drawX, drawY);
     }
     _moveCollider(c, x, y) {
-        switch (c.type) {
-            case 'line':
-                c.x1 += x;
-                c.x2 += x;
-                c.y1 += y;
-                c.y2 += y;
-                break;
-            case 'triangle':
-                c.x1 += x;
-                c.x2 += x;
-                c.x3 += x;
-                c.y1 += y;
-                c.y2 += y;
-                c.y3 += y;
-                break;
-            default:
-                c.x += x;
-                c.y += y;
-        }
+        c.x += x;
+        c.y += y;
     }
     _collide(x, y, tag, earlyOut) {
         if (!this.collider)
@@ -134,13 +93,13 @@ export class Entity {
             const e = this.scene.entities.inScene[i];
             if (e === this)
                 continue;
-            if (!e.collidable || !e.collider)
+            if (!e.collider?.collidable)
                 continue;
             if (tags.length && !tags.includes(e.collider.tag))
                 continue;
             this._moveCollider(this.collider, x, y);
             this._moveCollider(e.collider, e.x, e.y);
-            const collision = Collision.collide(this.collider, e.collider);
+            const collision = Collide.collide(this.collider, e.collider);
             const result = collision ? e : null;
             this._moveCollider(this.collider, -x, -y);
             this._moveCollider(e.collider, -e.x, -e.y);
@@ -169,7 +128,10 @@ export class Entity {
         const { input } = this.scene.engine;
         const mouseX = input.mouse.x + this.scene.camera.x;
         const mouseY = input.mouse.y + this.scene.camera.y;
-        return Collision.collide({
+        return Collide.collide(
+        // TODO(bret): input.mouse.collider or smth
+        // @ts-expect-error
+        {
             type: 'point',
             x: mouseX - x,
             y: mouseY - y,

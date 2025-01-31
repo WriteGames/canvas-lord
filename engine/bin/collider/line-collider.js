@@ -1,0 +1,25 @@
+/* Canvas Lord v0.4.4 */
+import { Collider } from './collider.js';
+import { Draw } from '../util/draw.js';
+export class LineCollider extends Collider {
+    type = 'line';
+    x1;
+    y1;
+    x2;
+    y2;
+    constructor(x1, y1, x2, y2, x = 0, y = 0) {
+        super(x, y);
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+    }
+    render(ctx, x = 0, y = 0) {
+        const x1 = x + this.x + this.x1;
+        const y1 = y + this.y + this.y1;
+        const x2 = x + this.x + this.x2;
+        const y2 = y + this.y + this.y2;
+        Draw.line(ctx, this.options, x1, y1, x2, y2);
+    }
+}
+//# sourceMappingURL=line-collider.js.map

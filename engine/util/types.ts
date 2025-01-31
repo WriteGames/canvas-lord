@@ -49,4 +49,4 @@ export interface IRenderable {
 
 export type Renderable = IRenderable;
 
-export type CSSColor = string;
+export type CSSColor = CanvasRenderingContext2D['fillStyle'];

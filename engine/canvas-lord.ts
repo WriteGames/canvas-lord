@@ -20,9 +20,9 @@ export {
 
 export { Draw } from './util/draw.js';
 export { Camera } from './util/camera.js';
-export * as Collision from './util/collision.js';
+export * as Collision from './collider/collision.js';
 export {
 	checkLineSegmentIntersection,
 	getLineSegmentIntersection,
-} from './util/collision.js';
+} from './collider/collision.js';
 export { Grid } from './util/grid.js';

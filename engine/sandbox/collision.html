@@ -36,20 +36,29 @@
 				Scene,
 				Entity,
 			} from '../bin/canvas-lord.js';
+			import * as Collide from '../bin/collider/collide.js';
 			import { addPos, Vec2 } from '../bin/math/index.js';
+			import {
+				LineCollider,
+				PointCollider,
+				CircleCollider,
+				TriangleCollider,
+				RightTriangleCollider,
+				RectCollider,
+			} from '../bin/collider/index.js';
 
 			const drawRect = (ctx, fill, ...args) =>
 				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-			const drawTriangle = (ctx, tri, type = 'stroke') => {
-				Draw.polygon(ctx, { type }, 0, 0, [
+			const drawTriangle = (ctx, tri, color, type = 'stroke') => {
+				Draw.polygon(ctx, { type, color }, 0, 0, [
 					[tri.x1, tri.y1],
 					[tri.x2, tri.y2],
 					[tri.x3, tri.y3],
 				]);
 			};
 
-			const drawRightTriangle = (ctx, rt, x = 0, y = 0, style) => {
+			const drawRightTriangle = (ctx, rt, color, x = 0, y = 0, style) => {
 				const TL = new Vec2(x + rt.x, y + rt.y);
 				const TR = new Vec2(x + rt.x + rt.w, y + rt.y);
 				const BR = new Vec2(x + rt.x + rt.w, y + rt.y + rt.h);
@@ -86,6 +95,7 @@
 						x3: points[2].x,
 						y3: points[2].y,
 					},
+					color,
 					style,
 				);
 			};
@@ -104,36 +114,26 @@
 			const RADIUS_L = 10;
 
 			const createRect = (point, size) => {
-				return {
-					type: 'rect',
-					x: point[0] - size,
-					y: point[1] - size,
-					w: size << 1,
-					h: size << 1,
-					colliding: false,
-				};
+				return new RectCollider(
+					size << 1,
+					size << 1,
+					point[0] - size,
+					point[1] - size,
+				);
 			};
 
 			const createCircle = (point, size) => {
-				return {
-					type: 'circle',
-					x: point[0],
-					y: point[1],
-					radius: size,
-					colliding: false,
-				};
+				return new CircleCollider(size, point[0], point[1]);
 			};
 
 			const createRightTriangle = (point, size) => {
-				return {
-					type: 'right-triangle',
-					x: point[0] - size,
-					y: point[1] - size,
-					w: size << 1,
-					h: size << 1,
-					orientation: 'NW',
-					colliding: false,
-				};
+				return new RightTriangleCollider(
+					size << 1,
+					size << 1,
+					'NW',
+					point[0] - size,
+					point[1] - size,
+				);
 			};
 
 			const resizeTriangle = (triangle, point, size) => {
@@ -146,10 +146,11 @@
 			};
 
 			const createTriangle = (point, size) => {
-				const triangle = {
-					type: 'triangle',
-					colliding: false,
-				};
+				const triangle = new TriangleCollider([
+					[0, 0],
+					[1, 1],
+					[2, 2],
+				]);
 				resizeTriangle(triangle, point, size);
 				return triangle;
 			};
@@ -165,11 +166,7 @@
 					case 'triangle':
 						return createTriangle(point, size);
 					case 'point':
-						return {
-							type: 'point',
-							x: -1,
-							y: -1,
-						};
+						return new PointCollider();
 					default:
 						throw new Error(
 							`createFromType(): "${type}" not yet supported`,
@@ -301,7 +298,7 @@
 
 						let colliding;
 						try {
-							colliding = Collision.collide(large, small);
+							colliding = Collide.collide(large, small);
 						} catch (e) {
 							colliding = undefined;
 						}
@@ -367,17 +364,17 @@
 							case 'circle':
 								Draw.circle(
 									ctx,
-									{ type: 'stroke' },
+									{ type: 'stroke', color: ctx.strokeStyle },
 									shape.x - shape.radius,
 									shape.y - shape.radius,
 									shape.radius,
 								);
 								break;
 							case 'right-triangle':
-								drawRightTriangle(ctx, shape);
+								drawRightTriangle(ctx, shape, ctx.strokeStyle);
 								break;
 							case 'triangle':
-								drawTriangle(ctx, shape);
+								drawTriangle(ctx, shape, ctx.strokeStyle);
 								break;
 						}
 					});
@@ -406,38 +403,16 @@
 
 				lines = [];
 
-				rect = {
-					type: 'rect',
-					x: 20,
-					y: 20,
-					w: RADIUS_L,
-					h: RADIUS_L,
-					colliding: false,
-				};
-				circle = {
-					type: 'circle',
-					x: 190,
-					y: 40,
-					radius: RADIUS_S,
-					colliding: false,
-				};
-				line = {
-					type: 'line',
-					x1: 0,
-					y1: 0,
-					x2: 0,
-					y2: 0,
-					colliding: false,
-				};
-				rightTriangle = {
-					type: 'right-triangle',
-					x: 20,
-					y: 20,
-					w: RADIUS_L,
-					h: RADIUS_L,
-					orientation: 'NW',
-					colliding: false,
-				};
+				rect = new RectCollider(RADIUS_L, RADIUS_L, 20, 20);
+				circle = new CircleCollider(RADIUS_S, 190, 40);
+				line = new LineCollider(0, 0, 0, 0);
+				rightTriangle = new RightTriangleCollider(
+					RADIUS_L,
+					RADIUS_L,
+					'NW',
+					20,
+					20,
+				);
 				triangle = {
 					type: 'triangle',
 					x1: 0,
@@ -608,7 +583,7 @@
 							case 'line':
 								Draw.line(
 									ctx,
-									{},
+									{ color: ctx.strokeStyle },
 									shape.x1,
 									shape.y1,
 									shape.x2,
@@ -618,7 +593,7 @@
 							case 'circle':
 								Draw.circle(
 									ctx,
-									{ type: 'stroke' },
+									{ type: 'stroke', color: ctx.strokeStyle },
 									shape.x - shape.radius,
 									shape.y - shape.radius,
 									shape.radius,
@@ -651,11 +626,11 @@
 					});
 
 					ctx.strokeStyle = this.triangle.colliding ? 'red' : 'lime';
-					drawTriangle(ctx, this.triangle);
+					drawTriangle(ctx, this.triangle, ctx.strokeStyle);
 					ctx.strokeStyle = this.rightTriangle.colliding
 						? 'red'
 						: 'lime';
-					drawRightTriangle(ctx, this.rightTriangle);
+					drawRightTriangle(ctx, this.rightTriangle, ctx.strokeStyle);
 				}
 			}
 
@@ -695,45 +670,35 @@
 								this.collider.h,
 							);
 
-							const w = this.collider.w;
-							const h = this.collider.h;
-							drawRect(ctx, false, x, y, w, h);
+							this.collider.render(ctx, this.x, this.y);
 							break;
 						}
 						case 'circle': {
 							Draw.circle(
 								ctx,
-								{ type: 'fill' },
+								{ ...this, type: 'fill' },
 								this.x - this.collider.radius,
 								this.y - this.collider.radius,
 								this.collider.radius,
 							);
-							Draw.circle(
+							this.collider.render(
 								ctx,
-								{ type: 'stroke' },
 								this.x - this.collider.radius + this.collider.x,
 								this.y - this.collider.radius + this.collider.y,
-								this.collider.radius,
 							);
 							break;
 						}
 						case 'right-triangle': {
-							ctx.fillStyle = this.color;
 							drawRightTriangle(
 								ctx,
 								this.collider,
+								this.color,
 								this.x,
 								this.y,
 								'fill',
 							);
-							ctx.strokeStyle = 'red';
-							drawRightTriangle(
-								ctx,
-								this.collider,
-								this.x,
-								this.y,
-								'stroke',
-							);
+
+							this.collider.render(ctx, this.x, this.y);
 						}
 					}
 				}
@@ -797,13 +762,7 @@
 			}
 
 			class SquareEntity extends MovingEntity {
-				collider = {
-					type: 'rect',
-					x: 0,
-					y: 0,
-					w: 20,
-					h: 20,
-				};
+				collider = new RectCollider(20, 20);
 
 				constructor(...args) {
 					super(...args);
@@ -812,12 +771,7 @@
 			}
 
 			class CircleEntity extends MovingEntity {
-				collider = {
-					type: 'circle',
-					x: 0,
-					y: 0,
-					radius: 10,
-				};
+				collider = new CircleCollider(10);
 
 				constructor(...args) {
 					super(...args);
@@ -830,13 +784,11 @@
 			class RightTriangleEntity extends CollisionEntity {
 				static size = 50;
 
-				collider = {
-					type: 'right-triangle',
-					x: 0,
-					y: 0,
-					w: RightTriangleEntity.size,
-					h: RightTriangleEntity.size,
-				};
+				collider = new RightTriangleCollider(
+					RightTriangleEntity.size,
+					RightTriangleEntity.size,
+					'NW',
+				);
 
 				constructor(x, y, orientation, type) {
 					super(x, y, type);
@@ -846,13 +798,8 @@
 			}
 
 			class MouseEntity extends CollisionEntity {
-				collider = {
-					type: 'rect',
-					x: 0,
-					y: 0,
-					w: 10,
-					h: 10,
-				};
+				// TODO(bret): PointCollider :)
+				collider = new RectCollider(0, 0, 10, 10);
 
 				constructor(x, y) {
 					super(x, y);

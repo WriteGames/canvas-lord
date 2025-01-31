@@ -1,6 +1,6 @@
 /* Canvas Lord v0.4.4 */
-import * as Components from './components.js';
 import { type ComponentProps } from './components.js';
+import type { CSSColor } from './types.js';
 
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 
@@ -16,7 +16,8 @@ export const drawable = {
 	color: undefined,
 };
 
-interface DrawOptions {
+export interface DrawOptions {
+	type?: 'fill' | 'stroke';
 	originX?: number;
 	originY?: number;
 	angle?: number;
@@ -25,7 +26,12 @@ interface DrawOptions {
 	offsetX?: number;
 	offsetY?: number;
 	alpha?: number;
-	color?: CanvasRenderingContext2D['fillStyle'];
+	color?: CSSColor;
+}
+
+interface ImageOptions extends DrawOptions {
+	imageSrc: HTMLCanvasElement | HTMLImageElement | null;
+	blend?: boolean;
 }
 
 interface TextOptions extends DrawOptions {
@@ -97,14 +103,10 @@ export const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 
 export const Draw = {
 	circle: moveCanvas(
-		(
-			ctx,
-			circle: ComponentProps<typeof Components.circle>,
-			x: number,
-			y: number,
-			radius: number,
-		) => {
+		(ctx, options: DrawOptions, x: number, y: number, radius: number) => {
 			initTempCanvas(ctx);
+
+			const color = options.color ?? 'magenta';
 
 			ctx.translate(0.5, 0.5);
 
@@ -113,13 +115,13 @@ export const Draw = {
 			// It could be good to pass an option that dictates whether or not to center it :)
 			ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
 
-			switch (circle.type) {
+			switch (options.type) {
 				case 'fill':
-					ctx.fillStyle = circle.color;
+					ctx.fillStyle = color;
 					ctx.fill();
 					break;
 				case 'stroke':
-					ctx.strokeStyle = circle.color;
+					ctx.strokeStyle = color;
 					ctx.stroke();
 					break;
 			}
@@ -140,7 +142,7 @@ export const Draw = {
 	rect: moveCanvas(
 		(
 			ctx,
-			rect: ComponentProps<typeof Components.rect>,
+			options: DrawOptions,
 			x: number,
 			y: number,
 			w: number,
@@ -148,15 +150,17 @@ export const Draw = {
 		) => {
 			initTempCanvas(ctx);
 
+			const color = options.color ?? 'magenta';
+
 			ctx.translate(0.5, 0.5);
 			const args = [x, y, w, h] as const;
-			switch (rect.type) {
+			switch (options.type) {
 				case 'fill':
-					ctx.fillStyle = rect.color;
+					ctx.fillStyle = color;
 					ctx.fillRect(...args);
 					break;
 				case 'stroke':
-					ctx.strokeStyle = rect.color;
+					ctx.strokeStyle = color;
 					ctx.strokeRect(...args);
 					break;
 			}
@@ -164,15 +168,10 @@ export const Draw = {
 	),
 
 	polygon: moveCanvas(
-		(
-			ctx,
-			// TODO(bret): actually set up the correct type here
-			options: ComponentProps<typeof Components.rect>,
-			x,
-			y,
-			_points: [number, number][],
-		) => {
+		(ctx, options: DrawOptions, x, y, _points: [number, number][]) => {
 			initTempCanvas(ctx);
+
+			const color = options.color ?? 'magenta';
 
 			ctx.translate(0.5, 0.5);
 			ctx.beginPath();
@@ -184,11 +183,11 @@ export const Draw = {
 			}
 			switch (options.type) {
 				case 'fill':
-					ctx.fillStyle = options.color;
+					ctx.fillStyle = color;
 					ctx.fill();
 					break;
 				case 'stroke':
-					ctx.strokeStyle = options.color;
+					ctx.strokeStyle = color;
 					ctx.stroke();
 					break;
 			}
@@ -198,7 +197,7 @@ export const Draw = {
 	image: moveCanvas(
 		(
 			ctx,
-			image: ComponentProps<typeof Components.staticImage>,
+			options: ImageOptions,
 			drawX: number = 0,
 			drawY: number = 0,
 			sourceX?: number,
@@ -208,7 +207,9 @@ export const Draw = {
 		) => {
 			initTempCanvas(ctx);
 
-			const { imageSrc } = image;
+			const color = options.color ?? 'magenta';
+
+			const { imageSrc } = options;
 			if (!imageSrc) return;
 
 			// TODO(bret): Expose this at the image level (and default to a global setting in Game!)
@@ -236,12 +237,12 @@ export const Draw = {
 				_height,
 			);
 
-			if (image.color) {
-				const { blend } = image;
+			if (options.color) {
+				const { blend } = options;
 				tempCtx.globalCompositeOperation = blend
 					? 'multiply'
 					: 'source-in';
-				tempCtx.fillStyle = image.color;
+				tempCtx.fillStyle = options.color;
 				// TODO(bret): Add ability to resize the rect :O
 				tempCtx.fillRect(0, 0, _width, _height);
 				if (blend) {

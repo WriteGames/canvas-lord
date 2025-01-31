@@ -13,7 +13,7 @@ import { findAllPolygonsInGrid } from './bin/util/grid.js';
 import {
 	checkLineSegmentIntersection,
 	getLineSegmentIntersection,
-} from './bin/util/collision.js';
+} from './bin/collider/collision.js';
 
 import { Entity } from './bin/core/entity.js';
 

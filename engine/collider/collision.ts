@@ -10,86 +10,50 @@ import {
 	Line2D,
 } from '../math/index.js';
 
-const types = [
-	'point',
-	'line',
-	'rect',
-	'circle',
-	'triangle',
-	'right-triangle',
-	'grid',
-] as const;
+import type { ColliderTag, ColliderType } from './collider.js';
+import { GridCollider } from './grid-collider.js';
+import {
+	CircleCollider,
+	LineCollider,
+	PointCollider,
+	RectCollider,
+	RightTriangleCollider,
+	TriangleCollider,
+} from './index.js';
 
-type Types = typeof types;
+type Point = PointCollider;
+type Line = LineCollider;
+type Rect = RectCollider;
+type Circle = CircleCollider;
+type RightTriangle = RightTriangleCollider;
+type GridShape = GridCollider;
+type Triangle = TriangleCollider;
 
-// TODO(Bret): rework this
-export type ColliderTag = string | undefined;
-interface BaseShape<T extends Types[number]> {
-	type: T;
-	tag?: ColliderTag;
-	collidable: boolean;
-	x: number;
-	y: number;
-}
-
-interface Point extends BaseShape<'point'> {}
-
-interface Line extends Omit<BaseShape<'line'>, 'x' | 'y'> {
-	x1: number;
-	y1: number;
-	x2: number;
-	y2: number;
-}
-
-interface Rect extends BaseShape<'rect'> {
-	w: number;
-	h: number;
-}
-
-interface Circle extends BaseShape<'circle'> {
-	radius: number;
-}
-
-const ORIENTATION = ['NE', 'SE', 'SW', 'NW'] as const;
-interface RightTriangle extends BaseShape<'right-triangle'> {
-	w: number;
-	h: number;
-	orientation: (typeof ORIENTATION)[number];
-}
-
-interface Triangle extends Omit<BaseShape<'triangle'>, 'x' | 'y'> {
-	x1: number;
-	y1: number;
-	x2: number;
-	y2: number;
-	x3: number;
-	y3: number;
-}
-
-interface GridShape extends BaseShape<'grid'> {
-	width: number;
-	height: number;
-	tileW: number;
-	tileH: number;
-	columns: number;
-	rows: number;
-	data: number[];
-	getTile: (x: number, y: number) => number;
-}
+// interface GridShape extends BaseShape<'grid'> {
+// 	width: number;
+// 	height: number;
+// 	tileW: number;
+// 	tileH: number;
+// 	columns: number;
+// 	rows: number;
+// 	data: number[];
+// 	getTile: (x: number, y: number) => number;
+// }
 
 // TODO: bounds!
 
-// TODO: this is exported for Entity, but do we really want this to be exported?
-export type Shape =
-	| Point
-	| Line
-	| Rect
-	| Circle
-	| RightTriangle
-	| Triangle
-	| GridShape;
-
-type RawShape<T> = Omit<T, 'type' | 'tag' | 'collidable'>;
+type RawLine = Pick<Line, 'x1' | 'y1' | 'x2' | 'y2'>;
+type RawRightTriangle = Pick<
+	RightTriangle,
+	'x' | 'y' | 'orientation' | 'w' | 'h'
+>;
+type RawGrid = Pick<GridShape, 'x' | 'y' | 'grid'>;
+type RawRect = Pick<Rect, 'x' | 'y' | 'w' | 'h'>;
+type RawCircle = Pick<Circle, 'x' | 'y' | 'radius'>;
+type RawTriangle = Pick<
+	Triangle,
+	'x' | 'y' | 'x1' | 'y1' | 'x2' | 'y2' | 'x3' | 'y3'
+>;
 
 const isPointInPolygon = (
 	x: number,
@@ -144,10 +108,11 @@ export const getLineSegmentIntersection = (
 		: null;
 };
 
-const getLineLength = (l: RawShape<Line>): number =>
+const getLineLength = (l: RawLine): number =>
 	Math.sqrt((l.x1 - l.x2) ** 2 + (l.y1 - l.y2) ** 2);
 
-const constructTriFromRightTri = (rt: RawShape<RightTriangle>) => {
+// TODO(bret): Gonna be able to get this from the collider itself :)
+const constructTriFromRightTri = (rt: RawRightTriangle) => {
 	const TL = new Vec2(rt.x, rt.y);
 	const TR = new Vec2(rt.x + rt.w, rt.y);
 	const BR = new Vec2(rt.x + rt.w, rt.y + rt.h);
@@ -174,13 +139,18 @@ const constructTriFromRightTri = (rt: RawShape<RightTriangle>) => {
 			throw new Error(`Invalid orientation (${rt.orientation})`);
 	}
 
-	const tri = {
+	const tri: Omit<Triangle, 'render' | 'collide' | 'options'> = {
 		x1: points[0].x,
 		y1: points[0].y,
 		x2: points[1].x,
 		y2: points[1].y,
 		x3: points[2].x,
 		y3: points[2].y,
+		type: 'triangle',
+		points: points.map((v) => [v.x, v.y] as const) as Triangle['points'],
+		collidable: true,
+		x: 0,
+		y: 0,
 	};
 	return tri;
 };
@@ -196,23 +166,15 @@ export const collidePointPoint = (
 	return Math.abs(x1 - x2) < EPSILON && Math.abs(y1 - y2) < EPSILON;
 };
 
-export const collidePointLine = (
-	x: number,
-	y: number,
-	line: RawShape<Line>,
-) => {
+export const collidePointLine = (x: number, y: number, line: RawLine) => {
 	return collideLineCircle(line, { x, y, radius: 0.5 });
 };
 
-export const collidePointRect = (x: number, y: number, r: RawShape<Rect>) => {
+export const collidePointRect = (x: number, y: number, r: RawRect) => {
 	return x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 };
 
-export const collidePointCircle = (
-	x: number,
-	y: number,
-	c: RawShape<Circle>,
-) => {
+export const collidePointCircle = (x: number, y: number, c: RawCircle) => {
 	const distanceSq = (c.x - x) ** 2 + (c.y - y) ** 2;
 	return distanceSq <= c.radius ** 2;
 };
@@ -220,7 +182,7 @@ export const collidePointCircle = (
 export const collidePointRightTriangle = (
 	x: number,
 	y: number,
-	rt: RawShape<RightTriangle>,
+	rt: RawRightTriangle,
 ) => {
 	if (collidePointRect(x, y, rt)) {
 		const TL = new Vec2(rt.x, rt.y);
@@ -249,41 +211,37 @@ export const collidePointRightTriangle = (
 	return false;
 };
 
-export const collidePointTriangle = (
-	x: number,
-	y: number,
-	t: RawShape<Triangle>,
-) => {
-	return isPointInPolygon(x, y, [
-		[t.x1, t.y1],
-		[t.x2, t.y2],
-		[t.x3, t.y3],
-	]);
+export const collidePointTriangle = (x: number, y: number, t: RawTriangle) => {
+	return isPointInPolygon(
+		x,
+		y,
+		[
+			[t.x1, t.y1],
+			[t.x2, t.y2],
+			[t.x3, t.y3],
+		].map(([x, y]) => [x + t.x, y + t.y]),
+	);
 };
 
-export const collidePointGrid = (
-	x: number,
-	y: number,
-	g: RawShape<GridShape>,
-) => {
+export const collidePointGrid = (x: number, y: number, g: RawGrid) => {
 	const gridRect = {
 		x: g.x,
 		y: g.y,
-		w: g.width,
-		h: g.height,
+		w: g.grid.width,
+		h: g.grid.height,
 	};
 	if (!collidePointRect(x, y, gridRect)) return false;
 
-	const xx = Math.floor(x / g.tileW);
-	const yy = Math.floor(y / g.tileH);
-	console.assert(xx === Math.clamp(xx, 0, g.columns - 1));
-	console.assert(yy === Math.clamp(yy, 0, g.rows - 1));
-	return g.getTile(xx, yy) === 1;
+	const xx = Math.floor(x / g.grid.tileW);
+	const yy = Math.floor(y / g.grid.tileH);
+	console.assert(xx === Math.clamp(xx, 0, g.grid.columns - 1));
+	console.assert(yy === Math.clamp(yy, 0, g.grid.rows - 1));
+	return g.grid.getTile(xx, yy) === 1;
 };
 
 /// ### Line vs X ###
 
-export const collideLineLine = (l1: RawShape<Line>, l2: RawShape<Line>) => {
+export const collideLineLine = (l1: RawLine, l2: RawLine) => {
 	const A: Line2D = [new Vec2(l1.x1, l1.y1), new Vec2(l1.x2, l1.y2)];
 	const B: Line2D = [new Vec2(l2.x1, l2.y1), new Vec2(l2.x2, l2.y2)];
 	return checkLineSegmentIntersection(A, B);
@@ -320,37 +278,35 @@ export const collideLineLine = (l1: RawShape<Line>, l2: RawShape<Line>) => {
 	}
 };
 
-export const collideLineRect = (l: RawShape<Line>, r: RawShape<Rect>) => {
+export const collideLineRect = (l: RawLine, r: RawRect) => {
 	if (collidePointRect(l.x1, l.y1, r) || collidePointRect(l.x2, l.y2, r))
 		return true;
 
 	const right = r.x + r.w;
 	const bottom = r.y + r.h;
-	const edge: Line = {
-		type: 'line',
+	const edge: RawLine = {
 		x1: r.x,
 		y1: r.y,
 		x2: r.x,
 		y2: r.y,
-		collidable: true,
 	};
-	const edgeT: Line = {
+	const edgeT: RawLine = {
 		...edge,
 		x2: right,
 	};
-	const edgeR: Line = {
+	const edgeR: RawLine = {
 		...edge,
 		x1: right,
 		x2: right,
 		y2: bottom,
 	};
-	const edgeB: Line = {
+	const edgeB: RawLine = {
 		...edge,
 		x1: right,
 		y1: bottom,
 		y2: bottom,
 	};
-	const edgeL: Line = {
+	const edgeL: RawLine = {
 		...edge,
 		y1: bottom,
 	};
@@ -364,7 +320,7 @@ export const collideLineRect = (l: RawShape<Line>, r: RawShape<Rect>) => {
 	return false;
 };
 
-export const collideLineCircle = (l: RawShape<Line>, c: RawShape<Circle>) => {
+export const collideLineCircle = (l: RawLine, c: RawCircle) => {
 	const pointA = new Vec2(l.x1, l.y1);
 	const pointB = new Vec2(l.x2, l.y2);
 
@@ -384,69 +340,57 @@ export const collideLineCircle = (l: RawShape<Line>, c: RawShape<Circle>) => {
 	return circlePos.sub(closest).magnitude <= c.radius;
 };
 
-export const collideLineRightTriangle = (
-	l: RawShape<Line>,
-	rt: RawShape<RightTriangle>,
-) => {
+export const collideLineRightTriangle = (l: RawLine, rt: RawRightTriangle) => {
 	return collideLineTriangle(l, constructTriFromRightTri(rt));
 };
 
-export const collideLineTriangle = (
-	l: RawShape<Line>,
-	t: RawShape<Triangle>,
-) => {
+export const collideLineTriangle = (l: RawLine, t: RawTriangle) => {
 	// TODO: test if using barycentric coords would be faster!
 	return (
 		collideLineLine(l, {
-			x1: t.x1,
-			y1: t.y1,
-			x2: t.x2,
-			y2: t.y2,
+			x1: t.x + t.x1,
+			y1: t.y + t.y1,
+			x2: t.x + t.x2,
+			y2: t.y + t.y2,
 		}) ||
 		collideLineLine(l, {
-			x1: t.x2,
-			y1: t.y2,
-			x2: t.x3,
-			y2: t.y3,
+			x1: t.x + t.x2,
+			y1: t.y + t.y2,
+			x2: t.x + t.x3,
+			y2: t.y + t.y3,
 		}) ||
 		collideLineLine(l, {
-			x1: t.x3,
-			y1: t.y3,
-			x2: t.x1,
-			y2: t.y1,
+			x1: t.x + t.x3,
+			y1: t.y + t.y3,
+			x2: t.x + t.x1,
+			y2: t.y + t.y1,
 		})
 	);
 };
 
 /// ### Rect vs X ###
 
-export const collideRectRect = (a: RawShape<Rect>, b: RawShape<Rect>) => {
+export const collideRectRect = (a: RawRect, b: RawRect) => {
 	return (
 		a.x + a.w > b.x && a.y + a.h > b.y && a.x < b.x + b.w && a.y < b.y + b.h
 	);
 };
 
-export const collideRectCircle = (r: RawShape<Rect>, c: RawShape<Circle>) => {
+export const collideRectCircle = (r: RawRect, c: RawCircle) => {
 	const x = Math.clamp(c.x, r.x, r.x + r.w - 1);
 	const y = Math.clamp(c.y, r.y, r.y + r.h - 1);
 	const distanceSq = (c.x - x) ** 2 + (c.y - y) ** 2;
 	return distanceSq < c.radius ** 2;
 };
 
-export const collideRectRightTriangle = (
-	r: RawShape<Rect>,
-	rt: RawShape<RightTriangle>,
-) => {
+export const collideRectRightTriangle = (r: RawRect, rt: RawRightTriangle) => {
 	// TODO(bret): write a better version of this
 	// NOTE(bret): Found this online https://seblee.me/2009/05/super-fast-trianglerectangle-intersection-test/
 
 	return collideRectTriangle(r, constructTriFromRightTri(rt));
 };
 
-export const collideRectTriangle = (
-	r: RawShape<Rect>,
-	t: RawShape<Triangle>,
-) => {
+export const collideRectTriangle = (r: RawRect, t: RawTriangle) => {
 	// TODO(bret): revisit
 	const xx = [t.x1, t.x2, t.x3];
 	const yy = [t.y1, t.y2, t.y3];
@@ -460,15 +404,19 @@ export const collideRectTriangle = (
 		w: maxX - minX,
 		h: maxY - minY,
 	};
-	return (
+	r.x -= t.x;
+	r.y -= t.y;
+	const result =
 		collideRectRect(r, triRect) &&
 		(collideLineRect({ x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }, r) ||
 			collideLineRect({ x1: t.x2, y1: t.y2, x2: t.x3, y2: t.y3 }, r) ||
-			collideLineRect({ x1: t.x3, y1: t.y3, x2: t.x1, y2: t.y1 }, r))
-	);
+			collideLineRect({ x1: t.x3, y1: t.y3, x2: t.x1, y2: t.y1 }, r));
+	r.x += t.x;
+	r.y += t.y;
+	return result;
 };
 
-export const collideRectGrid = (r: RawShape<Rect>, g: RawShape<GridShape>) => {
+export const collideRectGrid = (r: RawRect, g: RawGrid) => {
 	// are we within the bounds of the grid???
 
 	const x = r.x - g.x;
@@ -477,26 +425,34 @@ export const collideRectGrid = (r: RawShape<Rect>, g: RawShape<GridShape>) => {
 	const gridRect = {
 		x: g.x,
 		y: g.y,
-		w: g.width,
-		h: g.height,
+		w: g.grid.width,
+		h: g.grid.height,
 	};
 
 	if (!collideRectRect(r, gridRect)) return false;
 
 	// TODO(bret): uncertain if a clamp here is correct
-	const minX = Math.clamp(Math.floor(x / g.tileW), 0, g.columns - 1);
-	const minY = Math.clamp(Math.floor(y / g.tileH), 0, g.rows - 1);
+	const minX = Math.clamp(
+		Math.floor(x / g.grid.tileW),
+		0,
+		g.grid.columns - 1,
+	);
+	const minY = Math.clamp(Math.floor(y / g.grid.tileH), 0, g.grid.rows - 1);
 
 	const maxX = Math.clamp(
-		Math.floor((x + r.w - 1) / g.tileW),
+		Math.floor((x + r.w - 1) / g.grid.tileW),
 		0,
-		g.columns - 1,
+		g.grid.columns - 1,
 	);
-	const maxY = Math.clamp(Math.floor((y + r.h - 1) / g.tileH), 0, g.rows - 1);
+	const maxY = Math.clamp(
+		Math.floor((y + r.h - 1) / g.grid.tileH),
+		0,
+		g.grid.rows - 1,
+	);
 
 	for (let yy = minY; yy <= maxY; ++yy) {
 		for (let xx = minX; xx <= maxX; ++xx) {
-			if (g.getTile(xx, yy) === 1) return true;
+			if (g.grid.getTile(xx, yy) === 1) return true;
 		}
 	}
 
@@ -505,26 +461,20 @@ export const collideRectGrid = (r: RawShape<Rect>, g: RawShape<GridShape>) => {
 
 /// ### Circle vs X ###
 
-export const collideCircleCircle = (
-	a: RawShape<Circle>,
-	b: RawShape<Circle>,
-) => {
+export const collideCircleCircle = (a: RawCircle, b: RawCircle) => {
 	const distanceSq = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
 	return distanceSq <= (a.radius + b.radius) ** 2;
 };
 
 export const collideCircleRightTriangle = (
-	c: RawShape<Circle>,
-	rt: RawShape<RightTriangle>,
+	c: RawCircle,
+	rt: RawRightTriangle,
 ) => {
 	// TODO(bret): Revisit
 	return collideCircleTriangle(c, constructTriFromRightTri(rt));
 };
 
-export const collideCircleTriangle = (
-	c: RawShape<Circle>,
-	t: RawShape<Triangle>,
-) => {
+export const collideCircleTriangle = (c: RawCircle, t: RawTriangle) => {
 	// TODO(bret): Revisit
 	return (
 		collideLineCircle({ x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }, c) ||
@@ -535,8 +485,8 @@ export const collideCircleTriangle = (
 
 /// ### Right Triangle vs X ###
 export const collideRightTriangleRightTriangle = (
-	a: RawShape<RightTriangle>,
-	b: RawShape<RightTriangle>,
+	a: RawRightTriangle,
+	b: RawRightTriangle,
 ) => {
 	// TODO: revisit
 	return collideTriangleTriangle(
@@ -546,8 +496,8 @@ export const collideRightTriangleRightTriangle = (
 };
 
 export const collideRightTriangleTriangle = (
-	rt: RawShape<RightTriangle>,
-	t: RawShape<Triangle>,
+	rt: RawRightTriangle,
+	t: RawTriangle,
 ) => {
 	// TODO: revisit
 	return collideTriangleTriangle(constructTriFromRightTri(rt), t);
@@ -555,10 +505,7 @@ export const collideRightTriangleTriangle = (
 
 /// ### Triangle vs X ###
 
-export const collideTriangleTriangle = (
-	a: RawShape<Triangle>,
-	b: RawShape<Triangle>,
-) => {
+export const collideTriangleTriangle = (a: RawTriangle, b: RawTriangle) => {
 	// TODO: revisit
 	const linesA = [
 		{ x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2 },
@@ -578,85 +525,4 @@ export const collideTriangleTriangle = (
 		}
 	}
 	return false;
-};
-
-/// ### collide() ###
-
-const collisionMap = {
-	point: {
-		point: (p1: Point, p2: Point) =>
-			collidePointPoint(p1.x, p1.y, p2.x, p2.y),
-		line: (p: Point, l: Line) => collidePointLine(p.x, p.y, l),
-		rect: (p: Point, r: Rect) => collidePointRect(p.x, p.y, r),
-		circle: (p: Point, c: Circle) => collidePointCircle(p.x, p.y, c),
-		'right-triangle': collidePointRightTriangle,
-		triangle: (p: Point, t: Triangle) => collidePointTriangle(p.x, p.y, t),
-		grid: (p: Point, g: GridShape) => collidePointGrid(p.x, p.y, g),
-	},
-	line: {
-		point: (l: Line, p: Point) => collidePointLine(p.x, p.y, l),
-		line: collideLineLine,
-		rect: collideLineRect,
-		circle: collideLineCircle,
-		'right-triangle': collideLineRightTriangle,
-		triangle: collideLineTriangle,
-		grid: undefined,
-	},
-	rect: {
-		point: (r: Rect, p: Point) => collidePointRect(p.x, p.y, r),
-		line: (r: Rect, l: Line) => collideLineRect(l, r),
-		rect: collideRectRect,
-		circle: collideRectCircle,
-		'right-triangle': collideRectRightTriangle,
-		triangle: collideRectTriangle,
-		grid: collideRectGrid,
-	},
-	circle: {
-		point: (c: Circle, p: Point) => collidePointCircle(p.x, p.y, c),
-		line: (c: Circle, l: Line) => collideLineCircle(l, c),
-		rect: (c: Circle, r: Rect) => collideRectCircle(r, c),
-		circle: collideCircleCircle,
-		'right-triangle': collideCircleRightTriangle,
-		triangle: collideCircleTriangle,
-		grid: undefined,
-	},
-	'right-triangle': {
-		point: (rt: RightTriangle, p: Point) =>
-			collidePointRightTriangle(p.x, p.y, rt),
-		line: (rt: RightTriangle, l: Line) => collideLineRightTriangle(l, rt),
-		rect: (rt: RightTriangle, r: Rect) => collideRectRightTriangle(r, rt),
-		circle: (rt: RightTriangle, c: Circle) =>
-			collideCircleRightTriangle(c, rt),
-		'right-triangle': collideRightTriangleRightTriangle,
-		triangle: collideRightTriangleTriangle,
-		grid: undefined,
-	},
-	triangle: {
-		point: (t: Triangle, p: Point) => collidePointTriangle(p.x, p.y, t),
-		line: (t: Triangle, l: Line) => collideLineTriangle(l, t),
-		rect: (t: Triangle, r: Rect) => collideRectTriangle(r, t),
-		circle: (t: Triangle, c: Circle) => collideCircleTriangle(c, t),
-		'right-triangle': (t: Triangle, rt: RightTriangle) =>
-			collideRightTriangleTriangle(rt, t),
-		triangle: collideTriangleTriangle,
-		grid: undefined,
-	},
-	//collideRectGrid
-	grid: {
-		point: (g: GridShape, p: Point) => collidePointGrid(p.x, p.y, g),
-		// line: (g: GridShape, l: Line) => collideLineTriangle(l, g),
-		rect: (g: GridShape, r: Rect) => collideRectGrid(r, g),
-		// circle: (g: GridShape, c: Circle) => collideCircleTriangle(c, g),
-		// 'right-triangle': (g: GridShape, rt: RightTriangle) =>
-		// 	collideRightTriangleTriangle(rt, g),
-		// triangle: collideTriangleTriangle,
-		// grid: undefined,
-	},
-};
-
-// TODO: (shapeA, typeA, shapeB, typeB) - that way we don't have to store that data in the shapes themselves! This will make using the Collider classes easier, as they won't have to store that data :)
-// ^ We'll also be able to get rid of RawShape after that :D
-export const collide = (shapeA: Shape, shapeB: Shape) => {
-	// @ts-ignore
-	return collisionMap[shapeA.type][shapeB.type]?.(shapeA, shapeB);
 };

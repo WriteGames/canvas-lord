@@ -45,20 +45,21 @@ export const moveCanvas = (callback) => {
     };
 };
 export const Draw = {
-    circle: moveCanvas((ctx, circle, x, y, radius) => {
+    circle: moveCanvas((ctx, options, x, y, radius) => {
         initTempCanvas(ctx);
+        const color = options.color ?? 'magenta';
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
         // TODO: make this be able to be centered :O
         // It could be good to pass an option that dictates whether or not to center it :)
         ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
-        switch (circle.type) {
+        switch (options.type) {
             case 'fill':
-                ctx.fillStyle = circle.color;
+                ctx.fillStyle = color;
                 ctx.fill();
                 break;
             case 'stroke':
-                ctx.strokeStyle = circle.color;
+                ctx.strokeStyle = color;
                 ctx.stroke();
                 break;
         }
@@ -73,25 +74,25 @@ export const Draw = {
         ctx.lineTo(x2, y2);
         ctx.stroke();
     }),
-    rect: moveCanvas((ctx, rect, x, y, w, h) => {
+    rect: moveCanvas((ctx, options, x, y, w, h) => {
         initTempCanvas(ctx);
+        const color = options.color ?? 'magenta';
         ctx.translate(0.5, 0.5);
         const args = [x, y, w, h];
-        switch (rect.type) {
+        switch (options.type) {
             case 'fill':
-                ctx.fillStyle = rect.color;
+                ctx.fillStyle = color;
                 ctx.fillRect(...args);
                 break;
             case 'stroke':
-                ctx.strokeStyle = rect.color;
+                ctx.strokeStyle = color;
                 ctx.strokeRect(...args);
                 break;
         }
     }),
-    polygon: moveCanvas((ctx, 
-    // TODO(bret): actually set up the correct type here
-    options, x, y, _points) => {
+    polygon: moveCanvas((ctx, options, x, y, _points) => {
         initTempCanvas(ctx);
+        const color = options.color ?? 'magenta';
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
         const n = _points.length;
@@ -102,18 +103,19 @@ export const Draw = {
         }
         switch (options.type) {
             case 'fill':
-                ctx.fillStyle = options.color;
+                ctx.fillStyle = color;
                 ctx.fill();
                 break;
             case 'stroke':
-                ctx.strokeStyle = options.color;
+                ctx.strokeStyle = color;
                 ctx.stroke();
                 break;
         }
     }),
-    image: moveCanvas((ctx, image, drawX = 0, drawY = 0, sourceX, sourceY, width, height) => {
+    image: moveCanvas((ctx, options, drawX = 0, drawY = 0, sourceX, sourceY, width, height) => {
         initTempCanvas(ctx);
-        const { imageSrc } = image;
+        const color = options.color ?? 'magenta';
+        const { imageSrc } = options;
         if (!imageSrc)
             return;
         // TODO(bret): Expose this at the image level (and default to a global setting in Game!)
@@ -129,12 +131,12 @@ export const Draw = {
         tempCtx.save();
         tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
         tempCtx.drawImage(imageSrc, x, y, _width, _height, 0, 0, _width, _height);
-        if (image.color) {
-            const { blend } = image;
+        if (options.color) {
+            const { blend } = options;
             tempCtx.globalCompositeOperation = blend
                 ? 'multiply'
                 : 'source-in';
-            tempCtx.fillStyle = image.color;
+            tempCtx.fillStyle = options.color;
             // TODO(bret): Add ability to resize the rect :O
             tempCtx.fillRect(0, 0, _width, _height);
             if (blend) {

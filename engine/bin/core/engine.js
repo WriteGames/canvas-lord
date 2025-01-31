@@ -15,7 +15,7 @@ const defaultSettings = {
         updateMode: 'focus',
         renderMode: 'onUpdate',
     },
-    devMode: true, // TODO(bret): Set this to false someday probably
+    devMode: false, // TODO(bret): Set this to false someday probably
 };
 export class Game {
     gameLoopSettings = {

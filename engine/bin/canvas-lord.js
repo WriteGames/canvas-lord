@@ -9,7 +9,7 @@ export { Tileset } from './graphic/index.js';
 export { V2, addPos, subPos, scalePos, EPSILON, } from './math/index.js';
 export { Draw } from './util/draw.js';
 export { Camera } from './util/camera.js';
-export * as Collision from './util/collision.js';
-export { checkLineSegmentIntersection, getLineSegmentIntersection, } from './util/collision.js';
+export * as Collision from './collider/collision.js';
+export { checkLineSegmentIntersection, getLineSegmentIntersection, } from './collider/collision.js';
 export { Grid } from './util/grid.js';
 //# sourceMappingURL=canvas-lord.js.map
