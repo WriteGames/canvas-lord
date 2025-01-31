@@ -7,8 +7,8 @@ export type ColliderType =
 	| 'line'
 	| 'rect'
 	| 'circle'
-	| 'triangle'
 	| 'right-triangle'
+	| 'polygon'
 	| 'grid';
 export type ColliderTag = string | undefined;
 

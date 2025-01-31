@@ -5,9 +5,9 @@ import { Collider } from './collider.js';
 import { CircleCollider } from './circle-collider.js';
 import { LineCollider } from './line-collider.js';
 import { PointCollider } from './point-collider.js';
+import { PolygonCollider } from './polygon-collider.js';
 import { RightTriangleCollider } from './right-triangle-collider.js';
 import { RectCollider } from './rect-collider.js';
-import { TriangleCollider } from './triangle-collider.js';
 export * from './collision.js';
-export { Collide, Collision, Collider, CircleCollider, LineCollider, PointCollider, RightTriangleCollider, RectCollider, TriangleCollider, };
+export { Collide, Collision, Collider, CircleCollider, LineCollider, PointCollider, PolygonCollider, RightTriangleCollider, RectCollider, };
 //# sourceMappingURL=index.js.map

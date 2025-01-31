@@ -1,37 +1,37 @@
 import {
 	collideCircleCircle,
 	collideCircleRightTriangle,
-	collideCircleTriangle,
+	collideCirclePolygon,
 	collideLineCircle,
 	collideLineLine,
 	collideLineRect,
 	collideLineRightTriangle,
-	collideLineTriangle,
+	collideLinePolygon,
 	collidePointCircle,
 	collidePointGrid,
 	collidePointLine,
 	collidePointPoint,
 	collidePointRect,
 	collidePointRightTriangle,
-	collidePointTriangle,
+	collidePointPolygon,
 	collideRectCircle,
 	collideRectGrid,
 	collideRectRect,
 	collideRectRightTriangle,
-	collideRectTriangle,
+	collideRectPolygon,
 	collideRightTriangleRightTriangle,
-	collideRightTriangleTriangle,
-	collideTriangleTriangle,
+	collideRightTrianglePolygon,
+	collidePolygonPolygon,
 } from './collision.js';
 
-import type { Collider, ColliderTag, ColliderType } from './collider.js';
+import type { Collider } from './collider.js';
 import { PointCollider } from './point-collider.js';
 import { LineCollider } from './line-collider.js';
 import { RectCollider } from './rect-collider.js';
 import { CircleCollider } from './circle-collider.js';
 import { RightTriangleCollider } from './right-triangle-collider.js';
 import { GridCollider } from './grid-collider.js';
-import { TriangleCollider } from './triangle-collider.js';
+import { PolygonCollider } from './polygon-collider.js';
 
 const collisionMap = {
 	point: {
@@ -45,8 +45,8 @@ const collisionMap = {
 			collidePointCircle(p.x, p.y, c),
 		'right-triangle': (p: PointCollider, rt: RightTriangleCollider) =>
 			collidePointRightTriangle(p.x, p.y, rt),
-		triangle: (p: PointCollider, t: TriangleCollider) =>
-			collidePointTriangle(p.x, p.y, t),
+		polygon: (pt: PointCollider, p: PolygonCollider) =>
+			collidePointPolygon(pt.x, pt.y, p),
 		grid: (p: PointCollider, g: GridCollider) =>
 			collidePointGrid(p.x, p.y, g),
 	},
@@ -57,7 +57,7 @@ const collisionMap = {
 		rect: collideLineRect,
 		circle: collideLineCircle,
 		'right-triangle': collideLineRightTriangle,
-		triangle: collideLineTriangle,
+		polygon: collideLinePolygon,
 		grid: undefined,
 	},
 	rect: {
@@ -67,7 +67,7 @@ const collisionMap = {
 		rect: collideRectRect,
 		circle: collideRectCircle,
 		'right-triangle': collideRectRightTriangle,
-		triangle: collideRectTriangle,
+		polygon: collideRectPolygon,
 		grid: collideRectGrid,
 	},
 	circle: {
@@ -77,7 +77,7 @@ const collisionMap = {
 		rect: (c: CircleCollider, r: RectCollider) => collideRectCircle(r, c),
 		circle: collideCircleCircle,
 		'right-triangle': collideCircleRightTriangle,
-		triangle: collideCircleTriangle,
+		polygon: collideCirclePolygon,
 		grid: undefined,
 	},
 	'right-triangle': {
@@ -90,21 +90,19 @@ const collisionMap = {
 		circle: (rt: RightTriangleCollider, c: CircleCollider) =>
 			collideCircleRightTriangle(c, rt),
 		'right-triangle': collideRightTriangleRightTriangle,
-		triangle: collideRightTriangleTriangle,
+		polygon: collideRightTrianglePolygon,
 		grid: undefined,
 	},
-	triangle: {
-		point: (t: TriangleCollider, p: PointCollider) =>
-			collidePointTriangle(p.x, p.y, t),
-		line: (t: TriangleCollider, l: LineCollider) =>
-			collideLineTriangle(l, t),
-		rect: (t: TriangleCollider, r: RectCollider) =>
-			collideRectTriangle(r, t),
-		circle: (t: TriangleCollider, c: CircleCollider) =>
-			collideCircleTriangle(c, t),
-		'right-triangle': (t: TriangleCollider, rt: RightTriangleCollider) =>
-			collideRightTriangleTriangle(rt, t),
-		triangle: collideTriangleTriangle,
+	polygon: {
+		point: (p: PolygonCollider, pt: PointCollider) =>
+			collidePointPolygon(pt.x, pt.y, p),
+		line: (p: PolygonCollider, l: LineCollider) => collideLinePolygon(l, p),
+		rect: (p: PolygonCollider, r: RectCollider) => collideRectPolygon(r, p),
+		circle: (p: PolygonCollider, c: CircleCollider) =>
+			collideCirclePolygon(c, p),
+		'right-triangle': (p: PolygonCollider, rt: RightTriangleCollider) =>
+			collideRightTrianglePolygon(rt, p),
+		polygon: collidePolygonPolygon,
 		grid: undefined,
 	},
 	grid: {
@@ -118,8 +116,8 @@ const collisionMap = {
 		'right-triangle':
 			(g: GridCollider, rt: RightTriangleCollider) => () => {},
 		// collideRightTriangleGrid(rt, g),
-		triangle: (g: GridCollider, t: TriangleCollider) => () => {},
-		//collideTriangleGrid(t, g),
+		polygon: (g: GridCollider, p: PolygonCollider) => () => {},
+		//collidePolygonGrid(t, g),
 		grid: () => {},
 		//collideGridGrid,
 	},

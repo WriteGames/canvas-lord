@@ -42,7 +42,7 @@
 				LineCollider,
 				PointCollider,
 				CircleCollider,
-				TriangleCollider,
+				PolygonCollider,
 				RightTriangleCollider,
 				RectCollider,
 			} from '../bin/collider/index.js';
@@ -50,12 +50,18 @@
 			const drawRect = (ctx, fill, ...args) =>
 				fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
 
-			const drawTriangle = (ctx, tri, color, type = 'stroke') => {
-				Draw.polygon(ctx, { type, color }, 0, 0, [
-					[tri.x1, tri.y1],
-					[tri.x2, tri.y2],
-					[tri.x3, tri.y3],
-				]);
+			const drawPolygon = (
+				ctx,
+				tri,
+				color,
+				type = 'stroke',
+				map = false,
+			) => {
+				let points = [...tri.points];
+				if (map)
+					points = points.map(([x, y]) => [x + tri.x, y + tri.y]);
+
+				Draw.polygon(ctx, { type, color }, 0, 0, points);
 			};
 
 			const drawRightTriangle = (ctx, rt, color, x = 0, y = 0, style) => {
@@ -85,16 +91,9 @@
 						const msg = `Orientation "${rt.orientation}" not supported`;
 						throw new Error(msg);
 				}
-				drawTriangle(
+				drawPolygon(
 					ctx,
-					{
-						x1: points[0].x,
-						y1: points[0].y,
-						x2: points[1].x,
-						y2: points[1].y,
-						x3: points[2].x,
-						y3: points[2].y,
-					},
+					{ x: 0, y: 0, points: points.map(({ x, y }) => [x, y]) },
 					color,
 					style,
 				);
@@ -136,23 +135,24 @@
 				);
 			};
 
-			const resizeTriangle = (triangle, point, size) => {
-				triangle.x1 = point[0];
-				triangle.y1 = point[1] - size * 0.8;
-				triangle.x2 = point[0] + size;
-				triangle.y2 = point[1] + size * 0.8;
-				triangle.x3 = point[0] - size;
-				triangle.y3 = point[1] + size * 0.8;
+			const resizePolygon = (polygon, point, size) => {
+				polygon.x = point[0];
+				polygon.y = point[1];
+				polygon.points = [
+					[0, -size * 0.8],
+					[size, size * 0.8],
+					[-size, size * 0.8],
+				];
 			};
 
-			const createTriangle = (point, size) => {
-				const triangle = new TriangleCollider([
+			const createPolygon = (point, size) => {
+				const polygon = new PolygonCollider([
 					[0, 0],
 					[1, 1],
 					[2, 2],
 				]);
-				resizeTriangle(triangle, point, size);
-				return triangle;
+				resizePolygon(polygon, point, size);
+				return polygon;
 			};
 
 			const createFromType = (point, type, size) => {
@@ -163,8 +163,8 @@
 						return createCircle(point, size);
 					case 'right-triangle':
 						return createRightTriangle(point, size);
-					case 'triangle':
-						return createTriangle(point, size);
+					case 'polygon':
+						return createPolygon(point, size);
 					case 'point':
 						return new PointCollider();
 					default:
@@ -209,7 +209,7 @@
 						'rect',
 						'circle',
 						'right-triangle',
-						'triangle',
+						'polygon',
 						'point',
 					];
 					for (let i = 0; i < types.length - 1; ++i) {
@@ -286,9 +286,9 @@
 								small.y = y - (small.h >> 1);
 								small.orientation = orientationS;
 								break;
-							case 'triangle':
+							case 'polygon':
 								const oo = addPos(point, [offsetX, offsetY]);
-								resizeTriangle(small, oo, RADIUS_S);
+								resizePolygon(small, oo, RADIUS_S);
 								break;
 							default:
 								throw new Error(
@@ -373,8 +373,14 @@
 							case 'right-triangle':
 								drawRightTriangle(ctx, shape, ctx.strokeStyle);
 								break;
-							case 'triangle':
-								drawTriangle(ctx, shape, ctx.strokeStyle);
+							case 'polygon':
+								drawPolygon(
+									ctx,
+									shape,
+									ctx.strokeStyle,
+									'stroke',
+									true,
+								);
 								break;
 						}
 					});
@@ -413,16 +419,11 @@
 					20,
 					20,
 				);
-				triangle = {
-					type: 'triangle',
-					x1: 0,
-					y1: 0,
-					x2: RADIUS_L,
-					y2: RADIUS_L,
-					x3: 0,
-					y3: RADIUS_L,
-					colliding: false,
-				};
+				polygon = new PolygonCollider([
+					[0, RADIUS_L * 0.8],
+					[RADIUS_L, RADIUS_L * 0.8],
+					[RADIUS_L >> 1, 0],
+				]);
 
 				constructor(engine) {
 					super(engine);
@@ -518,20 +519,19 @@
 						const origin = this.points[3];
 
 						const yy = -RADIUS_S * 0.2;
-						this.triangle.x1 = offsetX + origin[0] + RADIUS_S;
-						this.triangle.y1 =
-							offsetY + origin[1] + RADIUS_S * 0.8 + yy;
-						this.triangle.x2 = offsetX + origin[0] - 0;
-						this.triangle.y2 =
-							offsetY + origin[1] - RADIUS_S * 0.8 + yy;
-						this.triangle.x3 = offsetX + origin[0] - RADIUS_S;
-						this.triangle.y3 =
-							offsetY + origin[1] + RADIUS_S * 0.8 + yy;
+						this.polygon.x = offsetX + origin[0];
+						this.polygon.y = offsetY + origin[1];
+						this.polygon.x1 = RADIUS_S;
+						this.polygon.y1 = RADIUS_S * 0.8 + yy;
+						this.polygon.x2 = 0;
+						this.polygon.y2 = -RADIUS_S * 0.8 + yy;
+						this.polygon.x3 = -RADIUS_S;
+						this.polygon.y3 = RADIUS_S * 0.8 + yy;
 
 						collideAgainstLines(
-							this.triangle,
+							this.polygon,
 							origin,
-							Collision.collideLineTriangle,
+							Collision.collideLinePolygon,
 						);
 					}
 
@@ -625,8 +625,14 @@
 						});
 					});
 
-					ctx.strokeStyle = this.triangle.colliding ? 'red' : 'lime';
-					drawTriangle(ctx, this.triangle, ctx.strokeStyle);
+					ctx.strokeStyle = this.polygon.colliding ? 'red' : 'lime';
+					drawPolygon(
+						ctx,
+						this.polygon,
+						ctx.strokeStyle,
+						'stroke',
+						true,
+					);
 					ctx.strokeStyle = this.rightTriangle.colliding
 						? 'red'
 						: 'lime';
@@ -641,6 +647,8 @@
 			};
 
 			class CollisionEntity extends Entity {
+				hover = false;
+
 				constructor(x, y, type) {
 					super(x, y);
 					if (type === COLLIDER_TAG.YELLOW) {
@@ -649,15 +657,22 @@
 						this.color = 'orange';
 					} else if (type === COLLIDER_TAG.SLOPE) {
 						this.color = 'black';
+					} else if (type === 'asdf') {
+						this.color = 'green';
 					} else {
 						this.color = 'magenta';
 					}
 				}
 
+				update() {
+					this.hover = this.collideMouse(this.x, this.y);
+				}
+
 				render(ctx) {
 					const x = this.x + this.collider.x;
 					const y = this.y + this.collider.y;
-					ctx.fillStyle = this.color;
+					const color = this.hover ? 'magenta' : this.color;
+					ctx.fillStyle = color;
 					ctx.strokeStyle = 'red';
 					switch (this.collider.type) {
 						case 'rect': {
@@ -676,7 +691,7 @@
 						case 'circle': {
 							Draw.circle(
 								ctx,
-								{ ...this, type: 'fill' },
+								{ ...this, type: 'fill', color },
 								this.x - this.collider.radius,
 								this.y - this.collider.radius,
 								this.collider.radius,
@@ -692,13 +707,29 @@
 							drawRightTriangle(
 								ctx,
 								this.collider,
-								this.color,
+								color,
 								this.x,
 								this.y,
 								'fill',
 							);
 
 							this.collider.render(ctx, this.x, this.y);
+							break;
+						}
+						case 'polygon': {
+							this.collider.x = this.x;
+							this.collider.y = this.y;
+							drawPolygon(
+								ctx,
+								this.collider,
+								color,
+								'fill',
+								true,
+							);
+							this.collider.x = 0;
+							this.collider.y = 0;
+							this.collider.render(ctx, this.x, this.y);
+							break;
 						}
 					}
 				}
@@ -731,17 +762,22 @@
 								break;
 							}
 						}
-						const other = this.collideEntity(
-							this.x + (axis === 'x' ? sign : 0),
-							this.y + (axis === 'y' ? sign : 0),
-							[COLLIDER_TAG.SLOPE, this.collider.tag],
-						);
-						if (other !== null) {
-							this.vel[axis] *= -1;
-							sign *= -1;
-							if (other.vel && this.vel[axis] === other.vel[axis])
-								other.vel[axis] *= -1;
-						}
+						try {
+							const other = this.collideEntity(
+								this.x + (axis === 'x' ? sign : 0),
+								this.y + (axis === 'y' ? sign : 0),
+								[COLLIDER_TAG.SLOPE, this.collider.tag],
+							);
+							if (other !== null) {
+								this.vel[axis] *= -1;
+								sign *= -1;
+								if (
+									other.vel &&
+									this.vel[axis] === other.vel[axis]
+								)
+									other.vel[axis] *= -1;
+							}
+						} catch (e) {}
 
 						if (left < min) {
 							sign = 1;
@@ -758,6 +794,7 @@
 				update() {
 					this.moveAxis('x');
 					this.moveAxis('y');
+					super.update();
 				}
 			}
 
@@ -778,6 +815,21 @@
 					this.x += this.collider.radius;
 					this.y += this.collider.radius;
 					this.collider.tag = args[2];
+				}
+			}
+
+			class PolygonEntity extends MovingEntity {
+				static size = 30;
+
+				collider = new PolygonCollider([
+					[0, 0],
+					[PolygonEntity.size, (PolygonEntity.size >> 1) + 3],
+					[-3, PolygonEntity.size + 2],
+				]);
+
+				constructor(x, y, type) {
+					super(x, y, type);
+					this.collider.tag = type;
 				}
 			}
 
@@ -854,7 +906,25 @@
 						COLLIDER_TAG.SLOPE,
 					);
 
-					[triLT, triRT, triLB, triRB].forEach((tri) => {
+					const yellowPoly = new PolygonEntity(
+						50,
+						50,
+						COLLIDER_TAG.YELLOW,
+					);
+					const orangePoly = new PolygonEntity(
+						150,
+						50,
+						COLLIDER_TAG.ORANGE,
+					);
+
+					[
+						triLT,
+						triRT,
+						triLB,
+						triRB,
+						yellowPoly,
+						orangePoly,
+					].forEach((tri) => {
 						this.addEntity(tri);
 						this.addRenderable(tri);
 					});

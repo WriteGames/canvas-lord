@@ -1,16 +1,5 @@
 /* Canvas Lord v0.4.4 */
 import { Vec2, EPSILON, addPos, scalePos, subPos, crossProduct2D, dotProduct2D, } from '../math/index.js';
-const isPointInPolygon = (x, y, polygon) => {
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const a = polygon[i];
-        const b = polygon[j];
-        if (a[1] > y !== b[1] > y &&
-            x < ((b[0] - a[0]) * (y - a[1])) / (b[1] - a[1]) + a[0])
-            inside = !inside;
-    }
-    return inside;
-};
 const getSideOfLine = (x, y, lineA, lineB) => {
     const d = (lineB.y - lineA.y) * (x - lineA.x) -
         (lineB.x - lineA.x) * (y - lineA.y);
@@ -37,11 +26,11 @@ export const getLineSegmentIntersection = (a, b) => {
 };
 const getLineLength = (l) => Math.sqrt((l.x1 - l.x2) ** 2 + (l.y1 - l.y2) ** 2);
 // TODO(bret): Gonna be able to get this from the collider itself :)
-const constructTriFromRightTri = (rt) => {
-    const TL = new Vec2(rt.x, rt.y);
-    const TR = new Vec2(rt.x + rt.w, rt.y);
-    const BR = new Vec2(rt.x + rt.w, rt.y + rt.h);
-    const BL = new Vec2(rt.x, rt.y + rt.h);
+const constructPolygonFromRightTriangle = (rt) => {
+    const TL = new Vec2(0, 0);
+    const TR = new Vec2(0 + rt.w, 0);
+    const BR = new Vec2(0 + rt.w, 0 + rt.h);
+    const BL = new Vec2(0, 0 + rt.h);
     let points;
     switch (rt.orientation) {
         case 'NE': {
@@ -63,20 +52,25 @@ const constructTriFromRightTri = (rt) => {
         default:
             throw new Error(`Invalid orientation (${rt.orientation})`);
     }
-    const tri = {
-        x1: points[0].x,
-        y1: points[0].y,
-        x2: points[1].x,
-        y2: points[1].y,
-        x3: points[2].x,
-        y3: points[2].y,
-        type: 'triangle',
+    const lines = [];
+    const n = points.length;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+        lines.push({
+            x1: rt.x + points[j][0],
+            y1: rt.y + points[j][1],
+            x2: rt.x + points[i][0],
+            y2: rt.y + points[i][1],
+        });
+    }
+    const polygon = {
+        type: 'polygon',
         points: points.map((v) => [v.x, v.y]),
+        lines,
         collidable: true,
-        x: 0,
-        y: 0,
+        x: rt.x,
+        y: rt.y,
     };
-    return tri;
+    return polygon;
 };
 /// ### Point vs X ###
 export const collidePointPoint = (x1, y1, x2, y2) => {
@@ -119,12 +113,18 @@ export const collidePointRightTriangle = (x, y, rt) => {
     }
     return false;
 };
-export const collidePointTriangle = (x, y, t) => {
-    return isPointInPolygon(x, y, [
-        [t.x1, t.y1],
-        [t.x2, t.y2],
-        [t.x3, t.y3],
-    ].map(([x, y]) => [x + t.x, y + t.y]));
+export const collidePointPolygon = (x, y, p) => {
+    let inside = false;
+    const points = p.points.map(([_x, _y]) => [_x + p.x, _y + p.y]);
+    const n = points.length;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+        const a = points[i];
+        const b = points[j];
+        if (a[1] > y !== b[1] > y &&
+            x < ((b[0] - a[0]) * (y - a[1])) / (b[1] - a[1]) + a[0])
+            inside = !inside;
+    }
+    return inside;
 };
 export const collidePointGrid = (x, y, g) => {
     const gridRect = {
@@ -227,28 +227,19 @@ export const collideLineCircle = (l, c) => {
     return circlePos.sub(closest).magnitude <= c.radius;
 };
 export const collideLineRightTriangle = (l, rt) => {
-    return collideLineTriangle(l, constructTriFromRightTri(rt));
+    return collideLinePolygon(l, constructPolygonFromRightTriangle(rt));
 };
-export const collideLineTriangle = (l, t) => {
+export const collideLinePolygon = (l, p) => {
     // TODO: test if using barycentric coords would be faster!
-    return (collideLineLine(l, {
-        x1: t.x + t.x1,
-        y1: t.y + t.y1,
-        x2: t.x + t.x2,
-        y2: t.y + t.y2,
-    }) ||
-        collideLineLine(l, {
-            x1: t.x + t.x2,
-            y1: t.y + t.y2,
-            x2: t.x + t.x3,
-            y2: t.y + t.y3,
-        }) ||
-        collideLineLine(l, {
-            x1: t.x + t.x3,
-            y1: t.y + t.y3,
-            x2: t.x + t.x1,
-            y2: t.y + t.y1,
-        }));
+    const { lines } = p;
+    if (!lines)
+        return false;
+    const n = lines.length;
+    for (let i = 0; i < n; ++i) {
+        if (collideLineLine(l, lines[i]))
+            return true;
+    }
+    return false;
 };
 /// ### Rect vs X ###
 export const collideRectRect = (a, b) => {
@@ -263,31 +254,18 @@ export const collideRectCircle = (r, c) => {
 export const collideRectRightTriangle = (r, rt) => {
     // TODO(bret): write a better version of this
     // NOTE(bret): Found this online https://seblee.me/2009/05/super-fast-trianglerectangle-intersection-test/
-    return collideRectTriangle(r, constructTriFromRightTri(rt));
+    return collideRectPolygon(r, constructPolygonFromRightTriangle(rt));
 };
-export const collideRectTriangle = (r, t) => {
+export const collideRectPolygon = (r, p) => {
     // TODO(bret): revisit
-    const xx = [t.x1, t.x2, t.x3];
-    const yy = [t.y1, t.y2, t.y3];
-    const minX = Math.min(...xx);
-    const maxX = Math.max(...xx);
-    const minY = Math.min(...yy);
-    const maxY = Math.max(...yy);
-    const triRect = {
-        x: minX,
-        y: minY,
-        w: maxX - minX,
-        h: maxY - minY,
-    };
-    r.x -= t.x;
-    r.y -= t.y;
-    const result = collideRectRect(r, triRect) &&
-        (collideLineRect({ x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }, r) ||
-            collideLineRect({ x1: t.x2, y1: t.y2, x2: t.x3, y2: t.y3 }, r) ||
-            collideLineRect({ x1: t.x3, y1: t.y3, x2: t.x1, y2: t.y1 }, r));
-    r.x += t.x;
-    r.y += t.y;
-    return result;
+    // this won't check if it's fully submerged :/ we would need SAT for that!
+    const { lines } = p;
+    const n = lines.length;
+    for (let i = 0; i < n; ++i) {
+        if (collideLineRect(lines[i], r))
+            return true;
+    }
+    return false;
 };
 export const collideRectGrid = (r, g) => {
     // are we within the bounds of the grid???
@@ -321,38 +299,36 @@ export const collideCircleCircle = (a, b) => {
 };
 export const collideCircleRightTriangle = (c, rt) => {
     // TODO(bret): Revisit
-    return collideCircleTriangle(c, constructTriFromRightTri(rt));
+    return collideCirclePolygon(c, constructPolygonFromRightTriangle(rt));
 };
-export const collideCircleTriangle = (c, t) => {
-    // TODO(bret): Revisit
-    return (collideLineCircle({ x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }, c) ||
-        collideLineCircle({ x1: t.x2, y1: t.y2, x2: t.x3, y2: t.y3 }, c) ||
-        collideLineCircle({ x1: t.x3, y1: t.y3, x2: t.x1, y2: t.y1 }, c));
+export const collideCirclePolygon = (c, p) => {
+    // TODO(bret): revisit
+    // this won't check if it's the circle is fully inside the polygon :/ might need SAT for that
+    const { lines } = p;
+    const n = lines.length;
+    for (let i = 0; i < n; ++i) {
+        if (collideLineCircle(lines[i], c))
+            return true;
+    }
+    return false;
 };
 /// ### Right Triangle vs X ###
 export const collideRightTriangleRightTriangle = (a, b) => {
     // TODO: revisit
-    return collideTriangleTriangle(constructTriFromRightTri(a), constructTriFromRightTri(b));
+    return collidePolygonPolygon(constructPolygonFromRightTriangle(a), constructPolygonFromRightTriangle(b));
 };
-export const collideRightTriangleTriangle = (rt, t) => {
+export const collideRightTrianglePolygon = (rt, p) => {
     // TODO: revisit
-    return collideTriangleTriangle(constructTriFromRightTri(rt), t);
+    return collidePolygonPolygon(constructPolygonFromRightTriangle(rt), p);
 };
-/// ### Triangle vs X ###
-export const collideTriangleTriangle = (a, b) => {
-    // TODO: revisit
-    const linesA = [
-        { x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2 },
-        { x1: a.x2, y1: a.y2, x2: a.x3, y2: a.y3 },
-        { x1: a.x3, y1: a.y3, x2: a.x1, y2: a.y1 },
-    ];
-    const linesB = [
-        { x1: b.x1, y1: b.y1, x2: b.x2, y2: b.y2 },
-        { x1: b.x2, y1: b.y2, x2: b.x3, y2: b.y3 },
-        { x1: b.x3, y1: b.y3, x2: b.x1, y2: b.y1 },
-    ];
-    for (let x = 0; x < 3; ++x) {
-        for (let y = 0; y < 3; ++y) {
+/// ### Polygon vs X ###
+export const collidePolygonPolygon = (a, b) => {
+    // TODO(bret): revisit
+    // we need proper SAT for when shapes are engulfed in their parent
+    const linesA = a.lines;
+    const linesB = b.lines;
+    for (let x = 0; x < linesA.length; ++x) {
+        for (let y = 0; y < linesB.length; ++y) {
             if (collideLineLine(linesA[x], linesB[y])) {
                 return true;
             }
