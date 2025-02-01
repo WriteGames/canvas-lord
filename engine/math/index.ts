@@ -73,6 +73,16 @@ export class Vec2 extends Array<number> {
 		this.y = y;
 	}
 
+	normalize() {
+		Vec2.normalize(this);
+	}
+
+	static normalize(v: Vec2) {
+		const mag = v.magnitude;
+		v.x /= mag;
+		v.y /= mag;
+	}
+
 	map<U>(
 		// TODO: index: 0 | 1 ?
 		callbackfn: (value: number, index: number, array: number[]) => U,

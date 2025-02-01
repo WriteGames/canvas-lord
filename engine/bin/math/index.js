@@ -47,6 +47,14 @@ export class Vec2 extends Array {
         this.x = x;
         this.y = y;
     }
+    normalize() {
+        Vec2.normalize(this);
+    }
+    static normalize(v) {
+        const mag = v.magnitude;
+        v.x /= mag;
+        v.y /= mag;
+    }
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {

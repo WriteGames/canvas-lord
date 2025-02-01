@@ -10,44 +10,13 @@ import {
 	Line2D,
 } from '../math/index.js';
 
-import { GridCollider } from './grid-collider.js';
-import {
-	CircleCollider,
-	LineCollider,
-	PointCollider,
+import type {
+	GridCollider,
 	PolygonCollider,
-	RectCollider,
 	RightTriangleCollider,
 } from './index.js';
 
-type Point = PointCollider;
-type Line = LineCollider;
-type Rect = RectCollider;
-type Circle = CircleCollider;
-type Polygon = PolygonCollider;
-type RightTriangle = RightTriangleCollider;
-type Grid = GridCollider;
-
 // TODO: bounds!
-
-// type AlwaysOmit =
-// 	| 'type'
-// 	| 'collide'
-// 	| 'render'
-// 	| 'options'
-// 	| 'tag'
-// 	| 'collidable'
-// 	| 'parent';
-// type RawCollider<T, O extends keyof Omit<T, AlwaysOmit>> = Omit<
-// 	Line,
-// 	AlwaysOmit | O
-// >;
-// type RawLine = RawCollider<Line, 'x' | 'y'>;
-// type RawRightTriangle = RawCollider<RightTriangle, 'width' | 'height'>;
-// type RawGrid = Omit<GridShape, AlwaysOmit>;
-// type RawRect = RawCollider<Rect, 'width' | 'height'>;
-// type RawCircle = RawCollider<Circle, 'r'>;
-// type RawPolygon = Omit<Polygon, AlwaysOmit>;
 
 const getSideOfLine = (x: number, y: number, lineA: Vec2, lineB: Vec2) => {
 	const d =
@@ -81,74 +50,6 @@ export const getLineSegmentIntersection = (
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1
 		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
 		: null;
-};
-
-// TODO(bret): Gonna be able to get this from the collider itself :)
-const constructPolygonFromRightTriangle = (rt: RightTriangle) => {
-	const TL = new Vec2(rt.left, rt.top);
-	const TR = new Vec2(rt.right, rt.top);
-	const BR = new Vec2(rt.right, rt.bottom);
-	const BL = new Vec2(rt.left, rt.bottom);
-	let verts;
-	switch (rt.orientation) {
-		case 'NE': {
-			verts = [TL, BR, BL];
-			break;
-		}
-		case 'SE': {
-			verts = [TR, BL, TL];
-			break;
-		}
-		case 'SW': {
-			verts = [BR, TL, TR];
-			break;
-		}
-		case 'NW': {
-			verts = [BL, TR, BR];
-			break;
-		}
-		default:
-			throw new Error(`Invalid orientation (${rt.orientation})`);
-	}
-
-	// console.log(points[0][0], rt.points[0][0]);
-
-	const lines: Line[] = [];
-	const n = verts.length;
-	for (let i = 0, j = n - 1; i < n; j = i++) {
-		const x1 = verts[j][0];
-		const y1 = verts[j][1];
-		const x2 = verts[i][0];
-		const y2 = verts[i][1];
-		// @ts-expect-error
-		lines.push({
-			x1,
-			y1,
-			x2,
-			y2,
-			xStart: x1,
-			yStart: y1,
-			xEnd: x2,
-			yEnd: y2,
-		});
-	}
-
-	const polygon: Omit<
-		Polygon,
-		'render' | 'collide' | 'options' | 'parent' | 'assignParent'
-	> = {
-		type: 'polygon',
-		vertices: verts.map((v) => [v.x, v.y] as const) as Polygon['vertices'],
-		lines: lines,
-		edges: [],
-		axes: [],
-		collidable: true,
-		// x: 0,
-		// y: 0,
-		x: (rt.x ?? 0) + (rt.parent?.x ?? 0),
-		y: (rt.y ?? 0) + (rt.parent?.y ?? 0),
-	};
-	return polygon;
 };
 
 /// ### Point vs X ###
@@ -198,7 +99,7 @@ export const collidePointCircle = (
 export const collidePointRightTriangle = (
 	x: number,
 	y: number,
-	rt: RightTriangle,
+	rt: RightTriangleCollider,
 ) => {
 	if (collidePointRect(x, y, rt.left, rt.top, rt.right, rt.bottom)) {
 		const TL = new Vec2(rt.left, rt.top);
@@ -227,7 +128,11 @@ export const collidePointRightTriangle = (
 	return false;
 };
 
-export const collidePointPolygon = (x: number, y: number, p: Polygon) => {
+export const collidePointPolygon = (
+	x: number,
+	y: number,
+	p: PolygonCollider,
+) => {
 	let inside = false;
 	const { vertices } = p;
 	const n = vertices.length;
@@ -245,7 +150,7 @@ export const collidePointPolygon = (x: number, y: number, p: Polygon) => {
 };
 
 // TODO(bret): make sure this is still working
-export const collidePointGrid = (x: number, y: number, g: Grid) => {
+export const collidePointGrid = (x: number, y: number, g: GridCollider) => {
 	const left = g.x + g.parent.x;
 	const top = g.y + g.parent.y;
 	const right = g.x + g.parent.x + g.grid.width - 1;
@@ -335,15 +240,14 @@ export const collideLineRightTriangle = (
 	y1: number,
 	x2: number,
 	y2: number,
-	rt: RightTriangle,
+	rt: RightTriangleCollider,
 ) => {
-	return collideLinePolygon(
-		x1,
-		y1,
-		x2,
-		y2,
-		// @ts-expect-error
-		constructPolygonFromRightTriangle(rt),
+	return (
+		collideLineLine(x1, y1, x2, y2, rt.x1, rt.y1, rt.x2, rt.y2) ||
+		collideLineLine(x1, y1, x2, y2, rt.x2, rt.y2, rt.x3, rt.y3) ||
+		collideLineLine(x1, y1, x2, y2, rt.x3, rt.y3, rt.x1, rt.y1) ||
+		collidePointRightTriangle(x1, y1, rt) ||
+		collidePointRightTriangle(x2, y2, rt)
 	);
 };
 
@@ -352,11 +256,10 @@ export const collideLinePolygon = (
 	y1: number,
 	x2: number,
 	y2: number,
-	p: Polygon,
+	p: PolygonCollider,
 ) => {
 	// TODO: test if using barycentric coords would be faster!
 	const { vertices } = p;
-	if (!vertices) return false;
 	const n = vertices.length;
 	for (let i = 0, j = n - 1; i < n; j = i++) {
 		if (
@@ -413,18 +316,19 @@ export const collideRectRightTriangle = (
 	top: number,
 	right: number,
 	bottom: number,
-	rt: RightTriangle,
+	rt: RightTriangleCollider,
 ) => {
 	// TODO(bret): write a better version of this
 	// NOTE(bret): Found this online https://seblee.me/2009/05/super-fast-trianglerectangle-intersection-test/
 
-	return collideRectPolygon(
-		left,
-		top,
-		right,
-		bottom,
-		// @ts-expect-error
-		constructPolygonFromRightTriangle(rt),
+	const centerX = (right - left) / 2 + left;
+	const centerY = (bottom - top) / 2 + top;
+
+	return (
+		collidePointRightTriangle(centerX, centerY, rt) ||
+		collideLineRect(rt.x1, rt.y1, rt.x2, rt.y2, left, top, right, bottom) ||
+		collideLineRect(rt.x2, rt.y2, rt.x3, rt.y3, left, top, right, bottom) ||
+		collideLineRect(rt.x3, rt.y3, rt.x1, rt.y1, left, top, right, bottom)
 	);
 };
 
@@ -433,7 +337,7 @@ export const collideRectPolygon = (
 	top: number,
 	right: number,
 	bottom: number,
-	p: Polygon,
+	p: PolygonCollider,
 ) => {
 	// TODO(bret): revisit
 	// this won't check if it's fully submerged :/ we would need SAT for that!
@@ -462,7 +366,7 @@ export const collideRectGrid = (
 	top: number,
 	right: number,
 	bottom: number,
-	g: Grid,
+	g: GridCollider,
 ) => {
 	// are we within the bounds of the grid???
 
@@ -529,10 +433,11 @@ export const collideCircleRightTriangle = (
 	cX: number,
 	cY: number,
 	radius: number,
-	rt: RightTriangle,
+	rt: RightTriangleCollider,
 ) => {
 	// TODO(bret): Revisit
 	return (
+		collidePointRightTriangle(cX, cY, rt) ||
 		collideLineCircle(rt.x1, rt.y1, rt.x2, rt.y2, cX, cY, radius) ||
 		collideLineCircle(rt.x2, rt.y2, rt.x3, rt.y3, cX, cY, radius) ||
 		collideLineCircle(rt.x3, rt.y3, rt.x1, rt.y1, cX, cY, radius)
@@ -543,10 +448,10 @@ export const collideCirclePolygon = (
 	cX: number,
 	cY: number,
 	radius: number,
-	p: Polygon,
+	p: PolygonCollider,
 ) => {
-	// TODO(bret): revisit, use SAT
-	// this won't check if it's the circle is fully inside the polygon :/ might need SAT for that
+	if (collidePointPolygon(cX, cY, p)) return true;
+
 	const { vertices } = p;
 	const n = vertices.length;
 	for (let i = 0, j = n - 1; i < n; j = i++) {
@@ -568,26 +473,38 @@ export const collideCirclePolygon = (
 
 /// ### Right Triangle vs X ###
 export const collideRightTriangleRightTriangle = (
-	a: RightTriangle,
-	b: RightTriangle,
+	a: RightTriangleCollider,
+	b: RightTriangleCollider,
 ) => {
-	// TODO: revisit
-	return collidePolygonPolygon(
-		// @ts-expect-error
-		constructPolygonFromRightTriangle(a),
-		constructPolygonFromRightTriangle(b),
-	);
+	for (let i = 0; i < 3; ++i) {
+		const aPoint = a.points[i];
+		const bPoint = b.points[i];
+		if (collidePointRightTriangle(aPoint.x, aPoint.y, b)) return true;
+		if (collidePointRightTriangle(bPoint.x, bPoint.y, a)) return true;
+	}
+	return false;
 };
 
-export const collideRightTrianglePolygon = (rt: RightTriangle, p: Polygon) => {
-	// TODO: revisit
-	// @ts-expect-error
-	return collidePolygonPolygon(constructPolygonFromRightTriangle(rt), p);
+export const collideRightTrianglePolygon = (
+	rt: RightTriangleCollider,
+	p: PolygonCollider,
+) => {
+	const vertices = p.vertices;
+	for (let i = 0; i < vertices.length; ++i) {
+		const vertex = vertices[i];
+		if (collidePointRightTriangle(vertex[0], vertex[1], rt)) return true;
+	}
+
+	return (
+		collidePointPolygon(rt.x1, rt.y1, p) ||
+		collidePointPolygon(rt.x2, rt.y2, p) ||
+		collidePointPolygon(rt.x3, rt.y3, p)
+	);
 };
 
 /// ### Polygon vs X ###
 
-const project = (p: Polygon, axis: Vec2) => {
+const project = (p: PolygonCollider, axis: Vec2) => {
 	const { vertices } = p;
 	let min = axis.dot(new Vec2(vertices[0][0], vertices[0][1]));
 	let max = min;
@@ -602,27 +519,26 @@ const project = (p: Polygon, axis: Vec2) => {
 	return { min, max };
 };
 
-export const collidePolygonPolygon = (a: Polygon, b: Polygon) => {
-	// TODO(bret): revisit
-	// we need proper SAT for when shapes are engulfed in their parent
-	const axesA = a.axes;
-	const axesB = b.axes;
+export const collidePolygonPolygon = (
+	a: PolygonCollider,
+	b: PolygonCollider,
+) => {
+	const aPos = new Vec2(a.x, a.y);
+	const bPos = new Vec2(b.x, b.y);
+	const vOffset = aPos.sub(bPos);
 
-	for (let i = 0; i < axesA.length; ++i) {
-		const axis = axesA[i];
-		const aa = project(a, axis);
-		const bb = project(b, axis);
-		if (aa.max >= bb.min && aa.min <= bb.max) {
-			return false;
-		}
-	}
+	const _axes = [a.axes, b.axes];
 
-	for (let i = 0; i < axesB.length; ++i) {
-		const axis = axesB[i];
-		const aa = project(a, axis);
-		const bb = project(b, axis);
-		if (aa.max >= bb.min && aa.min <= bb.max) {
-			return false;
+	for (let i = 0; i < 2; ++i) {
+		const axes = _axes[i];
+		for (let j = 0; j < axes.length; ++j) {
+			const axis = axes[j];
+			const aa = project(a, axis);
+			const bb = project(b, axis);
+			const scalerOffset = axis.dot(vOffset);
+			aa.min += scalerOffset;
+			aa.max += scalerOffset;
+			if (aa.min - bb.max > 0 || bb.min - aa.max > 0) return false;
 		}
 	}
 

@@ -6,23 +6,21 @@ export class PolygonCollider extends Collider {
     type = 'polygon';
     #points;
     get vertices() {
-        return this.#points.map((p) => {
-            return [
-                p[0] + this.x + this.parent.x,
-                p[1] + this.y + this.parent.y,
-            ];
-        });
+        return this.#points.map(([x, y]) => [
+            x + this.x + this.parent.x,
+            y + this.y + this.parent.y,
+        ]);
     }
     get lines() {
         const lines = [];
-        const points = this.#points;
-        const n = points.length;
+        const { vertices } = this;
+        const n = vertices.length;
         for (let i = 0, j = n - 1; i < n; j = i++) {
             lines.push({
-                x1: this.x + this.parent.x + points[j][0],
-                y1: this.y + this.parent.y + points[j][1],
-                x2: this.x + this.parent.x + points[i][0],
-                y2: this.y + this.parent.y + points[i][1],
+                x1: vertices[j][0],
+                y1: vertices[j][1],
+                x2: vertices[i][0],
+                y2: vertices[i][1],
             });
         }
         return lines;
@@ -32,8 +30,9 @@ export class PolygonCollider extends Collider {
         return lines.map(({ x1, y1, x2, y2 }) => new Vec2(x2 - x1, y2 - y1));
     }
     get axes() {
-        const edges = this.edges;
-        return edges.map(([_x, _y]) => new Vec2(-_y, _x));
+        const axes = this.edges.map(([_x, _y]) => new Vec2(-_y, _x));
+        axes.forEach(Vec2.normalize);
+        return axes;
     }
     // TODO(bret): throw error if points are invalid
     constructor(points, x = 0, y = 0) {

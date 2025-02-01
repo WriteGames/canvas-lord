@@ -1,6 +1,5 @@
-import { Collision, Draw, Game, Scene, Entity } from '/bin/canvas-lord.js';
-import * as Collide from '/bin/collider/collide.js';
-import { addPos, Vec2 } from '/bin/math/index.js';
+import { Draw, Scene, Entity } from '/bin/canvas-lord.js';
+import { Vec2 } from '/bin/math/index.js';
 import {
 	LineCollider,
 	PointCollider,
@@ -22,10 +21,10 @@ const drawPolygon = (ctx, polygon, color, type = 'stroke', map = false) => {
 };
 
 const drawRightTriangle = (ctx, rt, color, x = 0, y = 0, style) => {
-	const TL = new Vec2(x + rt.x, y + rt.y);
-	const TR = new Vec2(x + rt.x + rt.w, y + rt.y);
-	const BR = new Vec2(x + rt.x + rt.w, y + rt.y + rt.h);
-	const BL = new Vec2(x + rt.x, y + rt.y + rt.h);
+	const TL = new Vec2(x + rt.left, y + rt.top);
+	const TR = new Vec2(x + rt.right, y + rt.top);
+	const BR = new Vec2(x + rt.right, y + rt.bottom);
+	const BL = new Vec2(x + rt.left, y + rt.bottom);
 	let points;
 	switch (rt.orientation) {
 		case 'NE': {
@@ -105,33 +104,26 @@ class CollisionEntity extends Entity {
 		ctx.strokeStyle = 'red';
 		switch (this.collider.type) {
 			case 'rect': {
-				drawRect(
-					ctx,
-					true,
-					this.x,
-					this.y,
-					this.collider.w,
-					this.collider.h,
-				);
+				drawRect(ctx, true, x, y, this.collider.w, this.collider.h);
 				break;
 			}
 			case 'circle': {
 				Draw.circle(
 					ctx,
 					{ ...this, type: 'fill', color },
-					this.x - this.collider.radius,
-					this.y - this.collider.radius,
+					x - this.collider.radius,
+					y - this.collider.radius,
 					this.collider.radius,
 				);
 				break;
 			}
 			case 'point': {
-				const radius = 10;
+				const radius = color === 'magenta' ? 8 : 3;
 				Draw.circle(
 					ctx,
 					{ ...this, type: 'fill', color },
-					this.x - radius,
-					this.y - radius,
+					x - radius,
+					y - radius,
 					radius,
 				);
 				break;
@@ -151,18 +143,18 @@ class CollisionEntity extends Entity {
 				break;
 			}
 			case 'right-triangle': {
-				drawRightTriangle(
-					ctx,
-					this.collider,
-					color,
-					this.x,
-					this.y,
-					'fill',
-				);
+				drawRightTriangle(ctx, this.collider, color, 0, 0, 'fill');
 				break;
 			}
 			case 'polygon': {
-				drawPolygon(ctx, this.collider, color, 'fill');
+				// drawPolygon(ctx, this.collider, color, 'fill');
+				Draw.polygon(
+					ctx,
+					{ type: 'fill', color },
+					0,
+					0,
+					this.collider.vertices,
+				);
 				break;
 			}
 		}
@@ -291,10 +283,22 @@ class MouseEntity extends CollisionEntity {
 	constructor() {
 		super(-100, -100, COLLIDER_TAG.MOUSE);
 
-		this.rect = new RectCollider(20, 20);
-		this.circle = new CircleCollider(10);
+		this.colliders = [
+			new RectCollider(16, 16, -8, -8),
+			//
+			new CircleCollider(8),
+			new PointCollider(),
+			new LineCollider(-10, -10, 10, 10),
+			new RightTriangleCollider(20, 20, 'NE', -10, -10),
+			new PolygonCollider([
+				[10, 10],
+				[-10, 7],
+				[-7, -5],
+				[5, -10],
+			]),
+		];
 
-		this.changeCollider(this.circle);
+		this.changeCollider(this.colliders[5]);
 	}
 
 	changeCollider(c) {
@@ -306,14 +310,29 @@ class MouseEntity extends CollisionEntity {
 		this.x = input.mouse.x;
 		this.y = input.mouse.y;
 
+		let index;
 		switch (true) {
 			case input.keyPressed(Keys.Digit1):
-				this.changeCollider(this.rect);
+				index = 0;
 				break;
 			case input.keyPressed(Keys.Digit2):
-				this.changeCollider(this.circle);
+				index = 1;
+				break;
+			case input.keyPressed(Keys.Digit3):
+				index = 2;
+				break;
+			case input.keyPressed(Keys.Digit4):
+				index = 3;
+				break;
+			case input.keyPressed(Keys.Digit5):
+				index = 4;
+				break;
+			case input.keyPressed(Keys.Digit6):
+				index = 5;
 				break;
 		}
+
+		if (index !== undefined) this.changeCollider(this.colliders[index]);
 	}
 }
 
