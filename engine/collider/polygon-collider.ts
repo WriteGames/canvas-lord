@@ -22,6 +22,19 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 
 	#points: Points;
 
+	get left() {
+		return Math.min(...this.vertices.map(([x]) => x));
+	}
+	get top() {
+		return Math.min(...this.vertices.map(([_, y]) => y));
+	}
+	get right() {
+		return Math.max(...this.vertices.map(([x]) => x));
+	}
+	get bottom() {
+		return Math.max(...this.vertices.map(([_, y]) => y));
+	}
+
 	get vertices(): Points {
 		return this.#points.map(([x, y]) => [
 			x + this.x + this.parent.x,

@@ -428,10 +428,29 @@ export class Debug implements Debug {
 				JSON.stringify({
 					x: entity.collider.x,
 					y: entity.collider.y,
+					// @ts-expect-error
+					w: entity.collider.width,
+					// @ts-expect-error
+					h: entity.collider.height,
 					points:
 						'points' in entity.collider
 							? entity.collider.points
 							: null,
+				}),
+			);
+
+			drawText(
+				drawX + padding,
+				drawY + padding + 310,
+				JSON.stringify({
+					// @ts-expect-error
+					left: entity.collider.left,
+					// @ts-expect-error
+					top: entity.collider.top,
+					// @ts-expect-error
+					right: entity.collider.right,
+					// @ts-expect-error
+					bottom: entity.collider.bottom,
 				}),
 			);
 		}

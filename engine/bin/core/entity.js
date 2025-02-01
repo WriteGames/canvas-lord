@@ -1,5 +1,5 @@
 import * as Collide from '../collider/collide.js';
-import { PointCollider } from '../collider/index.js';
+import { PointCollider, } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 const mouseCollider = new PointCollider();
@@ -90,6 +90,10 @@ export class Entity {
     _collide(x, y, tag, earlyOut) {
         if (!this.collider)
             return [];
+        const _x = this.x;
+        const _y = this.y;
+        this.x = x;
+        this.y = y;
         const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
         let collide = [];
@@ -109,6 +113,8 @@ export class Entity {
             if (earlyOut)
                 break;
         }
+        this.x = _x;
+        this.y = _y;
         return collide;
     }
     collideEntity(x, y, tag) {
@@ -128,15 +134,24 @@ export class Entity {
         const { input } = this.scene.engine;
         const mouseX = input.mouse.x + this.scene.camera.x;
         const mouseY = input.mouse.y + this.scene.camera.y;
-        return Collide.collide(
+        const _x = this.x;
+        const _y = this.y;
+        this.x = x;
+        this.y = y;
+        const res = Collide.collide(
         // TODO(bret): input.mouse.collider or smth
-        // @ts-expect-error
         {
             type: 'point',
-            x: mouseX - x,
-            y: mouseY - y,
+            x: mouseX,
+            // @ts-expect-error
+            left: mouseX,
+            y: mouseY,
+            top: mouseY,
             collidable: true,
         }, this.collider);
+        this.x = _x;
+        this.y = _y;
+        return res;
     }
 }
 //# sourceMappingURL=entity.js.map

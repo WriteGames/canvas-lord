@@ -4,7 +4,12 @@ import type { Scene } from './scene.js';
 import type { Camera } from '../util/camera.js';
 import { Collider } from '../collider/collider.js';
 import * as Collide from '../collider/collide.js';
-import { PointCollider, type ColliderTag } from '../collider/index.js';
+import * as Collision from '../collider/collision.js';
+import {
+	PointCollider,
+	RectCollider,
+	type ColliderTag,
+} from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 import { type ComponentProps } from '../util/components.js';
@@ -169,6 +174,11 @@ export class Entity implements IEntity, IRenderable {
 	): Entity[] {
 		if (!this.collider) return [];
 
+		const _x = this.x;
+		const _y = this.y;
+		this.x = x;
+		this.y = y;
+
 		const tags = tag ? [tag].flat() : [];
 		const n = this.scene.entities.inScene.length;
 		let collide = [];
@@ -185,6 +195,10 @@ export class Entity implements IEntity, IRenderable {
 			collide.push(result);
 			if (earlyOut) break;
 		}
+
+		this.x = _x;
+		this.y = _y;
+
 		return collide;
 	}
 
@@ -213,16 +227,25 @@ export class Entity implements IEntity, IRenderable {
 		const mouseX = input.mouse.x + this.scene.camera.x;
 		const mouseY = input.mouse.y + this.scene.camera.y;
 
-		return Collide.collide(
+		const _x = this.x;
+		const _y = this.y;
+		this.x = x;
+		this.y = y;
+		const res = Collide.collide(
 			// TODO(bret): input.mouse.collider or smth
-			// @ts-expect-error
 			{
 				type: 'point',
-				x: mouseX - x,
-				y: mouseY - y,
+				x: mouseX,
+				// @ts-expect-error
+				left: mouseX,
+				y: mouseY,
+				top: mouseY,
 				collidable: true,
 			},
 			this.collider,
 		);
+		this.x = _x;
+		this.y = _y;
+		return res;
 	}
 }

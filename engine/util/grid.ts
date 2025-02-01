@@ -63,7 +63,7 @@ export class Grid {
 		OUTLINE: 0,
 		BOXES_OUTLINE: 1,
 		BOXES: 2,
-	};
+	} as const;
 
 	constructor(width: number, height: number, tileW: number, tileH: number) {
 		this.width = width;

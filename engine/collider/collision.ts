@@ -151,17 +151,10 @@ export const collidePointPolygon = (
 
 // TODO(bret): make sure this is still working
 export const collidePointGrid = (x: number, y: number, g: GridCollider) => {
-	const left = g.x + g.parent.x;
-	const top = g.y + g.parent.y;
-	const right = g.x + g.parent.x + g.grid.width - 1;
-	const bottom = g.y + g.parent.y + g.grid.height - 1;
+	if (!collidePointRect(x, y, g.left, g.top, g.right, g.bottom)) return false;
 
-	if (!collidePointRect(x, y, left, top, right, bottom)) return false;
-
-	const xx = Math.floor(x / g.grid.tileW);
-	const yy = Math.floor(y / g.grid.tileH);
-	console.assert(xx === Math.clamp(xx, 0, g.grid.columns - 1));
-	console.assert(yy === Math.clamp(yy, 0, g.grid.rows - 1));
+	const xx = Math.floor((x - g.left) / g.grid.tileW);
+	const yy = Math.floor((y - g.top) / g.grid.tileH);
 	return g.grid.getTile(xx, yy) === 1;
 };
 
@@ -339,6 +332,21 @@ export const collideRectPolygon = (
 	bottom: number,
 	p: PolygonCollider,
 ) => {
+	// check if we're even within the bounds
+	if (
+		!collideRectRect(
+			left,
+			top,
+			right,
+			bottom,
+			p.left,
+			p.top,
+			p.right,
+			p.bottom,
+		)
+	)
+		return false;
+
 	// TODO(bret): revisit
 	// this won't check if it's fully submerged :/ we would need SAT for that!
 	const { vertices } = p;
@@ -368,20 +376,27 @@ export const collideRectGrid = (
 	bottom: number,
 	g: GridCollider,
 ) => {
-	// are we within the bounds of the grid???
-
-	const gLeft = g.x + g.parent.x;
-	const gTop = g.y + g.parent.y;
-	const gRight = g.x + g.parent.x + g.grid.width - 1;
-	const gBottom = g.y + g.parent.y + g.grid.height - 1;
-
 	if (
-		!collideRectRect(left, right, top, bottom, gLeft, gTop, gRight, gBottom)
-	)
+		!collideRectRect(
+			left,
+			top,
+			right,
+			bottom,
+			g.left,
+			g.top,
+			g.right,
+			g.bottom,
+		)
+	) {
 		return false;
+	}
 
-	const x = left - gLeft;
-	const y = top - gTop;
+	const x = left - g.left;
+	const y = top - g.top;
+
+	// NOTE(bret): these already have -1 applied
+	const rectW = right - left;
+	const rectH = bottom - top;
 
 	// TODO(bret): uncertain if a clamp here is correct
 	const minX = Math.clamp(
@@ -390,10 +405,6 @@ export const collideRectGrid = (
 		g.grid.columns - 1,
 	);
 	const minY = Math.clamp(Math.floor(y / g.grid.tileH), 0, g.grid.rows - 1);
-
-	// NOTE(bret): these already have -1 applied
-	const rectW = right - left;
-	const rectH = bottom - top;
 
 	const maxX = Math.clamp(
 		Math.floor((x + rectW) / g.grid.tileW),

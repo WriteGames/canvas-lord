@@ -5,6 +5,18 @@ import { Draw } from '../util/draw.js';
 export class PolygonCollider extends Collider {
     type = 'polygon';
     #points;
+    get left() {
+        return Math.min(...this.vertices.map(([x]) => x));
+    }
+    get top() {
+        return Math.min(...this.vertices.map(([_, y]) => y));
+    }
+    get right() {
+        return Math.max(...this.vertices.map(([x]) => x));
+    }
+    get bottom() {
+        return Math.max(...this.vertices.map(([_, y]) => y));
+    }
     get vertices() {
         return this.#points.map(([x, y]) => [
             x + this.x + this.parent.x,
