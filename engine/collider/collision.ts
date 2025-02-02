@@ -74,7 +74,7 @@ export const collidePointLine = (
 	return collideLineCircle(x1, y1, x2, y2, x, y, 0.5);
 };
 
-export const collidePointRect = (
+export const collidePointBox = (
 	x: number,
 	y: number,
 	left: number,
@@ -101,7 +101,7 @@ export const collidePointRightTriangle = (
 	y: number,
 	rt: RightTriangleCollider,
 ) => {
-	if (collidePointRect(x, y, rt.left, rt.top, rt.right, rt.bottom)) {
+	if (collidePointBox(x, y, rt.left, rt.top, rt.right, rt.bottom)) {
 		const TL = new Vec2(rt.left, rt.top);
 		const TR = new Vec2(rt.right, rt.top);
 		const BR = new Vec2(rt.right, rt.bottom);
@@ -151,7 +151,7 @@ export const collidePointPolygon = (
 
 // TODO(bret): make sure this is still working
 export const collidePointGrid = (x: number, y: number, g: GridCollider) => {
-	if (!collidePointRect(x, y, g.left, g.top, g.right, g.bottom)) return false;
+	if (!collidePointBox(x, y, g.left, g.top, g.right, g.bottom)) return false;
 
 	const xx = Math.floor((x - g.left) / g.grid.tileW);
 	const yy = Math.floor((y - g.top) / g.grid.tileH);
@@ -175,7 +175,7 @@ export const collideLineLine = (
 	return checkLineSegmentIntersection(A, B);
 };
 
-export const collideLineRect = (
+export const collideLineBox = (
 	x1: number,
 	y1: number,
 	x2: number,
@@ -186,8 +186,8 @@ export const collideLineRect = (
 	bottom: number,
 ) => {
 	if (
-		collidePointRect(x1, y1, left, top, right, bottom) ||
-		collidePointRect(x2, y2, left, top, right, bottom)
+		collidePointBox(x1, y1, left, top, right, bottom) ||
+		collidePointBox(x2, y2, left, top, right, bottom)
 	)
 		return true;
 
@@ -272,9 +272,9 @@ export const collideLinePolygon = (
 	return false;
 };
 
-/// ### Rect vs X ###
+/// ### Box vs X ###
 
-export const collideRectRect = (
+export const collideBoxBox = (
 	aLeft: number,
 	aTop: number,
 	aRight: number,
@@ -289,7 +289,7 @@ export const collideRectRect = (
 	);
 };
 
-export const collideRectCircle = (
+export const collideBoxCircle = (
 	left: number,
 	top: number,
 	right: number,
@@ -304,7 +304,7 @@ export const collideRectCircle = (
 	return distanceSq < radius ** 2;
 };
 
-export const collideRectRightTriangle = (
+export const collideBoxRightTriangle = (
 	left: number,
 	top: number,
 	right: number,
@@ -319,13 +319,13 @@ export const collideRectRightTriangle = (
 
 	return (
 		collidePointRightTriangle(centerX, centerY, rt) ||
-		collideLineRect(rt.x1, rt.y1, rt.x2, rt.y2, left, top, right, bottom) ||
-		collideLineRect(rt.x2, rt.y2, rt.x3, rt.y3, left, top, right, bottom) ||
-		collideLineRect(rt.x3, rt.y3, rt.x1, rt.y1, left, top, right, bottom)
+		collideLineBox(rt.x1, rt.y1, rt.x2, rt.y2, left, top, right, bottom) ||
+		collideLineBox(rt.x2, rt.y2, rt.x3, rt.y3, left, top, right, bottom) ||
+		collideLineBox(rt.x3, rt.y3, rt.x1, rt.y1, left, top, right, bottom)
 	);
 };
 
-export const collideRectPolygon = (
+export const collideBoxPolygon = (
 	left: number,
 	top: number,
 	right: number,
@@ -334,7 +334,7 @@ export const collideRectPolygon = (
 ) => {
 	// check if we're even within the bounds
 	if (
-		!collideRectRect(
+		!collideBoxBox(
 			left,
 			top,
 			right,
@@ -353,7 +353,7 @@ export const collideRectPolygon = (
 	const n = vertices.length;
 	for (let i = 0, j = n - 1; i < n; j = i++) {
 		if (
-			collideLineRect(
+			collideLineBox(
 				vertices[j][0],
 				vertices[j][1],
 				vertices[i][0],
@@ -369,7 +369,7 @@ export const collideRectPolygon = (
 	return false;
 };
 
-export const collideRectGrid = (
+export const collideBoxGrid = (
 	left: number,
 	top: number,
 	right: number,
@@ -377,7 +377,7 @@ export const collideRectGrid = (
 	g: GridCollider,
 ) => {
 	if (
-		!collideRectRect(
+		!collideBoxBox(
 			left,
 			top,
 			right,
@@ -395,8 +395,8 @@ export const collideRectGrid = (
 	const y = top - g.top;
 
 	// NOTE(bret): these already have -1 applied
-	const rectW = right - left;
-	const rectH = bottom - top;
+	const boxW = right - left;
+	const boxH = bottom - top;
 
 	// TODO(bret): uncertain if a clamp here is correct
 	const minX = Math.clamp(
@@ -407,12 +407,12 @@ export const collideRectGrid = (
 	const minY = Math.clamp(Math.floor(y / g.grid.tileH), 0, g.grid.rows - 1);
 
 	const maxX = Math.clamp(
-		Math.floor((x + rectW) / g.grid.tileW),
+		Math.floor((x + boxW) / g.grid.tileW),
 		0,
 		g.grid.columns - 1,
 	);
 	const maxY = Math.clamp(
-		Math.floor((y + rectH) / g.grid.tileH),
+		Math.floor((y + boxH) / g.grid.tileH),
 		0,
 		g.grid.rows - 1,
 	);
@@ -447,6 +447,7 @@ export const collideCircleRightTriangle = (
 	rt: RightTriangleCollider,
 ) => {
 	// TODO(bret): Revisit
+	// need to also check if the points are in the circle
 	return (
 		collidePointRightTriangle(cX, cY, rt) ||
 		collideLineCircle(rt.x1, rt.y1, rt.x2, rt.y2, cX, cY, radius) ||
@@ -496,6 +497,7 @@ export const collideRightTriangleRightTriangle = (
 	return false;
 };
 
+// TODO(bret): need to do SAT here!! edges can collide w/o vertices
 export const collideRightTrianglePolygon = (
 	rt: RightTriangleCollider,
 	p: PolygonCollider,
@@ -534,10 +536,6 @@ export const collidePolygonPolygon = (
 	a: PolygonCollider,
 	b: PolygonCollider,
 ) => {
-	const aPos = new Vec2(a.x, a.y);
-	const bPos = new Vec2(b.x, b.y);
-	const vOffset = aPos.sub(bPos);
-
 	const _axes = [a.axes, b.axes];
 
 	for (let i = 0; i < 2; ++i) {
@@ -546,9 +544,6 @@ export const collidePolygonPolygon = (
 			const axis = axes[j];
 			const aa = project(a, axis);
 			const bb = project(b, axis);
-			const scalerOffset = axis.dot(vOffset);
-			aa.min += scalerOffset;
-			aa.max += scalerOffset;
 			if (aa.min - bb.max > 0 || bb.min - aa.max > 0) return false;
 		}
 	}

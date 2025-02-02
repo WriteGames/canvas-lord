@@ -17,12 +17,13 @@ export class RightTriangleCollider extends Collider {
         return this.#points;
     }
     #computePoints(compute = false) {
-        if (compute ||
-            (this.left === this.#lastLeft &&
-                this.top === this.#lastTop &&
-                this.width === this.#lastW &&
-                this.height === this.#lastH))
-            return;
+        if (this.left === this.#lastLeft &&
+            this.top === this.#lastTop &&
+            this.width === this.#lastW &&
+            this.height === this.#lastH) {
+            if (!compute)
+                return;
+        }
         this.#lastLeft = this.left;
         this.#lastTop = this.top;
         this.#lastW = this.width;
@@ -134,6 +135,9 @@ export class RightTriangleCollider extends Collider {
         return this.#points[2][1];
     }
     render(ctx, x = 0, y = 0) {
+        if (!this.parent)
+            console.warn(this);
+        // console.log(this.parent);
         // TODO(bret): Fix this
         Draw.polygon(ctx, this.options, x, y, 
         // @ts-expect-error

@@ -40,13 +40,13 @@ export class RightTriangleCollider
 
 	#computePoints(compute = false) {
 		if (
-			compute ||
-			(this.left === this.#lastLeft &&
-				this.top === this.#lastTop &&
-				this.width === this.#lastW &&
-				this.height === this.#lastH)
-		)
-			return;
+			this.left === this.#lastLeft &&
+			this.top === this.#lastTop &&
+			this.width === this.#lastW &&
+			this.height === this.#lastH
+		) {
+			if (!compute) return;
+		}
 
 		this.#lastLeft = this.left;
 		this.#lastTop = this.top;
@@ -170,6 +170,8 @@ export class RightTriangleCollider
 	}
 
 	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
+		if (!this.parent) console.warn(this);
+		// console.log(this.parent);
 		// TODO(bret): Fix this
 		Draw.polygon(
 			ctx,

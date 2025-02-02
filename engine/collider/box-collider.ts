@@ -2,14 +2,14 @@
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
 
-interface IRectCollider {
-	type: 'rect';
+interface IBoxCollider {
+	type: 'box';
 	width: number;
 	height: number;
 }
 
-export class RectCollider extends Collider implements IRectCollider {
-	type = 'rect' as const;
+export class BoxCollider extends Collider implements IBoxCollider {
+	type = 'box' as const;
 	width: number;
 	height: number;
 

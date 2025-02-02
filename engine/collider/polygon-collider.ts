@@ -35,6 +35,10 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 		return Math.max(...this.vertices.map(([_, y]) => y));
 	}
 
+	setPoints(value: Points) {
+		this.#points = value;
+	}
+
 	get vertices(): Points {
 		return this.#points.map(([x, y]) => [
 			x + this.x + this.parent.x,

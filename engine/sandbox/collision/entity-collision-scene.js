@@ -6,7 +6,7 @@ import {
 	CircleCollider,
 	PolygonCollider,
 	RightTriangleCollider,
-	RectCollider,
+	BoxCollider,
 } from '/bin/collider/index.js';
 import { Keys } from '/bin/core/input.js';
 
@@ -103,7 +103,7 @@ class CollisionEntity extends Entity {
 		ctx.fillStyle = color;
 		ctx.strokeStyle = 'red';
 		switch (this.collider.type) {
-			case 'rect': {
+			case 'box': {
 				drawRect(ctx, true, x, y, this.collider.w, this.collider.h);
 				break;
 			}
@@ -179,7 +179,7 @@ class MovingEntity extends CollisionEntity {
 			let left = this[axis] + sign;
 			let right = this[axis] + sign;
 			switch (this.collider.type) {
-				case 'rect': {
+				case 'box': {
 					right += this.collider[side];
 					break;
 				}
@@ -225,7 +225,7 @@ class MovingEntity extends CollisionEntity {
 class SquareEntity extends MovingEntity {
 	constructor(...args) {
 		super(...args);
-		this.collider = new RectCollider(20, 20);
+		this.collider = new BoxCollider(20, 20);
 		this.collider.tag = args[2];
 	}
 }
@@ -284,7 +284,7 @@ class MouseEntity extends CollisionEntity {
 		super(-100, -100, COLLIDER_TAG.MOUSE);
 
 		this.colliders = [
-			new RectCollider(16, 16, -8, -8),
+			new BoxCollider(16, 16, -8, -8),
 			//
 			new CircleCollider(8),
 			new PointCollider(),
@@ -343,7 +343,7 @@ export class EntityCollisionScene extends Scene {
 		const { canvas } = engine;
 		this.bounds = [0, 0, canvas.width, canvas.height];
 
-		const rectBG = new BackgroundCollider(40, 30, new RectCollider(50, 50));
+		const rectBG = new BackgroundCollider(40, 30, new BoxCollider(50, 50));
 		const circleBG = new BackgroundCollider(
 			140,
 			30,

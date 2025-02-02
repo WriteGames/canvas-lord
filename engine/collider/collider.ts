@@ -6,7 +6,7 @@ import { collide } from './collide.js';
 export type ColliderType =
 	| 'point'
 	| 'line'
-	| 'rect'
+	| 'box'
 	| 'circle'
 	| 'right-triangle'
 	| 'polygon'

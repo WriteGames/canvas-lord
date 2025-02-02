@@ -1,8 +1,8 @@
 /* Canvas Lord v0.5.0 */
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
-export class RectCollider extends Collider {
-    type = 'rect';
+export class BoxCollider extends Collider {
+    type = 'box';
     width;
     height;
     get w() {
@@ -42,4 +42,4 @@ export class RectCollider extends Collider {
         Draw.rect(ctx, this.options, x + this.left, y + this.top, this.w, this.h);
     }
 }
-//# sourceMappingURL=rect-collider.js.map
+//# sourceMappingURL=box-collider.js.map

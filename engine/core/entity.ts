@@ -4,12 +4,7 @@ import type { Scene } from './scene.js';
 import type { Camera } from '../util/camera.js';
 import { Collider } from '../collider/collider.js';
 import * as Collide from '../collider/collide.js';
-import * as Collision from '../collider/collision.js';
-import {
-	PointCollider,
-	RectCollider,
-	type ColliderTag,
-} from '../collider/index.js';
+import { PointCollider, type ColliderTag } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 import { type ComponentProps } from '../util/components.js';

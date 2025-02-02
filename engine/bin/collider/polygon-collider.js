@@ -17,6 +17,9 @@ export class PolygonCollider extends Collider {
     get bottom() {
         return Math.max(...this.vertices.map(([_, y]) => y));
     }
+    setPoints(value) {
+        this.#points = value;
+    }
     get vertices() {
         return this.#points.map(([x, y]) => [
             x + this.x + this.parent.x,

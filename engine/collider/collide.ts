@@ -5,21 +5,21 @@ import {
 	collideCirclePolygon,
 	collideLineCircle,
 	collideLineLine,
-	collideLineRect,
+	collideLineBox,
 	collideLineRightTriangle,
 	collideLinePolygon,
 	collidePointCircle,
 	collidePointGrid,
 	collidePointLine,
 	collidePointPoint,
-	collidePointRect,
+	collidePointBox,
 	collidePointRightTriangle,
 	collidePointPolygon,
-	collideRectCircle,
-	collideRectGrid,
-	collideRectRect,
-	collideRectRightTriangle,
-	collideRectPolygon,
+	collideBoxCircle,
+	collideBoxGrid,
+	collideBoxBox,
+	collideBoxRightTriangle,
+	collideBoxPolygon,
 	collideRightTriangleRightTriangle,
 	collideRightTrianglePolygon,
 	collidePolygonPolygon,
@@ -28,7 +28,7 @@ import {
 import type { Collider } from './collider.js';
 import { PointCollider } from './point-collider.js';
 import { LineCollider } from './line-collider.js';
-import { RectCollider } from './rect-collider.js';
+import { BoxCollider } from './box-collider.js';
 import { CircleCollider } from './circle-collider.js';
 import { RightTriangleCollider } from './right-triangle-collider.js';
 import { GridCollider } from './grid-collider.js';
@@ -37,7 +37,7 @@ import { PolygonCollider } from './polygon-collider.js';
 const dePoint = (p: PointCollider) => [p.left, p.top] as const;
 const deLine = (l: LineCollider) =>
 	[l.xStart, l.yStart, l.xEnd, l.yEnd] as const;
-const deRect = (r: RectCollider) => [r.left, r.top, r.right, r.bottom] as const;
+const deBox = (b: BoxCollider) => [b.left, b.top, b.right, b.bottom] as const;
 const deCircle = (c: CircleCollider) =>
 	[c.centerX, c.centerY, c.radius] as const;
 const deRT = (rt: RightTriangleCollider) => [rt] as const;
@@ -50,8 +50,8 @@ const collisionMap = {
 			collidePointPoint(...dePoint(a), ...dePoint(b)),
 		line: (pt: PointCollider, l: LineCollider) =>
 			collidePointLine(...dePoint(pt), ...deLine(l)),
-		rect: (pt: PointCollider, r: RectCollider) =>
-			collidePointRect(...dePoint(pt), ...deRect(r)),
+		box: (pt: PointCollider, b: BoxCollider) =>
+			collidePointBox(...dePoint(pt), ...deBox(b)),
 		circle: (pt: PointCollider, c: CircleCollider) =>
 			collidePointCircle(...dePoint(pt), ...deCircle(c)),
 		'right-triangle': (pt: PointCollider, rt: RightTriangleCollider) =>
@@ -66,8 +66,8 @@ const collisionMap = {
 			collidePointLine(...dePoint(pt), ...deLine(l)),
 		line: (a: LineCollider, b: LineCollider) =>
 			collideLineLine(...deLine(a), ...deLine(b)),
-		rect: (l: LineCollider, r: RectCollider) =>
-			collideLineRect(...deLine(l), ...deRect(r)),
+		box: (l: LineCollider, b: BoxCollider) =>
+			collideLineBox(...deLine(l), ...deBox(b)),
 		circle: (l: LineCollider, c: CircleCollider) =>
 			collideLineCircle(...deLine(l), ...deCircle(c)),
 		'right-triangle': (l: LineCollider, rt: RightTriangleCollider) =>
@@ -76,29 +76,29 @@ const collisionMap = {
 			collideLinePolygon(...deLine(l), ...dePolygon(p)),
 		grid: (l: LineCollider, g: GridCollider) => undefined,
 	},
-	rect: {
-		point: (r: RectCollider, pt: PointCollider) =>
-			collidePointRect(...dePoint(pt), ...deRect(r)),
-		line: (r: RectCollider, l: LineCollider) =>
-			collideLineRect(...deLine(l), ...deRect(r)),
-		rect: (a: RectCollider, b: RectCollider) =>
-			collideRectRect(...deRect(a), ...deRect(b)),
-		circle: (r: RectCollider, c: CircleCollider) =>
-			collideRectCircle(...deRect(r), ...deCircle(c)),
-		'right-triangle': (r: RectCollider, rt: RightTriangleCollider) =>
-			collideRectRightTriangle(...deRect(r), ...deRT(rt)),
-		polygon: (r: RectCollider, p: PolygonCollider) =>
-			collideRectPolygon(...deRect(r), ...dePolygon(p)),
-		grid: (r: RectCollider, g: GridCollider) =>
-			collideRectGrid(...deRect(r), ...deGrid(g)),
+	box: {
+		point: (b: BoxCollider, pt: PointCollider) =>
+			collidePointBox(...dePoint(pt), ...deBox(b)),
+		line: (b: BoxCollider, l: LineCollider) =>
+			collideLineBox(...deLine(l), ...deBox(b)),
+		box: (a: BoxCollider, b: BoxCollider) =>
+			collideBoxBox(...deBox(a), ...deBox(b)),
+		circle: (b: BoxCollider, c: CircleCollider) =>
+			collideBoxCircle(...deBox(b), ...deCircle(c)),
+		'right-triangle': (b: BoxCollider, rt: RightTriangleCollider) =>
+			collideBoxRightTriangle(...deBox(b), ...deRT(rt)),
+		polygon: (b: BoxCollider, p: PolygonCollider) =>
+			collideBoxPolygon(...deBox(b), ...dePolygon(p)),
+		grid: (b: BoxCollider, g: GridCollider) =>
+			collideBoxGrid(...deBox(b), ...deGrid(g)),
 	},
 	circle: {
 		point: (c: CircleCollider, pt: PointCollider) =>
 			collidePointCircle(...dePoint(pt), ...deCircle(c)),
 		line: (c: CircleCollider, l: LineCollider) =>
 			collideLineCircle(...deLine(l), ...deCircle(c)),
-		rect: (c: CircleCollider, r: RectCollider) =>
-			collideRectCircle(...deRect(r), ...deCircle(c)),
+		box: (c: CircleCollider, b: BoxCollider) =>
+			collideBoxCircle(...deBox(b), ...deCircle(c)),
 		circle: (a: CircleCollider, b: CircleCollider) =>
 			collideCircleCircle(...deCircle(a), ...deCircle(b)),
 		'right-triangle': (c: CircleCollider, rt: RightTriangleCollider) =>
@@ -112,8 +112,8 @@ const collisionMap = {
 			collidePointRightTriangle(...dePoint(pt), ...deRT(rt)),
 		line: (rt: RightTriangleCollider, l: LineCollider) =>
 			collideLineRightTriangle(...deLine(l), ...deRT(rt)),
-		rect: (rt: RightTriangleCollider, r: RectCollider) =>
-			collideRectRightTriangle(...deRect(r), ...deRT(rt)),
+		box: (rt: RightTriangleCollider, b: BoxCollider) =>
+			collideBoxRightTriangle(...deBox(b), ...deRT(rt)),
 		circle: (rt: RightTriangleCollider, c: CircleCollider) =>
 			collideCircleRightTriangle(...deCircle(c), ...deRT(rt)),
 		'right-triangle': (
@@ -129,8 +129,8 @@ const collisionMap = {
 			collidePointPolygon(...dePoint(pt), ...dePolygon(p)),
 		line: (p: PolygonCollider, l: LineCollider) =>
 			collideLinePolygon(...deLine(l), ...dePolygon(p)),
-		rect: (p: PolygonCollider, r: RectCollider) =>
-			collideRectPolygon(...deRect(r), ...dePolygon(p)),
+		box: (p: PolygonCollider, b: BoxCollider) =>
+			collideBoxPolygon(...deBox(b), ...dePolygon(p)),
 		circle: (p: PolygonCollider, c: CircleCollider) =>
 			collideCirclePolygon(...deCircle(c), ...dePolygon(p)),
 		'right-triangle': (p: PolygonCollider, rt: RightTriangleCollider) =>
@@ -144,8 +144,8 @@ const collisionMap = {
 			collidePointGrid(...dePoint(pt), ...deGrid(g)),
 		line: (g: GridCollider, l: LineCollider) => undefined,
 		//collideLineGrid(l, g),
-		rect: (g: GridCollider, r: RectCollider) =>
-			collideRectGrid(...deRect(r), ...deGrid(g)),
+		box: (g: GridCollider, b: BoxCollider) =>
+			collideBoxGrid(...deBox(b), ...deGrid(g)),
 		circle: (g: GridCollider, c: CircleCollider) => undefined,
 		//collideCircleGrid(c, g),
 		'right-triangle': (g: GridCollider, rt: RightTriangleCollider) =>

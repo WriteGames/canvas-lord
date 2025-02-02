@@ -1,5 +1,5 @@
 import * as Collide from '../collider/collide.js';
-import { PointCollider, } from '../collider/index.js';
+import { PointCollider } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 const mouseCollider = new PointCollider();

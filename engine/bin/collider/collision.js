@@ -32,7 +32,7 @@ export const collidePointPoint = (aX, aY, bX, bY) => {
 export const collidePointLine = (x, y, x1, y1, x2, y2) => {
     return collideLineCircle(x1, y1, x2, y2, x, y, 0.5);
 };
-export const collidePointRect = (x, y, left, top, right, bottom) => {
+export const collidePointBox = (x, y, left, top, right, bottom) => {
     return x >= left && y >= top && x <= right && y <= bottom;
 };
 export const collidePointCircle = (x, y, cX, cY, radius) => {
@@ -40,7 +40,7 @@ export const collidePointCircle = (x, y, cX, cY, radius) => {
     return distanceSq <= radius ** 2;
 };
 export const collidePointRightTriangle = (x, y, rt) => {
-    if (collidePointRect(x, y, rt.left, rt.top, rt.right, rt.bottom)) {
+    if (collidePointBox(x, y, rt.left, rt.top, rt.right, rt.bottom)) {
         const TL = new Vec2(rt.left, rt.top);
         const TR = new Vec2(rt.right, rt.top);
         const BR = new Vec2(rt.right, rt.bottom);
@@ -81,7 +81,7 @@ export const collidePointPolygon = (x, y, p) => {
 };
 // TODO(bret): make sure this is still working
 export const collidePointGrid = (x, y, g) => {
-    if (!collidePointRect(x, y, g.left, g.top, g.right, g.bottom))
+    if (!collidePointBox(x, y, g.left, g.top, g.right, g.bottom))
         return false;
     const xx = Math.floor((x - g.left) / g.grid.tileW);
     const yy = Math.floor((y - g.top) / g.grid.tileH);
@@ -93,9 +93,9 @@ export const collideLineLine = (aX1, aY1, aX2, aY2, bX1, bY1, bX2, bY2) => {
     const B = [new Vec2(bX1, bY1), new Vec2(bX2, bY2)];
     return checkLineSegmentIntersection(A, B);
 };
-export const collideLineRect = (x1, y1, x2, y2, left, top, right, bottom) => {
-    if (collidePointRect(x1, y1, left, top, right, bottom) ||
-        collidePointRect(x2, y2, left, top, right, bottom))
+export const collideLineBox = (x1, y1, x2, y2, left, top, right, bottom) => {
+    if (collidePointBox(x1, y1, left, top, right, bottom) ||
+        collidePointBox(x2, y2, left, top, right, bottom))
         return true;
     const collideLine = collideLineLine.bind(null, x1, y1, x2, y2);
     return (collideLine(left, top, right, top) ||
@@ -138,54 +138,54 @@ export const collideLinePolygon = (x1, y1, x2, y2, p) => {
     }
     return false;
 };
-/// ### Rect vs X ###
-export const collideRectRect = (aLeft, aTop, aRight, aBottom, bLeft, bTop, bRight, bBottom) => {
+/// ### Box vs X ###
+export const collideBoxBox = (aLeft, aTop, aRight, aBottom, bLeft, bTop, bRight, bBottom) => {
     return (aRight >= bLeft && aBottom >= bTop && aLeft <= bRight && aTop <= bBottom);
 };
-export const collideRectCircle = (left, top, right, bottom, cX, cY, radius) => {
+export const collideBoxCircle = (left, top, right, bottom, cX, cY, radius) => {
     const x = Math.clamp(cX, left, right);
     const y = Math.clamp(cY, top, bottom - 1);
     const distanceSq = (cX - x) ** 2 + (cY - y) ** 2;
     return distanceSq < radius ** 2;
 };
-export const collideRectRightTriangle = (left, top, right, bottom, rt) => {
+export const collideBoxRightTriangle = (left, top, right, bottom, rt) => {
     // TODO(bret): write a better version of this
     // NOTE(bret): Found this online https://seblee.me/2009/05/super-fast-trianglerectangle-intersection-test/
     const centerX = (right - left) / 2 + left;
     const centerY = (bottom - top) / 2 + top;
     return (collidePointRightTriangle(centerX, centerY, rt) ||
-        collideLineRect(rt.x1, rt.y1, rt.x2, rt.y2, left, top, right, bottom) ||
-        collideLineRect(rt.x2, rt.y2, rt.x3, rt.y3, left, top, right, bottom) ||
-        collideLineRect(rt.x3, rt.y3, rt.x1, rt.y1, left, top, right, bottom));
+        collideLineBox(rt.x1, rt.y1, rt.x2, rt.y2, left, top, right, bottom) ||
+        collideLineBox(rt.x2, rt.y2, rt.x3, rt.y3, left, top, right, bottom) ||
+        collideLineBox(rt.x3, rt.y3, rt.x1, rt.y1, left, top, right, bottom));
 };
-export const collideRectPolygon = (left, top, right, bottom, p) => {
+export const collideBoxPolygon = (left, top, right, bottom, p) => {
     // check if we're even within the bounds
-    if (!collideRectRect(left, top, right, bottom, p.left, p.top, p.right, p.bottom))
+    if (!collideBoxBox(left, top, right, bottom, p.left, p.top, p.right, p.bottom))
         return false;
     // TODO(bret): revisit
     // this won't check if it's fully submerged :/ we would need SAT for that!
     const { vertices } = p;
     const n = vertices.length;
     for (let i = 0, j = n - 1; i < n; j = i++) {
-        if (collideLineRect(vertices[j][0], vertices[j][1], vertices[i][0], vertices[i][1], left, top, right, bottom))
+        if (collideLineBox(vertices[j][0], vertices[j][1], vertices[i][0], vertices[i][1], left, top, right, bottom))
             return true;
     }
     return false;
 };
-export const collideRectGrid = (left, top, right, bottom, g) => {
-    if (!collideRectRect(left, top, right, bottom, g.left, g.top, g.right, g.bottom)) {
+export const collideBoxGrid = (left, top, right, bottom, g) => {
+    if (!collideBoxBox(left, top, right, bottom, g.left, g.top, g.right, g.bottom)) {
         return false;
     }
     const x = left - g.left;
     const y = top - g.top;
     // NOTE(bret): these already have -1 applied
-    const rectW = right - left;
-    const rectH = bottom - top;
+    const boxW = right - left;
+    const boxH = bottom - top;
     // TODO(bret): uncertain if a clamp here is correct
     const minX = Math.clamp(Math.floor(x / g.grid.tileW), 0, g.grid.columns - 1);
     const minY = Math.clamp(Math.floor(y / g.grid.tileH), 0, g.grid.rows - 1);
-    const maxX = Math.clamp(Math.floor((x + rectW) / g.grid.tileW), 0, g.grid.columns - 1);
-    const maxY = Math.clamp(Math.floor((y + rectH) / g.grid.tileH), 0, g.grid.rows - 1);
+    const maxX = Math.clamp(Math.floor((x + boxW) / g.grid.tileW), 0, g.grid.columns - 1);
+    const maxY = Math.clamp(Math.floor((y + boxH) / g.grid.tileH), 0, g.grid.rows - 1);
     for (let yy = minY; yy <= maxY; ++yy) {
         for (let xx = minX; xx <= maxX; ++xx) {
             if (g.grid.getTile(xx, yy) === 1)
@@ -201,6 +201,7 @@ export const collideCircleCircle = (aX, aY, aRadius, bX, bY, bRadius) => {
 };
 export const collideCircleRightTriangle = (cX, cY, radius, rt) => {
     // TODO(bret): Revisit
+    // need to also check if the points are in the circle
     return (collidePointRightTriangle(cX, cY, rt) ||
         collideLineCircle(rt.x1, rt.y1, rt.x2, rt.y2, cX, cY, radius) ||
         collideLineCircle(rt.x2, rt.y2, rt.x3, rt.y3, cX, cY, radius) ||
@@ -229,6 +230,7 @@ export const collideRightTriangleRightTriangle = (a, b) => {
     }
     return false;
 };
+// TODO(bret): need to do SAT here!! edges can collide w/o vertices
 export const collideRightTrianglePolygon = (rt, p) => {
     const vertices = p.vertices;
     for (let i = 0; i < vertices.length; ++i) {
@@ -257,9 +259,6 @@ const project = (p, axis) => {
     return { min, max };
 };
 export const collidePolygonPolygon = (a, b) => {
-    const aPos = new Vec2(a.x, a.y);
-    const bPos = new Vec2(b.x, b.y);
-    const vOffset = aPos.sub(bPos);
     const _axes = [a.axes, b.axes];
     for (let i = 0; i < 2; ++i) {
         const axes = _axes[i];
@@ -267,9 +266,6 @@ export const collidePolygonPolygon = (a, b) => {
             const axis = axes[j];
             const aa = project(a, axis);
             const bb = project(b, axis);
-            const scalerOffset = axis.dot(vOffset);
-            aa.min += scalerOffset;
-            aa.max += scalerOffset;
             if (aa.min - bb.max > 0 || bb.min - aa.max > 0)
                 return false;
         }
