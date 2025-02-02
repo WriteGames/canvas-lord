@@ -121,7 +121,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
 		const { frameId, frameW, frameH } = this;
-		this.framesPerRow = this.imageSrc.width / frameW;
+		this.framesPerRow = Math.floor(this.imageSrc.width / frameW);
 
 		const sourceX = (frameId % this.framesPerRow) * frameW;
 		const sourceY = Math.floor(frameId / this.framesPerRow) * frameH;

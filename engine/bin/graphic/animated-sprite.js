@@ -91,7 +91,7 @@ export class AnimatedSprite extends Graphic {
     }
     render(ctx, camera = Vec2.zero) {
         const { frameId, frameW, frameH } = this;
-        this.framesPerRow = this.imageSrc.width / frameW;
+        this.framesPerRow = Math.floor(this.imageSrc.width / frameW);
         const sourceX = (frameId % this.framesPerRow) * frameW;
         const sourceY = Math.floor(frameId / this.framesPerRow) * frameH;
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
