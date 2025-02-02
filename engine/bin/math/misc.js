@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.0 */
 // TODO(bret): This file is a bunch of random stuff, will need to clean up
 import { addPos, EPSILON, hashPos, subPos, Vec2, } from './index.js';
 const reduceSum = (acc, v) => acc + v;

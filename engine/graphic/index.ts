@@ -1,4 +1,4 @@
-/* Canvas Lord v0.4.4 */
+/* Canvas Lord v0.5.0 */
 import { AnimatedSprite } from './animated-sprite.js';
 import { Emitter } from './emitter.js';
 import { Graphic } from './graphic.js';

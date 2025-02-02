@@ -1,4 +1,4 @@
-/* Canvas Lord v0.4.4 */
+/* Canvas Lord v0.5.0 */
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
 import type { Camera } from '../util/camera.js';

@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.0 */
 import type { Engine } from './engine.js';
 import { Vec2 } from '../math/index.js';
 

@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.0 */
 export class Inspector {
     engine;
     wrapper;

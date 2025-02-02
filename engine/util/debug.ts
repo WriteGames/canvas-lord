@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.0 */
 import type { Engine } from '../core/engine.js';
 import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';

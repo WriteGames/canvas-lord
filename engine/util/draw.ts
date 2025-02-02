@@ -1,4 +1,4 @@
-/* Canvas Lord v0.4.4 */
+/* Canvas Lord v0.5.0 */
 import { type ComponentProps } from './components.js';
 import type { CSSColor } from './types.js';
 

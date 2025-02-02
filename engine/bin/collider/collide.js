@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.0 */
 import { collideCircleCircle, collideCircleRightTriangle, collideCirclePolygon, collideLineCircle, collideLineLine, collideLineRect, collideLineRightTriangle, collideLinePolygon, collidePointCircle, collidePointGrid, collidePointLine, collidePointPoint, collidePointRect, collidePointRightTriangle, collidePointPolygon, collideRectCircle, collideRectGrid, collideRectRect, collideRectRightTriangle, collideRectPolygon, collideRightTriangleRightTriangle, collideRightTrianglePolygon, collidePolygonPolygon, } from './collision.js';
 const dePoint = (p) => [p.left, p.top];
 const deLine = (l) => [l.xStart, l.yStart, l.xEnd, l.yEnd];

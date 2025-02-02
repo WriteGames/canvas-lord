@@ -1,4 +1,4 @@
-/* Canvas Lord v0.4.4 */
+/* Canvas Lord v0.5.0 */
 import { Graphic } from './graphic.js';
 import { Sprite } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';

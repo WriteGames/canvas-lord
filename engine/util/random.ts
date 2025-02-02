@@ -1,4 +1,4 @@
-/* Canvas Lord v0.4.4 */
+/* Canvas Lord v0.5.0 */
 const xorShift32 = (random: Random) => {
 	let x = random.seed;
 	x ^= x << 13;
