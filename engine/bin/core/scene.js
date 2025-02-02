@@ -1,6 +1,6 @@
-import { Camera } from './camera.js';
-import { Vec2 } from './math.js';
-import { Messages } from './messages.js';
+import { Vec2 } from '../math/index.js';
+import { Camera } from '../util/camera.js';
+import { Messages } from '../util/messages.js';
 export class Scene {
     constructor(engine) {
         this.engine = engine;
@@ -92,7 +92,6 @@ export class Scene {
             this.engine.canvas.blur();
         if (!this.shouldUpdate)
             return;
-        // remove old entities
         this.entities.inScene.forEach((entity) => entity.update(input));
         this.entities.inScene.forEach((entity) => entity.graphic?.update?.(input));
         // this.renderables = this.renderables.filter(e => e).sort();
@@ -112,6 +111,7 @@ export class Scene {
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const ctx = this.ctx ?? gameCtx;
         const { canvas } = ctx;
+        const { camera } = this;
         let { backgroundColor } = this;
         if (this.ctx) {
             // set to the engine's background color if this is a standalone canvas
@@ -121,7 +121,7 @@ export class Scene {
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        this.renderables.inScene.forEach((entity) => entity.render(ctx, this.camera));
+        this.renderables.inScene.forEach((entity) => entity.render(ctx, camera));
         // const width = 2;
         // const posOffset = 0.5;
         // const widthOffset = width;
@@ -135,7 +135,7 @@ export class Scene {
                     return;
                 const entities = this.renderables.inScene.filter((e) => Boolean(e.component?.(component)));
                 entities.forEach((entity) => {
-                    render(entity, ctx, this.camera);
+                    render(entity, ctx, camera);
                 });
             });
         });

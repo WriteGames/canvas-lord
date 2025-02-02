@@ -1,4 +1,4 @@
-import { Vec2 } from './math.js';
+import { Vec2 } from '../math/index.js';
 export const copyObject = (obj) => (Array.isArray(obj) ? [...obj] : structuredClone(obj));
 // TODO: rename to registerComponent? And then do something with that?
 // TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
@@ -19,6 +19,10 @@ const style = {
     type: 'fill',
     color: 'white',
 };
+export const staticImage = createComponent({
+    imageSrc: null,
+    ...drawable,
+});
 export const image = createComponent({
     imageSrc: null,
     frame: 0,

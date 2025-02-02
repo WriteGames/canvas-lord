@@ -1,4 +1,5 @@
-import { AssetManager, Game } from 'canvas-lord';
+import { Game } from 'canvas-lord';
+import { AssetManager } from 'canvas-lord/core/asset-manager';
 import { Inspector } from 'canvas-lord/inspector';
 import { PlayerScene } from './player-scene';
 export let assetManager;

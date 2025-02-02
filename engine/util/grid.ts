@@ -1,5 +1,24 @@
-import type { AssetManager, Camera } from '../canvas-lord.js';
-import { indexToPos, V2, Vec2 } from './math.js';
+/* Canvas Lord v0.4.4 */
+import type { AssetManager } from '../core/asset-manager.js';
+import {
+	addPos,
+	hashPos,
+	indexToPos,
+	posEqual,
+	posToIndex,
+	scalePos,
+	subPos,
+	V2,
+	Vec2,
+} from '../math/index.js';
+import {
+	isWithinBounds,
+	norm,
+	Path,
+	V2CardinalNorm,
+	V2OrthogonalNorm,
+} from '../math/misc.js';
+import type { Camera } from './camera.js';
 import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';
 
@@ -44,7 +63,7 @@ export class Grid {
 		OUTLINE: 0,
 		BOXES_OUTLINE: 1,
 		BOXES: 2,
-	};
+	} as const;
 
 	constructor(width: number, height: number, tileW: number, tileH: number) {
 		this.width = width;
@@ -150,21 +169,27 @@ export class Grid {
 		return this.data[y * this.columns + x] as number;
 	}
 
-	renderOutline(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	renderOutline(
+		ctx: CanvasRenderingContext2D,
+		camera: Camera,
+		offsetX = 0,
+		offsetY = 0,
+	): void {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
 
 		const [cameraX, cameraY] = camera;
 
+		ctx.save();
 		ctx.strokeStyle = this.color;
 		ctx.lineWidth = 1;
 
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
 				if (this.data[y * stride + x] === 1) {
-					const x1 = x * this.tileW + 0.5 - cameraX;
-					const y1 = y * this.tileH + 0.5 - cameraY;
+					const x1 = x * this.tileW - cameraX + offsetX;
+					const y1 = y * this.tileH - cameraY + offsetY;
 					const x2 = x1 + width - 1;
 					const y2 = y1 + height - 1;
 					if (!this.getTile(x - 1, y)) {
@@ -182,6 +207,7 @@ export class Grid {
 				}
 			}
 		}
+		ctx.restore();
 	}
 
 	renderEachCell(
@@ -238,4 +264,318 @@ export class Grid {
 			}
 		}
 	}
+}
+
+type GridOrData = Grid | Grid['data'];
+
+interface Polygon {
+	points: Path;
+}
+
+function getGridData(
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): [Grid['data'], number, number] {
+	if (_grid instanceof Grid) {
+		const { data: grid, columns, rows } = _grid;
+		return [grid, columns, rows];
+	}
+	return [_grid, _columns as number, _rows as number];
+}
+
+export const findAllPolygonsInGrid = (
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): Polygon[] => {
+	const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
+
+	const polygons: Polygon[] = [];
+
+	const offsets = {
+		[hashPos(norm.NU)]: [norm.RU, norm.NU],
+		[hashPos(norm.ND)]: [norm.LD, norm.ND],
+		[hashPos(norm.RN)]: [norm.RD, norm.RN],
+		[hashPos(norm.LN)]: [norm.LU, norm.LN],
+	} as const;
+
+	const shapes = findAllShapesInGrid(grid, columns, rows);
+	shapes.forEach((shape) => {
+		const [first] = shape.shapeCells;
+		if (first === undefined) return;
+
+		const { gridType } = shape;
+
+		let curDir = norm.ND as V2OrthogonalNorm;
+		let lastDir = curDir;
+
+		const points: Path = [];
+		const polygon = { points };
+		polygons.push(polygon);
+
+		const addPointsToPolygon = (
+			points: Path,
+			pos: Vec2,
+			interior: boolean,
+		): void => {
+			const origin = interior ? 0 : -1;
+			const size = 16;
+			const m1 = size - 1;
+			const basePos = scalePos(pos, size);
+
+			const [lastX, lastY] = points.length
+				? subPos(points[points.length - 1]!, basePos)
+				: [origin, origin];
+
+			const offset = new Vec2(0, 0);
+			switch (curDir) {
+				case norm.ND:
+					offset[0] = origin;
+					offset[1] = lastY;
+					break;
+
+				case norm.NU:
+					offset[0] = m1 - origin;
+					offset[1] = lastY;
+					break;
+
+				case norm.RN:
+					offset[0] = lastX;
+					offset[1] = m1 - origin;
+					break;
+
+				case norm.LN:
+					offset[0] = lastX;
+					offset[1] = origin;
+					break;
+			}
+
+			points.push(addPos(basePos, offset));
+		};
+
+		addPointsToPolygon(points, first, gridType === 1);
+
+		for (
+			let next = first, firstIter = true;
+			firstIter || !posEqual(curDir, norm.ND) || !posEqual(next, first);
+			firstIter = false
+		) {
+			const [p1, p2] = (
+				offsets[hashPos(curDir)] as [V2CardinalNorm, V2CardinalNorm]
+			)
+				.map((o) => addPos(next, o))
+				.map((p) => {
+					return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
+						? (grid[posToIndex(p, columns)] as number)
+						: 0;
+				});
+
+			if (p2 === gridType) {
+				if (p1 === gridType) {
+					next = addPos(next, curDir);
+					curDir = rotateNormBy90Deg(curDir, 1);
+				}
+
+				next = addPos(next, curDir);
+
+				if (lastDir !== curDir)
+					addPointsToPolygon(points, next, gridType === 1);
+			} else {
+				curDir = rotateNormBy90Deg(curDir, -1);
+				addPointsToPolygon(points, next, gridType === 1);
+			}
+
+			lastDir = curDir;
+
+			// if (curDir === normND && next === first) break;
+		}
+	});
+
+	return polygons;
+};
+
+interface Shape {
+	gridType: number;
+	shapeCells: Vec2[];
+	minX: number;
+	maxX: number;
+	minY: number;
+	maxY: number;
+}
+
+const findAllShapesInGrid = (
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): Shape[] => {
+	const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
+
+	const shapes = [];
+	const checked = Array.from({ length: columns * rows }, () => false);
+
+	let nextIndex;
+	while ((nextIndex = checked.findIndex((v) => !v)) > -1) {
+		const shape = fillShape(
+			indexToPos(nextIndex, columns),
+			checked,
+			grid,
+			columns,
+			rows,
+		);
+
+		// Empty shapes must be enclosed
+		if (
+			shape.gridType === 0 &&
+			(shape.minX === 0 ||
+				shape.minY === 0 ||
+				shape.maxX >= columns ||
+				shape.maxY >= rows)
+		)
+			continue;
+
+		shapes.push(shape);
+	}
+
+	return shapes;
+};
+
+const fillShape = (
+	start: Vec2,
+	checked: boolean[],
+	_grid: GridOrData,
+	_columns?: number,
+	_rows?: number,
+): {
+	gridType: number;
+	shapeCells: Vec2[];
+	minX: number;
+	maxX: number;
+	minY: number;
+	maxY: number;
+} => {
+	const [grid, columns, rows] = getGridData(_grid, _columns, _rows);
+
+	const stride = columns;
+
+	const gridType = grid[posToIndex(start, columns)] as number;
+
+	const queue = [start];
+	const visited: string[] = [];
+
+	let next;
+	while ((next = queue.pop())) {
+		const hash = hashPos(next);
+		if (visited.includes(hash)) continue;
+
+		const index = posToIndex(next, stride);
+		visited.push(hash);
+		if (grid[posToIndex(next, columns)] !== gridType) continue;
+
+		checked[index] = true;
+
+		const [x, y] = next;
+		if (x > 0) queue.push(new Vec2(x - 1, y));
+		if (x < columns - 1) queue.push(new Vec2(x + 1, y));
+		if (y > 0) queue.push(new Vec2(x, y - 1));
+		if (y < rows - 1) queue.push(new Vec2(x, y + 1));
+	}
+
+	const shapeCells = visited.map(
+		(v) => new Vec2(...v.split(',').map((c) => +c)),
+	);
+
+	const shapeBounds = shapeCells.reduce(
+		(acc, cell) => {
+			const [x, y] = cell;
+			return {
+				minX: Math.min(x, acc.minX),
+				maxX: Math.max(x, acc.maxX),
+				minY: Math.min(y, acc.minY),
+				maxY: Math.max(y, acc.maxY),
+			};
+		},
+		{
+			minX: Number.POSITIVE_INFINITY,
+			maxX: Number.NEGATIVE_INFINITY,
+			minY: Number.POSITIVE_INFINITY,
+			maxY: Number.NEGATIVE_INFINITY,
+		},
+	);
+
+	return {
+		...shapeBounds,
+		gridType,
+		shapeCells,
+	};
+};
+
+export interface GridOutline {
+	grid: Grid | null;
+	polygons: Polygon[];
+	show: boolean;
+
+	renderOutline: boolean;
+	outlineColor: CSSColor;
+
+	renderPoints: boolean;
+	pointsColor: CSSColor;
+}
+
+export class GridOutline {
+	constructor() {
+		this.grid = null;
+		this.polygons = [];
+		this.show = false;
+
+		this.renderOutline = true;
+		this.outlineColor = 'red';
+
+		this.renderPoints = true;
+		this.pointsColor = 'red';
+	}
+
+	computeOutline(grid: Grid): void {
+		this.grid = grid;
+		this.polygons = findAllPolygonsInGrid(grid);
+	}
+
+	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+		if (!this.show) return;
+
+		// Draw edges
+		if (this.renderOutline) {
+			this.polygons.forEach((polygon) => {
+				ctx.beginPath();
+				ctx.strokeStyle = this.outlineColor;
+				const start = addPos(polygon.points[0]!, [0.5, 0.5]);
+				const cameraPos = new Vec2(camera[0], camera[1]);
+				const [_x, _y] = subPos(start, cameraPos);
+				ctx.moveTo(_x, _y);
+				polygon.points
+					.slice(1)
+					.map((p) => subPos(p, camera))
+					.forEach(([x, y]) => {
+						ctx.lineTo(x + 0.5, y + 0.5);
+					});
+				ctx.closePath();
+				ctx.stroke();
+			});
+		}
+
+		// Draw points
+		if (this.renderPoints) {
+			ctx.fillStyle = this.pointsColor;
+			this.polygons.forEach((polygon) => {
+				polygon.points
+					.map((p) => subPos(p, camera))
+					.forEach(([x, y]) => {
+						ctx.fillRect(x - 1, y - 1, 3, 3);
+					});
+			});
+		}
+	}
+}
+function rotateNormBy90Deg(curDir: Vec2, arg1: number): Vec2 {
+	throw new Error('Function not implemented.');
 }

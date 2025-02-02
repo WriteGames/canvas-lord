@@ -1,14 +1,16 @@
+/* Canvas Lord v0.4.4 */
+import type { Engine } from './engine.js';
+import type { Entity } from './entity.js';
+import type { Input } from './input.js';
+import { Vec2 } from '../math/index.js';
+import { Camera } from '../util/camera.js';
+import { Messages } from '../util/messages.js';
 import type {
-	Engine,
-	Entity,
-	Input,
 	IEntitySystem,
 	Renderable,
-} from '../canvas-lord.js';
-import { Camera } from './camera.js';
-import { Vec2 } from './math.js';
-import { Messages } from './messages.js';
-import type { CSSColor, IEntityComponentType } from './types.js';
+	CSSColor,
+	IEntityComponentType,
+} from '../util/types.js';
 
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
@@ -40,7 +42,7 @@ export interface Scene {
 	ctx: CanvasRenderingContext2D;
 }
 
-export class Scene {
+export class Scene implements Scene {
 	constructor(engine: Engine) {
 		this.engine = engine;
 
@@ -156,8 +158,6 @@ export class Scene {
 
 		if (!this.shouldUpdate) return;
 
-		// remove old entities
-
 		this.entities.inScene.forEach((entity) => entity.update(input));
 		this.entities.inScene.forEach((entity) =>
 			entity.graphic?.update?.(input),
@@ -188,6 +188,7 @@ export class Scene {
 		const ctx = this.ctx ?? gameCtx;
 		const { canvas } = ctx;
 
+		const { camera } = this;
 		let { backgroundColor } = this;
 
 		if (this.ctx) {
@@ -201,7 +202,7 @@ export class Scene {
 		}
 
 		this.renderables.inScene.forEach((entity) =>
-			entity.render(ctx, this.camera),
+			entity.render(ctx, camera),
 		);
 
 		// const width = 2;
@@ -220,7 +221,7 @@ export class Scene {
 					Boolean((e as Entity).component?.(component)),
 				);
 				entities.forEach((entity) => {
-					render(entity as Entity, ctx, this.camera);
+					render(entity as Entity, ctx, camera);
 				});
 			});
 		});

@@ -1,22 +1,20 @@
+import type { AssetManager } from 'canvas-lord/core/asset-manager';
+import type { Engine } from 'canvas-lord/core/engine';
+import { Entity } from 'canvas-lord/core/entity';
+import type { Input } from 'canvas-lord/core/input';
+import { Scene } from 'canvas-lord/core/scene';
+import { Vec2 } from 'canvas-lord/math/index';
 import {
-	AssetManager,
 	cardinalNorms,
-	Engine,
-	Entity,
 	filterWithinBounds,
 	globalSetTile,
-	Grid,
-	GridOutline,
-	Input,
 	mapByOffset,
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-	Scene,
-	Tileset,
-	V2,
-} from 'canvas-lord';
-import { Vec2 } from 'canvas-lord/util/math';
+} from 'canvas-lord/math/misc';
+import { Tileset } from 'canvas-lord/graphic';
+import { Grid, GridOutline } from 'canvas-lord/util/grid';
 
 export interface PlayerClass extends Entity {
 	// width: number;

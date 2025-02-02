@@ -1,3 +1,4 @@
+/* Canvas Lord v0.4.4 */
 export const EPSILON = 0.000001;
 // Math prototype fun :~)
 if (typeof Math.clamp === 'undefined') {
@@ -38,6 +39,22 @@ export class Vec2 extends Array {
     get magnitude() {
         return magnitude2D(this);
     }
+    set(v) {
+        this.x = v.x;
+        this.y = v.y;
+    }
+    setXY(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    normalize() {
+        Vec2.normalize(this);
+    }
+    static normalize(v) {
+        const mag = v.magnitude;
+        v.x /= mag;
+        v.y /= mag;
+    }
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {
@@ -66,11 +83,23 @@ export class Vec2 extends Array {
     static add(a, b) {
         return addPos(a, b);
     }
+    plus(v) {
+        return this.add(v);
+    }
+    static plus(a, b) {
+        return Vec2.add(a, b);
+    }
     sub(v) {
         return Vec2.sub(this, v);
     }
     static sub(a, b) {
         return subPos(a, b);
+    }
+    minus(v) {
+        return this.sub(v);
+    }
+    static minus(a, b) {
+        return Vec2.sub(a, b);
     }
     scale(s) {
         return Vec2.scale(this, s);
@@ -153,4 +182,4 @@ export const posToIndex = ([x, y], stride) => y * stride + x;
 export const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
 export const dotProduct2D = (a, b) => a[0] * b[0] + a[1] * b[1];
 export const magnitude2D = (v) => Math.sqrt(v.x ** 2 + v.y ** 2);
-//# sourceMappingURL=math.js.map
+//# sourceMappingURL=index.js.map

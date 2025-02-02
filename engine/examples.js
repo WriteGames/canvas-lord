@@ -1,28 +1,21 @@
 import {
 	AssetManager,
-	cardinalNorms,
-	filterWithinBounds,
 	Game,
 	Grid,
-	GridOutline,
-	mapByOffset,
-	mapFindOffset,
-	normToBitFlagMap,
-	reduceBitFlags,
 	Scene,
-	Tileset,
 	V2,
 	addPos,
 	subPos,
-	dirND,
-	findAllPolygonsInGrid,
-	checkLineSegmentIntersection,
-	getLineSegmentIntersection,
-	isPointOnLine,
-	isPointInsidePath,
 } from './bin/canvas-lord.js';
 
-import { Entity } from './bin/util/entity.js';
+import { dirND, isPointOnLine, isPointInsidePath } from './bin/math/misc.js';
+import { findAllPolygonsInGrid } from './bin/util/grid.js';
+import {
+	checkLineSegmentIntersection,
+	getLineSegmentIntersection,
+} from './bin/collider/collision.js';
+
+import { Entity } from './bin/core/entity.js';
 
 import { createSceneGrid, createButtons } from './shared.js';
 

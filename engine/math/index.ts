@@ -1,4 +1,12 @@
+/* Canvas Lord v0.4.4 */
 export const EPSILON = 0.000001;
+
+declare global {
+	interface Math {
+		clamp: (val: number, min: number, max: number) => number;
+		lerp: (a: number, b: number, t: number) => number;
+	}
+}
 
 // Math prototype fun :~)
 if (typeof Math.clamp === 'undefined') {
@@ -55,6 +63,26 @@ export class Vec2 extends Array<number> {
 		return magnitude2D(this);
 	}
 
+	set(v: Vec2) {
+		this.x = v.x;
+		this.y = v.y;
+	}
+
+	setXY(x: number, y: number) {
+		this.x = x;
+		this.y = y;
+	}
+
+	normalize() {
+		Vec2.normalize(this);
+	}
+
+	static normalize(v: Vec2) {
+		const mag = v.magnitude;
+		v.x /= mag;
+		v.y /= mag;
+	}
+
 	map<U>(
 		// TODO: index: 0 | 1 ?
 		callbackfn: (value: number, index: number, array: number[]) => U,
@@ -96,12 +124,28 @@ export class Vec2 extends Array<number> {
 		return addPos(a, b);
 	}
 
+	plus(v: Vec2): Vec2 {
+		return this.add(v);
+	}
+
+	static plus(a: Vec2, b: Vec2): Vec2 {
+		return Vec2.add(a, b);
+	}
+
 	sub(v: Vec2): Vec2 {
 		return Vec2.sub(this, v);
 	}
 
 	static sub(a: Vec2, b: Vec2): Vec2 {
 		return subPos(a, b);
+	}
+
+	minus(v: Vec2): Vec2 {
+		return this.sub(v);
+	}
+
+	static minus(a: Vec2, b: Vec2): Vec2 {
+		return Vec2.sub(a, b);
 	}
 
 	scale(s: number): Vec2 {

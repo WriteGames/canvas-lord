@@ -1,13 +1,19 @@
-import type { Camera, Input, IRenderable } from '../canvas-lord.js';
-import * as Components from './components.js';
-import { type ComponentProps } from './components.js';
+/* Canvas Lord v0.4.4 */
+import type { Input } from './input.js';
 import type { Scene } from './scene.js';
-import type { IEntityComponentType } from './types.js';
-import * as Collision from './collision.js';
-import { type ColliderTag } from './collision.js';
-
-// TODO: fix this!
-type Collider = Collision.Shape;
+import type { Camera } from '../util/camera.js';
+import { Collider } from '../collider/collider.js';
+import * as Collide from '../collider/collide.js';
+import * as Collision from '../collider/collision.js';
+import {
+	PointCollider,
+	RectCollider,
+	type ColliderTag,
+} from '../collider/index.js';
+import { Vec2 } from '../math/index.js';
+import * as Components from '../util/components.js';
+import { type ComponentProps } from '../util/components.js';
+import type { IRenderable, IEntityComponentType } from '../util/types.js';
 
 // TODO(bret): Fix this type lol
 type Graphic = IRenderable;
@@ -24,7 +30,6 @@ export interface IEntity {
 	components: Map<IEntityComponentType, any>;
 	collider: Collider | undefined;
 	visible: boolean;
-	collidable: boolean;
 	update: (input: Input) => void;
 	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
 	addComponent: <T extends IEntityComponentType>(
@@ -48,16 +53,29 @@ export interface IEntity {
 		y: number,
 		tag: ColliderTag | ColliderTag[],
 	) => boolean;
+	collideMouse: (x: number, y: number) => boolean;
 }
+
+const mouseCollider = new PointCollider();
 
 export class Entity implements IEntity, IRenderable {
 	scene!: Scene; // NOTE: set by scene
 	components = new Map<IEntityComponentType, any>();
 	depth = 0;
-	collider: Collider | undefined = undefined;
+	#collider: Collider | undefined = undefined;
 	visible = true;
-	collidable = true;
 	#graphic: Graphic | undefined = undefined;
+
+	get collider() {
+		return this.#collider;
+	}
+
+	set collider(value) {
+		// TODO(bret): Might be good to do this, not sure yet
+		// this.#collider?.assignParent(null);
+		this.#collider = value;
+		this.#collider?.assignParent(this);
+	}
 
 	get graphic() {
 		return this.#graphic;
@@ -109,7 +127,9 @@ export class Entity implements IEntity, IRenderable {
 	// TODO(bret): Set up setters for these as well
 	// TODO(bret): Would be good to set up for non-rect shapes :)
 	get width() {
-		if (this.collider && 'w' in this.collider) return this.collider.w;
+		if (this.collider && 'w' in this.collider)
+			// TODO(bret): fix "as number"
+			return this.collider.w as number;
 		return 0;
 	}
 
@@ -118,7 +138,9 @@ export class Entity implements IEntity, IRenderable {
 	}
 
 	get height() {
-		if (this.collider && 'h' in this.collider) return this.collider.h;
+		if (this.collider && 'h' in this.collider)
+			// TODO(bret): fix "as number"
+			return this.collider.h as number;
 		return 0;
 	}
 
@@ -135,26 +157,13 @@ export class Entity implements IEntity, IRenderable {
 		}
 	}
 
-	_moveCollider(c: Collider, x: number, y: number) {
-		switch (c.type) {
-			case 'line':
-				c.x1 += x;
-				c.x2 += x;
-				c.y1 += y;
-				c.y2 += y;
-				break;
-			case 'triangle':
-				c.x1 += x;
-				c.x2 += x;
-				c.x3 += x;
-				c.y1 += y;
-				c.y2 += y;
-				c.y3 += y;
-				break;
-			default:
-				c.x += x;
-				c.y += y;
-		}
+	renderCollider(
+		ctx: CanvasRenderingContext2D,
+		camera: Camera = Vec2.zero,
+	): void {
+		if (!this.collider) return;
+
+		this.collider.render?.(ctx, -camera.x, -camera.y);
 	}
 
 	_collide(
@@ -163,7 +172,12 @@ export class Entity implements IEntity, IRenderable {
 		tag: ColliderTag | ColliderTag[],
 		earlyOut: boolean,
 	): Entity[] {
-		if (!this.collidable || !this.collider) return [];
+		if (!this.collider) return [];
+
+		const _x = this.x;
+		const _y = this.y;
+		this.x = x;
+		this.y = y;
 
 		const tags = tag ? [tag].flat() : [];
 		const n = this.scene.entities.inScene.length;
@@ -171,20 +185,20 @@ export class Entity implements IEntity, IRenderable {
 		for (let i = 0; i < n; ++i) {
 			const e = this.scene.entities.inScene[i];
 			if (e === this) continue;
-			if (!e.collidable || !e.collider) continue;
+			if (!e.collider?.collidable) continue;
 			if (tags.length && !tags.includes(e.collider.tag)) continue;
 
-			this._moveCollider(this.collider, x, y);
-			this._moveCollider(e.collider, e.x, e.y);
-			const collision = Collision.collide(this.collider, e.collider);
+			const collision = Collide.collide(this.collider, e.collider);
 			const result = collision ? e : null;
-			this._moveCollider(this.collider, -x, -y);
-			this._moveCollider(e.collider, -e.x, -e.y);
 			if (result === null) continue;
 
 			collide.push(result);
 			if (earlyOut) break;
 		}
+
+		this.x = _x;
+		this.y = _y;
+
 		return collide;
 	}
 
@@ -201,7 +215,37 @@ export class Entity implements IEntity, IRenderable {
 	}
 
 	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collidable || !this.collider) return false;
+		if (!this.collider) return false;
 		return this.collideEntity(x, y, tag) !== null;
+	}
+
+	collideMouse(x: number, y: number) {
+		if (!this.collider) return false;
+
+		const { input } = this.scene.engine;
+
+		const mouseX = input.mouse.x + this.scene.camera.x;
+		const mouseY = input.mouse.y + this.scene.camera.y;
+
+		const _x = this.x;
+		const _y = this.y;
+		this.x = x;
+		this.y = y;
+		const res = Collide.collide(
+			// TODO(bret): input.mouse.collider or smth
+			{
+				type: 'point',
+				x: mouseX,
+				// @ts-expect-error
+				left: mouseX,
+				y: mouseY,
+				top: mouseY,
+				collidable: true,
+			},
+			this.collider,
+		);
+		this.x = _x;
+		this.y = _y;
+		return res;
 	}
 }

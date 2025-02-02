@@ -1,13 +1,24 @@
-import * as Components from './components.js';
-import * as Collision from './collision.js';
+import * as Collide from '../collider/collide.js';
+import { PointCollider, } from '../collider/index.js';
+import { Vec2 } from '../math/index.js';
+import * as Components from '../util/components.js';
+const mouseCollider = new PointCollider();
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
     depth = 0;
-    collider = undefined;
+    #collider = undefined;
     visible = true;
-    collidable = true;
     #graphic = undefined;
+    get collider() {
+        return this.#collider;
+    }
+    set collider(value) {
+        // TODO(bret): Might be good to do this, not sure yet
+        // this.#collider?.assignParent(null);
+        this.#collider = value;
+        this.#collider?.assignParent(this);
+    }
     get graphic() {
         return this.#graphic;
     }
@@ -48,6 +59,7 @@ export class Entity {
     // TODO(bret): Would be good to set up for non-rect shapes :)
     get width() {
         if (this.collider && 'w' in this.collider)
+            // TODO(bret): fix "as number"
             return this.collider.w;
         return 0;
     }
@@ -56,6 +68,7 @@ export class Entity {
     }
     get height() {
         if (this.collider && 'h' in this.collider)
+            // TODO(bret): fix "as number"
             return this.collider.h;
         return 0;
     }
@@ -69,30 +82,18 @@ export class Entity {
             this.#graphic?.render(ctx, camera);
         }
     }
-    _moveCollider(c, x, y) {
-        switch (c.type) {
-            case 'line':
-                c.x1 += x;
-                c.x2 += x;
-                c.y1 += y;
-                c.y2 += y;
-                break;
-            case 'triangle':
-                c.x1 += x;
-                c.x2 += x;
-                c.x3 += x;
-                c.y1 += y;
-                c.y2 += y;
-                c.y3 += y;
-                break;
-            default:
-                c.x += x;
-                c.y += y;
-        }
+    renderCollider(ctx, camera = Vec2.zero) {
+        if (!this.collider)
+            return;
+        this.collider.render?.(ctx, -camera.x, -camera.y);
     }
     _collide(x, y, tag, earlyOut) {
-        if (!this.collidable || !this.collider)
+        if (!this.collider)
             return [];
+        const _x = this.x;
+        const _y = this.y;
+        this.x = x;
+        this.y = y;
         const tags = tag ? [tag].flat() : [];
         const n = this.scene.entities.inScene.length;
         let collide = [];
@@ -100,22 +101,20 @@ export class Entity {
             const e = this.scene.entities.inScene[i];
             if (e === this)
                 continue;
-            if (!e.collidable || !e.collider)
+            if (!e.collider?.collidable)
                 continue;
             if (tags.length && !tags.includes(e.collider.tag))
                 continue;
-            this._moveCollider(this.collider, x, y);
-            this._moveCollider(e.collider, e.x, e.y);
-            const collision = Collision.collide(this.collider, e.collider);
+            const collision = Collide.collide(this.collider, e.collider);
             const result = collision ? e : null;
-            this._moveCollider(this.collider, -x, -y);
-            this._moveCollider(e.collider, -e.x, -e.y);
             if (result === null)
                 continue;
             collide.push(result);
             if (earlyOut)
                 break;
         }
+        this.x = _x;
+        this.y = _y;
         return collide;
     }
     collideEntity(x, y, tag) {
@@ -125,9 +124,34 @@ export class Entity {
         return this._collide(x, y, tag, false);
     }
     collide(x, y, tag) {
-        if (!this.collidable || !this.collider)
+        if (!this.collider)
             return false;
         return this.collideEntity(x, y, tag) !== null;
+    }
+    collideMouse(x, y) {
+        if (!this.collider)
+            return false;
+        const { input } = this.scene.engine;
+        const mouseX = input.mouse.x + this.scene.camera.x;
+        const mouseY = input.mouse.y + this.scene.camera.y;
+        const _x = this.x;
+        const _y = this.y;
+        this.x = x;
+        this.y = y;
+        const res = Collide.collide(
+        // TODO(bret): input.mouse.collider or smth
+        {
+            type: 'point',
+            x: mouseX,
+            // @ts-expect-error
+            left: mouseX,
+            y: mouseY,
+            top: mouseY,
+            collidable: true,
+        }, this.collider);
+        this.x = _x;
+        this.y = _y;
+        return res;
     }
 }
 //# sourceMappingURL=entity.js.map
