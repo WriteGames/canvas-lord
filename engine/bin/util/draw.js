@@ -168,14 +168,14 @@ export const Draw = {
                 func = 'strokeText';
                 break;
         }
-        if (!text.width) {
+        if (!text.maxWidth) {
             let _str = str;
             if (count !== undefined)
                 _str = str.slice(0, count);
             ctx[func](_str, drawX, drawY);
             return;
         }
-        if (text.width <= 0)
+        if (text.maxWidth <= 0)
             return 0;
         const words = str.split(' ').map((str) => ({
             str,
@@ -190,7 +190,7 @@ export const Draw = {
         let wordX = 0;
         let wordY = 0;
         let rows = 1;
-        const maxWidth = text.width;
+        const { maxWidth } = text;
         const space = ctx.measureText(' ');
         for (let i = 0; i < words.length; ++i) {
             const word = words[i];

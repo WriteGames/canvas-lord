@@ -15,6 +15,7 @@ interface TextOptions {
 	size: number;
 	align: CanvasTextAlign;
 	baseline: CanvasTextBaseline;
+	count?: number;
 }
 
 // TODO(bret): Make this a global ?
@@ -28,7 +29,12 @@ const defaultTextOptions: TextOptions = {
 	baseline: 'top',
 };
 
-export class Text extends Graphic {
+interface IText extends TextOptions {
+	str: string;
+	maxWidth?: number;
+}
+
+export class Text extends Graphic implements IText {
 	str: string;
 
 	#count?: number;
@@ -39,7 +45,10 @@ export class Text extends Graphic {
 	#align!: TextOptions['align'];
 	#baseline!: TextOptions['baseline'];
 
+	maxWidth?: number;
+
 	#invalided: Boolean = true;
+	#metrics!: TextMetrics;
 
 	get count() {
 		return this.#count;
@@ -108,8 +117,6 @@ export class Text extends Graphic {
 			this.#metrics.actualBoundingBoxDescent
 		);
 	}
-
-	#metrics!: TextMetrics;
 
 	constructor(
 		str: string,

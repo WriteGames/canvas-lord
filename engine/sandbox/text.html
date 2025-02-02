@@ -27,18 +27,18 @@
 			class TextStandardScene extends Scene {
 				constructor(...args) {
 					super(...args);
+					this._maxWidth = this.engine.canvas.width - 20;
 					this.maxWidth = this.engine.canvas.width - 20;
-					this.width = this.engine.canvas.width - 20;
-					this.minWidth = 10;
+					this._minWidth = 10;
 					this.inc = 0;
 				}
 
 				update() {
-					this.width =
-						this.minWidth +
+					this.maxWidth =
+						this._minWidth +
 						Math.round(
 							Math.abs(Math.cos(++this.inc / 100)) *
-								(this.maxWidth - this.minWidth),
+								(this._maxWidth - this._minWidth),
 						);
 				}
 
@@ -54,10 +54,10 @@
 
 					Draw.text(ctx, textOptions, 10, 10, str);
 
-					const drawTextWithRect = (x, y, width, count) => {
+					const drawTextWithRect = (x, y, maxWidth, count) => {
 						const height = Draw.text(
 							ctx,
-							{ ...textOptions, width, count },
+							{ ...textOptions, maxWidth, count },
 							x,
 							y,
 							str,
@@ -69,7 +69,7 @@
 							{ type: 'stroke', color: 'red' },
 							x - 1,
 							y - 1,
-							width + 2,
+							maxWidth + 2,
 							height + 2,
 						);
 					};
@@ -80,7 +80,7 @@
 						str.length,
 					);
 					drawTextWithRect(10, 40, 100, count);
-					drawTextWithRect(10, 96, this.width);
+					drawTextWithRect(10, 96, this.maxWidth);
 				}
 			}
 

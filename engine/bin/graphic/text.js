@@ -23,7 +23,9 @@ export class Text extends Graphic {
     #size;
     #align;
     #baseline;
+    maxWidth;
     #invalided = true;
+    #metrics;
     get count() {
         return this.#count;
     }
@@ -82,7 +84,6 @@ export class Text extends Graphic {
         return (this.#metrics.actualBoundingBoxAscent +
             this.#metrics.actualBoundingBoxDescent);
     }
-    #metrics;
     constructor(str, x, y, options = {}) {
         super(x, y);
         this.str = str;
