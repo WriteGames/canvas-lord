@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.1 */
 import { Vec2 } from '../math/index.js';
 // TODO(bret): Could be nice to do a custom binding, so:
 // AltLeft/AltRight also activate Alt

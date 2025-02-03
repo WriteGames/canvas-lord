@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import { Draw } from '../util/draw.js';

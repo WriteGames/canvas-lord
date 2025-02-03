@@ -1,4 +1,5 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
+
 type AssetManagerOnLoadCallback = (src: string) => void;
 
 export type ImageAsset = {

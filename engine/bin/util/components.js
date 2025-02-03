@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.1 */
 import { Vec2 } from '../math/index.js';
 export const copyObject = (obj) => (Array.isArray(obj) ? [...obj] : structuredClone(obj));
 // TODO: rename to registerComponent? And then do something with that?

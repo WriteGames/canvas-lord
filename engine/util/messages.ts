@@ -1,4 +1,5 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
+
 export type MessagesPayload = object;
 export type MessagesSubscriber = {
 	receive?: (message: string, payload: MessagesPayload) => void;

@@ -1,4 +1,5 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
+
 import { AssetManager, Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import type { Scene } from './scene.js';

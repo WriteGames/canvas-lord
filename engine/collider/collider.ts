@@ -1,4 +1,5 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
+
 import type { Entity } from '../core/entity.js';
 import { type DrawOptions } from '../util/draw.js';
 import { collide } from './collide.js';

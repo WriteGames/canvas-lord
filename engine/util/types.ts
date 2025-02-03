@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
 
 import type { Engine } from '../core/engine';
 import type { Entity } from '../core/entity';

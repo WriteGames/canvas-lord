@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
 import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
 import { Grid } from '../util/grid.js';

@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
 export const EPSILON = 0.000001;
 // Math prototype fun :~)
 if (typeof Math.clamp === 'undefined') {

@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.1 */
 export class ButtonsOverlay {
     x;
     y;

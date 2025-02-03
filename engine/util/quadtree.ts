@@ -1,4 +1,5 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
+
 import { V3, addPos, scalePos, subPos, posEqual, Vec2 } from '../math/index.js';
 
 // TODO: capacity, aka when it splits

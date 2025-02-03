@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.0 */
+/* Canvas Lord v0.5.1 */
 import * as Collide from './collide.js';
 import * as Collision from './collision.js';
 import { BoxCollider } from './box-collider.js';

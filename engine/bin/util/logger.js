@@ -1,7 +1,4 @@
-/* Canvas Lord v0.5.0 */
-// IDEA(bret): What if we can define types of logs and toggle them on/off?
-// IDEA(bret): There could also be a setting that you can enable to choose whether getting a value sent to that Log item causes it to display
-// IDEA(bret): You could also have a timeout that causes that log value to disable after not receiving a change for X frames
+/* Canvas Lord v0.5.1 */
 export const YesNoLogParser = (value) => {
     return value ? 'yes' : 'no';
 };

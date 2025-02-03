@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.1 */
 import { collide } from './collide.js';
 // TODO(bret): getters for left/right/top/bottom :)
 export class Collider {

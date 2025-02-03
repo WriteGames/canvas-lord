@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.1 */
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 export const drawable = {
     angle: 0,

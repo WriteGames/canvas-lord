@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.1 */
 import { Vec2 } from '../math/index.js';
 // TODO(bret): extend Graphic!!
 export class Tileset {
