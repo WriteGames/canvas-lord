@@ -65,7 +65,8 @@ const upgradeTsFile = async (tsFileName) => {
 		// remove comment
 		contents = contents.slice(contents.indexOf('*/') + 2);
 		// remove newline
-		contents = contents.slice(contents.indexOf('\n') + 1);
+		const rest = contents.slice(contents.indexOf('\n') + 1);
+		contents = rest.startsWith('\n') ? rest : '\n' + rest;
 	}
 	contents = [comment, contents].join('\n');
 	await fs.writeFile(tsFileName, contents);
