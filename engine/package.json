@@ -2,7 +2,7 @@
 	"name": "canvas-lord",
 	"private": true,
 	"version": "0.5.2",
-	"packageManager": "pnpm@9.6.0",
+	"packageManager": "pnpm@9.8.0",
 	"description": "An HTML5 game engine",
 	"main": "canvas-lord.js",
 	"type": "module",
@@ -11,7 +11,7 @@
 		"./*": "./bin/*"
 	},
 	"engines": {
-		"node": "^20",
+		"node": "^22",
 		"pnpm": "^9"
 	},
 	"scripts": {

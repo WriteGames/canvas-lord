@@ -2,11 +2,11 @@
 	"name": "canvas-lord-root",
 	"private": true,
 	"version": "1.0.0",
-	"packageManager": "pnpm@9.6.0",
+	"packageManager": "pnpm@9.8.0",
 	"main": "engine/canvas-lord.js",
 	"types": "engine/global.d.ts",
 	"engines": {
-		"node": "^20",
+		"node": "^22",
 		"pnpm": "^9"
 	},
 	"scripts": {
