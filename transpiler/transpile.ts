@@ -216,6 +216,10 @@ const generateEntity = ({ entityName, components, systems }: EntityData) => {
 	};
 };
 
+if (!fs.existsSync('out')) {
+	fs.mkdirSync('out');
+}
+
 const entityToFile = (
 	fileName: string,
 	entityData: ReturnType<typeof generateEntity>,
