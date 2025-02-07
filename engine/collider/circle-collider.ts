@@ -1,6 +1,7 @@
 /* Canvas Lord v0.5.1 */
 
 import { Collider } from './collider.js';
+import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import { Vec2 } from '../math/index.js';
 
@@ -37,7 +38,7 @@ export class CircleCollider extends Collider implements ICircleCollider {
 		this.radius = r;
 	}
 
-	render(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+	render(ctx: Ctx, x: number, y: number): void {
 		Draw.circle(
 			ctx,
 			{

@@ -2,6 +2,7 @@
 
 import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
+import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 
 type Point = [number, number];
@@ -80,7 +81,7 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 		this.#points = points;
 	}
 
-	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
+	render(ctx: Ctx, x = 0, y = 0): void {
 		const drawX = x + this.parent.x;
 		const drawY = y + this.parent.y;
 		Draw.polygon(ctx, this.options, drawX, drawY, this.#points);

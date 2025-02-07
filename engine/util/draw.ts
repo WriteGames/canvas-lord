@@ -1,7 +1,6 @@
 /* Canvas Lord v0.5.1 */
 
-import { generateCanvasAndCtx } from './canvas.js';
-import { type ComponentProps } from './components.js';
+import type { Canvas, Ctx } from './canvas.js';
 import type { CSSColor } from './types.js';
 
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
@@ -32,7 +31,7 @@ export interface DrawOptions {
 }
 
 interface ImageOptions extends DrawOptions {
-	imageSrc: HTMLCanvasElement | OffscreenCanvas | HTMLImageElement | null;
+	imageSrc: Canvas | HTMLImageElement | null;
 	blend?: boolean;
 }
 
@@ -42,33 +41,31 @@ interface TextOptions extends DrawOptions {
 	size?: string | number;
 	align?: CanvasTextAlign;
 	baseline?: CanvasTextBaseline;
-	color: CanvasRenderingContext2D['fillStyle'];
+	color: CSSColor;
 	maxWidth?: number;
 	count?: number;
 }
 
 type Callback<T extends unknown[], O extends DrawOptions> = (
-	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+	ctx: Ctx,
 	options: O,
 	drawX: number,
 	drawY: number,
 	...args: T
 ) => void;
 
-let tempCanvas: HTMLCanvasElement | OffscreenCanvas;
-let tempCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-// TODO(bret): Should we use generateCanvasAndCtx here?
-const initTempCanvas = (
-	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-) => {
+let tempCanvas: HTMLCanvasElement;
+let tempCtx: CanvasRenderingContext2D;
+const initTempCanvas = (ctx: Ctx) => {
 	if (tempCanvas) return;
-	const { canvas, ctx: _tempCtx } = generateCanvasAndCtx(
-		ctx.canvas.width,
-		ctx.canvas.height,
-	);
-	if (!_tempCtx) throw new Error();
-	tempCanvas = canvas;
-	tempCtx = _tempCtx;
+	// NOTE(bret): Do NOT make this an OffscreenCanvas, it will be slow!!
+	tempCanvas = document.createElement('canvas');
+	tempCanvas.width = ctx.canvas.width;
+	tempCanvas.height = ctx.canvas.height;
+
+	const _ctx = tempCanvas.getContext('2d');
+	if (!_ctx) throw new Error();
+	tempCtx = _ctx;
 };
 
 // TODO(bret): un-export this!

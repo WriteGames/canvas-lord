@@ -5,9 +5,9 @@ import { Sprite } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import { generateCanvasAndCtx, type Canvas, type Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
-import { generateCanvasAndCtx } from '../util/canvas.js';
 
 interface MinMax<T> {
 	min: T;
@@ -42,7 +42,7 @@ interface ParticleType {
 	alpha?: StartEnd<number>;
 	alphaEase?: Ease;
 	color?: {
-		ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+		ctx: Ctx;
 		samples: string[];
 	};
 	colorEase?: Ease;
@@ -74,9 +74,9 @@ export class Emitter extends Graphic {
 
 	// TODO(bret): remove the seed
 	random = new Random(2378495);
-	imageSrc: HTMLCanvasElement | OffscreenCanvas | HTMLImageElement | null =
-		null;
-	blendCanvas: HTMLCanvasElement | OffscreenCanvas;
+	// TODO(bret): Ensure we want both of these to be able to be OffscreenCanvases
+	imageSrc: Canvas | HTMLImageElement | null = null;
+	blendCanvas: Canvas;
 
 	// get imageSrc(): HTMLImageElement {
 	// 	if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
@@ -255,7 +255,7 @@ export class Emitter extends Graphic {
 		});
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 
@@ -267,7 +267,7 @@ export class Emitter extends Graphic {
 		blendCanvas.height = image.height;
 		const { width, height } = blendCanvas;
 		// TODO(bret): We might want to cache this
-		const blendCtx = blendCanvas.getContext('2d');
+		const blendCtx = blendCanvas.getContext('2d') as Ctx;
 		if (!blendCtx) throw new Error();
 
 		[...this.#types.entries()].forEach(([name, type]) => {

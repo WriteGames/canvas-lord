@@ -1,5 +1,7 @@
 /* Canvas Lord v0.5.1 */
 
+import type { Ctx } from '../util/canvas.js';
+
 // IDEA(bret): What if we can define types of logs and toggle them on/off?
 // IDEA(bret): There could also be a setting that you can enable to choose whether getting a value sent to that Log item causes it to display
 // IDEA(bret): You could also have a timeout that causes that log value to disable after not receiving a change for X frames
@@ -19,7 +21,7 @@ export const YesNoLogParser = (value: LogValue) => {
 
 // "Renderer" refers to how the text is rendered!
 export type LogRenderer = (
-	ctx: CanvasRenderingContext2D,
+	ctx: Ctx,
 	log: Log,
 	drawX: number,
 	drawY: number,
@@ -156,7 +158,7 @@ export class Logger {
 		this.logs.forEach((log) => log.elapsed++);
 	}
 
-	render(ctx: CanvasRenderingContext2D) {
+	render(ctx: Ctx) {
 		// FIXME: handle this better
 		const watched = Array.from(this.watched).filter(([_, v]) => v.visible);
 		const logs = this.logs.filter((l) => l.visible);

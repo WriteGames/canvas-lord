@@ -1,6 +1,7 @@
 /* Canvas Lord v0.5.1 */
 
 import { Collider } from './collider.js';
+import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 
 interface IPointCollider {
@@ -27,7 +28,7 @@ export class PointCollider extends Collider implements IPointCollider {
 		super(x, y);
 	}
 
-	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
+	render(ctx: Ctx, x = 0, y = 0): void {
 		Draw.circle(ctx, this.options, x + this.left, y + this.top, 1);
 	}
 }

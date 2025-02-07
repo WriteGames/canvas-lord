@@ -4,6 +4,7 @@ import type { Engine } from '../core/engine';
 import type { Entity } from '../core/entity';
 import type { Input } from '../core/input';
 import type { Camera } from './camera';
+import type { Ctx } from './canvas.js';
 
 declare global {
 	interface HTMLCanvasElement {
@@ -32,11 +33,7 @@ export type IEntityComponentType<T = any> = {
 
 export interface IEntitySystem {
 	update?: (entity: Entity, input: Input) => void;
-	render?: (
-		entity: Entity,
-		ctx: CanvasRenderingContext2D,
-		camera: Camera,
-	) => void;
+	render?: (entity: Entity, ctx: Ctx, camera: Camera) => void;
 }
 
 export interface IRenderable {
@@ -44,7 +41,7 @@ export interface IRenderable {
 	parent?: IRenderable | undefined;
 	// TODO(bret): Figure out if we want this to be like this...
 	update?: (input: Input) => void;
-	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+	render: (ctx: Ctx, camera: Camera) => void;
 }
 
 export type Renderable = IRenderable;

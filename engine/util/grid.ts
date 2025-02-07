@@ -21,7 +21,7 @@ import {
 	V2OrthogonalNorm,
 } from '../math/misc.js';
 import type { Camera } from './camera.js';
-import { generateCanvasAndCtx } from './canvas.js';
+import { generateCanvasAndCtx, type Ctx } from './canvas.js';
 import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';
 
@@ -152,12 +152,7 @@ export class Grid {
 		return this.data[y * this.columns + x] as number;
 	}
 
-	renderOutline(
-		ctx: CanvasRenderingContext2D,
-		camera: Camera,
-		offsetX = 0,
-		offsetY = 0,
-	): void {
+	renderOutline(ctx: Ctx, camera: Camera, offsetX = 0, offsetY = 0): void {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
@@ -193,11 +188,7 @@ export class Grid {
 		ctx.restore();
 	}
 
-	renderEachCell(
-		ctx: CanvasRenderingContext2D,
-		camera: Camera,
-		fill = false,
-	): void {
+	renderEachCell(ctx: Ctx, camera: Camera, fill = false): void {
 		const stride = this.columns;
 		const width = this.tileW - +!fill;
 		const height = this.tileH - +!fill;
@@ -227,7 +218,7 @@ export class Grid {
 		}
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	render(ctx: Ctx, camera: Camera): void {
 		switch (this.renderMode) {
 			case Grid.RenderMode.OUTLINE:
 				this.renderOutline(ctx, camera);
@@ -523,7 +514,7 @@ export class GridOutline {
 		this.polygons = findAllPolygonsInGrid(grid);
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	render(ctx: Ctx, camera: Camera): void {
 		if (!this.show) return;
 
 		// Draw edges

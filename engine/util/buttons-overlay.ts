@@ -1,6 +1,7 @@
 /* Canvas Lord v0.5.1 */
 
 import { Input, Key } from '../core/input.js';
+import type { Ctx } from '../util/canvas.js';
 
 interface ButtonsOverlayKeys {
 	left: Key[];
@@ -31,7 +32,7 @@ export class ButtonsOverlay {
 		this.keyJumpCheck = input.keyCheck(this.keys.jump);
 	}
 
-	render(ctx: CanvasRenderingContext2D) {
+	render(ctx: Ctx) {
 		let drawX = this.x,
 			drawY = this.y;
 

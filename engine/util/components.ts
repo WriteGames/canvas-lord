@@ -2,6 +2,7 @@
 
 import { IEntityComponentType } from './types.js';
 import { Vec2 } from '../math/index.js';
+import type { Canvas } from '../util/canvas.js';
 
 // NOTE: This is necessary since Components.createComponent() returns a Readonly<IEntityComponent> - we can use this to remove Readable<>
 export type ComponentProps<T extends IEntityComponentType> =
@@ -58,12 +59,12 @@ const style = {
 };
 
 export const staticImage = createComponent({
-	imageSrc: null as HTMLCanvasElement | HTMLImageElement | null,
+	imageSrc: null as Canvas | HTMLImageElement | null,
 	...drawable,
 });
 
 export const image = createComponent({
-	imageSrc: null as HTMLCanvasElement | HTMLImageElement | null,
+	imageSrc: null as Canvas | HTMLImageElement | null,
 	frame: 0,
 	frameW: 0,
 	frameH: 0,

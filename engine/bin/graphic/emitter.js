@@ -2,14 +2,15 @@
 import { Graphic } from './graphic.js';
 import { Sprite } from './sprite.js';
 import { Vec2 } from '../math/index.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
-import { generateCanvasAndCtx } from '../util/canvas.js';
 export class Emitter extends Graphic {
     asset;
     #types = new Map();
     // TODO(bret): remove the seed
     random = new Random(2378495);
+    // TODO(bret): Ensure we want both of these to be able to be OffscreenCanvases
     imageSrc = null;
     blendCanvas;
     // get imageSrc(): HTMLImageElement {

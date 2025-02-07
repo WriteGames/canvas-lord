@@ -1,3 +1,6 @@
+export type Canvas = HTMLCanvasElement | OffscreenCanvas;
+export type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
 type Response =
 	| {
 			canvas: null;
@@ -23,6 +26,8 @@ export const generateCanvasAndCtx = (
 	}
 	if (typeof document !== 'undefined') {
 		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
 		return { canvas, ctx: canvas.getContext('2d', options) };
 	}
 	return { canvas: null, ctx: null };

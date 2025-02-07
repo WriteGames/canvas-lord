@@ -2,6 +2,7 @@
 
 import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
+import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import { Entity } from '../canvas-lord.js';
 
@@ -170,7 +171,7 @@ export class RightTriangleCollider
 		return this.#points[2][1];
 	}
 
-	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
+	render(ctx: Ctx, x = 0, y = 0): void {
 		if (!this.parent) console.warn(this);
 		// console.log(this.parent);
 		// TODO(bret): Fix this

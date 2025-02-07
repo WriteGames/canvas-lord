@@ -2,11 +2,12 @@
 
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
-import type { Camera } from '../util/camera.js';
 import { Collider } from '../collider/collider.js';
 import * as Collide from '../collider/collide.js';
 import { PointCollider, type ColliderTag } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
+import type { Camera } from '../util/camera.js';
+import type { Ctx } from '../util/canvas.js';
 import * as Components from '../util/components.js';
 import { type ComponentProps } from '../util/components.js';
 import type { IRenderable, IEntityComponentType } from '../util/types.js';
@@ -146,17 +147,14 @@ export class Entity implements IEntity, IRenderable {
 
 	update(input: Input): void {}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+	render(ctx: Ctx, camera: Camera): void {
 		// TODO(bret): .visible should probably be on the Graphic, not the Entity itself
 		if (this.visible) {
 			this.#graphic?.render(ctx, camera);
 		}
 	}
 
-	renderCollider(
-		ctx: CanvasRenderingContext2D,
-		camera: Camera = Vec2.zero,
-	): void {
+	renderCollider(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		if (!this.collider) return;
 
 		this.collider.render?.(ctx, -camera.x, -camera.y);

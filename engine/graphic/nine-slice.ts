@@ -8,6 +8,7 @@ import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
+import type { Ctx } from '../util/canvas.js';
 import { moveCanvas, Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
 
@@ -58,7 +59,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 		const { tileW: w, tileH: h } = this;
 		tempCanvas.width = this.tileW;
 		tempCanvas.height = this.tileH;
-		const ctx = tempCanvas.getContext('2d');
+		const ctx = tempCanvas.getContext('2d') as Ctx;
 		if (!ctx) throw new Error();
 		// top
 		ctx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
@@ -93,7 +94,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 	}
 
 	// TODO: hook up moveCanvas
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		const o = this;
 		const x = this.x - camera.x * this.scrollX;
 		const y = this.y - camera.y * this.scrollY;

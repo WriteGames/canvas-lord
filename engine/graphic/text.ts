@@ -3,6 +3,7 @@
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import type { Ctx } from '../util/canvas.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import type { CSSColor } from '../util/types.js';
@@ -170,7 +171,7 @@ export class Text extends Graphic implements IText {
 		textCtx.restore();
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.text(ctx, this, x, y, this.str);

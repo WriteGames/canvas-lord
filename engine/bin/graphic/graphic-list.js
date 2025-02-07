@@ -1,7 +1,7 @@
 /* Canvas Lord v0.5.1 */
+import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import { moveCanvas } from '../util/draw.js';
-import { Graphic } from './graphic.js';
 export class GraphicList extends Graphic {
     graphics;
     constructor(x = 0, y = 0) {

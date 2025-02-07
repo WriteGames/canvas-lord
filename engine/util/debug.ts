@@ -4,6 +4,7 @@ import type { Engine } from '../core/engine.js';
 import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import type { Scene } from '../core/scene.js';
+import type { Ctx } from './canvas.js';
 import { Vec2 } from '../math/index.js';
 import { Camera } from './camera.js';
 import { Draw } from './draw.js';
@@ -190,7 +191,7 @@ export class Debug implements Debug {
 	}
 
 	renderGraphicWithRect(
-		ctx: CanvasRenderingContext2D,
+		ctx: Ctx,
 		graphic: Tileset | Sprite,
 		x: number,
 		y: number,
@@ -235,7 +236,6 @@ export class Debug implements Debug {
 
 			if (highlightRect) {
 				tempSprite.alpha = 0.5;
-				// @ts-expect-error
 				tempSprite.render(this.hiddenCtx);
 
 				// Draw full-alpha rect
@@ -253,7 +253,6 @@ export class Debug implements Debug {
 			tempSprite.sourceH = rect.h;
 
 			tempSprite.alpha = 1.0;
-			// @ts-expect-error
 			tempSprite.render(this.hiddenCtx, Vec2.zero);
 
 			const lineW = 3;

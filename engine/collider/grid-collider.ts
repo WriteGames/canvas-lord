@@ -2,7 +2,7 @@
 
 import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
-import { Draw } from '../util/draw.js';
+import type { Ctx } from '../util/canvas.js';
 import { Grid } from '../util/grid.js';
 
 interface IGridCollider {
@@ -49,7 +49,7 @@ export class GridCollider extends Collider implements IGridCollider {
 		return this.parent.y + this.y + this.h - 1;
 	}
 
-	render(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+	render(ctx: Ctx, x: number, y: number): void {
 		// TODO(bret): Isn't this backwards?
 		const cameraX = -x;
 		const cameraY = -y;

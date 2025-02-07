@@ -1,13 +1,10 @@
 /* Canvas Lord v0.5.1 */
 
-import { Graphic, type GraphicParent } from './graphic.js';
+import { type GraphicParent } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
-import type { Entity } from '../core/entity.js';
-import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
-import { moveCanvas, Draw } from '../util/draw.js';
-import { Random } from '../util/random.js';
+import type { Ctx } from '../util/canvas.js';
 
 export interface Tileset {
 	width: number;
@@ -72,7 +69,7 @@ export class Tileset {
 		return this.data[y * this.columns + x];
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero): void {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const scale = 1;
 
 		const {

@@ -1,8 +1,9 @@
 /* Canvas Lord v0.5.1 */
 
-import type { Entity } from '../core/entity.js';
-import { type DrawOptions } from '../util/draw.js';
 import { collide } from './collide.js';
+import type { Entity } from '../core/entity.js';
+import type { Ctx } from '../util/canvas.js';
+import { type DrawOptions } from '../util/draw.js';
 
 export type ColliderType =
 	| 'point'
@@ -25,7 +26,7 @@ interface ICollider {
 	x: number;
 	y: number;
 
-	render(ctx: CanvasRenderingContext2D, x: number, y: number): void;
+	render(ctx: Ctx, x: number, y: number): void;
 }
 
 // TODO(bret): getters for left/right/top/bottom :)
@@ -67,7 +68,7 @@ export abstract class Collider implements ICollider {
 		collide(this, other);
 	}
 
-	render(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+	render(ctx: Ctx, x: number, y: number): void {
 		throw new Error('render() unimplemented');
 	}
 }

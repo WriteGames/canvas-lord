@@ -1,6 +1,7 @@
 /* Canvas Lord v0.5.1 */
 
 import { Collider } from './collider.js';
+import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 
 interface ILineCollider {
@@ -62,7 +63,7 @@ export class LineCollider extends Collider implements ILineCollider {
 		this.y2 = y2;
 	}
 
-	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
+	render(ctx: Ctx, x = 0, y = 0): void {
 		const x1 = x + this.xStart;
 		const y1 = y + this.yStart;
 		const x2 = x + this.xEnd;

@@ -2,14 +2,11 @@
 
 import { Graphic } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
-import type { Entity } from '../core/entity.js';
-import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import { type Ctx } from '../util/canvas.js';
 import { moveCanvas, Draw } from '../util/draw.js';
-import { Random } from '../util/random.js';
 import type { CSSColor } from '../util/types';
-import { generateCanvasAndCtx } from '../util/canvas.js';
 
 export interface ISpriteLike {
 	color?: CSSColor;
@@ -105,7 +102,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		this.originY = -this.height >> 1;
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		const {
 			sourceX,
 			sourceY,

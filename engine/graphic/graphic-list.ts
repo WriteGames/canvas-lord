@@ -1,10 +1,11 @@
 /* Canvas Lord v0.5.1 */
 
+import { Graphic } from './graphic.js';
 import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import { moveCanvas } from '../util/draw.js';
-import { Graphic } from './graphic.js';
+import type { Ctx } from '../util/canvas.js';
 
 export class GraphicList extends Graphic {
 	graphics: Graphic[];
@@ -44,7 +45,7 @@ export class GraphicList extends Graphic {
 		this.graphics.forEach((graphic) => graphic.update(input));
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		// TODO(bret): Set up transformations here!
 		this.scrollX = this.scrollY = 0;
 		const r = 3;

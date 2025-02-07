@@ -3,12 +3,13 @@
 import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import type { Ctx } from '../util/canvas.js';
 
 export interface GraphicParent {
 	x: number;
 	y: number;
 	update: (input: Input) => void;
-	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+	render: (ctx: Ctx, camera: Camera) => void;
 }
 
 export interface IGraphic {
@@ -27,7 +28,7 @@ export interface IGraphic {
 	centerOrigin: () => void;
 	centerOO: () => void;
 	update: (input: Input) => void;
-	render: (ctx: CanvasRenderingContext2D, camera: Camera) => void;
+	render: (ctx: Ctx, camera: Camera) => void;
 	reset: () => void;
 }
 
@@ -69,7 +70,7 @@ export class Graphic implements IGraphic {
 
 	update(input: Input): void {}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {}
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {}
 
 	reset() {
 		this.x = 0;

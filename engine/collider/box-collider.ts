@@ -1,6 +1,7 @@
 /* Canvas Lord v0.5.1 */
 
 import { Collider } from './collider.js';
+import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 
 interface IBoxCollider {
@@ -49,7 +50,7 @@ export class BoxCollider extends Collider implements IBoxCollider {
 		this.height = h;
 	}
 
-	render(ctx: CanvasRenderingContext2D, x = 0, y = 0): void {
+	render(ctx: Ctx, x = 0, y = 0): void {
 		Draw.rect(
 			ctx,
 			this.options,

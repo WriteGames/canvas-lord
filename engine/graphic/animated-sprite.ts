@@ -7,6 +7,7 @@ import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import type { Ctx } from '../util/canvas.js';
 import { moveCanvas, Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
 
@@ -120,7 +121,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		}
 	}
 
-	render(ctx: CanvasRenderingContext2D, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		const { frameId, frameW, frameH } = this;
 		this.framesPerRow = Math.floor(this.imageSrc.width / frameW);
 

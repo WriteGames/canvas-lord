@@ -5,6 +5,7 @@ import type { Entity } from './entity.js';
 import type { Input } from './input.js';
 import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
+import type { Canvas, Ctx } from '../util/canvas.js';
 import { Messages } from '../util/messages.js';
 import type {
 	IEntitySystem,
@@ -40,8 +41,8 @@ export interface Scene {
 	// TODO: we need a Rect type, maybe class?
 	bounds: [number, number, number, number] | null;
 
-	canvas: HTMLCanvasElement | OffscreenCanvas;
-	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+	canvas: Canvas;
+	ctx: Ctx;
 }
 
 export class Scene implements Scene {
@@ -182,7 +183,7 @@ export class Scene implements Scene {
 
 	postUpdate(input: Input): void {}
 
-	render(gameCtx: CanvasRenderingContext2D): void {
+	render(gameCtx: Ctx): void {
 		// TODO: this should maybe be in pre-render?
 		this.renderables.inScene.sort(
 			(a, b) => (b.depth ?? 0) - (a.depth ?? 0),
