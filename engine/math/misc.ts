@@ -335,7 +335,7 @@ export const rotateNormBy45Deg = (
 };
 
 // NOTE: The generic allows it to use V2's orthogonal or diagonal norm types, depending on the `curDir`
-const rotateNormBy90Deg = <V extends V2CardinalNorm>(
+export const rotateNormBy90Deg = <V extends V2CardinalNorm>(
 	curDir: V,
 	turns: number,
 ): V => rotateNormBy45Deg(curDir, 2 * turns) as V;

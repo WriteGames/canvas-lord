@@ -203,5 +203,5 @@ export const rotateNormBy45Deg = (curDir, turns) => {
     return cardinalNorms[(index - turns + n) % n];
 };
 // NOTE: The generic allows it to use V2's orthogonal or diagonal norm types, depending on the `curDir`
-const rotateNormBy90Deg = (curDir, turns) => rotateNormBy45Deg(curDir, 2 * turns);
+export const rotateNormBy90Deg = (curDir, turns) => rotateNormBy45Deg(curDir, 2 * turns);
 //# sourceMappingURL=misc.js.map

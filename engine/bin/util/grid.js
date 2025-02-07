@@ -1,6 +1,6 @@
 /* Canvas Lord v0.5.1 */
 import { addPos, hashPos, indexToPos, posEqual, posToIndex, scalePos, subPos, Vec2, } from '../math/index.js';
-import { isWithinBounds, norm, } from '../math/misc.js';
+import { isWithinBounds, norm, rotateNormBy90Deg, } from '../math/misc.js';
 import { Draw, drawable } from './draw.js';
 // TODO: find a better place for this to live globally
 const pixelCanvas = typeof OffscreenCanvas !== 'undefined'
@@ -372,8 +372,5 @@ export class GridOutline {
             });
         }
     }
-}
-function rotateNormBy90Deg(curDir, arg1) {
-    throw new Error('Function not implemented.');
 }
 //# sourceMappingURL=grid.js.map

@@ -1,4 +1,4 @@
-import { Entity } from 'canvas-lord/util/entity.js';
+import { Entity } from 'canvas-lord/core/entity.js';
 
 export class GenPlayer extends Entity {
 	jumpActive = false;

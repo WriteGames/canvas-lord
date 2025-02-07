@@ -1,4 +1,4 @@
-import { V2 } from 'canvas-lord';
+import { Keys, V2 } from 'canvas-lord';
 
 import { initGamesBase, assetManager } from './base-game';
 
@@ -40,9 +40,9 @@ class Player {
 	}
 
 	update(input) {
-		const leftKeys = ['ArrowLeft', 'a', 'A'];
-		const rightKeys = ['ArrowRight', 'd', 'D'];
-		const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
+		const leftKeys = [Keys.ArrowLeft, Keys.A];
+		const rightKeys = [Keys.ArrowRight, Keys.A];
+		const jumpKeys = [Keys.ArrowUp, Keys.Space, Keys.W, Keys.Z];
 
 		const keyLeftCheck = input.keyCheck(leftKeys);
 		const keyRightCheck = input.keyCheck(rightKeys);
@@ -246,7 +246,7 @@ class Player {
 		}
 
 		ctx.drawImage(
-			this.image,
+			this.image.image,
 			this.frame * 32,
 			0,
 			32,

@@ -16,6 +16,7 @@ import {
 	isWithinBounds,
 	norm,
 	Path,
+	rotateNormBy90Deg,
 	V2CardinalNorm,
 	V2OrthogonalNorm,
 } from '../math/misc.js';
@@ -576,7 +577,4 @@ export class GridOutline {
 			});
 		}
 	}
-}
-function rotateNormBy90Deg(curDir: Vec2, arg1: number): Vec2 {
-	throw new Error('Function not implemented.');
 }

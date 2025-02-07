@@ -1,18 +1,15 @@
+import { Game, Scene, Tileset } from 'canvas-lord';
+import { Grid, GridOutline } from 'canvas-lord/util/grid';
+import { AssetManager } from 'canvas-lord/core/asset-manager';
 import {
-	AssetManager,
 	cardinalNorms,
 	filterWithinBounds,
-	Game,
 	globalSetTile,
-	Grid,
-	GridOutline,
 	mapByOffset,
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-	Scene,
-	Tileset,
-} from 'canvas-lord';
+} from 'canvas-lord/math/misc';
 import { Inspector } from 'canvas-lord/inspector';
 
 const initTileset = (grid) => {

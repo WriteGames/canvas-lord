@@ -206,7 +206,7 @@ const generateEntity = ({ entityName, components, systems }: EntityData) => {
 		.filter(Boolean)
 		.join('\n\t\n\t');
 
-	const imports = [`import { Entity } from 'canvas-lord/util/entity.js';`];
+	const imports = [`import { Entity } from 'canvas-lord/core/entity.js';`];
 	const classDefinition = `export class ${entityName} extends Entity {\n\t${entityContents}\n}`;
 
 	return {
