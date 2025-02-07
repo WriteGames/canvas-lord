@@ -112,6 +112,9 @@ export class Sfx {
         return Sfx.#audioCtx;
     }
     static music = new Map();
+    static resetAudioCtx() {
+        Sfx.#audioCtx = new AudioContext();
+    }
     static play(audio) {
         const source = Sfx.audioCtx.createBufferSource();
         source.buffer = audio.buffer;

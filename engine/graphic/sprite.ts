@@ -65,7 +65,10 @@ export class Sprite extends Graphic implements ISpriteLike {
 	}
 
 	static createRect(width: number, height: number, color: string) {
-		const { canvas, ctx } = generateCanvasAndCtx(width, height);
+		// TODO(bret): use generateCanvasAndCtx
+		// const { canvas, ctx } = generateCanvasAndCtx(width, height);
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
 		if (!ctx) throw new Error('[Sprite.createRect()] getContext() failed');
 
 		ctx.fillStyle = color;

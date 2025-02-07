@@ -175,6 +175,10 @@ export class Sfx {
 
 	static music = new Map<AudioAsset, AudioBufferSourceNode>();
 
+	static resetAudioCtx() {
+		Sfx.#audioCtx = new AudioContext();
+	}
+
 	static play(audio: AudioAsset) {
 		const source = Sfx.audioCtx.createBufferSource();
 		source.buffer = audio.buffer;
