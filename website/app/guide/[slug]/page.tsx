@@ -13,11 +13,11 @@ export async function generateStaticParams() {
 }
 
 interface PageProps {
-	params: { slug: string };
+	params: Promise<{ slug: string }>;
 }
 
 export default async function Page({ params }: PageProps) {
-	const { slug } = params;
+	const { slug } = await params;
 	const Content: React.ComponentType<{
 		components: {
 			[key: string]: React.FC<any>;
