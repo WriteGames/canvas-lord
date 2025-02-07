@@ -156,6 +156,14 @@ export const V2 = Object.defineProperties({}, {
         writable: false,
     },
 });
+const createVector = (p, arr) => {
+    switch (true) {
+        case p instanceof Vec2:
+            return new Vec2(...arr);
+        default:
+            return arr;
+    }
+};
 export const hashPos = (pos) => pos.join(',');
 export const addPos = (a, b) => {
     return a.map((v, i) => v + (b[i] ?? 0));
@@ -164,10 +172,10 @@ export const subPos = (a, b) => {
     return a.map((v, i) => v - (b[i] ?? 0));
 };
 export const addScalar = (p, s) => {
-    return new Vec2(...p.map((v) => v + s));
+    return createVector(p, p.map((v) => v + s));
 };
 export const scalePos = (p, s) => {
-    return new Vec2(...p.map((v) => v * s));
+    return createVector(p, p.map((v) => v * s));
 };
 export const posEqual = (a, b) => {
     const aa = [...a];
@@ -182,4 +190,16 @@ export const posToIndex = ([x, y], stride) => y * stride + x;
 export const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
 export const dotProduct2D = (a, b) => a[0] * b[0] + a[1] * b[1];
 export const magnitude2D = (v) => Math.sqrt(v.x ** 2 + v.y ** 2);
+function processValue(value, s) {
+    const arr = value.map((v) => v * s);
+    switch (true) {
+        case value instanceof Vec2:
+            return new Vec2();
+        default:
+            return arr;
+    }
+}
+// Usage
+const result1 = processValue(new Vec2(), 2); // result1 is Vec2
+const result2 = processValue([1, 2], 2); // result2 is number
 //# sourceMappingURL=index.js.map

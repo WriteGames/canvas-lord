@@ -226,14 +226,15 @@ export const V2 = Object.defineProperties(
 	one: V2;
 };
 
+type Vec = Vec2;
+
+type VV<T> = T extends Vector ? Vector : T extends Vec2 ? Vec2 : never;
+
 type FuncMapVector = <T extends Vector | Vec2, A extends T, B extends T>(
 	a: A,
 	b: B,
 ) => A;
-type FuncMapVectorByScalar = <P extends Vector>(
-	p: Vec2 | Vector,
-	s: number,
-) => Vec2;
+type FuncMapVectorByScalar = <P extends Vec | Vector>(p: P, s: number) => VV<P>;
 
 type FuncReduceVector = <A extends Vector, B extends Vector>(
 	a: Vec2,
@@ -241,6 +242,15 @@ type FuncReduceVector = <A extends Vector, B extends Vector>(
 ) => number;
 
 type FuncCompare<T extends any> = (a: T, b: T) => boolean;
+
+const createVector = <P extends Vec2 | Vector>(p: P, arr: number[]): VV<P> => {
+	switch (true) {
+		case p instanceof Vec2:
+			return new Vec2(...arr) as VV<typeof p>;
+		default:
+			return arr as VV<typeof p>;
+	}
+};
 
 export const hashPos = (pos: Vector | Vec2) => pos.join(',');
 
@@ -253,11 +263,17 @@ export const subPos: FuncMapVector = (a, b) => {
 };
 
 export const addScalar: FuncMapVectorByScalar = (p, s) => {
-	return new Vec2(...p.map((v) => v + s));
+	return createVector(
+		p,
+		p.map((v) => v + s),
+	);
 };
 
 export const scalePos: FuncMapVectorByScalar = (p, s) => {
-	return new Vec2(...p.map((v) => v * s));
+	return createVector(
+		p,
+		p.map((v) => v * s),
+	);
 };
 
 export const posEqual = (a: Vector | Vec2, b: Vector | Vec2): boolean => {
@@ -282,3 +298,22 @@ export const crossProduct2D: FuncReduceVector = (a, b) =>
 export const dotProduct2D: FuncReduceVector = (a, b) =>
 	a[0] * b[0] + a[1] * b[1];
 export const magnitude2D = (v: Vec2): number => Math.sqrt(v.x ** 2 + v.y ** 2);
+
+type Identity<T> = T extends Vector ? Vector : T extends Vec2 ? Vec2 : never;
+
+function processValue<T extends Vector | Vec2>(
+	value: T,
+	s: number,
+): Identity<T> {
+	const arr = value.map((v) => v * s);
+	switch (true) {
+		case value instanceof Vec2:
+			return new Vec2() as Identity<T>;
+		default:
+			return arr as Identity<T>;
+	}
+}
+
+// Usage
+const result1 = processValue(new Vec2(), 2); // result1 is Vec2
+const result2 = processValue([1, 2], 2); // result2 is number

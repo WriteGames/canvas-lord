@@ -1,5 +1,5 @@
 import type { Engine } from './canvas-lord.js';
-import { Input, type Key } from './util/input.js';
+import { Input, Keys, type Key } from './core/input.js';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 const engine = {
@@ -12,48 +12,48 @@ beforeEach(() => {
 	input = new Input(engine);
 });
 
-const emulateKeyDown = (input: Input, key: Key): void => {
+const emulateKeyDown = (input: Input, code: Key): void => {
 	input.onKeyDown({
 		preventDefault: () => {
 			/**/
 		},
-		key,
+		code,
 	} as KeyboardEvent);
 };
 
-const emulateKeyUp = (input: Input, key: Key): void => {
+const emulateKeyUp = (input: Input, code: Key): void => {
 	input.onKeyUp({
 		preventDefault: () => {
 			/**/
 		},
-		key,
+		code,
 	} as KeyboardEvent);
 };
 
 describe('input / keyboard', () => {
 	test('should not have any keyboard state on a key at init', () => {
-		const leftPressed = input.keyPressed('ArrowLeft');
+		const leftPressed = input.keyPressed(Keys.ArrowLeft);
 		expect(leftPressed).toEqual(false);
-		const leftHeld = input.keyCheck('ArrowLeft');
+		const leftHeld = input.keyCheck(Keys.ArrowLeft);
 		expect(leftHeld).toEqual(false);
-		const leftReleased = input.keyReleased('ArrowLeft');
+		const leftReleased = input.keyReleased(Keys.ArrowLeft);
 		expect(leftReleased).toEqual(false);
 	});
 
 	// key down
 	describe('on keydown', () => {
 		beforeEach(() => {
-			emulateKeyDown(input, 'ArrowLeft');
+			emulateKeyDown(input, Keys.ArrowLeft);
 		});
 
 		describe('first frame', () => {
 			test('should register keydown events', () => {
-				const leftPressed = input.keyPressed('ArrowLeft');
+				const leftPressed = input.keyPressed(Keys.ArrowLeft);
 				expect(leftPressed).toEqual(true);
 			});
 
 			test('should be held on press frame', () => {
-				const leftHeld = input.keyCheck('ArrowLeft');
+				const leftHeld = input.keyCheck(Keys.ArrowLeft);
 				expect(leftHeld).toEqual(true);
 			});
 		});
@@ -64,12 +64,12 @@ describe('input / keyboard', () => {
 			});
 
 			test('should only be pressed for a single frame', () => {
-				const leftPressed = input.keyPressed('ArrowLeft');
+				const leftPressed = input.keyPressed(Keys.ArrowLeft);
 				expect(leftPressed).toEqual(false);
 			});
 
 			test('should be held after press frame', () => {
-				const leftHeld = input.keyCheck('ArrowLeft');
+				const leftHeld = input.keyCheck(Keys.ArrowLeft);
 				expect(leftHeld).toEqual(true);
 			});
 		});
@@ -78,18 +78,18 @@ describe('input / keyboard', () => {
 	// key up
 	describe('on keyup', () => {
 		beforeEach(() => {
-			emulateKeyDown(input, 'ArrowLeft');
-			emulateKeyUp(input, 'ArrowLeft');
+			emulateKeyDown(input, Keys.ArrowLeft);
+			emulateKeyUp(input, Keys.ArrowLeft);
 		});
 
 		describe('first frame', () => {
 			test('should register keyup events', () => {
-				const leftReleased = input.keyReleased('ArrowLeft');
+				const leftReleased = input.keyReleased(Keys.ArrowLeft);
 				expect(leftReleased).toEqual(true);
 			});
 
 			test('should not be held on release frame', () => {
-				const leftHeld = input.keyCheck('ArrowLeft');
+				const leftHeld = input.keyCheck(Keys.ArrowLeft);
 				expect(leftHeld).toEqual(false);
 			});
 		});
@@ -100,12 +100,12 @@ describe('input / keyboard', () => {
 			});
 
 			test('should only be released for a single frame', () => {
-				const leftReleased = input.keyReleased('ArrowLeft');
+				const leftReleased = input.keyReleased(Keys.ArrowLeft);
 				expect(leftReleased).toEqual(false);
 			});
 
 			test('should not be held after release frame', () => {
-				const leftHeld = input.keyCheck('ArrowLeft');
+				const leftHeld = input.keyCheck(Keys.ArrowLeft);
 				expect(leftHeld).toEqual(false);
 			});
 		});
