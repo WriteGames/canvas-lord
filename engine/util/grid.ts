@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.1 */
+/* Canvas Lord v0.5.2 */
 
 import type { AssetManager } from '../core/asset-manager.js';
 import {

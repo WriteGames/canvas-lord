@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.1 */
+/* Canvas Lord v0.5.2 */
 import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
 import { Messages } from '../util/messages.js';

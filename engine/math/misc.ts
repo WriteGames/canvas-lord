@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.1 */
+/* Canvas Lord v0.5.2 */
 
 // TODO(bret): This file is a bunch of random stuff, will need to clean up
 import {

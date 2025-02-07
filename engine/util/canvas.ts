@@ -1,3 +1,5 @@
+/* Canvas Lord v0.5.2 */
+
 export type Canvas = HTMLCanvasElement | OffscreenCanvas;
 export type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 

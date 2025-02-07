@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.1 */
+/* Canvas Lord v0.5.2 */
 export class AssetManager {
     constructor(prefix = '') {
         this.sprites = new Map();

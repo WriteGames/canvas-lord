@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.1 */
+/* Canvas Lord v0.5.2 */
 
 import { Graphic } from './graphic.js';
 import type { Input } from '../core/input.js';
