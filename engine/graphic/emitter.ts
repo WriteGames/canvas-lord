@@ -7,6 +7,7 @@ import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import { Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 
 interface MinMax<T> {
 	min: T;
@@ -41,7 +42,7 @@ interface ParticleType {
 	alpha?: StartEnd<number>;
 	alphaEase?: Ease;
 	color?: {
-		ctx: CanvasRenderingContext2D;
+		ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 		samples: string[];
 	};
 	colorEase?: Ease;
@@ -73,8 +74,9 @@ export class Emitter extends Graphic {
 
 	// TODO(bret): remove the seed
 	random = new Random(2378495);
-	imageSrc: HTMLCanvasElement | HTMLImageElement | null = null;
-	blendCanvas: HTMLCanvasElement;
+	imageSrc: HTMLCanvasElement | OffscreenCanvas | HTMLImageElement | null =
+		null;
+	blendCanvas: HTMLCanvasElement | OffscreenCanvas;
 
 	// get imageSrc(): HTMLImageElement {
 	// 	if (!this.asset.image) throw new Error("asset.image hasn't loaded yet");
@@ -90,7 +92,9 @@ export class Emitter extends Graphic {
 		}
 
 		this.asset = asset;
-		this.blendCanvas = document.createElement('canvas');
+		const { canvas } = generateCanvasAndCtx();
+		if (!canvas) throw new Error();
+		this.blendCanvas = canvas;
 	}
 
 	newType(name: string, frames?: number[]) {
@@ -143,10 +147,7 @@ export class Emitter extends Graphic {
 		const type = this.getType(name);
 		let ctx = type.color?.ctx ?? null;
 		if (!type.color) {
-			const canvas = document.createElement('canvas');
-			canvas.width = resolution;
-			canvas.height = 1;
-			ctx = canvas.getContext('2d');
+			({ ctx } = generateCanvasAndCtx(resolution, 1));
 		}
 		if (!ctx) throw new Error();
 		const gradient = ctx.createLinearGradient(0, 0, resolution, 1);

@@ -1,11 +1,12 @@
 import fs from 'fs';
+
 import * as Components from 'canvas-lord/util/components.js';
 import type {
 	IEntitySystem,
 	IEntityComponentType,
 } from 'canvas-lord/util/types';
 
-// components & systems
+// // components & systems
 import {
 	testComponent,
 	moveRightSystem,

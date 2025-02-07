@@ -12,6 +12,7 @@ import type {
 	CSSColor,
 	IEntityComponentType,
 } from '../util/types.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
@@ -39,8 +40,8 @@ export interface Scene {
 	// TODO: we need a Rect type, maybe class?
 	bounds: [number, number, number, number] | null;
 
-	canvas: HTMLCanvasElement;
-	ctx: CanvasRenderingContext2D;
+	canvas: HTMLCanvasElement | OffscreenCanvas;
+	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 }
 
 export class Scene implements Scene {
@@ -77,11 +78,12 @@ export class Scene implements Scene {
 
 	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
 	setCanvasSize(width: number, height: number): void {
-		const canvas = (this.canvas = document.createElement('canvas'));
-		const ctx = canvas.getContext('2d');
-		if (ctx) this.ctx = ctx;
-		canvas.width = width;
-		canvas.height = height;
+		if (!this.canvas) {
+			const { canvas, ctx } = generateCanvasAndCtx(width, height);
+			if (!ctx) throw new Error();
+			this.canvas = canvas;
+			this.ctx = ctx;
+		}
 	}
 
 	begin(): void {}

@@ -7,10 +7,11 @@ import type { Entity } from '../core/entity.js';
 import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 import { moveCanvas, Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
 
-const tempCanvas = document.createElement('canvas');
+const { canvas: tempCanvas } = generateCanvasAndCtx();
 
 // TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic implements ISpriteLike {
@@ -50,6 +51,10 @@ export class NineSlice extends Graphic implements ISpriteLike {
 	}
 
 	recalculate() {
+		if (!tempCanvas) {
+			throw new Error('tempCanvas failed to create');
+		}
+
 		const { tileW: w, tileH: h } = this;
 		tempCanvas.width = this.tileW;
 		tempCanvas.height = this.tileH;

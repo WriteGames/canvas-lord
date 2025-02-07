@@ -2,6 +2,7 @@
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import { Draw } from '../util/draw.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 // TODO(bret): How to tile?
 export class Sprite extends Graphic {
     asset;
@@ -37,10 +38,7 @@ export class Sprite extends Graphic {
         this.sourceH = sourceH;
     }
     static createRect(width, height, color) {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
+        const { canvas, ctx } = generateCanvasAndCtx(width, height);
         if (!ctx)
             throw new Error('[Sprite.createRect()] getContext() failed');
         ctx.fillStyle = color;

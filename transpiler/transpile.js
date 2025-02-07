@@ -1,5 +1,5 @@
 import fs from 'fs';
-// components & systems
+// // components & systems
 import { testComponent, moveRightSystem, moveLeftSystem, deleteSelfSystem, } from './in/test.js';
 import { horizontalMovementComponent, verticalMovementComponent2, horizontalMovementSystem, verticalMovementSystem2, moveXSystem, moveYSystem, } from './in/player.js';
 const parseComponent = (component) => {

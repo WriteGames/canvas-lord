@@ -2,6 +2,7 @@
 import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
 import { Messages } from '../util/messages.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 export class Scene {
     constructor(engine) {
         this.engine = engine;
@@ -27,12 +28,13 @@ export class Scene {
     }
     // TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
     setCanvasSize(width, height) {
-        const canvas = (this.canvas = document.createElement('canvas'));
-        const ctx = canvas.getContext('2d');
-        if (ctx)
+        if (!this.canvas) {
+            const { canvas, ctx } = generateCanvasAndCtx(width, height);
+            if (!ctx)
+                throw new Error();
+            this.canvas = canvas;
             this.ctx = ctx;
-        canvas.width = width;
-        canvas.height = height;
+        }
     }
     begin() { }
     end() { }

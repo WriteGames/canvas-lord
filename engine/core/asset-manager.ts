@@ -167,7 +167,11 @@ export class AssetManager {
 }
 
 export class Sfx {
-	static audioCtx = new AudioContext();
+	static #audioCtx: AudioContext;
+	static get audioCtx() {
+		Sfx.#audioCtx ??= new AudioContext();
+		return Sfx.#audioCtx;
+	}
 
 	static music = new Map<AudioAsset, AudioBufferSourceNode>();
 

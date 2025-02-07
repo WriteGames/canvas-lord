@@ -1,9 +1,9 @@
 /* Canvas Lord v0.5.1 */
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-const textCanvas = document.createElement('canvas');
-const textCtx = textCanvas.getContext('2d');
+const { ctx: textCtx } = generateCanvasAndCtx();
 // TODO(bret): Make this a global ?
 const defaultTextOptions = {
     color: 'white', // what do we want for default?

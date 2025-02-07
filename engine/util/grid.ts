@@ -21,32 +21,13 @@ import {
 	V2OrthogonalNorm,
 } from '../math/misc.js';
 import type { Camera } from './camera.js';
+import { generateCanvasAndCtx } from './canvas.js';
 import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';
 
-// TODO: find a better place for this to live globally
-const pixelCanvas =
-	typeof OffscreenCanvas !== 'undefined'
-		? new OffscreenCanvas(1, 1)
-		: document.createElement('canvas');
-const options = { willReadFrequently: true };
-const _pixelCtx =
-	typeof OffscreenCanvas !== 'undefined'
-		? (pixelCanvas as OffscreenCanvas).getContext('2d', options)
-		: (pixelCanvas as HTMLCanvasElement).getContext('2d', options);
-// const pixelCanvas =
-// 	typeof OffscreenCanvas !== 'undefined'
-// 		? new OffscreenCanvas(1, 1)
-// 		: document.createElement('canvas');
-// const options = { willReadFrequently: true };
-// const _pixelCtx =
-// 	typeof OffscreenCanvas !== 'undefined'
-// 		? (pixelCanvas as OffscreenCanvas).getContext('2d', options)
-// 		: (pixelCanvas as HTMLCanvasElement).getContext('2d', options);
-if (!_pixelCtx) {
-	throw Error('pixelCtx failed to create');
-}
-const pixelCtx = _pixelCtx;
+const { ctx: pixelCtx } = generateCanvasAndCtx(1, 1, {
+	willReadFrequently: true,
+});
 
 export interface Grid {
 	width: number;
@@ -93,15 +74,15 @@ export class Grid {
 			throw new Error('image is not valid');
 		}
 
+		if (!pixelCtx) throw Error('pixelCtx failed to create');
+
 		const width = sprite.width * tileW;
 		const height = sprite.height * tileH;
 		const stride = sprite.width;
 
 		const grid = new Grid(width, height, tileW, tileH);
 		grid.forEach((_, [x, y]) => {
-			// @ts-ignore
 			pixelCtx.drawImage(sprite.image, -x, -y);
-			// @ts-ignore
 			const { data } = pixelCtx.getImageData(0, 0, 1, 1);
 			if (data[0] === 0) {
 				grid.setTile(x, y, 1);

@@ -1,5 +1,6 @@
 /* Canvas Lord v0.5.1 */
 
+import { generateCanvasAndCtx } from './canvas.js';
 import { type ComponentProps } from './components.js';
 import type { CSSColor } from './types.js';
 
@@ -31,7 +32,7 @@ export interface DrawOptions {
 }
 
 interface ImageOptions extends DrawOptions {
-	imageSrc: HTMLCanvasElement | HTMLImageElement | null;
+	imageSrc: HTMLCanvasElement | OffscreenCanvas | HTMLImageElement | null;
 	blend?: boolean;
 }
 
@@ -47,24 +48,27 @@ interface TextOptions extends DrawOptions {
 }
 
 type Callback<T extends unknown[], O extends DrawOptions> = (
-	ctx: CanvasRenderingContext2D,
+	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 	options: O,
 	drawX: number,
 	drawY: number,
 	...args: T
 ) => void;
 
-let tempCanvas: HTMLCanvasElement;
-let tempCtx: CanvasRenderingContext2D;
-const initTempCanvas = (ctx: CanvasRenderingContext2D) => {
+let tempCanvas: HTMLCanvasElement | OffscreenCanvas;
+let tempCtx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+// TODO(bret): Should we use generateCanvasAndCtx here?
+const initTempCanvas = (
+	ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+) => {
 	if (tempCanvas) return;
-	tempCanvas = document.createElement('canvas');
-	tempCanvas.width = ctx.canvas.width;
-	tempCanvas.height = ctx.canvas.height;
-
-	const _ctx = tempCanvas.getContext('2d');
-	if (!_ctx) throw new Error();
-	tempCtx = _ctx;
+	const { canvas, ctx: _tempCtx } = generateCanvasAndCtx(
+		ctx.canvas.width,
+		ctx.canvas.height,
+	);
+	if (!_tempCtx) throw new Error();
+	tempCanvas = canvas;
+	tempCtx = _tempCtx;
 };
 
 // TODO(bret): un-export this!
@@ -270,13 +274,7 @@ export const Draw = {
 	// TODO(bret): This breaks if the width is too small :(
 	// TODO(bret): Condense some of this down
 	text: moveCanvas(
-		(
-			ctx: CanvasRenderingContext2D,
-			text: TextOptions,
-			drawX: number,
-			drawY: number,
-			str: string,
-		) => {
+		(ctx, text: TextOptions, drawX: number, drawY: number, str: string) => {
 			initTempCanvas(ctx);
 
 			const {

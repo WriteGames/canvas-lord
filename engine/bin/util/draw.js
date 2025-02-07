@@ -1,4 +1,5 @@
 /* Canvas Lord v0.5.1 */
+import { generateCanvasAndCtx } from './canvas.js';
 // TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 export const drawable = {
     angle: 0,
@@ -13,16 +14,15 @@ export const drawable = {
 };
 let tempCanvas;
 let tempCtx;
+// TODO(bret): Should we use generateCanvasAndCtx here?
 const initTempCanvas = (ctx) => {
     if (tempCanvas)
         return;
-    tempCanvas = document.createElement('canvas');
-    tempCanvas.width = ctx.canvas.width;
-    tempCanvas.height = ctx.canvas.height;
-    const _ctx = tempCanvas.getContext('2d');
-    if (!_ctx)
+    const { canvas, ctx: _tempCtx } = generateCanvasAndCtx(ctx.canvas.width, ctx.canvas.height);
+    if (!_tempCtx)
         throw new Error();
-    tempCtx = _ctx;
+    tempCanvas = canvas;
+    tempCtx = _tempCtx;
 };
 // TODO(bret): un-export this!
 export const moveCanvas = (callback) => {

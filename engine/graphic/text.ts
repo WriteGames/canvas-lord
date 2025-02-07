@@ -3,11 +3,11 @@
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import type { CSSColor } from '../util/types.js';
 
-const textCanvas = document.createElement('canvas');
-const textCtx = textCanvas.getContext('2d');
+const { ctx: textCtx } = generateCanvasAndCtx();
 
 interface TextOptions {
 	color: CSSColor;

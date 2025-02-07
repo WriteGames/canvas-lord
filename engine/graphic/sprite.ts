@@ -9,6 +9,7 @@ import type { Camera } from '../util/camera.js';
 import { moveCanvas, Draw } from '../util/draw.js';
 import { Random } from '../util/random.js';
 import type { CSSColor } from '../util/types';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 
 export interface ISpriteLike {
 	color?: CSSColor;
@@ -64,12 +65,9 @@ export class Sprite extends Graphic implements ISpriteLike {
 	}
 
 	static createRect(width: number, height: number, color: string) {
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-
-		const ctx = canvas.getContext('2d');
+		const { canvas, ctx } = generateCanvasAndCtx(width, height);
 		if (!ctx) throw new Error('[Sprite.createRect()] getContext() failed');
+
 		ctx.fillStyle = color;
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 

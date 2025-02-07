@@ -1,8 +1,9 @@
 /* Canvas Lord v0.5.1 */
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
+import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-const tempCanvas = document.createElement('canvas');
+const { canvas: tempCanvas } = generateCanvasAndCtx();
 // TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic {
     asset;
@@ -36,6 +37,9 @@ export class NineSlice extends Graphic {
         this.recalculate();
     }
     recalculate() {
+        if (!tempCanvas) {
+            throw new Error('tempCanvas failed to create');
+        }
         const { tileW: w, tileH: h } = this;
         tempCanvas.width = this.tileW;
         tempCanvas.height = this.tileH;
