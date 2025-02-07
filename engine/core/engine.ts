@@ -1,8 +1,9 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.1 */
 
 import { AssetManager, Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import type { Scene } from './scene.js';
+import type { Ctx } from '../util/canvas.js';
 import { Debug } from '../util/debug.js';
 
 import { CSSColor, RequiredAndOmit } from '../util/types.js';
@@ -515,7 +516,7 @@ export class Game {
 		this.listeners[event].forEach((c) => c());
 	}
 
-	renderScenes(ctx: CanvasRenderingContext2D, scenes?: Scene[]): void {
+	renderScenes(ctx: Ctx, scenes?: Scene[]): void {
 		if (!scenes) return;
 
 		// TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
