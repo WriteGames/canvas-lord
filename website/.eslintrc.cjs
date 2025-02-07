@@ -1,6 +1,7 @@
 const { resolve } = require('node:path');
 
 const project = resolve(__dirname, 'tsconfig.json');
+console.log(project);
 
 module.exports = {
 	extends: [
@@ -9,7 +10,7 @@ module.exports = {
 		'@vercel/style-guide/eslint/react',
 		'@vercel/style-guide/eslint/next',
 		'@vercel/style-guide/eslint/typescript',
-		'../.eslintrc.js',
+		'../.eslintrc.cjs',
 	].map((config) => require.resolve(config)),
 	overrides: [],
 	parser: '@typescript-eslint/parser',
