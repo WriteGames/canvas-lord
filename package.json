@@ -2,12 +2,12 @@
 	"name": "canvas-lord-root",
 	"private": true,
 	"version": "1.0.0",
-	"packageManager": "pnpm@7.20.0",
+	"packageManager": "pnpm@9.6.0",
 	"main": "engine/canvas-lord.js",
 	"types": "engine/global.d.ts",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^20",
+		"pnpm": "^9"
 	},
 	"scripts": {
 		"transpile": "pnpm -F canvas-lord-transpiler transpile",

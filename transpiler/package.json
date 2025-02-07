@@ -2,12 +2,13 @@
 	"name": "canvas-lord-transpiler",
 	"private": true,
 	"version": "0.0.1",
+	"packageManager": "pnpm@9.6.0",
 	"description": "An entity transpiler",
 	"main": "transpile.js",
 	"type": "module",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^20",
+		"pnpm": "^9"
 	},
 	"scripts": {
 		"transpile": "node transpile.js"
