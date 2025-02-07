@@ -124,6 +124,9 @@ const generateEntity = ({ entityName, components, systems }) => {
 if (!fs.existsSync('out')) {
     fs.mkdirSync('out');
 }
+if (!fs.existsSync('../website/out')) {
+    fs.mkdirSync('../website/out');
+}
 const entityToFile = (fileName, entityData) => {
     fs.writeFileSync(fileName, `${entityData.imports.join('\n')}\n\n${entityData.classDefinition}`);
 };
