@@ -25,9 +25,9 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@writegames.com/style-guide": "workspace:*",
-		"canvas": "^2.11.2",
-		"jsdom": "^23.2.0",
-		"typescript": "5.4.3",
-		"vitest": "^1.2.0"
+		"canvas": "^3.1.0",
+		"jsdom": "^26.0.0",
+		"typescript": "5.7.3",
+		"vitest": "^3.0.5"
 	}
 }
