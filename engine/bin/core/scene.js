@@ -61,7 +61,12 @@ export class Scene {
     }
     #addEntitiesToScene() {
         const newEntities = this.entities.addQueue.splice(0);
-        this.entities.inScene.push(...newEntities);
+        for (let i = 0; i < newEntities.length; ++i) {
+            const e = newEntities[i];
+            if (this.entities.inScene.indexOf(e) > -1)
+                continue;
+            this.entities.inScene.push(e);
+        }
     }
     addRenderable(renderable) {
         // renderable.scene = this;
@@ -70,7 +75,12 @@ export class Scene {
     }
     #addRenderablesToScene() {
         const newRenderables = this.renderables.addQueue.splice(0);
-        this.renderables.inScene.push(...newRenderables);
+        for (let i = 0; i < newRenderables.length; ++i) {
+            const r = newRenderables[i];
+            if (this.renderables.inScene.indexOf(r) > -1)
+                continue;
+            this.renderables.inScene.push(r);
+        }
     }
     removeEntity(entity) {
         this.entities.removeQueue.push(entity);

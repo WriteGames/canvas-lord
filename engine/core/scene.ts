@@ -119,7 +119,11 @@ export class Scene implements Scene {
 
 	#addEntitiesToScene(): void {
 		const newEntities = this.entities.addQueue.splice(0);
-		this.entities.inScene.push(...newEntities);
+		for (let i = 0; i < newEntities.length; ++i) {
+			const e = newEntities[i];
+			if (this.entities.inScene.indexOf(e) > -1) continue;
+			this.entities.inScene.push(e);
+		}
 	}
 
 	addRenderable<T extends Renderable>(renderable: T): T {
@@ -130,7 +134,11 @@ export class Scene implements Scene {
 
 	#addRenderablesToScene(): void {
 		const newRenderables = this.renderables.addQueue.splice(0);
-		this.renderables.inScene.push(...newRenderables);
+		for (let i = 0; i < newRenderables.length; ++i) {
+			const r = newRenderables[i];
+			if (this.renderables.inScene.indexOf(r) > -1) continue;
+			this.renderables.inScene.push(r);
+		}
 	}
 
 	removeEntity<T extends Entity>(entity: T): T {
