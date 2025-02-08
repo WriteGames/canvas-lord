@@ -229,14 +229,6 @@
 						'../sandbox/img/animation.png',
 					);
 
-					const gfx = new AnimatedSprite(asset, 32, 32);
-
-					const anim1 = [0, 1, 2, 3];
-					const anim2 = [5, 6, 7];
-					const anim3 = [10, 11, 12, 13, 14];
-
-					const fr = 10;
-
 					const _callback = (name) => {
 						switch (name) {
 							case '1':
@@ -251,6 +243,14 @@
 						}
 					};
 					const callback = useCallback ? _callback : undefined;
+
+					const gfx = new AnimatedSprite(asset, 32, 32, callback);
+
+					const anim1 = [0, 1, 2, 3];
+					const anim2 = [5, 6, 7];
+					const anim3 = [10, 11, 12, 13, 14];
+
+					const fr = 10;
 
 					gfx.add('all', [...anim1, ...anim2, ...anim3], fr, loop);
 					gfx.add('1', anim1, fr, loop, callback);

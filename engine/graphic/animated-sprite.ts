@@ -15,7 +15,6 @@ interface Animation {
 	frames: number[];
 	frameRate: number;
 	loop: boolean;
-	callback?: AnimCallback;
 	done: boolean;
 }
 
@@ -40,6 +39,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	animations: Map<string, Animation> = new Map();
 	currentAnimation?: Animation;
+	callback?: AnimCallback;
 
 	get width() {
 		return this.imageSrc.width;
@@ -60,7 +60,12 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		return this.asset.image;
 	}
 
-	constructor(asset: ImageAsset, frameW: number, frameH: number) {
+	constructor(
+		asset: ImageAsset,
+		frameW: number,
+		frameH: number,
+		callback?: AnimCallback,
+	) {
 		super();
 		this.asset = asset;
 
@@ -76,21 +81,16 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.sourceY = 0;
 		this.sourceW = asset.image?.width;
 		this.sourceH = asset.image?.height;
+
+		this.callback = callback;
 	}
 
-	add(
-		name: string,
-		frames: number[],
-		frameRate: number,
-		loop = true,
-		callback = undefined,
-	) {
+	add(name: string, frames: number[], frameRate: number, loop = true) {
 		const animation: Animation = {
 			name,
 			frames,
 			frameRate,
 			loop,
-			callback,
 			done: false,
 		};
 		this.animations.set(name, animation);
@@ -157,7 +157,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			if (!this.currentAnimation.loop) {
 				this.currentAnimation.done = true;
 			}
-			this.currentAnimation.callback?.(this.currentAnimation.name);
+			this.callback?.(this.currentAnimation.name);
 		}
 	}
 

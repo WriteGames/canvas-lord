@@ -18,6 +18,7 @@ export class AnimatedSprite extends Graphic {
     blend;
     animations = new Map();
     currentAnimation;
+    callback;
     get width() {
         return this.imageSrc.width;
     }
@@ -35,7 +36,7 @@ export class AnimatedSprite extends Graphic {
             throw new Error("asset.image hasn't loaded yet");
         return this.asset.image;
     }
-    constructor(asset, frameW, frameH) {
+    constructor(asset, frameW, frameH, callback) {
         super();
         this.asset = asset;
         if (frameW === undefined || frameH === undefined)
@@ -48,14 +49,14 @@ export class AnimatedSprite extends Graphic {
         this.sourceY = 0;
         this.sourceW = asset.image?.width;
         this.sourceH = asset.image?.height;
+        this.callback = callback;
     }
-    add(name, frames, frameRate, loop = true, callback = undefined) {
+    add(name, frames, frameRate, loop = true) {
         const animation = {
             name,
             frames,
             frameRate,
             loop,
-            callback,
             done: false,
         };
         this.animations.set(name, animation);
@@ -114,7 +115,7 @@ export class AnimatedSprite extends Graphic {
             if (!this.currentAnimation.loop) {
                 this.currentAnimation.done = true;
             }
-            this.currentAnimation.callback?.(this.currentAnimation.name);
+            this.callback?.(this.currentAnimation.name);
         }
     }
     render(ctx, camera = Vec2.zero) {
