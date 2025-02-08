@@ -75,17 +75,14 @@ export const createSceneGrid = (scene, assetManager) => {
 
 	scene.addRenderable(scene.tileset);
 	scene.addRenderable(scene.gridOutline);
-	scene.addRenderable(scene.player);
 };
 
 export const createButtons = (scene, { leftKeys, rightKeys, jumpKeys }) => {
-	const buttons = scene.addEntity(
+	return scene.addEntity(
 		new ButtonsOverlay(50, 168, {
 			left: leftKeys,
 			right: rightKeys,
 			jump: jumpKeys,
 		}),
 	);
-
-	scene.addRenderable(buttons);
 };

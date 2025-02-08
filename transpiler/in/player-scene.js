@@ -28,7 +28,6 @@ export class PlayerScene extends Scene {
         this.gridOutline.computeOutline(this.grid);
         this.addRenderable(this.tileset);
         this.addRenderable(this.gridOutline);
-        this.addRenderable(this.player);
     }
     initTileset(grid, assetManager) {
         const img = assetManager.sprites.get('tileset.png');

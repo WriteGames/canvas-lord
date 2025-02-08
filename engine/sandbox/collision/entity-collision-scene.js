@@ -350,10 +350,7 @@ export class EntityCollisionScene extends Scene {
 			new CircleCollider(25),
 		);
 		const pointBG = new BackgroundCollider(115, 70, new PointCollider());
-		[rectBG, circleBG, pointBG].forEach((bg) => {
-			this.addEntity(bg);
-			this.addRenderable(bg);
-		});
+		this.addEntities(rectBG, circleBG, pointBG);
 		const lineBG = new BackgroundCollider(
 			185,
 			40,
@@ -370,10 +367,7 @@ export class EntityCollisionScene extends Scene {
 			]),
 		);
 		// TODO: GridCollider
-		[rectBG, circleBG, pointBG, lineBG, polygonBG].forEach((bg) => {
-			this.addEntity(bg);
-			this.addRenderable(bg);
-		});
+		this.addEntities(rectBG, circleBG, pointBG, lineBG, polygonBG);
 
 		const triLT = new RightTriangleEntity(0, 0, 'SE', COLLIDER_TAG.SLOPE);
 
@@ -401,16 +395,13 @@ export class EntityCollisionScene extends Scene {
 		const yellowPoly = new PolygonEntity(50, 50, COLLIDER_TAG.YELLOW);
 		const orangePoly = new PolygonEntity(150, 50, COLLIDER_TAG.ORANGE);
 
-		[
+		this.addEntities(
 			triLT,
 			triRT,
 			triLB,
 			triRB,
 			// yellowPoly, orangePoly
-		].forEach((tri) => {
-			this.addEntity(tri);
-			this.addRenderable(tri);
-		});
+		);
 
 		const shapes = [];
 		shapes.push(new SquareEntity(120, 40, COLLIDER_TAG.YELLOW));
@@ -423,15 +414,10 @@ export class EntityCollisionScene extends Scene {
 		// shapes.push(new SquareEntity(20, 20, COLLIDER_TAG.YELLOW));
 		// shapes.push(new SquareEntity(100, 70, COLLIDER_TAG.YELLOW));
 		// shapes.push(new SquareEntity(20, 140, COLLIDER_TAG.YELLOW));
-		shapes.forEach((shape) => {
-			this.addEntity(shape);
-			this.addRenderable(shape);
-		});
+		this.addEntities(shapes);
 
 		if (true) {
-			const mouse = new MouseEntity();
-			this.addEntity(mouse);
-			this.addRenderable(mouse);
+			this.addEntity(new MouseEntity());
 		}
 	}
 }

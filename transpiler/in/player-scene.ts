@@ -55,7 +55,6 @@ export class PlayerScene<P extends PlayerClass> extends Scene {
 
 		this.addRenderable(this.tileset);
 		this.addRenderable(this.gridOutline);
-		this.addRenderable(this.player);
 	}
 
 	initTileset(grid: Grid, assetManager: AssetManager) {

@@ -133,7 +133,6 @@
 						entity.graphic.centerOO();
 						entity.reposition();
 						this.addEntity(entity);
-						this.addRenderable(entity);
 					});
 				}
 			}
@@ -212,10 +211,7 @@
 						entity.x = centerX - offsetX + padding * i;
 					});
 
-					[...radioHeads].forEach((entity) => {
-						this.addEntity(entity);
-						this.addRenderable(entity);
-					});
+					this.addEntities(radioHeads);
 				}
 			}
 
@@ -328,7 +324,7 @@
 						frame: 3,
 					});
 
-					[
+					this.addEntities(
 						animAll,
 						animCallback,
 						anim1,
@@ -341,10 +337,7 @@
 						anim1_2,
 						anim1_3,
 						anim1_4,
-					].forEach((entity) => {
-						this.addEntity(entity);
-						this.addRenderable(entity);
-					});
+					);
 				}
 			}
 

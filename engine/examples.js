@@ -546,8 +546,6 @@ class PlayerScene extends Scene {
 
 		createSceneGrid(this, assetManager);
 		createButtons(this, { leftKeys, rightKeys, jumpKeys });
-
-		this.addRenderable(this.logger);
 	}
 
 	updateCamera() {

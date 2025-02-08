@@ -51,7 +51,6 @@ export class Scene {
         const entity = new Entity(x, y);
         entity.graphic = graphic;
         this.addEntity(entity);
-        this.addRenderable(entity);
         return entity;
     }
     addEntity(entity, renderable = true) {

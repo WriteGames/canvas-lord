@@ -91,13 +91,9 @@
 				constructor(engine, easing) {
 					super(engine);
 
-					const emitterEntity = new EmitterEntity(
-						640 >> 2,
-						320 >> 1,
-						easing,
+					this.addEntity(
+						new EmitterEntity(640 >> 2, 320 >> 1, easing),
 					);
-					this.addEntity(emitterEntity);
-					this.addRenderable(emitterEntity);
 				}
 			}
 

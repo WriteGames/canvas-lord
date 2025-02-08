@@ -80,7 +80,6 @@ class PlayerScene extends Scene {
 
 		this.addRenderable(this.tileset);
 		this.addRenderable(this.gridOutline);
-		this.addRenderable(this.player);
 	}
 
 	updateCamera() {
