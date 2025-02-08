@@ -118,6 +118,12 @@ export class Scene implements Scene {
 		return entity;
 	}
 
+	addEntities(...entities: Entity[] | Entity[][]): Entity[] {
+		const _entities = entities.flat();
+		_entities.forEach((e) => this.addEntity(e));
+		return _entities;
+	}
+
 	#addEntitiesToScene(): void {
 		const newEntities = this.entities.addQueue.splice(0);
 		for (let i = 0; i < newEntities.length; ++i) {
@@ -131,6 +137,12 @@ export class Scene implements Scene {
 		// renderable.scene = this;
 		this.renderables.addQueue.push(renderable);
 		return renderable;
+	}
+
+	addRenderables(...renderables: Entity[] | Entity[][]): Entity[] {
+		const _renderables = renderables.flat();
+		_renderables.forEach((r) => this.addRenderable(r));
+		return _renderables;
 	}
 
 	#addRenderablesToScene(): void {

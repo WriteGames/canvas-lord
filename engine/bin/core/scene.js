@@ -61,6 +61,11 @@ export class Scene {
             this.addRenderable(entity);
         return entity;
     }
+    addEntities(...entities) {
+        const _entities = entities.flat();
+        _entities.forEach((e) => this.addEntity(e));
+        return _entities;
+    }
     #addEntitiesToScene() {
         const newEntities = this.entities.addQueue.splice(0);
         for (let i = 0; i < newEntities.length; ++i) {
@@ -74,6 +79,11 @@ export class Scene {
         // renderable.scene = this;
         this.renderables.addQueue.push(renderable);
         return renderable;
+    }
+    addRenderables(...renderables) {
+        const _renderables = renderables.flat();
+        _renderables.forEach((r) => this.addRenderable(r));
+        return _renderables;
     }
     #addRenderablesToScene() {
         const newRenderables = this.renderables.addQueue.splice(0);
