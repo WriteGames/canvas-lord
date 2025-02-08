@@ -1,4 +1,5 @@
 /* Canvas Lord v0.5.2 */
+import { Entity } from './entity.js';
 import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
 import { Messages } from '../util/messages.js';
@@ -26,6 +27,12 @@ export class Scene {
         this.allowRefresh = true;
         this.bounds = null;
     }
+    #mouse = new Vec2(-1, -1);
+    get mouse() {
+        const pos = this.engine.input.mouse.pos.add(this.camera);
+        this.#mouse.set(pos);
+        return this.#mouse;
+    }
     // TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
     setCanvasSize(width, height) {
         if (!this.canvas) {
@@ -40,6 +47,13 @@ export class Scene {
     end() { }
     pause() { }
     resume() { }
+    addGraphic(graphic, x = 0, y = 0) {
+        const entity = new Entity(x, y);
+        entity.graphic = graphic;
+        this.addEntity(entity);
+        this.addRenderable(entity);
+        return entity;
+    }
     addEntity(entity) {
         entity.scene = this;
         this.entities.addQueue.push(entity);

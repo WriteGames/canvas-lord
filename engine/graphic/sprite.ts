@@ -4,7 +4,7 @@ import { Graphic } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
-import { type Ctx } from '../util/canvas.js';
+import type { Canvas, Ctx } from '../util/canvas.js';
 import { moveCanvas, Draw } from '../util/draw.js';
 import type { CSSColor } from '../util/types';
 
@@ -61,19 +61,23 @@ export class Sprite extends Graphic implements ISpriteLike {
 		this.sourceH = sourceH;
 	}
 
-	static createRect(width: number, height: number, color: string) {
+	static createImage(
+		width: number,
+		height: number,
+		fileName: string,
+		callback: (ctx: Ctx) => void,
+	) {
 		// TODO(bret): use generateCanvasAndCtx
 		// const { canvas, ctx } = generateCanvasAndCtx(width, height);
 		const canvas = document.createElement('canvas');
 		const ctx = canvas.getContext('2d');
 		if (!ctx) throw new Error('[Sprite.createRect()] getContext() failed');
 
-		ctx.fillStyle = color;
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		callback(ctx);
 
 		const asset = {
 			// TODO(bret): Could hash these & put them in assetManager :O
-			fileName: [width, height, color].join('-'),
+			fileName,
 			image: null,
 			loaded: false,
 		} as ImageAsset;
@@ -95,11 +99,20 @@ export class Sprite extends Graphic implements ISpriteLike {
 		return new Sprite(asset);
 	}
 
+	static createRect(width: number, height: number, color: string) {
+		const fileName = [width, height, color].join('-');
+		return Sprite.createImage(width, height, fileName, (ctx: Ctx) => {
+			ctx.fillStyle = color;
+			ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		});
+	}
+
 	centerOrigin() {
-		this.offsetX = -this.width >> 1;
-		this.offsetY = -this.height >> 1;
-		this.originX = -this.width >> 1;
-		this.originY = -this.height >> 1;
+		// TODO(bret): How do we want to handle odd-width sprites w/ pixel art?
+		this.offsetX = -this.width / 2;
+		this.offsetY = -this.height / 2;
+		this.originX = -this.width / 2;
+		this.originY = -this.height / 2;
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero) {

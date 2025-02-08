@@ -1,7 +1,7 @@
 /* Canvas Lord v0.5.2 */
 
 import type { Engine } from './engine.js';
-import type { Entity } from './entity.js';
+import { Entity } from './entity.js';
 import type { Input } from './input.js';
 import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
@@ -14,6 +14,7 @@ import type {
 	IEntityComponentType,
 } from '../util/types.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
+import { Graphic } from '../graphic/graphic.js';
 
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
@@ -77,6 +78,13 @@ export class Scene implements Scene {
 		this.bounds = null;
 	}
 
+	#mouse = new Vec2(-1, -1);
+	get mouse() {
+		const pos = this.engine.input.mouse.pos.add(this.camera);
+		this.#mouse.set(pos);
+		return this.#mouse;
+	}
+
 	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
 	setCanvasSize(width: number, height: number): void {
 		if (!this.canvas) {
@@ -94,6 +102,14 @@ export class Scene implements Scene {
 	pause(): void {}
 
 	resume(): void {}
+
+	addGraphic<T extends Graphic>(graphic: T, x = 0, y = 0): Entity {
+		const entity = new Entity(x, y);
+		entity.graphic = graphic;
+		this.addEntity(entity);
+		this.addRenderable(entity);
+		return entity;
+	}
 
 	addEntity<T extends Entity>(entity: T): T {
 		entity.scene = this;

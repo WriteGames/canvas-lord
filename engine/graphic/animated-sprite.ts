@@ -3,19 +3,20 @@
 import { Graphic } from './graphic.js';
 import type { ISpriteLike } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';
-import type { Entity } from '../core/entity.js';
-import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
-import { moveCanvas, Draw } from '../util/draw.js';
-import { Random } from '../util/random.js';
+import { Draw } from '../util/draw.js';
+
+type AnimCallback = (name: string) => void;
 
 interface Animation {
 	name: string;
 	frames: number[];
 	frameRate: number;
 	loop: boolean;
+	callback?: AnimCallback;
+	done: boolean;
 }
 
 export class AnimatedSprite extends Graphic implements ISpriteLike {
@@ -77,12 +78,20 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.sourceH = asset.image?.height;
 	}
 
-	add(name: string, frames: number[], frameRate: number, loop = true) {
+	add(
+		name: string,
+		frames: number[],
+		frameRate: number,
+		loop = true,
+		callback = undefined,
+	) {
 		const animation: Animation = {
 			name,
 			frames,
 			frameRate,
 			loop,
+			callback,
+			done: false,
 		};
 		this.animations.set(name, animation);
 	}
@@ -94,6 +103,11 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.inc = 0;
 		this.currentAnimation =
 			name !== undefined ? this.animations.get(name) : name;
+		if (this.currentAnimation) {
+			this.currentAnimation.done = false;
+		}
+
+		this.updateRect();
 	}
 
 	stop() {
@@ -107,17 +121,43 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.originY = -this.frameH >> 1;
 	}
 
+	updateRect() {
+		if (!this.currentAnimation) return;
+
+		const { frames, frameRate } = this.currentAnimation;
+		this.frame = Math.floor(this.inc / frameRate);
+		if (this.currentAnimation.loop) {
+			this.frame %= frames.length;
+		} else {
+			this.frame = Math.min(this.frame, frames.length - 1);
+		}
+		this.frameId = frames[this.frame];
+	}
+
 	update() {
-		if (this.currentAnimation) {
-			const { frames, frameRate } = this.currentAnimation;
-			this.frame = Math.floor(this.inc / frameRate);
+		if (!this.currentAnimation) return;
+		if (this.currentAnimation.done) return;
+
+		const { frames, frameRate } = this.currentAnimation;
+
+		++this.inc;
+
+		let atEnd = false;
+		const dur = frameRate * frames.length;
+		if (this.inc >= dur) {
+			atEnd = true;
 			if (this.currentAnimation.loop) {
-				this.frame %= frames.length;
-			} else {
-				this.frame = Math.min(this.frame, frames.length - 1);
+				this.inc -= dur;
 			}
-			this.frameId = frames[this.frame];
-			++this.inc;
+		}
+
+		this.updateRect();
+
+		if (atEnd) {
+			if (!this.currentAnimation.loop) {
+				this.currentAnimation.done = true;
+			}
+			this.currentAnimation.callback?.(this.currentAnimation.name);
 		}
 	}
 

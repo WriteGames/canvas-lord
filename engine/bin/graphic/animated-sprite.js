@@ -49,12 +49,14 @@ export class AnimatedSprite extends Graphic {
         this.sourceW = asset.image?.width;
         this.sourceH = asset.image?.height;
     }
-    add(name, frames, frameRate, loop = true) {
+    add(name, frames, frameRate, loop = true, callback = undefined) {
         const animation = {
             name,
             frames,
             frameRate,
             loop,
+            callback,
+            done: false,
         };
         this.animations.set(name, animation);
     }
@@ -65,6 +67,10 @@ export class AnimatedSprite extends Graphic {
         this.inc = 0;
         this.currentAnimation =
             name !== undefined ? this.animations.get(name) : name;
+        if (this.currentAnimation) {
+            this.currentAnimation.done = false;
+        }
+        this.updateRect();
     }
     stop() {
         this.play();
@@ -75,18 +81,40 @@ export class AnimatedSprite extends Graphic {
         this.originX = -this.frameW >> 1;
         this.originY = -this.frameH >> 1;
     }
+    updateRect() {
+        if (!this.currentAnimation)
+            return;
+        const { frames, frameRate } = this.currentAnimation;
+        this.frame = Math.floor(this.inc / frameRate);
+        if (this.currentAnimation.loop) {
+            this.frame %= frames.length;
+        }
+        else {
+            this.frame = Math.min(this.frame, frames.length - 1);
+        }
+        this.frameId = frames[this.frame];
+    }
     update() {
-        if (this.currentAnimation) {
-            const { frames, frameRate } = this.currentAnimation;
-            this.frame = Math.floor(this.inc / frameRate);
+        if (!this.currentAnimation)
+            return;
+        if (this.currentAnimation.done)
+            return;
+        const { frames, frameRate } = this.currentAnimation;
+        ++this.inc;
+        let atEnd = false;
+        const dur = frameRate * frames.length;
+        if (this.inc >= dur) {
+            atEnd = true;
             if (this.currentAnimation.loop) {
-                this.frame %= frames.length;
+                this.inc -= dur;
             }
-            else {
-                this.frame = Math.min(this.frame, frames.length - 1);
+        }
+        this.updateRect();
+        if (atEnd) {
+            if (!this.currentAnimation.loop) {
+                this.currentAnimation.done = true;
             }
-            this.frameId = frames[this.frame];
-            ++this.inc;
+            this.currentAnimation.callback?.(this.currentAnimation.name);
         }
     }
     render(ctx, camera = Vec2.zero) {

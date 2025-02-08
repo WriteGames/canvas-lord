@@ -8,6 +8,12 @@
 	</head>
 	<body>
 		<canvas
+			id="animation-2"
+			width="320px"
+			height="180px"
+			tabindex="-1"
+		></canvas>
+		<canvas
 			id="graphics"
 			width="320px"
 			height="180px"
@@ -213,8 +219,101 @@
 				}
 			}
 
-			const ids = ['graphics', 'animation'];
-			const scenes = [GraphicScene, AnimationScene];
+			class Anim extends Entity {
+				frame = 0;
+
+				constructor(x, y, play, loop = true, useCallback = false) {
+					super(x, y);
+
+					const asset = assetManager.sprites.get(
+						'../sandbox/img/animation.png',
+					);
+
+					const gfx = new AnimatedSprite(asset, 32, 32);
+
+					const anim1 = [0, 1, 2, 3];
+					const anim2 = [5, 6, 7];
+					const anim3 = [10, 11, 12, 13, 14];
+
+					const fr = 10;
+
+					const _callback = (name) => {
+						switch (name) {
+							case '1':
+								gfx.play('2');
+								break;
+							case '2':
+								gfx.play('3');
+								break;
+							case '3':
+								gfx.play('1');
+								break;
+						}
+					};
+					const callback = useCallback ? _callback : undefined;
+
+					gfx.add('all', [...anim1, ...anim2, ...anim3], fr, loop);
+					gfx.add('1', anim1, fr, loop, callback);
+					gfx.add('2', anim2, fr, loop, callback);
+					gfx.add('3', anim3, fr, loop, callback);
+
+					gfx.play(play);
+
+					this.graphic = gfx;
+				}
+
+				update() {
+					super.update();
+					++this.frame;
+				}
+			}
+
+			class AnimationScene2 extends Scene {
+				constructor(engine) {
+					super(engine);
+
+					const spacing = 48;
+
+					let x = 0;
+					let y = 0;
+					const animAll = new Anim(x, y, 'all');
+					x += spacing;
+					const animCallback = new Anim(x, y, '1', false, true);
+
+					y += spacing;
+					x = 0;
+					const anim1 = new Anim(x, y, '1', true);
+					x += spacing;
+					const anim2 = new Anim(x, y, '2', true);
+					x += spacing;
+					const anim3 = new Anim(x, y, '3', true);
+
+					y += spacing;
+					x = 0;
+					const anim1Stop = new Anim(x, y, '1', false);
+					x += spacing;
+					const anim2Stop = new Anim(x, y, '2', false);
+					x += spacing;
+					const anim3Stop = new Anim(x, y, '3', false);
+
+					[
+						animAll,
+						animCallback,
+						anim1,
+						anim2,
+						anim3,
+						anim1Stop,
+						anim2Stop,
+						anim3Stop,
+					].forEach((entity) => {
+						this.addEntity(entity);
+						this.addRenderable(entity);
+					});
+				}
+			}
+
+			const ids = ['graphics', 'animation', 'animation-2'];
+			const scenes = [GraphicScene, AnimationScene, AnimationScene2];
 
 			let loaded = false;
 			const assetManager = new AssetManager('../img/');
@@ -222,6 +321,7 @@
 			assetManager.addImage('particle.png');
 			assetManager.addImage('particle-2.png');
 			assetManager.addImage('particle-3.png');
+			assetManager.addImage('../sandbox/img/animation.png');
 			assetManager.onLoad(() => {
 				if (loaded) return;
 				loaded = true;
@@ -230,7 +330,7 @@
 					const game = new Game(id, {
 						assetManager,
 						gameLoopSettings: {
-							updateMode: 'always',
+							updateMode: 'focus',
 							renderMode: 'onUpdate',
 						},
 					});
