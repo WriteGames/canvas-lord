@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 
 import { collide } from './collide.js';
 import type { Entity } from '../core/entity.js';

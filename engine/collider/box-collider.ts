@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 
 import { Collider } from './collider.js';
 import type { Ctx } from '../util/canvas.js';

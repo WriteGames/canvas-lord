@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 
 import { type GraphicParent } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';

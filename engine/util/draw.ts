@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 
 import type { Canvas, Ctx } from './canvas.js';
 import type { CSSColor } from './types.js';

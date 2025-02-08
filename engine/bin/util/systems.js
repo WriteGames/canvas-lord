@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 import { Draw } from './draw.js';
 import { image } from './components.js';
 import * as Components from './components.js';

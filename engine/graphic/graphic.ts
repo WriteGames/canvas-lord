@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 
 import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';

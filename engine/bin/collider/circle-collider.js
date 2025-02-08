@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
 import { Vec2 } from '../math/index.js';

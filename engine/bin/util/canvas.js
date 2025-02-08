@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.2 */
+/* Canvas Lord v0.5.3 */
 export const generateCanvasAndCtx = (width = 1, height = 1, options) => {
     if (typeof OffscreenCanvas !== 'undefined') {
         const canvas = new OffscreenCanvas(width, height);
