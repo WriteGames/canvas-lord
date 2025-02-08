@@ -111,9 +111,10 @@ export class Scene implements Scene {
 		return entity;
 	}
 
-	addEntity<T extends Entity>(entity: T): T {
+	addEntity<T extends Entity>(entity: T, renderable = true): T {
 		entity.scene = this;
 		this.entities.addQueue.push(entity);
+		if (renderable) this.addRenderable(entity);
 		return entity;
 	}
 

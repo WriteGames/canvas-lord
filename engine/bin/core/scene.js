@@ -54,9 +54,11 @@ export class Scene {
         this.addRenderable(entity);
         return entity;
     }
-    addEntity(entity) {
+    addEntity(entity, renderable = true) {
         entity.scene = this;
         this.entities.addQueue.push(entity);
+        if (renderable)
+            this.addRenderable(entity);
         return entity;
     }
     #addEntitiesToScene() {
