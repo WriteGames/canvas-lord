@@ -15,7 +15,6 @@ interface Animation {
 	frames: number[];
 	frameRate: number;
 	loop: boolean;
-	done: boolean;
 }
 
 export class AnimatedSprite extends Graphic implements ISpriteLike {
@@ -36,6 +35,8 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	color?: string;
 	blend?: boolean;
+
+	done: boolean = false;
 
 	animations: Map<string, Animation> = new Map();
 	currentAnimation?: Animation;
@@ -91,20 +92,23 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			frames,
 			frameRate,
 			loop,
-			done: false,
 		};
 		this.animations.set(name, animation);
 	}
 
 	// TODO(bret): Revisit this, we might want a `restart = false` override
-	play(name?: string) {
-		if (name === this.currentAnimation?.name) return;
+	play(name?: string, reset = false, frame = 0) {
+		if (!reset && name === this.currentAnimation?.name) return;
 
-		this.inc = 0;
 		this.currentAnimation =
 			name !== undefined ? this.animations.get(name) : name;
+
 		if (this.currentAnimation) {
-			this.currentAnimation.done = false;
+			this.inc = frame * this.currentAnimation.frameRate;
+			this.done = false;
+		} else {
+			this.inc = 0;
+			this.done = true;
 		}
 
 		this.updateRect();
@@ -135,8 +139,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	}
 
 	update() {
-		if (!this.currentAnimation) return;
-		if (this.currentAnimation.done) return;
+		if (!this.currentAnimation || this.done) return;
 
 		const { frames, frameRate } = this.currentAnimation;
 
@@ -155,7 +158,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 		if (atEnd) {
 			if (!this.currentAnimation.loop) {
-				this.currentAnimation.done = true;
+				this.done = true;
 			}
 			this.callback?.(this.currentAnimation.name);
 		}

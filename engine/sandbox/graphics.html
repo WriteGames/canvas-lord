@@ -222,8 +222,14 @@
 			class Anim extends Entity {
 				frame = 0;
 
-				constructor(x, y, play, loop = true, useCallback = false) {
+				constructor(x, y, play, options = {}) {
 					super(x, y);
+
+					const {
+						loop = true,
+						useCallback = false,
+						frame = undefined,
+					} = options;
 
 					const asset = assetManager.sprites.get(
 						'../sandbox/img/animation.png',
@@ -257,7 +263,7 @@
 					gfx.add('2', anim2, fr, loop, callback);
 					gfx.add('3', anim3, fr, loop, callback);
 
-					gfx.play(play);
+					gfx.play(play, false, frame);
 
 					this.graphic = gfx;
 				}
@@ -278,23 +284,49 @@
 					let y = 0;
 					const animAll = new Anim(x, y, 'all');
 					x += spacing;
-					const animCallback = new Anim(x, y, '1', false, true);
+					const animCallback = new Anim(x, y, '1', {
+						loop: false,
+						useCallback: true,
+					});
 
 					y += spacing;
 					x = 0;
-					const anim1 = new Anim(x, y, '1', true);
+					const anim1 = new Anim(x, y, '1');
 					x += spacing;
-					const anim2 = new Anim(x, y, '2', true);
+					const anim2 = new Anim(x, y, '2');
 					x += spacing;
-					const anim3 = new Anim(x, y, '3', true);
+					const anim3 = new Anim(x, y, '3');
 
 					y += spacing;
 					x = 0;
-					const anim1Stop = new Anim(x, y, '1', false);
+					const noLoopOptions = { loop: false };
+					const anim1Stop = new Anim(x, y, '1', noLoopOptions);
 					x += spacing;
-					const anim2Stop = new Anim(x, y, '2', false);
+					const anim2Stop = new Anim(x, y, '2', noLoopOptions);
 					x += spacing;
-					const anim3Stop = new Anim(x, y, '3', false);
+					const anim3Stop = new Anim(x, y, '3', noLoopOptions);
+
+					y += spacing;
+					x = 0;
+					const anim1_1 = new Anim(x, y, '1', {
+						loop: false,
+						frame: 0,
+					});
+					x += spacing;
+					const anim1_2 = new Anim(x, y, '1', {
+						loop: false,
+						frame: 1,
+					});
+					x += spacing;
+					const anim1_3 = new Anim(x, y, '1', {
+						loop: false,
+						frame: 2,
+					});
+					x += spacing;
+					const anim1_4 = new Anim(x, y, '1', {
+						loop: false,
+						frame: 3,
+					});
 
 					[
 						animAll,
@@ -305,6 +337,10 @@
 						anim1Stop,
 						anim2Stop,
 						anim3Stop,
+						anim1_1,
+						anim1_2,
+						anim1_3,
+						anim1_4,
 					].forEach((entity) => {
 						this.addEntity(entity);
 						this.addRenderable(entity);

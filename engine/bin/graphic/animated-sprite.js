@@ -16,6 +16,7 @@ export class AnimatedSprite extends Graphic {
     sourceH;
     color;
     blend;
+    done = false;
     animations = new Map();
     currentAnimation;
     callback;
@@ -57,19 +58,22 @@ export class AnimatedSprite extends Graphic {
             frames,
             frameRate,
             loop,
-            done: false,
         };
         this.animations.set(name, animation);
     }
     // TODO(bret): Revisit this, we might want a `restart = false` override
-    play(name) {
-        if (name === this.currentAnimation?.name)
+    play(name, reset = false, frame = 0) {
+        if (!reset && name === this.currentAnimation?.name)
             return;
-        this.inc = 0;
         this.currentAnimation =
             name !== undefined ? this.animations.get(name) : name;
         if (this.currentAnimation) {
-            this.currentAnimation.done = false;
+            this.inc = frame * this.currentAnimation.frameRate;
+            this.done = false;
+        }
+        else {
+            this.inc = 0;
+            this.done = true;
         }
         this.updateRect();
     }
@@ -96,9 +100,7 @@ export class AnimatedSprite extends Graphic {
         this.frameId = frames[this.frame];
     }
     update() {
-        if (!this.currentAnimation)
-            return;
-        if (this.currentAnimation.done)
+        if (!this.currentAnimation || this.done)
             return;
         const { frames, frameRate } = this.currentAnimation;
         ++this.inc;
@@ -113,7 +115,7 @@ export class AnimatedSprite extends Graphic {
         this.updateRect();
         if (atEnd) {
             if (!this.currentAnimation.loop) {
-                this.currentAnimation.done = true;
+                this.done = true;
             }
             this.callback?.(this.currentAnimation.name);
         }
