@@ -7,40 +7,19 @@
 		<link rel="stylesheet" href="./css/sandbox.css" media="screen" />
 	</head>
 	<body>
-		<canvas
-			id="grid-bitmap"
-			width="320px"
-			height="180px"
-			tabindex="-1"
-		></canvas>
+		<canvas id="grid-bitmap" width="320px" height="180px"></canvas>
 		<canvas
 			id="grid-array"
 			width="240px"
 			height="240px"
 			style="max-width: 480px"
-			tabindex="-1"
 		></canvas>
-		<canvas
-			id="grid-binary"
-			width="320px"
-			height="180px"
-			tabindex="-1"
-		></canvas>
-		<canvas
-			id="grid-manual"
-			width="320px"
-			height="180px"
-			tabindex="-1"
-		></canvas>
+		<canvas id="grid-binary" width="320px" height="180px"></canvas>
+		<canvas id="grid-manual" width="320px" height="180px"></canvas>
 
 		<script type="module">
-			import {
-				AssetManager,
-				Game,
-				Scene,
-				Entity,
-				Grid,
-			} from '../bin/canvas-lord.js';
+			import { Game, Scene, Entity, Grid } from '../bin/canvas-lord.js';
+			import { init } from './sandbox.js';
 
 			class GridScene extends Scene {
 				constructor(...args) {
@@ -118,40 +97,21 @@
 				}
 			}
 
-			const ids = [
-				'grid-bitmap',
-				'grid-array',
-				'grid-binary',
-				'grid-manual',
-			];
-			const scenes = [
-				GridBitmapScene,
-				GridArrayScene,
-				GridBinaryScene,
-				GridManualScene,
-			];
-
-			let loaded = false;
-			const assetManager = new AssetManager('../img/');
-			assetManager.addImage('grid.bmp');
-			assetManager.onLoad(() => {
-				if (loaded) return;
-				loaded = true;
-
-				ids.forEach((id, i) => {
-					const game = new Game(id, {
-						assetManager,
-					});
-
-					game.backgroundColor = '#003300';
-
-					const scene = new scenes[i](game);
-					game.pushScene(scene);
-
-					game.render();
-				});
+			const gameSettings = {
+				backgroundColor: '#003300',
+			};
+			const { assetManager } = init({
+				games: [
+					init.game('grid-bitmap', GridBitmapScene, { gameSettings }),
+					init.game('grid-array', GridArrayScene, { gameSettings }),
+					init.game('grid-binary', GridBinaryScene, { gameSettings }),
+					init.game('grid-manual', GridManualScene, { gameSettings }),
+				],
+				assetSrc: '../../img/',
+				assets: {
+					images: ['grid.bmp'],
+				},
 			});
-			assetManager.loadAssets();
 		</script>
 	</body>
 </html>

@@ -11,6 +11,7 @@ import {
 } from '/bin/collider/index.js';
 import { EntityCollisionScene } from './entity-collision-scene.js';
 import { Keys } from '../../bin/canvas-lord.js';
+import { init } from '../sandbox.js';
 
 const drawRect = (ctx, fill, ...args) =>
 	fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
@@ -625,17 +626,22 @@ const startGame = (id, Scene, options = { fps: 60 }) => {
 	drawOverlay();
 };
 
-const gameLoopSettings = {
-	updateMode: 'always',
-	renderMode: 'onUpdate',
+const args = {
+	onStart: (game) => {
+		const drawOverlay = () => {
+			game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
+			game.ctx.fillRect(0, 0, 640, 360);
+		};
+
+		game.listeners.blur.add(drawOverlay);
+		drawOverlay();
+	},
 };
 
-startGame('entities', EntityCollisionScene, {
-	gameLoopSettings,
-});
-startGame('shapes', ShapeCollisionScene, {
-	gameLoopSettings,
-});
-startGame('lines', LineCollisionScene, {
-	gameLoopSettings,
+init({
+	games: [
+		init.game('entities', EntityCollisionScene, args),
+		init.game('shapes', ShapeCollisionScene, args),
+		init.game('lines', LineCollisionScene, args),
+	],
 });

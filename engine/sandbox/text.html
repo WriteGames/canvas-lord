@@ -24,6 +24,8 @@
 				Draw,
 			} from '../bin/canvas-lord.js';
 
+			import { init } from './sandbox.js';
+
 			class TextStandardScene extends Scene {
 				constructor(...args) {
 					super(...args);
@@ -84,30 +86,15 @@
 				}
 			}
 
-			const ids = ['text-standard'];
-			const scenes = [TextStandardScene];
+			const gameSettings = { backgroundColor: '#003300' };
 
-			let loaded = false;
-			const assetManager = new AssetManager('../img/');
-			assetManager.addImage('grid.bmp');
-			assetManager.onLoad(() => {
-				if (loaded) return;
-				loaded = true;
-
-				ids.forEach((id, i) => {
-					const game = new Game(id, {
-						assetManager,
-					});
-
-					game.backgroundColor = '#003300';
-
-					const scene = new scenes[i](game);
-					game.pushScene(scene);
-
-					game.render();
-				});
+			init({
+				games: [
+					init.game('text-standard', TextStandardScene, {
+						gameSettings,
+					}),
+				],
 			});
-			assetManager.loadAssets();
 		</script>
 	</body>
 </html>

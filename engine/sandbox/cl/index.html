@@ -46,6 +46,7 @@
 				GraphicList,
 				Emitter,
 			} from '../../bin/graphic/index.js';
+			import { init } from '../sandbox.js';
 
 			const gravity = 0.25;
 
@@ -92,13 +93,14 @@
 				}
 			}
 
-			const ids = ['scene-1', 'scene-2', 'scene-3'];
-			const scenes = [MyScene, MyScene, MyScene];
-
 			const { assetManager } = init({
-				ids,
-				scenes,
+				games: ['1', '2', '3']
+					.map((id) => `scene-${id}`)
+					.map((id) => init.game(id, MyScene)),
 				assetSrc: '../../img/',
+				gameSettings: {
+					backgroundColor: '#330000',
+				},
 			});
 		</script>
 	</body>

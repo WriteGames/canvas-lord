@@ -41,6 +41,7 @@
 				GraphicList,
 				Emitter,
 			} from '../bin/graphic/index.js';
+			import { init } from './sandbox.js';
 
 			class GraphicEntity extends Entity {
 				constructor(x, y, moveOffset, rotateSpeed) {
@@ -341,36 +342,23 @@
 				}
 			}
 
-			const ids = ['graphics', 'animation', 'animation-2'];
-			const scenes = [GraphicScene, AnimationScene, AnimationScene2];
-
-			let loaded = false;
-			const assetManager = new AssetManager('../img/');
-			assetManager.addImage('radiohead_spritesheet.png');
-			assetManager.addImage('particle.png');
-			assetManager.addImage('particle-2.png');
-			assetManager.addImage('particle-3.png');
-			assetManager.addImage('../sandbox/img/animation.png');
-			assetManager.onLoad(() => {
-				if (loaded) return;
-				loaded = true;
-
-				ids.forEach((id, i) => {
-					const game = new Game(id, {
-						assetManager,
-						gameLoopSettings: {
-							updateMode: 'focus',
-							renderMode: 'onUpdate',
-						},
-					});
-
-					const scene = new scenes[i](game);
-					game.pushScene(scene);
-
-					game.render();
-				});
+			const { assetManager } = init({
+				games: [
+					init.game('animation-2', AnimationScene2),
+					init.game('animation', AnimationScene),
+					init.game('graphics', GraphicScene),
+				],
+				assetSrc: '../img/',
+				assets: {
+					images: [
+						'radiohead_spritesheet.png',
+						'particle.png',
+						'particle-2.png',
+						'particle-3.png',
+						'../sandbox/img/animation.png',
+					],
+				},
 			});
-			assetManager.loadAssets();
 		</script>
 	</body>
 </html>

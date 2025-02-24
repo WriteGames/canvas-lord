@@ -36,6 +36,7 @@
 				Draw,
 			} from '../bin/canvas-lord.js';
 			import { Sprite, Emitter } from '../bin/graphic/index.js';
+			import { init } from './sandbox.js';
 
 			class EmitterEntity extends Entity {
 				constructor(x, y, easing) {
@@ -116,33 +117,24 @@
 				return 1 - easeOutBounce(1 - x);
 			}
 
-			const ids = ['emitter-1', 'emitter-2', 'emitter-3'];
+			const ids = ['emitter-1', 'emitter-2'];
 			const scenes = [ParticleScene, ParticleScene, ParticleScene];
 			const easing = [undefined, easeOutBounce, easeInBounce];
 
-			let loaded = false;
-			const assetManager = new AssetManager('../img/');
-			assetManager.addImage('particle.png');
-			assetManager.onLoad(() => {
-				if (loaded) return;
-				loaded = true;
-
-				ids.forEach((id, i) => {
-					const game = new Game(id, {
-						assetManager,
-						gameLoopSettings: {
-							updateMode: 'always',
-							renderMode: 'onUpdate',
+			const { assetManager } = init({
+				games: easing.map((ease, i) => {
+					return init.game(`emitter-${i + 1}`, ParticleScene, {
+						sceneArgs: [easing[i]],
+						gameSettings: {
+							backgroundColor: '#353',
 						},
 					});
-
-					const scene = new scenes[i](game, easing[i]);
-					game.pushScene(scene);
-
-					game.render();
-				});
+				}),
+				assetSrc: '../img/',
+				assets: {
+					images: ['particle.png'],
+				},
 			});
-			assetManager.loadAssets();
 		</script>
 	</body>
 </html>

@@ -2,45 +2,18 @@ import { AssetManager, Game } from '../bin/canvas-lord.js';
 
 const sandboxContainer = document.getElementById('sandbox') ?? document.body;
 
+// TODO(bret): Might want to define this on the window so it can be overridden
 const defaultAttr = {
 	width: 640,
 	height: 320,
 	tabindex: -1,
 };
 
-export const init = ({ games, assetSrc, assets }) => {
-	let loaded = false;
-
-	const ids = games.map(({ id }) => id);
-	const scenes = games.map(({ Scene }) => Scene);
-
-	const assetManager = new AssetManager(assetSrc);
-	assets?.images?.forEach((asset) => assetManager.addImage(asset));
-	assets?.audio?.forEach((asset) => assetManager.addAudio(asset));
-	assetManager.onLoad(() => {
-		if (loaded) return;
-		loaded = true;
-
-		ids.forEach((id, i) => {
-			const game = new Game(id, {
-				assetManager,
-				gameLoopSettings: {
-					updateMode: 'focus',
-					renderMode: 'onUpdate',
-				},
-			});
-
-			const scene = new scenes[i](game);
-			game.pushScene(scene);
-
-			game.render();
-		});
-	});
-	assetManager.loadAssets();
-	return { assetManager };
-};
-
-init.game = (id, Scene, attr) => {
+const initGame = (
+	id,
+	Scene,
+	{ sceneArgs = [], attr, onStart, gameSettings, remove = true } = {},
+) => {
 	let canvasElem = document.getElementById(id);
 	canvasElem ??= document.createElement('canvas');
 
@@ -54,12 +27,62 @@ init.game = (id, Scene, attr) => {
 			canvasElem.setAttribute(attr, value);
 	});
 
-	canvasElem.remove();
-	sandboxContainer.append(canvasElem);
+	if (remove) {
+		canvasElem.remove();
+		sandboxContainer.append(canvasElem);
+	}
 
 	return {
 		id,
 		Scene,
+		sceneArgs,
+		gameSettings,
+		onStart,
 		canvas: canvasElem,
 	};
 };
+
+const startGame = (
+	{ id, Scene, sceneArgs = [], onStart, gameSettings = {} },
+	assetManager,
+) => {
+	const game = new Game(id, {
+		assetManager,
+		gameLoopSettings: {
+			updateMode: 'focus',
+			renderMode: 'onUpdate',
+		},
+		...gameSettings,
+	});
+
+	const scene = new Scene(game, ...sceneArgs);
+	game.pushScene(scene);
+
+	game.render();
+
+	onStart?.(game);
+};
+
+export const init = ({ games, assetSrc, assets }) => {
+	let loaded = false;
+	if (!assetSrc) {
+		games.forEach((game) => startGame(game));
+		return {};
+	}
+
+	const assetManager = new AssetManager(assetSrc);
+	assets?.images?.forEach((asset) => assetManager.addImage(asset));
+	assets?.audio?.forEach((asset) => assetManager.addAudio(asset));
+	assetManager.onLoad(() => {
+		if (loaded) return;
+		loaded = true;
+
+		games.forEach((game) => {
+			startGame(game, assetManager);
+		});
+	});
+	assetManager.loadAssets();
+	return { assetManager };
+};
+
+init.game = initGame;
