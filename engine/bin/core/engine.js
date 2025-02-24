@@ -2,6 +2,7 @@
 import { Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import { Debug } from '../util/debug.js';
+import { CL } from './CL.js';
 const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.defineProperty(obj, prop, {
     ...attributes,
     value,
@@ -125,7 +126,9 @@ export class Game {
         let deltaTime = 0;
         const maxFrames = 5;
         let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
+        const engine = this;
         this.mainLoop = (time) => {
+            CL.__setEngine(engine);
             const timeStep = 1e3 / this.fps;
             this.frameRequestId = requestAnimationFrame(this.mainLoop);
             const timeSinceLastFrame = time - this._lastFrame;
@@ -152,6 +155,7 @@ export class Game {
                 this.frameRate = Math.round(1e3 / (recentFramesSum / this.recentFrames.length));
                 this._lastUpdate = finishedAt;
             }
+            CL.__setEngine(undefined);
         };
         this.eventListeners = [];
         window.addEventListener('resize', (e) => {
@@ -286,27 +290,34 @@ export class Game {
         this._lastFrame = performance.now();
         this._lastUpdate = performance.now();
     }
+    _forEachScene(scenes, callbackfn, thisArg) {
+        scenes?.forEach((scene, ...args) => {
+            CL.__setScene(scene);
+            callbackfn(scene, ...args);
+            CL.__setScene(undefined);
+        }, thisArg);
+    }
     pushScene(scene) {
         this.pushScenes(scene);
     }
     pushScenes(...scenes) {
-        this.currentScenes?.forEach((scene) => {
+        this._forEachScene(scenes, (scene) => {
             scene.pause();
         });
         this.sceneStack.push(scenes);
-        scenes.forEach((scene) => {
+        this._forEachScene(scenes, (scene) => {
             scene.engine = this;
             scene.updateLists();
-            scene.begin();
+            CL.__setScene(undefined);
         });
     }
     popScenes() {
-        this.currentScenes?.forEach((scene) => {
+        this._forEachScene(this.currentScenes, (scene) => {
             // TODO(bret): Should we delete scene.engine?
             scene.end();
         });
         const scenes = this.sceneStack.pop();
-        this.currentScenes?.forEach((scene) => {
+        this._forEachScene(this.currentScenes, (scene) => {
             scene.updateLists();
             scene.resume();
         });
@@ -315,10 +326,18 @@ export class Game {
     updateScenes(scenes) {
         if (!scenes)
             return;
-        scenes.forEach((scene) => scene.updateLists());
-        scenes.forEach((scene) => scene.preUpdate(this.input));
-        scenes.forEach((scene) => scene.update(this.input));
-        scenes.forEach((scene) => scene.postUpdate(this.input));
+        this._forEachScene(scenes, (scene) => {
+            scene.updateLists();
+        });
+        this._forEachScene(scenes, (scene) => {
+            scene.preUpdate(this.input);
+        });
+        this._forEachScene(scenes, (scene) => {
+            scene.update(this.input);
+        });
+        this._forEachScene(scenes, (scene) => {
+            scene.postUpdate(this.input);
+        });
     }
     update() {
         const { debug } = this;
@@ -341,7 +360,9 @@ export class Game {
             return;
         // TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
         this.sceneStack.forEach((scenes) => {
-            scenes.forEach((scene) => scene.render(ctx));
+            this._forEachScene(scenes, (scene) => {
+                scene.render(ctx);
+            });
         });
         // Splitscreen
         if (this.sceneStack[0]?.length === 2) {

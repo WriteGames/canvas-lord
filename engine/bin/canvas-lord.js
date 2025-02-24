@@ -1,5 +1,6 @@
 /* Canvas Lord v0.5.3 */
 export * from './core/asset-manager.js';
+export * from './core/CL.js';
 export * from './core/engine.js';
 export { Input, Keys } from './core/input.js';
 export { Entity } from './core/entity.js';

@@ -7,6 +7,7 @@ import type { Ctx } from '../util/canvas.js';
 import { Debug } from '../util/debug.js';
 
 import { CSSColor, RequiredAndOmit } from '../util/types.js';
+import { CL } from './CL.js';
 
 const defineUnwritableProperty: <T>(
 	obj: T,
@@ -280,7 +281,10 @@ export class Game implements Engine {
 		let deltaTime = 0;
 		const maxFrames = 5;
 		let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
+		const engine = this;
 		this.mainLoop = (time): void => {
+			CL.__setEngine(engine);
+
 			const timeStep = 1e3 / this.fps;
 
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
@@ -314,6 +318,8 @@ export class Game implements Engine {
 				);
 				this._lastUpdate = finishedAt;
 			}
+
+			CL.__setEngine(undefined);
 		};
 
 		this.eventListeners = [];
@@ -492,33 +498,45 @@ export class Game implements Engine {
 		this._lastUpdate = performance.now();
 	}
 
+	_forEachScene<T extends Scene>(
+		scenes: T[] | undefined,
+		callbackfn: (value: T, index: number, array: T[]) => void,
+		thisArg?: any,
+	): void {
+		scenes?.forEach((scene, ...args) => {
+			CL.__setScene(scene);
+			callbackfn(scene, ...args);
+			CL.__setScene(undefined);
+		}, thisArg);
+	}
+
 	pushScene(scene: Scene): void {
 		this.pushScenes(scene);
 	}
 
 	pushScenes(...scenes: Scene[]): void {
-		this.currentScenes?.forEach((scene) => {
+		this._forEachScene(scenes, (scene) => {
 			scene.pause();
 		});
 
 		this.sceneStack.push(scenes);
 
-		scenes.forEach((scene) => {
+		this._forEachScene(scenes, (scene) => {
 			scene.engine = this;
 			scene.updateLists();
-			scene.begin();
+			CL.__setScene(undefined);
 		});
 	}
 
 	popScenes(): Scene[] | undefined {
-		this.currentScenes?.forEach((scene) => {
+		this._forEachScene(this.currentScenes, (scene) => {
 			// TODO(bret): Should we delete scene.engine?
 			scene.end();
 		});
 
 		const scenes = this.sceneStack.pop();
 
-		this.currentScenes?.forEach((scene) => {
+		this._forEachScene(this.currentScenes, (scene) => {
 			scene.updateLists();
 			scene.resume();
 		});
@@ -528,10 +546,18 @@ export class Game implements Engine {
 
 	updateScenes(scenes?: Scene[]): void {
 		if (!scenes) return;
-		scenes.forEach((scene) => scene.updateLists());
-		scenes.forEach((scene) => scene.preUpdate(this.input));
-		scenes.forEach((scene) => scene.update(this.input));
-		scenes.forEach((scene) => scene.postUpdate(this.input));
+		this._forEachScene(scenes, (scene) => {
+			scene.updateLists();
+		});
+		this._forEachScene(scenes, (scene) => {
+			scene.preUpdate(this.input);
+		});
+		this._forEachScene(scenes, (scene) => {
+			scene.update(this.input);
+		});
+		this._forEachScene(scenes, (scene) => {
+			scene.postUpdate(this.input);
+		});
 	}
 
 	update(): void {
@@ -560,7 +586,9 @@ export class Game implements Engine {
 
 		// TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
 		this.sceneStack.forEach((scenes) => {
-			scenes.forEach((scene) => scene.render(ctx));
+			this._forEachScene(scenes, (scene) => {
+				scene.render(ctx);
+			});
 		});
 
 		// Splitscreen
