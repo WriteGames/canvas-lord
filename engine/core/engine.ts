@@ -50,7 +50,7 @@ const gameEvents = ['blur', 'focus', 'update'] as const;
 type GameEvent = (typeof gameEvents)[number];
 type EventCallback = () => void;
 
-export interface Game {
+export interface IEngine {
 	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
 
@@ -58,7 +58,6 @@ export interface Game {
 	frameIndex: number;
 	recentFrames: number[];
 	frameRate: number;
-	_lastUpdate: number;
 
 	gameLoopSettings: GameLoopSettings;
 	sceneStack: Scene[][];
@@ -68,16 +67,34 @@ export interface Game {
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
 	input: Input;
-	_lastFrame: number;
-	mainLoop: (time: number) => void;
 	frameRequestId: number;
 	eventListeners: CachedEventListener[];
-	_onGameLoopSettingsUpdate?: EventCallback;
 	assetManager?: AssetManager;
 	debug?: Debug;
+
+	// getters & setters
+	readonly width: number;
+	readonly height: number;
+	readonly currentScenes: Scene[] | undefined;
+
+	// methods
+	load(assetManager: AssetManager): void;
+	updateGameLoopSettings(newGameLoopSettings: GameLoopSettings): void;
+	addEventListener(
+		element: Element | Window,
+		...rest: CachedEventListener['arguments']
+	): void;
+	pushScene(scene: Scene): void;
+	pushScenes(...scenes: Scene[]): void;
+	popScenes(): Scene[] | undefined;
+	updateScenes(scenes?: Scene[]): void;
+	update(): void;
+	sendEvent(event: GameEvent): void;
+	renderScenes(ctx: Ctx, scenes?: Scene[]): void;
+	render(): void;
 }
 
-export type Engine = Game;
+export type Engine = IEngine;
 
 interface InitialSettings {
 	fps: number;
@@ -100,19 +117,41 @@ const defaultSettings: Settings = {
 	devMode: false, // TODO(bret): Set this to false someday probably
 };
 
-export class Game {
+export class Game implements Engine {
 	gameLoopSettings: GameLoopSettings = {
 		updateMode: 'focus',
 		renderMode: 'onUpdate',
 	};
+
+	listeners: Record<'focus' | 'blur' | 'update', Set<EventCallback>>;
+	focus: boolean;
+
+	fps: number;
+	frameIndex: number;
+	recentFrames: number[];
+	frameRate: number;
+	_lastUpdate: number = 0;
+
+	sceneStack: Scene[][];
+	backgroundColor: string | CanvasGradient | CanvasPattern;
+	focusElement: HTMLElement;
+	wrapper: HTMLElement;
+	canvas: HTMLCanvasElement;
+	ctx: CanvasRenderingContext2D;
+	input: Input;
+	_lastFrame: number;
+	mainLoop: (time: number) => void;
+	frameRequestId: number = -1;
+	eventListeners: CachedEventListener[];
+	assetManager?: AssetManager | undefined;
+	debug?: Debug | undefined;
 
 	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
 			`canvas#${id}`,
 		);
 		if (canvas === null) {
-			console.error(`No canvas with id "${id}" was able to be found`);
-			return;
+			throw new Error(`No canvas with id "${id}" was able to be found`);
 		}
 
 		canvas._engine = this;
@@ -121,10 +160,9 @@ export class Game {
 			alpha: false,
 		});
 		if (ctx === null) {
-			console.error(
+			throw new Error(
 				`Context was not able to be created from canvas "#${id}"`,
 			);
-			return;
 		}
 
 		this.canvas = canvas;
@@ -302,18 +340,19 @@ export class Game {
 		assetManager.loadAssets();
 	}
 
-	get width(): number {
+	get width() {
 		return this.canvas.width;
 	}
 
-	get height(): number {
+	get height() {
 		return this.canvas.height;
 	}
 
-	get currentScenes(): Scene[] | undefined {
+	get currentScenes() {
 		return this.sceneStack.at(-1);
 	}
 
+	_onGameLoopSettingsUpdate?: EventCallback | undefined;
 	// TODO(bret): We're going to need to make a less clunky interface
 	updateGameLoopSettings(newGameLoopSettings: GameLoopSettings): void {
 		this._onGameLoopSettingsUpdate?.();

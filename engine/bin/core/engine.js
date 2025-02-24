@@ -23,19 +23,37 @@ export class Game {
         updateMode: 'focus',
         renderMode: 'onUpdate',
     };
+    listeners;
+    focus;
+    fps;
+    frameIndex;
+    recentFrames;
+    frameRate;
+    _lastUpdate = 0;
+    sceneStack;
+    backgroundColor;
+    focusElement;
+    wrapper;
+    canvas;
+    ctx;
+    input;
+    _lastFrame;
+    mainLoop;
+    frameRequestId = -1;
+    eventListeners;
+    assetManager;
+    debug;
     constructor(id, settings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
-            console.error(`No canvas with id "${id}" was able to be found`);
-            return;
+            throw new Error(`No canvas with id "${id}" was able to be found`);
         }
         canvas._engine = this;
         const ctx = canvas.getContext('2d', {
             alpha: false,
         });
         if (ctx === null) {
-            console.error(`Context was not able to be created from canvas "#${id}"`);
-            return;
+            throw new Error(`Context was not able to be created from canvas "#${id}"`);
         }
         this.canvas = canvas;
         this.ctx = ctx;
@@ -158,6 +176,7 @@ export class Game {
     get currentScenes() {
         return this.sceneStack.at(-1);
     }
+    _onGameLoopSettingsUpdate;
     // TODO(bret): We're going to need to make a less clunky interface
     updateGameLoopSettings(newGameLoopSettings) {
         this._onGameLoopSettingsUpdate?.();
