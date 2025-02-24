@@ -95,28 +95,11 @@
 			const ids = ['scene-1', 'scene-2', 'scene-3'];
 			const scenes = [MyScene, MyScene, MyScene];
 
-			let loaded = false;
-			const assetManager = new AssetManager('../../img/');
-			assetManager.onLoad(() => {
-				if (loaded) return;
-				loaded = true;
-
-				ids.forEach((id, i) => {
-					const game = new Game(id, {
-						assetManager,
-						gameLoopSettings: {
-							updateMode: 'focus',
-							renderMode: 'onUpdate',
-						},
-					});
-
-					const scene = new scenes[i](game);
-					game.pushScene(scene);
-
-					game.render();
-				});
+			const { assetManager } = init({
+				ids,
+				scenes,
+				assetSrc: '../../img/',
 			});
-			assetManager.loadAssets();
 		</script>
 	</body>
 </html>
