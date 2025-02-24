@@ -273,7 +273,9 @@ export class Game implements Engine {
 		this.ctx.imageSmoothingEnabled = false;
 
 		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
+		CL.__setEngine(this);
 		this.render();
+		CL.__setEngine(undefined);
 
 		this.input = new Input(this);
 
@@ -603,6 +605,8 @@ export class Game implements Engine {
 	}
 
 	render(): void {
+		CL.__setEngine(this);
+
 		const { ctx } = this;
 
 		ctx.fillStyle = this.backgroundColor;
@@ -611,5 +615,7 @@ export class Game implements Engine {
 		const { debug } = this;
 		this.renderScenes(ctx, []);
 		if (debug?.enabled) debug.render(ctx);
+
+		CL.__setEngine(undefined);
 	}
 }

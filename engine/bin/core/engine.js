@@ -120,7 +120,9 @@ export class Game {
         computeCanvasSize(this.canvas);
         this.ctx.imageSmoothingEnabled = false;
         // TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
+        CL.__setEngine(this);
         this.render();
+        CL.__setEngine(undefined);
         this.input = new Input(this);
         this._lastFrame = 0; // TODO: rename this - this is actually since last mainLoop() call
         let deltaTime = 0;
@@ -375,6 +377,7 @@ export class Game {
         }
     }
     render() {
+        CL.__setEngine(this);
         const { ctx } = this;
         ctx.fillStyle = this.backgroundColor;
         ctx.fillRect(0, 0, this.width, this.height);
@@ -382,6 +385,7 @@ export class Game {
         this.renderScenes(ctx, []);
         if (debug?.enabled)
             debug.render(ctx);
+        CL.__setEngine(undefined);
     }
 }
 //# sourceMappingURL=engine.js.map

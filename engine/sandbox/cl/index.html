@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<title>[Sandbox] Testing CL</title>
+		<meta name="color-scheme" content="dark light" />
+		<link rel="stylesheet" href="../css/sandbox.css" media="screen" />
+	</head>
+	<body>
+		<div style="width: 656px; position: relative">
+			<canvas
+				id="scene-1"
+				width="640px"
+				height="320px"
+				tabindex="-1"
+			></canvas>
+			<canvas
+				id="scene-2"
+				width="640px"
+				height="320px"
+				tabindex="-1"
+			></canvas>
+			<canvas
+				id="scene-3"
+				width="640px"
+				height="320px"
+				tabindex="-1"
+			></canvas>
+		</div>
+
+		<script type="module">
+			import {
+				AssetManager,
+				CL,
+				Game,
+				Scene,
+				Entity,
+				Grid,
+				Draw,
+			} from '../../bin/canvas-lord.js';
+			import { Keys } from '../../bin/core/input.js';
+			import { Vec2 } from '../../bin/math/index.js';
+			import {
+				Sprite,
+				AnimatedSprite,
+				GraphicList,
+				Emitter,
+			} from '../../bin/graphic/index.js';
+
+			const gravity = 0.25;
+
+			class MyEntity extends Entity {
+				updated = false;
+				rendered = false;
+
+				validateCL(func, input) {
+					console.log(
+						`[${func}] this.scene === CL.scene: `,
+						this.scene === CL.scene,
+					);
+					console.log(
+						`[${func}] this.scene.engine === CL.engine: `,
+						this.scene.engine === CL.engine,
+					);
+					if (input) {
+						console.log(
+							`[${func}] this.scene.engine.input === CL.input: `,
+							this.scene.engine.input === CL.input,
+						);
+					}
+				}
+
+				update(input) {
+					if (this.updated) return;
+					this.validateCL('update', input);
+					this.updated = true;
+				}
+
+				render(ctx, camera) {
+					super.render(ctx, camera);
+
+					if (this.rendered) return;
+					this.validateCL('render');
+					this.rendered = true;
+				}
+			}
+			class MyScene extends Scene {
+				constructor(engine) {
+					super(engine);
+
+					this.addEntities(new MyEntity());
+				}
+			}
+
+			const ids = ['scene-1', 'scene-2', 'scene-3'];
+			const scenes = [MyScene, MyScene, MyScene];
+
+			let loaded = false;
+			const assetManager = new AssetManager('../../img/');
+			assetManager.onLoad(() => {
+				if (loaded) return;
+				loaded = true;
+
+				ids.forEach((id, i) => {
+					const game = new Game(id, {
+						assetManager,
+						gameLoopSettings: {
+							updateMode: 'focus',
+							renderMode: 'onUpdate',
+						},
+					});
+
+					const scene = new scenes[i](game);
+					game.pushScene(scene);
+
+					game.render();
+				});
+			});
+			assetManager.loadAssets();
+		</script>
+	</body>
+</html>
