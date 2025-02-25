@@ -15,6 +15,8 @@ import type { IRenderable, IEntityComponentType } from '../util/types.js';
 // TODO(bret): Fix this type lol
 type Graphic = IRenderable;
 
+type ColliderType = ColliderTag | ColliderTag[] | Entity | Entity[];
+
 export interface IEntity {
 	x: number;
 	y: number;
@@ -35,22 +37,26 @@ export interface IEntity {
 	component: <T extends IEntityComponentType>(
 		component: T,
 	) => ComponentProps<T> | undefined;
-	collideEntity: (
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	) => Entity | null;
-	collideEntities: (
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	) => Entity[];
-	collide: (
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	) => boolean;
-	collideMouse: (x: number, y: number) => boolean;
+
+	collideEntity(x: number, y: number): Entity | null;
+	collideEntity(x: number, y: number, tag?: ColliderTag): Entity | null;
+	collideEntity(x: number, y: number, tags: ColliderTag[]): Entity | null;
+	collideEntity(x: number, y: number, entity: Entity): Entity | null;
+	collideEntity(x: number, y: number, entities: Entity[]): Entity | null;
+
+	collideEntities(x: number, y: number): Entity[];
+	collideEntities(x: number, y: number, tag?: ColliderTag): Entity[];
+	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
+	collideEntities(x: number, y: number, entity: Entity): Entity[];
+	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
+
+	collide(x: number, y: number): boolean;
+	collide(x: number, y: number, tag?: ColliderTag): boolean;
+	collide(x: number, y: number, tags: ColliderTag[]): boolean;
+	collide(x: number, y: number, entity: Entity): boolean;
+	collide(x: number, y: number, entities: Entity[]): boolean;
+
+	collideMouse(x: number, y: number): boolean;
 }
 
 const mouseCollider = new PointCollider();
@@ -160,10 +166,10 @@ export class Entity implements IEntity, IRenderable {
 		this.collider.render?.(ctx, -camera.x, -camera.y);
 	}
 
-	_collide(
+	#collide(
 		x: number,
 		y: number,
-		tag: ColliderTag | ColliderTag[],
+		match: ColliderType | undefined,
 		earlyOut: boolean,
 	): Entity[] {
 		if (!this.collider) return [];
@@ -173,14 +179,36 @@ export class Entity implements IEntity, IRenderable {
 		this.x = x;
 		this.y = y;
 
-		const tags = tag ? [tag].flat() : [];
-		const n = this.scene.entities.inScene.length;
+		let entities: Entity[] = this.scene.entities.inScene;
+		let tags: ColliderTag[] = [];
+
+		switch (true) {
+			case match instanceof Entity: {
+				entities = [match];
+				break;
+			}
+
+			case typeof match === 'string': {
+				tags = [match];
+				break;
+			}
+
+			case Array.isArray(match): {
+				if (match.every((item) => item instanceof Entity)) {
+					entities = match;
+				} else {
+					tags = match;
+				}
+			}
+		}
+
+		const n = entities.length;
 		let collide = [];
 		for (let i = 0; i < n; ++i) {
-			const e = this.scene.entities.inScene[i];
+			const e = entities[i];
 			if (e === this) continue;
 			if (!e.collider?.collidable) continue;
-			if (tags.length && !tags.includes(e.collider.tag)) continue;
+			if (e.collider.tag && !tags.includes(e.collider.tag)) continue;
 
 			const collision = Collide.collide(this.collider, e.collider);
 			const result = collision ? e : null;
@@ -196,21 +224,31 @@ export class Entity implements IEntity, IRenderable {
 		return collide;
 	}
 
-	collideEntity(
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	): Entity | null {
-		return this._collide(x, y, tag, true)[0] ?? null;
+	collideEntity(x: number, y: number): Entity;
+	collideEntity(x: number, y: number, tag?: ColliderTag): Entity;
+	collideEntity(x: number, y: number, tags: ColliderTag[]): Entity;
+	collideEntity(x: number, y: number, entity: Entity): Entity;
+	collideEntity(x: number, y: number, entities: Entity[]): Entity;
+	collideEntity(x: number, y: number, match?: unknown): Entity | null {
+		return this.#collide(x, y, match as ColliderType, true)[0] ?? null;
 	}
 
-	collideEntities(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		return this._collide(x, y, tag, false);
+	collideEntities(x: number, y: number): Entity[];
+	collideEntities(x: number, y: number, tag?: ColliderTag): Entity[];
+	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
+	collideEntities(x: number, y: number, entity: Entity): Entity[];
+	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
+	collideEntities(x: number, y: number, match?: unknown) {
+		return this.#collide(x, y, match as ColliderType, false);
 	}
 
-	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collider) return false;
-		return this.collideEntity(x, y, tag) !== null;
+	collide(x: number, y: number): boolean;
+	collide(x: number, y: number, tag?: ColliderTag): boolean;
+	collide(x: number, y: number, tags: ColliderTag[]): boolean;
+	collide(x: number, y: number, entity: Entity): boolean;
+	collide(x: number, y: number, entities: Entity[]): boolean;
+	collide(x: number, y: number, match?: unknown): boolean {
+		return this.#collide(x, y, match as ColliderType, true).length > 0;
 	}
 
 	collideMouse(x: number, y: number) {

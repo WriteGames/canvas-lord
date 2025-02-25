@@ -1,4 +1,4 @@
-import { Collision, Draw, Game, Scene, Entity } from '/bin/canvas-lord.js';
+import { Collision, Draw, Scene, Entity } from '/bin/canvas-lord.js';
 import * as Collide from '/bin/collider/collide.js';
 import { addPos, Vec2 } from '/bin/math/index.js';
 import {
@@ -12,6 +12,7 @@ import {
 import { EntityCollisionScene } from './entity-collision-scene.js';
 import { Keys } from '../../bin/canvas-lord.js';
 import { init } from '../sandbox.js';
+import { Sprite, Text } from '../../bin/graphic/index.js';
 
 const drawRect = (ctx, fill, ...args) =>
 	fill ? ctx.fillRect(...args) : ctx.strokeRect(...args);
@@ -608,29 +609,87 @@ class LineCollisionScene extends Scene {
 	}
 }
 
-const startGame = (id, Scene, options = { fps: 60 }) => {
-	const game = new Game(id, options);
+const colliderTag = 'tag';
+class EntityMethodCollisionScene extends Scene {
+	constructor(...args) {
+		super(...args);
 
-	const drawOverlay = () => {
-		game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
-		game.ctx.fillRect(0, 0, 640, 360);
-	};
+		const createEntity = (x, y) => {
+			const w = 70;
+			const h = 70;
+			const entity = this.addGraphic(
+				Sprite.createRect(w, h, '#ff0000'),
+				x,
+				y,
+			);
+			entity.graphic.centerOrigin();
 
-	game.listeners.blur.add(drawOverlay);
+			entity.collider = new BoxCollider(w, h, -w >> 1, -h >> 1);
+			// entity.collider.centerOrigin();
+			return entity;
+		};
 
-	const scene = new Scene(game);
+		this.taggedEntity = createEntity(100, 100);
+		this.taggedEntity.collider.tag = colliderTag;
+		this.targetEntity = createEntity(300, 150);
 
-	game.pushScene(scene);
+		this.mouseEntity = createEntity(0, 0);
 
-	game.render();
-	drawOverlay();
-};
+		this.collidingText = this.addGraphic(
+			new Text('Colliding: false', 20, 300 + 0),
+		).graphic;
+		this.collidingTagText = this.addGraphic(
+			new Text('Colliding with tag: false', 20, 300 + 50),
+		).graphic;
+		this.collidingEntityText = this.addGraphic(
+			new Text('Colliding with target entity: false', 20, 300 + 100),
+		).graphic;
+
+		// lil' hack
+		window.requestAnimationFrame(() => {
+			this.engine.render();
+		});
+	}
+
+	update(input) {
+		super.update(input);
+
+		this.mouseEntity.x = input.mouse.x;
+		this.mouseEntity.y = input.mouse.y;
+
+		const transform = (text, value) => {
+			text.str = text.str.split(':')[0] + ': ' + value;
+		};
+
+		const { x, y } = this.mouseEntity;
+		transform(this.collidingText, this.mouseEntity.collide(x, y));
+		transform(
+			this.collidingTagText,
+			this.mouseEntity.collide(x, y, [colliderTag]),
+		);
+		transform(
+			this.collidingEntityText,
+			this.mouseEntity.collide(x, y, [this.targetEntity]),
+		);
+	}
+
+	render(ctx, camera) {
+		super.render(ctx, camera);
+
+		this.mouseEntity.renderCollider(ctx, camera);
+	}
+}
 
 const args = {
+	attr: {
+		width: 640,
+		height: 480,
+	},
 	onStart: (game) => {
 		const drawOverlay = () => {
+			const { width, height } = game.canvas;
 			game.ctx.fillStyle = 'rgba(32, 32, 32, 0.5)';
-			game.ctx.fillRect(0, 0, 640, 360);
+			game.ctx.fillRect(0, 0, width, height);
 		};
 
 		game.listeners.blur.add(drawOverlay);
@@ -640,6 +699,7 @@ const args = {
 
 init({
 	games: [
+		init.game('entity-methods', EntityMethodCollisionScene, args),
 		init.game('entities', EntityCollisionScene, args),
 		init.game('shapes', ShapeCollisionScene, args),
 		init.game('lines', LineCollisionScene, args),

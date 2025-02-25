@@ -13,7 +13,7 @@ export type ColliderType =
 	| 'right-triangle'
 	| 'polygon'
 	| 'grid';
-export type ColliderTag = string | undefined;
+export type ColliderTag = string;
 
 type ColliderParent = Entity;
 
