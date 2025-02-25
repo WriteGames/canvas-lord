@@ -147,7 +147,9 @@ export class Emitter extends Graphic {
 		const type = this.getType(name);
 		let ctx = type.color?.ctx ?? null;
 		if (!type.color) {
-			({ ctx } = generateCanvasAndCtx(resolution, 1));
+			({ ctx } = generateCanvasAndCtx(resolution, 1, {
+				willReadFrequently: true,
+			}));
 		}
 		if (!ctx) throw new Error();
 		const gradient = ctx.createLinearGradient(0, 0, resolution, 1);
