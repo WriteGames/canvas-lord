@@ -285,8 +285,6 @@ export class Game implements Engine {
 		let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
 		const engine = this;
 		this.mainLoop = (time): void => {
-			CL.__setEngine(engine);
-
 			const timeStep = 1e3 / this.fps;
 
 			this.frameRequestId = requestAnimationFrame(this.mainLoop);
@@ -300,12 +298,14 @@ export class Game implements Engine {
 			const prevFrameIndex = this.frameIndex;
 			// should we send a pre-/post- message in case there are
 			// multiple updates that happen in a single while?
+			CL.__setEngine(engine);
 			while (deltaTime >= timeStep) {
 				this.update();
 				this.input.update();
 				deltaTime -= timeStep;
 				++this.frameIndex;
 			}
+			CL.__setEngine(undefined);
 
 			if (prevFrameIndex !== this.frameIndex) {
 				const finishedAt = performance.now();
@@ -320,8 +320,6 @@ export class Game implements Engine {
 				);
 				this._lastUpdate = finishedAt;
 			}
-
-			CL.__setEngine(undefined);
 		};
 
 		this.eventListeners = [];
