@@ -4,16 +4,18 @@ import { Vec2 } from '../math/index.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 const { ctx: textCtx } = generateCanvasAndCtx();
-// TODO(bret): Make this a global ?
-const defaultTextOptions = {
+// TODO(bret): Note that this is global, not just per-Game!
+// we're going to want to move all the global things into a special Game._globals probably
+const textOptionPresetMap = new Map();
+textOptionPresetMap.set(undefined, {
     color: 'white', // what do we want for default?
     type: 'fill',
-    font: 'sans-serif',
-    size: 10,
+    font: 'monospace',
+    size: 16,
     align: 'left',
     // TODO(bret): check if this is the default we want :/
     baseline: 'top',
-};
+});
 export class Text extends Graphic {
     str;
     #count;
@@ -84,17 +86,34 @@ export class Text extends Graphic {
         return (this.#metrics.actualBoundingBoxAscent +
             this.#metrics.actualBoundingBoxDescent);
     }
-    constructor(str, x, y, options = {}) {
+    constructor(str, x, y, options) {
         super(x, y);
         this.str = str;
-        const _options = Object.assign({}, defaultTextOptions, options);
+        this.#setOptions(options);
+        this.#revalidate();
+    }
+    #setOptions(options) {
+        let _options = Object.assign({}, textOptionPresetMap.get(undefined));
+        if (options !== undefined) {
+            Object.assign(_options, typeof options === 'string'
+                ? textOptionPresetMap.get(options)
+                : options);
+        }
         this.color = _options.color;
         this.type = _options.type;
         this.font = _options.font;
         this.size = _options.size;
         this.align = _options.align;
         this.baseline = _options.baseline;
-        this.#revalidate();
+    }
+    setOptions(options) {
+        this.#setOptions(options);
+    }
+    resetToDefault() {
+        this.#setOptions();
+    }
+    usePreset(name) {
+        this.#setOptions(name);
     }
     centerOrigin() {
         this.#revalidate();
@@ -124,6 +143,14 @@ export class Text extends Graphic {
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
         Draw.text(ctx, this, x, y, this.str);
+    }
+    static addPreset(name, options) {
+        if (name === undefined)
+            throw new Error('');
+        textOptionPresetMap.set(name, Object.assign({}, textOptionPresetMap.get(undefined), options));
+    }
+    static updateDefaultOptions(options) {
+        textOptionPresetMap.set(undefined, Object.assign({}, textOptionPresetMap.get(undefined), options));
     }
 }
 //# sourceMappingURL=text.js.map

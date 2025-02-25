@@ -1,4 +1,5 @@
 import { Scene, Draw } from '../../bin/canvas-lord.js';
+import { Text } from '../../bin/graphic/text.js';
 import { init } from '../sandbox.js';
 
 class TextStandardScene extends Scene {
@@ -61,11 +62,47 @@ class TextStandardScene extends Scene {
 	}
 }
 
-const gameSettings = { backgroundColor: '#003300' };
+class TextPresetScene extends Scene {
+	constructor(...args) {
+		super(...args);
+		// Text.addPreset('', );
+		Text.updateDefaultOptions({
+			color: 'red',
+			size: 32,
+		});
+		Text.addPreset('doom', {
+			color: 'yellow',
+			font: 'serif',
+		});
+
+		const text = new Text('testing', 20, 20);
+		this.addGraphic(text);
+		const text2 = new Text('testing', 20, 80, 'doom');
+		this.addGraphic(text2);
+
+		const text3 = new Text('testing', 20, 140, 'doom');
+		this.addGraphic(text3);
+		text3.resetToDefault();
+
+		const text4 = new Text('testing', 20, 200);
+		this.addGraphic(text4);
+		text4.usePreset('doom');
+	}
+}
+
+const gameSettings = {
+	backgroundColor: '#003300',
+	gameLoopSettings: {
+		updateMode: 'always',
+	},
+};
 
 init({
 	games: [
 		init.game('text-standard', TextStandardScene, {
+			gameSettings,
+		}),
+		init.game('text-presets', TextPresetScene, {
 			gameSettings,
 		}),
 	],
