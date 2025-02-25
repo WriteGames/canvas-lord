@@ -10,10 +10,11 @@ import type { Ctx } from '../util/canvas.js';
 export class GraphicList extends Graphic {
 	graphics: Graphic[];
 
-	constructor(x = 0, y = 0) {
-		super(x, y);
+	constructor(...graphics: Graphic[]) {
+		super(0, 0);
 
 		this.graphics = [];
+		this.add(graphics);
 	}
 
 	centerOrigin() {
@@ -21,11 +22,13 @@ export class GraphicList extends Graphic {
 		this.graphics.forEach((graphic) => graphic.centerOrigin());
 	}
 
-	add(graphic: Graphic) {
-		if (this.has(graphic)) return;
+	add(...graphics: Graphic[] | Graphic[][]) {
+		graphics.flat().forEach((graphic) => {
+			if (this.has(graphic)) return;
 
-		graphic.parent = this;
-		this.graphics.push(graphic);
+			graphic.parent = this;
+			this.graphics.push(graphic);
+		});
 	}
 
 	has(graphic: Graphic) {
@@ -33,12 +36,14 @@ export class GraphicList extends Graphic {
 		return index > -1;
 	}
 
-	remove(graphic: Graphic) {
-		if (!this.has(graphic)) return;
+	remove(...graphics: Graphic[] | Graphic[][]) {
+		graphics.flat().forEach((graphic) => {
+			if (!this.has(graphic)) return;
 
-		const index = this.graphics.indexOf(graphic);
-		graphic.parent = undefined;
-		this.graphics.splice(index, 1);
+			const index = this.graphics.indexOf(graphic);
+			graphic.parent = undefined;
+			this.graphics.splice(index, 1);
+		});
 	}
 
 	update(input: Input) {

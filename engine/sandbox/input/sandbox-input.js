@@ -17,9 +17,7 @@ class CursorChanger extends Entity {
 		});
 		this.sprite = sprite;
 		this.text = text;
-		this.graphic = new GraphicList();
-		this.graphic.add(this.sprite);
-		this.graphic.add(this.text);
+		this.graphic = new GraphicList(this.sprite, this.text);
 
 		this.collider = new BoxCollider(sprite.width, sprite.height);
 
