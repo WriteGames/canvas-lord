@@ -116,6 +116,7 @@ export class Input {
             pos: new Vec2(-1, -1),
             realPos: new Vec2(-1, -1),
             _clicked: [0, 0, 0, 0, 0],
+            cursor: undefined,
         };
         const defineXYProperties = (mouse, prefix = null) => {
             const posName = prefix !== null ? `${prefix}Pos` : 'pos';
@@ -146,6 +147,7 @@ export class Input {
         _keysArr.forEach((key) => {
             this.keys[key] &= ~1;
         });
+        this.engine.canvas.style.cursor = this.mouse.cursor ?? 'auto';
     }
     // Events
     onMouseMove(e) {

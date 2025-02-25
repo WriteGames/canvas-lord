@@ -12,6 +12,7 @@ interface Mouse {
 	realPos: Vec2;
 	realX: Vec2[0];
 	realY: Vec2[1];
+	cursor: string | undefined;
 	_clicked: [InputStatus, InputStatus, InputStatus, InputStatus, InputStatus];
 }
 
@@ -134,7 +135,7 @@ export interface Input {
 	keys: Record<Key, InputStatus>;
 }
 
-type MousePrototype = Pick<Mouse, 'pos' | 'realPos' | '_clicked'>;
+type MousePrototype = Pick<Mouse, 'pos' | 'realPos' | '_clicked' | 'cursor'>;
 
 export class Input {
 	constructor(engine: Engine) {
@@ -144,6 +145,7 @@ export class Input {
 			pos: new Vec2(-1, -1),
 			realPos: new Vec2(-1, -1),
 			_clicked: [0, 0, 0, 0, 0],
+			cursor: undefined,
 		};
 
 		const defineXYProperties = (
@@ -184,6 +186,8 @@ export class Input {
 		_keysArr.forEach((key) => {
 			this.keys[key] &= ~1;
 		});
+
+		this.engine.canvas.style.cursor = this.mouse.cursor ?? 'auto';
 	}
 
 	// Events
