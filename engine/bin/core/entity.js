@@ -3,7 +3,8 @@ import * as Collide from '../collider/collide.js';
 import { PointCollider } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
-const mouseCollider = new PointCollider();
+// TODO(bret): hook this up
+const _mouseCollider = new PointCollider();
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
@@ -76,7 +77,9 @@ export class Entity {
     get h() {
         return this.height;
     }
-    update(input) { }
+    update(_input) {
+        //
+    }
     render(ctx, camera) {
         // TODO(bret): .visible should probably be on the Graphic, not the Entity itself
         if (this.visible) {
@@ -86,7 +89,7 @@ export class Entity {
     renderCollider(ctx, camera = Vec2.zero) {
         if (!this.collider)
             return;
-        this.collider.render?.(ctx, -camera.x, -camera.y);
+        this.collider.render(ctx, -camera.x, -camera.y);
     }
     #collide(x, y, match, earlyOut) {
         if (!this.collider)
@@ -113,10 +116,13 @@ export class Entity {
                 else {
                     tags = match;
                 }
+                break;
             }
+            default:
+                throw new Error('unknown error');
         }
         const n = entities.length;
-        let collide = [];
+        const collide = [];
         for (let i = 0; i < n; ++i) {
             const e = entities[i];
             if (e === this)
@@ -161,7 +167,8 @@ export class Entity {
         {
             type: 'point',
             x: mouseX,
-            // @ts-expect-error
+            // TODO(bret): fix meeeee
+            // @ts-expect-error -- left and top don't exist??
             left: mouseX,
             y: mouseY,
             top: mouseY,

@@ -24,20 +24,20 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 
 	#points: Points;
 
-	get left() {
+	get left(): number {
 		return Math.min(...this.vertices.map(([x]) => x));
 	}
-	get top() {
+	get top(): number {
 		return Math.min(...this.vertices.map(([_, y]) => y));
 	}
-	get right() {
+	get right(): number {
 		return Math.max(...this.vertices.map(([x]) => x));
 	}
-	get bottom() {
+	get bottom(): number {
 		return Math.max(...this.vertices.map(([_, y]) => y));
 	}
 
-	setPoints(value: Points) {
+	setPoints(value: Points): void {
 		this.#points = value;
 	}
 
@@ -48,7 +48,7 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 		]) as Points;
 	}
 
-	get lines() {
+	get lines(): Line[] {
 		const lines: Line[] = [];
 		const { vertices } = this;
 		const n = vertices.length;
@@ -63,14 +63,14 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 		return lines;
 	}
 
-	get edges() {
+	get edges(): Vec2[] {
 		const lines = this.lines;
 		return lines.map(({ x1, y1, x2, y2 }) => new Vec2(x2 - x1, y2 - y1));
 	}
 
-	get axes() {
+	get axes(): Vec2[] {
 		const axes = this.edges.map(([_x, _y]) => new Vec2(-_y, _x));
-		axes.forEach(Vec2.normalize);
+		axes.forEach((axis) => Vec2.normalize(axis));
 		return axes;
 	}
 

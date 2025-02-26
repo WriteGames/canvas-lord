@@ -22,30 +22,30 @@ export class GridCollider extends Collider implements IGridCollider {
 		this.grid.renderMode = Grid.RenderMode.OUTLINE;
 	}
 
-	get width() {
+	get width(): number {
 		return this.grid.width;
 	}
-	get w() {
+	get w(): number {
 		return this.width;
 	}
 
-	get height() {
+	get height(): number {
 		return this.grid.height;
 	}
-	get h() {
+	get h(): number {
 		return this.height;
 	}
 
-	get left() {
+	get left(): number {
 		return this.parent.x + this.x;
 	}
-	get right() {
+	get right(): number {
 		return this.parent.x + this.x + this.w - 1;
 	}
-	get top() {
+	get top(): number {
 		return this.parent.y + this.y;
 	}
-	get bottom() {
+	get bottom(): number {
 		return this.parent.y + this.y + this.h - 1;
 	}
 

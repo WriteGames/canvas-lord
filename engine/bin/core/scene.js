@@ -43,10 +43,18 @@ export class Scene {
             this.ctx = ctx;
         }
     }
-    begin() { }
-    end() { }
-    pause() { }
-    resume() { }
+    begin() {
+        //
+    }
+    end() {
+        //
+    }
+    pause() {
+        //
+    }
+    resume() {
+        //
+    }
     addGraphic(graphic, x = 0, y = 0) {
         const entity = new Entity(x, y);
         entity.graphic = graphic;
@@ -69,7 +77,7 @@ export class Scene {
         const newEntities = this.entities.addQueue.splice(0);
         for (let i = 0; i < newEntities.length; ++i) {
             const e = newEntities[i];
-            if (this.entities.inScene.indexOf(e) > -1)
+            if (this.entities.inScene.includes(e))
                 continue;
             this.entities.inScene.push(e);
         }
@@ -88,7 +96,7 @@ export class Scene {
         const newRenderables = this.renderables.addQueue.splice(0);
         for (let i = 0; i < newRenderables.length; ++i) {
             const r = newRenderables[i];
-            if (this.renderables.inScene.indexOf(r) > -1)
+            if (this.renderables.inScene.includes(r))
                 continue;
             this.renderables.inScene.push(r);
         }
@@ -121,7 +129,9 @@ export class Scene {
         this.#addRenderablesToScene();
         this.#removeRenderablesFromScene();
     }
-    preUpdate(input) { }
+    preUpdate(_input) {
+        //
+    }
     update(input) {
         // TODO: move the following two to game probably
         if (this.allowRefresh && input.keyPressed('F5'))
@@ -138,12 +148,14 @@ export class Scene {
                 const { update } = system;
                 if (!update)
                     return;
-                const entities = this.entities.inScene.filter((e) => Boolean(e.component?.(component)));
+                const entities = this.entities.inScene.filter((e) => Boolean(e.component(component)));
                 entities.forEach((entity) => update(entity, input));
             });
         });
     }
-    postUpdate(input) { }
+    postUpdate(_input) {
+        //
+    }
     render(gameCtx) {
         // TODO: this should maybe be in pre-render?
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));

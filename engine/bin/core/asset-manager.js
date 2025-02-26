@@ -1,4 +1,5 @@
 /* Canvas Lord v0.5.3 */
+const isLoaded = (asset) => asset.loaded;
 export class AssetManager {
     constructor(prefix = '') {
         this.sprites = new Map();
@@ -33,10 +34,17 @@ export class AssetManager {
                 throw new Error(`Loaded audio that doesn't exist in map ("${src}" / "${fullPath}")`);
             }
             audio.loaded = true;
-            if ((audio.buffer = audioBuffer)) {
+            audio.buffer = audioBuffer;
+            if (isLoaded(audio)) {
                 audio.duration = audioBuffer.duration;
             }
             this.audioLoaded(src);
+            return audio;
+        })
+            .then((audio) => {
+            if (audio.buffer) {
+                audio.duration = 10;
+            }
         });
     }
     loadImage(src) {
@@ -52,7 +60,8 @@ export class AssetManager {
                 throw new Error(`Loaded image that doesn't exist in map ("${src}" / "${fullPath}")`);
             }
             sprite.loaded = true;
-            if ((sprite.image = image)) {
+            sprite.image = image;
+            if (isLoaded(sprite)) {
                 sprite.width = image.width;
                 sprite.height = image.height;
             }
@@ -93,11 +102,11 @@ export class AssetManager {
             this.emitOnLoad('');
         }
     }
-    imageLoaded(src) {
+    imageLoaded(_src) {
         ++this.spritesLoaded;
         this._checkAllAssetsLoaded();
     }
-    audioLoaded(src) {
+    audioLoaded(_src) {
         ++this.audioFilesLoaded;
         this._checkAllAssetsLoaded();
     }
@@ -105,6 +114,7 @@ export class AssetManager {
         this.onLoadCallbacks.push(callback);
     }
 }
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- static class yo
 export class Sfx {
     static #audioCtx;
     static get audioCtx() {

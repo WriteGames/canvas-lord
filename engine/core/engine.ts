@@ -1,12 +1,12 @@
 /* Canvas Lord v0.5.3 */
 
-import { AssetManager, Sfx } from './asset-manager.js';
+import { type AssetManager, Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import type { Scene } from './scene.js';
 import type { Ctx } from '../util/canvas.js';
 import { Debug } from '../util/debug.js';
 
-import { CSSColor, RequiredAndOmit } from '../util/types.js';
+import type { CSSColor, RequiredAndOmit } from '../util/types.js';
 import { CL } from './CL.js';
 
 const defineUnwritableProperty: <T>(
@@ -131,7 +131,7 @@ export class Game implements Engine {
 	frameIndex: number;
 	recentFrames: number[];
 	frameRate: number;
-	_lastUpdate: number = 0;
+	_lastUpdate = 0;
 
 	sceneStack: Scene[][];
 	backgroundColor: string | CanvasGradient | CanvasPattern;
@@ -142,7 +142,7 @@ export class Game implements Engine {
 	input: Input;
 	_lastFrame: number;
 	mainLoop: (time: number) => void;
-	frameRequestId: number = -1;
+	frameRequestId = -1;
 	eventListeners: CachedEventListener[];
 	assetManager?: AssetManager | undefined;
 	debug?: Debug | undefined;
@@ -170,16 +170,15 @@ export class Game implements Engine {
 		this.ctx = ctx;
 
 		// apply defaults to game settings
-		const engineSettings: Settings = Object.assign(
-			{},
-			defaultSettings,
-			settings,
-		);
-		engineSettings.gameLoopSettings = Object.assign(
-			{},
-			defaultSettings.gameLoopSettings,
-			settings?.gameLoopSettings,
-		);
+		const engineSettings: Settings = {
+			...defaultSettings,
+			...settings,
+		};
+
+		engineSettings.gameLoopSettings = {
+			...defaultSettings.gameLoopSettings,
+			...settings?.gameLoopSettings,
+		};
 
 		// render a rectangle ASAP
 		this.backgroundColor = engineSettings.backgroundColor;
@@ -214,9 +213,6 @@ export class Game implements Engine {
 		this.frameIndex = 0;
 		this.frameRate = this.fps;
 
-		if (engineSettings.gameLoopSettings) {
-			this.gameLoopSettings = engineSettings.gameLoopSettings;
-		}
 		this.assetManager = engineSettings.assetManager;
 
 		if (engineSettings.devMode) this.debug = new Debug(this);
@@ -283,7 +279,6 @@ export class Game implements Engine {
 		let deltaTime = 0;
 		const maxFrames = 5;
 		let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
-		const engine = this;
 		this.mainLoop = (time): void => {
 			const timeStep = 1e3 / this.fps;
 
@@ -298,7 +293,7 @@ export class Game implements Engine {
 			const prevFrameIndex = this.frameIndex;
 			// should we send a pre-/post- message in case there are
 			// multiple updates that happen in a single while?
-			CL.__setEngine(engine);
+			CL.__setEngine(this);
 			while (deltaTime >= timeStep) {
 				this.update();
 				this.input.update();
@@ -324,37 +319,35 @@ export class Game implements Engine {
 
 		this.eventListeners = [];
 
-		window.addEventListener('resize', (e) => {
+		window.addEventListener('resize', () => {
 			computeCanvasSize(this.canvas);
 		});
 
-		window.addEventListener('blur', (e) => this.onFocus(false));
+		window.addEventListener('blur', () => this.onFocus(false));
 
 		// TODO: should we allow folks to customize this to be directly on the canvas?
 		this.focusElement = this.wrapper;
-		this.focusElement.addEventListener('focusin', (e) =>
-			this.onFocus(true),
-		);
-		this.focusElement.addEventListener('focusout', (e) =>
+		this.focusElement.addEventListener('focusin', () => this.onFocus(true));
+		this.focusElement.addEventListener('focusout', () =>
 			this.onFocus(false),
 		);
 
 		this.updateGameLoopSettings(this.gameLoopSettings);
 	}
 
-	load(assetManager: AssetManager) {
-		assetManager.loadAssets();
+	async load(assetManager: AssetManager): Promise<void> {
+		return assetManager.loadAssets();
 	}
 
-	get width() {
+	get width(): number {
 		return this.canvas.width;
 	}
 
-	get height() {
+	get height(): number {
 		return this.canvas.height;
 	}
 
-	get currentScenes() {
+	get currentScenes(): Scene[] | undefined {
 		return this.sceneStack.at(-1);
 	}
 
@@ -488,9 +481,9 @@ export class Game implements Engine {
 	onFocus(focus: boolean): void {
 		if (this.focus === focus) return;
 		if (this.focus) {
-			Sfx.audioCtx.suspend();
+			void Sfx.audioCtx.suspend();
 		} else {
-			Sfx.audioCtx.resume();
+			void Sfx.audioCtx.resume();
 		}
 		this.focus = focus;
 		this.sendEvent(focus ? 'focus' : 'blur');
@@ -501,7 +494,7 @@ export class Game implements Engine {
 	_forEachScene<T extends Scene>(
 		scenes: T[] | undefined,
 		callbackfn: (value: T, index: number, array: T[]) => void,
-		thisArg?: any,
+		thisArg?: unknown,
 	): void {
 		scenes?.forEach((scene, ...args) => {
 			CL.__setScene(scene);

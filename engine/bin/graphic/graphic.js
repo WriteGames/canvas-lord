@@ -27,8 +27,12 @@ export class Graphic {
     centerOO() {
         this.centerOrigin();
     }
-    update(input) { }
-    render(ctx, camera = Vec2.zero) { }
+    update(_input) {
+        //
+    }
+    render(_ctx, _camera = Vec2.zero) {
+        //
+    }
     reset() {
         this.x = 0;
         this.y = 0;

@@ -41,7 +41,7 @@ export class QuadtreeNode {
         this.posB = [x2, y2];
         this.rangeX = rangeX;
         this.rangeY = rangeY;
-        this.radii = scalePos(new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]), 0.5);
+        this.radii = new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]).scale(0.5);
         this.midPoint = new Vec2(...addPos(this.posA, this.radii));
     }
     getQuadIndex(pos) {
@@ -61,8 +61,8 @@ export class QuadtreeNode {
             const pointsY = [this.posA[1], this.midPoint[1], this.posB[1]];
             const xIndex = i % 2;
             const yIndex = Math.floor(i / 2);
-            const rangeX = [pointsX[xIndex], pointsX[xIndex + 1]];
-            const rangeY = [pointsY[yIndex], pointsY[yIndex + 1]];
+            const rangeX = new Vec2(pointsX[xIndex], pointsX[xIndex + 1]);
+            const rangeY = new Vec2(pointsY[yIndex], pointsY[yIndex + 1]);
             const node = new QuadtreeNode(rangeX, rangeY, this.itemPosCallback, this.leafThreshold);
             node.setParent(this);
             return node;
@@ -85,11 +85,8 @@ export class QuadtreeNode {
         this.parent?.recomputeCounts();
     }
     expand() {
-        // @ts-ignore
         const newRangeX = scalePos(this.rangeX, 2);
-        // @ts-ignore
         const newRangeY = scalePos(this.rangeY, 2);
-        // @ts-ignore
         this.recompute(newRangeX, newRangeY);
         if (this.type === 'leaf')
             return;
@@ -101,8 +98,8 @@ export class QuadtreeNode {
         oldQuads.forEach((quad, quadIndex) => {
             const xIndex = quadIndex % 2;
             const yIndex = Math.floor(quadIndex / 2);
-            const newRangeX = xPoints.slice(xIndex, xIndex + 2);
-            const newRangeY = yPoints.slice(yIndex, yIndex + 2);
+            const newRangeX = new Vec2(...xPoints.slice(xIndex, xIndex + 2));
+            const newRangeY = new Vec2(...yPoints.slice(yIndex, yIndex + 2));
             quad.recompute(newRangeX, newRangeY);
         });
     }
@@ -175,7 +172,8 @@ export class QuadtreeNode {
             }
             node = this.findChildNode(child);
         }
-        if (node == null)
+        // NOTE(bret): This was `node == null`
+        if (node === null)
             return;
         // add child
         node.children.push(child);
@@ -194,7 +192,7 @@ export class QuadtreeNode {
         const children = node.children;
         if (!children.includes(child))
             return;
-        const before = children.length;
+        // const before = children.length;
         arrayRemove(children, child);
         node.totalChildrenCount = node.children.length;
         node.parent?.recomputeCounts();

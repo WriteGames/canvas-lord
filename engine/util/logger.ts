@@ -1,6 +1,6 @@
 /* Canvas Lord v0.5.3 */
 
-import type { Ctx } from '../util/canvas.js';
+import type { Ctx } from './canvas.js';
 
 // IDEA(bret): What if we can define types of logs and toggle them on/off?
 // IDEA(bret): There could also be a setting that you can enable to choose whether getting a value sent to that Log item causes it to display
@@ -11,11 +11,12 @@ import type { Ctx } from '../util/canvas.js';
 
 // IDEA(bret): Nesting Loggers (at this point, would we combine the idea of a Log & a Logger, at least in some intermediate representation? If we build a tree, each item gets to override the settings of its parent, and then only nodes actually get added to the render queue) - the only issue is that if something has a VALUE and CHILDREN, it cannot be a NODE which is what determines what renders... it gets complicated fast :(
 
-export type LogValue = any;
+// TODO(bret): revisit what htis should be
+export type LogValue = string | number | boolean | undefined;
 
 export type LogParser = (value: LogValue) => string;
 
-export const YesNoLogParser = (value: LogValue) => {
+export const YesNoLogParser = (value: LogValue): 'yes' | 'no' => {
 	return value ? 'yes' : 'no';
 };
 
@@ -47,8 +48,10 @@ const defaultLoggerOptions = Object.freeze<LoggerOptions>({
 	logs: {
 		defaults: {
 			lifespan: 60,
-			parser: (val: LogValue) =>
-				JSON.parse(JSON.stringify(val)).toString(),
+			parser: (val: LogValue) => {
+				const json = JSON.parse(JSON.stringify(val)) as LogValue;
+				return json?.toString() ?? '';
+			},
 			visible: true,
 			renderer: (ctx, log, drawX, drawY) => {
 				ctx.fillStyle = 'white';
@@ -60,7 +63,7 @@ const defaultLoggerOptions = Object.freeze<LoggerOptions>({
 
 export class Log {
 	#_value: LogValue;
-	#_str: string = 'undefined';
+	#_str = 'undefined';
 	logger: Logger;
 	elapsed: number;
 	// CLEANUP(bret): is there any way to add these from LogOptions? Or vice-versa?
@@ -88,16 +91,16 @@ export class Log {
 		this.value = value;
 	}
 
-	set value(val) {
+	set value(val: LogValue) {
 		this.#_value = val;
 		this.#_str = this.parser(val);
 	}
 
-	get value() {
+	get value(): LogValue {
 		return this.#_value;
 	}
 
-	get str() {
+	get str(): string {
 		return this.#_str;
 	}
 }
@@ -116,7 +119,7 @@ export class Logger {
 
 		// REVISIT(bret): Make this generic :)
 		// NOTE(bret): structuredClone would be neat here, but it cannot copy functions (perhaps the``transfer` option would help there?)
-		this.options = Object.assign({}, defaultLoggerOptions);
+		this.options = { ...defaultLoggerOptions };
 		Object.assign(this.options.logs, options.logs);
 
 		// REVISIT(bret): Do we need these? Could they just be getter/setters?
@@ -127,21 +130,24 @@ export class Logger {
 		this.watchedDelimiter = ': ';
 	}
 
-	setLogDefault<K extends keyof LogOptions>(key: K, value: LogOptions[K]) {
+	setLogDefault<K extends keyof LogOptions>(
+		key: K,
+		value: LogOptions[K],
+	): void {
 		this.options.logs.defaults[key] = value;
 	}
 
-	log(str: string, options?: LogOptions) {
+	log(str: string, options?: LogOptions): void {
 		const log = new Log(this, str, options);
 		this.logs.push(log);
 	}
 
-	watch(tag: string, initialValue: LogValue, options?: LogOptions) {
+	watch(tag: string, initialValue: LogValue, options?: LogOptions): void {
 		const log = new Log(this, initialValue, options);
 		this.watched.set(tag, log);
 	}
 
-	set(tag: string, value: LogValue) {
+	set(tag: string, value: LogValue): void {
 		const log = this.watched.get(tag);
 		if (!log) {
 			console.warn(`Logger is not watching "${tag}"`);
@@ -150,7 +156,7 @@ export class Logger {
 		log.value = value;
 	}
 
-	update() {
+	update(): void {
 		// remove old logs
 		this.logs = this.logs.filter((log) => log.elapsed !== log.lifespan);
 
@@ -158,7 +164,7 @@ export class Logger {
 		this.logs.forEach((log) => log.elapsed++);
 	}
 
-	render(ctx: Ctx) {
+	render(ctx: Ctx): void {
 		// FIXME: handle this better
 		const watched = Array.from(this.watched).filter(([_, v]) => v.visible);
 		const logs = this.logs.filter((l) => l.visible);
@@ -166,8 +172,8 @@ export class Logger {
 		const lines = watched.length + logs.length;
 		if (lines === 0) return;
 
-		let drawX = this.x,
-			drawY = this.y;
+		const drawX = this.x;
+		let drawY = this.y;
 
 		ctx.font = '10px Monospace';
 

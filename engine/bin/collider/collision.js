@@ -60,6 +60,7 @@ export const collidePointRightTriangle = (x, y, rt) => {
                 side = getSideOfLine(x, y, BL, TR);
                 break;
             default:
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- for the JS users
                 throw new Error(`Invalid orientation (${rt.orientation})`);
         }
         return side <= 0;
@@ -248,7 +249,7 @@ const project = (p, axis) => {
     let min = axis.dot(new Vec2(vertices[0][0], vertices[0][1]));
     let max = min;
     for (let i = 1; i < vertices.length; ++i) {
-        let p = axis.dot(new Vec2(vertices[i][0], vertices[i][1]));
+        const p = axis.dot(new Vec2(vertices[i][0], vertices[i][1]));
         if (p < min) {
             min = p;
         }

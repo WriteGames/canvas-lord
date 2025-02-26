@@ -8,7 +8,7 @@ import {
 	subPos,
 	crossProduct2D,
 	dotProduct2D,
-	Line2D,
+	type Line2D,
 } from '../math/index.js';
 
 import type {
@@ -19,7 +19,12 @@ import type {
 
 // TODO: bounds!
 
-const getSideOfLine = (x: number, y: number, lineA: Vec2, lineB: Vec2) => {
+const getSideOfLine = (
+	x: number,
+	y: number,
+	lineA: Vec2,
+	lineB: Vec2,
+): number => {
 	const d =
 		(lineB.y - lineA.y) * (x - lineA.x) -
 		(lineB.x - lineA.x) * (y - lineA.y);
@@ -60,7 +65,7 @@ export const collidePointPoint = (
 	aY: number,
 	bX: number,
 	bY: number,
-) => {
+): boolean => {
 	return Math.abs(aX - bX) < EPSILON && Math.abs(aY - bY) < EPSILON;
 };
 
@@ -71,7 +76,7 @@ export const collidePointLine = (
 	y1: number,
 	x2: number,
 	y2: number,
-) => {
+): boolean => {
 	return collideLineCircle(x1, y1, x2, y2, x, y, 0.5);
 };
 
@@ -82,7 +87,7 @@ export const collidePointBox = (
 	top: number,
 	right: number,
 	bottom: number,
-) => {
+): boolean => {
 	return x >= left && y >= top && x <= right && y <= bottom;
 };
 
@@ -92,7 +97,7 @@ export const collidePointCircle = (
 	cX: number,
 	cY: number,
 	radius: number,
-) => {
+): boolean => {
 	const distanceSq = (cX - x) ** 2 + (cY - y) ** 2;
 	return distanceSq <= radius ** 2;
 };
@@ -101,7 +106,7 @@ export const collidePointRightTriangle = (
 	x: number,
 	y: number,
 	rt: RightTriangleCollider,
-) => {
+): boolean => {
 	if (collidePointBox(x, y, rt.left, rt.top, rt.right, rt.bottom)) {
 		const TL = new Vec2(rt.left, rt.top);
 		const TR = new Vec2(rt.right, rt.top);
@@ -122,6 +127,7 @@ export const collidePointRightTriangle = (
 				side = getSideOfLine(x, y, BL, TR);
 				break;
 			default:
+				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- for the JS users
 				throw new Error(`Invalid orientation (${rt.orientation})`);
 		}
 		return side <= 0;
@@ -133,7 +139,7 @@ export const collidePointPolygon = (
 	x: number,
 	y: number,
 	p: PolygonCollider,
-) => {
+): boolean => {
 	let inside = false;
 	const { vertices } = p;
 	const n = vertices.length;
@@ -151,7 +157,11 @@ export const collidePointPolygon = (
 };
 
 // TODO(bret): make sure this is still working
-export const collidePointGrid = (x: number, y: number, g: GridCollider) => {
+export const collidePointGrid = (
+	x: number,
+	y: number,
+	g: GridCollider,
+): boolean => {
 	if (!collidePointBox(x, y, g.left, g.top, g.right, g.bottom)) return false;
 
 	const xx = Math.floor((x - g.left) / g.grid.tileW);
@@ -170,7 +180,7 @@ export const collideLineLine = (
 	bY1: number,
 	bX2: number,
 	bY2: number,
-) => {
+): boolean => {
 	const A: Line2D = [new Vec2(aX1, aY1), new Vec2(aX2, aY2)];
 	const B: Line2D = [new Vec2(bX1, bY1), new Vec2(bX2, bY2)];
 	return checkLineSegmentIntersection(A, B);
@@ -185,7 +195,7 @@ export const collideLineBox = (
 	top: number,
 	right: number,
 	bottom: number,
-) => {
+): boolean => {
 	if (
 		collidePointBox(x1, y1, left, top, right, bottom) ||
 		collidePointBox(x2, y2, left, top, right, bottom)
@@ -209,7 +219,7 @@ export const collideLineCircle = (
 	cX: number,
 	cY: number,
 	radius: number,
-) => {
+): boolean => {
 	const pointA = new Vec2(x1, y1);
 	const pointB = new Vec2(x2, y2);
 
@@ -235,7 +245,7 @@ export const collideLineRightTriangle = (
 	x2: number,
 	y2: number,
 	rt: RightTriangleCollider,
-) => {
+): boolean => {
 	return (
 		collideLineLine(x1, y1, x2, y2, rt.x1, rt.y1, rt.x2, rt.y2) ||
 		collideLineLine(x1, y1, x2, y2, rt.x2, rt.y2, rt.x3, rt.y3) ||
@@ -251,7 +261,7 @@ export const collideLinePolygon = (
 	x2: number,
 	y2: number,
 	p: PolygonCollider,
-) => {
+): boolean => {
 	// TODO: test if using barycentric coords would be faster!
 	const { vertices } = p;
 	const n = vertices.length;
@@ -284,7 +294,7 @@ export const collideBoxBox = (
 	bTop: number,
 	bRight: number,
 	bBottom: number,
-) => {
+): boolean => {
 	return (
 		aRight >= bLeft && aBottom >= bTop && aLeft <= bRight && aTop <= bBottom
 	);
@@ -298,7 +308,7 @@ export const collideBoxCircle = (
 	cX: number,
 	cY: number,
 	radius: number,
-) => {
+): boolean => {
 	const x = Math.clamp(cX, left, right);
 	const y = Math.clamp(cY, top, bottom - 1);
 	const distanceSq = (cX - x) ** 2 + (cY - y) ** 2;
@@ -311,7 +321,7 @@ export const collideBoxRightTriangle = (
 	right: number,
 	bottom: number,
 	rt: RightTriangleCollider,
-) => {
+): boolean => {
 	// TODO(bret): write a better version of this
 	// NOTE(bret): Found this online https://seblee.me/2009/05/super-fast-trianglerectangle-intersection-test/
 
@@ -332,7 +342,7 @@ export const collideBoxPolygon = (
 	right: number,
 	bottom: number,
 	p: PolygonCollider,
-) => {
+): boolean => {
 	// check if we're even within the bounds
 	if (
 		!collideBoxBox(
@@ -376,7 +386,7 @@ export const collideBoxGrid = (
 	right: number,
 	bottom: number,
 	g: GridCollider,
-) => {
+): boolean => {
 	if (
 		!collideBoxBox(
 			left,
@@ -436,7 +446,7 @@ export const collideCircleCircle = (
 	bX: number,
 	bY: number,
 	bRadius: number,
-) => {
+): boolean => {
 	const distanceSq = (aX - bX) ** 2 + (aY - bY) ** 2;
 	return distanceSq <= (aRadius + bRadius) ** 2;
 };
@@ -446,7 +456,7 @@ export const collideCircleRightTriangle = (
 	cY: number,
 	radius: number,
 	rt: RightTriangleCollider,
-) => {
+): boolean => {
 	// TODO(bret): Revisit
 	// need to also check if the points are in the circle
 	return (
@@ -462,7 +472,7 @@ export const collideCirclePolygon = (
 	cY: number,
 	radius: number,
 	p: PolygonCollider,
-) => {
+): boolean => {
 	if (collidePointPolygon(cX, cY, p)) return true;
 
 	const { vertices } = p;
@@ -488,7 +498,7 @@ export const collideCirclePolygon = (
 export const collideRightTriangleRightTriangle = (
 	a: RightTriangleCollider,
 	b: RightTriangleCollider,
-) => {
+): boolean => {
 	for (let i = 0; i < 3; ++i) {
 		const aPoint = a.points[i];
 		const bPoint = b.points[i];
@@ -502,7 +512,7 @@ export const collideRightTriangleRightTriangle = (
 export const collideRightTrianglePolygon = (
 	rt: RightTriangleCollider,
 	p: PolygonCollider,
-) => {
+): boolean => {
 	const vertices = p.vertices;
 	for (let i = 0; i < vertices.length; ++i) {
 		const vertex = vertices[i];
@@ -518,12 +528,15 @@ export const collideRightTrianglePolygon = (
 
 /// ### Polygon vs X ###
 
-const project = (p: PolygonCollider, axis: Vec2) => {
+const project = (
+	p: PolygonCollider,
+	axis: Vec2,
+): { min: number; max: number } => {
 	const { vertices } = p;
 	let min = axis.dot(new Vec2(vertices[0][0], vertices[0][1]));
 	let max = min;
 	for (let i = 1; i < vertices.length; ++i) {
-		let p = axis.dot(new Vec2(vertices[i][0], vertices[i][1]));
+		const p = axis.dot(new Vec2(vertices[i][0], vertices[i][1]));
 		if (p < min) {
 			min = p;
 		} else if (p > max) {
@@ -536,7 +549,7 @@ const project = (p: PolygonCollider, axis: Vec2) => {
 export const collidePolygonPolygon = (
 	a: PolygonCollider,
 	b: PolygonCollider,
-) => {
+): boolean => {
 	const _axes = [a.axes, b.axes];
 
 	for (let i = 0; i < 2; ++i) {

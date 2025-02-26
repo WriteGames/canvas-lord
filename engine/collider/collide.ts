@@ -27,13 +27,13 @@ import {
 } from './collision.js';
 
 import type { Collider } from './collider.js';
-import { PointCollider } from './point-collider.js';
-import { LineCollider } from './line-collider.js';
-import { BoxCollider } from './box-collider.js';
-import { CircleCollider } from './circle-collider.js';
-import { RightTriangleCollider } from './right-triangle-collider.js';
-import { GridCollider } from './grid-collider.js';
-import { PolygonCollider } from './polygon-collider.js';
+import type { PointCollider } from './point-collider.js';
+import type { LineCollider } from './line-collider.js';
+import type { BoxCollider } from './box-collider.js';
+import type { CircleCollider } from './circle-collider.js';
+import type { RightTriangleCollider } from './right-triangle-collider.js';
+import type { GridCollider } from './grid-collider.js';
+import type { PolygonCollider } from './polygon-collider.js';
 
 const dePoint = (p: PointCollider) => [p.left, p.top] as const;
 const deLine = (l: LineCollider) =>
@@ -75,7 +75,7 @@ const collisionMap = {
 			collideLineRightTriangle(...deLine(l), ...deRT(rt)),
 		polygon: (l: LineCollider, p: PolygonCollider) =>
 			collideLinePolygon(...deLine(l), ...dePolygon(p)),
-		grid: (l: LineCollider, g: GridCollider) => undefined,
+		grid: (_l: LineCollider, _g: GridCollider) => undefined,
 	},
 	box: {
 		point: (b: BoxCollider, pt: PointCollider) =>
@@ -106,7 +106,7 @@ const collisionMap = {
 			collideCircleRightTriangle(...deCircle(c), ...deRT(rt)),
 		polygon: (c: CircleCollider, p: PolygonCollider) =>
 			collideCirclePolygon(...deCircle(c), ...dePolygon(p)),
-		grid: (c: CircleCollider, g: GridCollider) => undefined,
+		grid: (_c: CircleCollider, _g: GridCollider) => undefined,
 	},
 	'right-triangle': {
 		point: (rt: RightTriangleCollider, pt: PointCollider) =>
@@ -123,7 +123,7 @@ const collisionMap = {
 		) => collideRightTriangleRightTriangle(...deRT(a), ...deRT(b)),
 		polygon: (rt: RightTriangleCollider, p: PolygonCollider) =>
 			collideRightTrianglePolygon(...deRT(rt), ...dePolygon(p)),
-		grid: (rt: RightTriangleCollider) => undefined,
+		grid: (_rt: RightTriangleCollider) => undefined,
 	},
 	polygon: {
 		point: (p: PolygonCollider, pt: PointCollider) =>
@@ -138,28 +138,29 @@ const collisionMap = {
 			collideRightTrianglePolygon(...deRT(rt), ...dePolygon(p)),
 		polygon: (a: PolygonCollider, b: PolygonCollider) =>
 			collidePolygonPolygon(...dePolygon(a), ...dePolygon(b)),
-		grid: (p: PolygonCollider, g: GridCollider) => undefined,
+		grid: (_p: PolygonCollider, _g: GridCollider) => undefined,
 	},
 	grid: {
 		point: (g: GridCollider, pt: PointCollider) =>
 			collidePointGrid(...dePoint(pt), ...deGrid(g)),
-		line: (g: GridCollider, l: LineCollider) => undefined,
+		line: (_g: GridCollider, _l: LineCollider) => undefined,
 		//collideLineGrid(l, g),
 		box: (g: GridCollider, b: BoxCollider) =>
 			collideBoxGrid(...deBox(b), ...deGrid(g)),
-		circle: (g: GridCollider, c: CircleCollider) => undefined,
+		circle: (_g: GridCollider, _c: CircleCollider) => undefined,
 		//collideCircleGrid(c, g),
-		'right-triangle': (g: GridCollider, rt: RightTriangleCollider) =>
+		'right-triangle': (_g: GridCollider, _rt: RightTriangleCollider) =>
 			undefined,
 		// collideRightTriangleGrid(rt, g),
-		polygon: (g: GridCollider, p: PolygonCollider) => undefined,
+		polygon: (_g: GridCollider, _p: PolygonCollider) => undefined,
 		//collidePolygonGrid(t, g),
-		grid: (a: GridCollider, b: GridCollider) => undefined,
+		grid: (_a: GridCollider, _b: GridCollider) => undefined,
 		//collideGridGrid,
 	},
 } as const;
 
 export const collide = (shapeA: Collider, shapeB: Collider): boolean => {
-	// @ts-expect-error
+	// TODO(bret): well, remove the error supression :)
+	// @ts-expect-error -- no idea how to fix this lol
 	return collisionMap[shapeA.type][shapeB.type](shapeA, shapeB);
 };

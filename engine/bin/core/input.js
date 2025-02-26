@@ -163,7 +163,7 @@ export class Input {
     }
     onMouseDown(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         if (!this.mouseCheck(e.button)) {
             this.mouse._clicked[e.button] = 3;
@@ -172,7 +172,7 @@ export class Input {
     }
     onMouseUp(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         if (this.mouseCheck(e.button)) {
             this.mouse._clicked[e.button] = 1;
@@ -181,7 +181,7 @@ export class Input {
     }
     onKeyDown(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         const { code } = e;
         if (code in this.keys && !this.keyCheck(code)) {
@@ -191,7 +191,7 @@ export class Input {
     }
     onKeyUp(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         const { code } = e;
         if (code in this.keys && this.keyCheck(code)) {
@@ -243,6 +243,8 @@ export class Input {
         this.keys = _keysArr.reduce((acc, v) => {
             acc[v] = 0;
             return acc;
+            // TODO(bret): revisit this
+            // eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter -- tee hee will fix later
         }, {});
     }
 }

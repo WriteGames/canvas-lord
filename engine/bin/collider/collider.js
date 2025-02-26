@@ -31,7 +31,7 @@ export class Collider {
     collide(other) {
         collide(this, other);
     }
-    render(ctx, x, y) {
+    render(_ctx, _x, _y) {
         throw new Error('render() unimplemented');
     }
 }

@@ -65,11 +65,15 @@ export class Graphic implements IGraphic {
 		this.centerOrigin();
 	}
 
-	update(input: Input): void {}
+	update(_input: Input): void {
+		//
+	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {}
+	render(_ctx: Ctx, _camera: Camera = Vec2.zero): void {
+		//
+	}
 
-	reset() {
+	reset(): void {
 		this.x = 0;
 		this.y = 0;
 		this.alpha = 1;

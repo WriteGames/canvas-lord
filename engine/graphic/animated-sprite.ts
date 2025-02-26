@@ -22,37 +22,37 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	inc = 0;
 
-	frame: number = 0;
-	frameId: number = 0;
-	frameW: number = 0;
-	frameH: number = 0;
-	framesPerRow: number = 0;
+	frame = 0;
+	frameId = 0;
+	frameW = 0;
+	frameH = 0;
+	framesPerRow = 0;
 
-	sourceX: number = 0;
-	sourceY: number = 0;
+	sourceX = 0;
+	sourceY = 0;
 	sourceW: number | undefined;
 	sourceH: number | undefined;
 
 	color?: string;
 	blend?: boolean;
 
-	done: boolean = false;
+	done = false;
 
-	animations: Map<string, Animation> = new Map();
+	animations = new Map<string, Animation>();
 	currentAnimation?: Animation;
 	callback?: AnimCallback;
 
-	get width() {
+	get width(): number {
 		return this.imageSrc.width;
 	}
-	get w() {
+	get w(): number {
 		return this.width;
 	}
 
-	get height() {
+	get height(): number {
 		return this.imageSrc.height;
 	}
-	get h() {
+	get h(): number {
 		return this.height;
 	}
 
@@ -70,7 +70,10 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		super();
 		this.asset = asset;
 
-		if (frameW === undefined || frameH === undefined)
+		if (
+			(frameW as unknown) === undefined ||
+			(frameH as unknown) === undefined
+		)
 			throw new Error('please supply frameW/frameH');
 
 		this.frame = 0;
@@ -86,7 +89,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.callback = callback;
 	}
 
-	add(name: string, frames: number[], frameRate: number, loop = true) {
+	add(name: string, frames: number[], frameRate: number, loop = true): void {
 		const animation: Animation = {
 			name,
 			frames,
@@ -97,7 +100,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	}
 
 	// TODO(bret): Revisit this, we might want a `restart = false` override
-	play(name?: string, reset = false, frame = 0) {
+	play(name?: string, reset = false, frame = 0): void {
 		if (!reset && name === this.currentAnimation?.name) return;
 
 		this.currentAnimation =
@@ -114,16 +117,16 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.updateRect();
 	}
 
-	stop() {
+	stop(): void {
 		this.play();
 	}
 
-	centerOrigin() {
+	centerOrigin(): void {
 		this.originX = this.frameW >> 1;
 		this.originY = this.frameH >> 1;
 	}
 
-	updateRect() {
+	updateRect(): void {
 		if (!this.currentAnimation) return;
 
 		const { frames, frameRate } = this.currentAnimation;
@@ -136,7 +139,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.frameId = frames[this.frame];
 	}
 
-	update() {
+	update(): void {
 		if (!this.currentAnimation || this.done) return;
 
 		const { frames, frameRate } = this.currentAnimation;
@@ -162,7 +165,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		}
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const { frameId, frameW, frameH } = this;
 		this.framesPerRow = Math.floor(this.imageSrc.width / frameW);
 
@@ -173,7 +176,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		Draw.image(ctx, this, x, y, sourceX, sourceY, frameW, frameH);
 	}
 
-	reset() {
+	reset(): void {
 		super.reset();
 
 		this.inc = 0;

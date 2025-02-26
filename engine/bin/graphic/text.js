@@ -100,7 +100,9 @@ export class Text extends Graphic {
         this.#revalidate();
     }
     #setOptions(options) {
-        let _options = Object.assign({}, textOptionPresetMap.get(undefined));
+        const _options = {
+            ...textOptionPresetMap.get(undefined),
+        };
         if (options !== undefined) {
             Object.assign(_options, typeof options === 'string'
                 ? textOptionPresetMap.get(options)
@@ -154,10 +156,16 @@ export class Text extends Graphic {
     static addPreset(name, options) {
         if (name === undefined)
             throw new Error('');
-        textOptionPresetMap.set(name, Object.assign({}, textOptionPresetMap.get(undefined), options));
+        textOptionPresetMap.set(name, {
+            ...textOptionPresetMap.get(undefined),
+            ...options,
+        });
     }
     static updateDefaultOptions(options) {
-        textOptionPresetMap.set(undefined, Object.assign({}, textOptionPresetMap.get(undefined), options));
+        textOptionPresetMap.set(undefined, {
+            ...textOptionPresetMap.get(undefined),
+            ...options,
+        });
     }
 }
 //# sourceMappingURL=text.js.map

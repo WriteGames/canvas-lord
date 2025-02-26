@@ -1,6 +1,6 @@
 /* Canvas Lord v0.5.3 */
 
-const xorShift32 = (random: Random) => {
+const xorShift32 = (random: Random): number => {
 	let x = random.seed;
 	x ^= x << 13;
 	x ^= x >>> 17;
@@ -17,31 +17,31 @@ export class Random {
 		this.seed = seed;
 	}
 
-	#next() {
+	#next(): number {
 		return Number(xorShift32(this) / 0xffffffff);
 	}
 
-	float(n: number = 0) {
+	float(n: number): number {
 		return this.#next() * n;
 	}
 
-	int(n: number) {
+	int(n: number): number {
 		return Math.floor(this.#next() * n);
 	}
 
-	range(a: number, b: number) {
+	range(a: number, b: number): number {
 		return this.float(b - a) + a;
 	}
 
-	bool() {
+	bool(): boolean {
 		return this.int(2) > 0;
 	}
 
-	sign() {
+	sign(): 1 | -1 {
 		return this.bool() ? 1 : -1;
 	}
 
-	angle() {
+	angle(): number {
 		return this.float(360);
 	}
 

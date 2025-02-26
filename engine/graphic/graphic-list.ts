@@ -17,12 +17,12 @@ export class GraphicList extends Graphic {
 		this.add(graphics);
 	}
 
-	centerOrigin() {
+	centerOrigin(): void {
 		// TODO(bret): what should this actually do?
 		this.graphics.forEach((graphic) => graphic.centerOrigin());
 	}
 
-	add(...graphics: Graphic[] | Graphic[][]) {
+	add(...graphics: Graphic[] | Graphic[][]): void {
 		graphics.flat().forEach((graphic) => {
 			if (this.has(graphic)) return;
 
@@ -31,12 +31,11 @@ export class GraphicList extends Graphic {
 		});
 	}
 
-	has(graphic: Graphic) {
-		const index = this.graphics.indexOf(graphic);
-		return index > -1;
+	has(graphic: Graphic): boolean {
+		return this.graphics.includes(graphic);
 	}
 
-	remove(...graphics: Graphic[] | Graphic[][]) {
+	remove(...graphics: Graphic[] | Graphic[][]): void {
 		graphics.flat().forEach((graphic) => {
 			if (!this.has(graphic)) return;
 
@@ -46,14 +45,13 @@ export class GraphicList extends Graphic {
 		});
 	}
 
-	update(input: Input) {
+	update(input: Input): void {
 		this.graphics.forEach((graphic) => graphic.update(input));
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		// TODO(bret): Set up transformations here!
 		this.scrollX = this.scrollY = 0;
-		const r = 3;
 		const preX = this.x;
 		const preY = this.y;
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);

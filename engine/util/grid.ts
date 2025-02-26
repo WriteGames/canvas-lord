@@ -9,16 +9,15 @@ import {
 	posToIndex,
 	scalePos,
 	subPos,
-	V2,
 	Vec2,
 } from '../math/index.js';
 import {
 	isWithinBounds,
 	norm,
-	Path,
 	rotateNormBy90Deg,
-	V2CardinalNorm,
-	V2OrthogonalNorm,
+	type Path,
+	type V2CardinalNorm,
+	type V2OrthogonalNorm,
 } from '../math/misc.js';
 import type { Camera } from './camera.js';
 import { generateCanvasAndCtx, type Ctx } from './canvas.js';
@@ -78,7 +77,7 @@ export class Grid {
 
 		const width = sprite.width * tileW;
 		const height = sprite.height * tileH;
-		const stride = sprite.width;
+		// const stride = sprite.width;
 
 		const grid = new Grid(width, height, tileW, tileH);
 		grid.forEach((_, [x, y]) => {
@@ -149,7 +148,7 @@ export class Grid {
 
 	getTile(x: number, y: number): number {
 		if (!this.inBounds(x, y)) return 0;
-		return this.data[y * this.columns + x] as number;
+		return this.data[y * this.columns + x] as unknown as number;
 	}
 
 	renderOutline(ctx: Ctx, camera: Camera, x = 0, y = 0): void {
@@ -277,11 +276,11 @@ export const findAllPolygonsInGrid = (
 	const shapes = findAllShapesInGrid(grid, columns, rows);
 	shapes.forEach((shape) => {
 		const [first] = shape.shapeCells;
-		if (first === undefined) return;
+		if ((first as unknown) === undefined) return;
 
 		const { gridType } = shape;
 
-		let curDir = norm.ND as V2OrthogonalNorm;
+		let curDir = norm.ND as unknown as V2OrthogonalNorm;
 		let lastDir = curDir;
 
 		const points: Path = [];
@@ -299,7 +298,7 @@ export const findAllPolygonsInGrid = (
 			const basePos = scalePos(pos, size);
 
 			const [lastX, lastY] = points.length
-				? subPos(points[points.length - 1]!, basePos)
+				? subPos(points[points.length - 1], basePos)
 				: [origin, origin];
 
 			const offset = new Vec2(0, 0);
@@ -341,7 +340,7 @@ export const findAllPolygonsInGrid = (
 				.map((o) => addPos(next, o))
 				.map((p) => {
 					return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
-						? (grid[posToIndex(p, columns)] as number)
+						? (grid[posToIndex(p, columns)] as unknown as number)
 						: 0;
 				});
 
@@ -432,7 +431,7 @@ const fillShape = (
 
 	const stride = columns;
 
-	const gridType = grid[posToIndex(start, columns)] as number;
+	const gridType = grid[posToIndex(start, columns)] as unknown as number;
 
 	const queue = [start];
 	const visited: string[] = [];
@@ -522,7 +521,7 @@ export class GridOutline {
 			this.polygons.forEach((polygon) => {
 				ctx.beginPath();
 				ctx.strokeStyle = this.outlineColor;
-				const start = addPos(polygon.points[0]!, [0.5, 0.5]);
+				const start = addPos(polygon.points[0], [0.5, 0.5]);
 				const cameraPos = new Vec2(camera[0], camera[1]);
 				const [_x, _y] = subPos(start, cameraPos);
 				ctx.moveTo(_x, _y);

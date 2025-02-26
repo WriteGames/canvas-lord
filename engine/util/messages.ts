@@ -1,9 +1,9 @@
 /* Canvas Lord v0.5.3 */
 
 export type MessagesPayload = object;
-export type MessagesSubscriber = {
+export interface MessagesSubscriber {
 	receive?: (message: string, payload: MessagesPayload) => void;
-};
+}
 
 export class Messages {
 	subscribers: Map<string, MessagesSubscriber[]>;
@@ -12,7 +12,7 @@ export class Messages {
 		this.subscribers = new Map<string, MessagesSubscriber[]>();
 	}
 
-	subscribe(subscriber: MessagesSubscriber, ...messages: string[]) {
+	subscribe(subscriber: MessagesSubscriber, ...messages: string[]): void {
 		messages.forEach((message) => {
 			if (!this.subscribers.has(message)) {
 				this.subscribers.set(message, []);
@@ -22,7 +22,7 @@ export class Messages {
 		});
 	}
 
-	sendMessage(message: string, payload: MessagesPayload) {
+	sendMessage(message: string, payload: MessagesPayload): void {
 		const subs = this.subscribers.get(message);
 		if (!subs) {
 			console.warn(`${message} isn't registered`);

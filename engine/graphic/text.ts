@@ -51,10 +51,10 @@ export class Text extends Graphic implements IText {
 
 	maxWidth?: number;
 
-	#invalided: Boolean = true;
+	#invalided = true;
 	#metrics!: TextMetrics;
 
-	get str() {
+	get str(): string {
 		return this.#str;
 	}
 	set str(value) {
@@ -62,7 +62,7 @@ export class Text extends Graphic implements IText {
 		this.#str = value;
 	}
 
-	get count() {
+	get count(): TextOptions['count'] {
 		return this.#count;
 	}
 	set count(value) {
@@ -70,7 +70,7 @@ export class Text extends Graphic implements IText {
 		this.#count = value;
 	}
 
-	get color() {
+	get color(): CSSColor {
 		return this.#color;
 	}
 	set color(value) {
@@ -78,7 +78,7 @@ export class Text extends Graphic implements IText {
 		this.#color = value;
 	}
 
-	get type() {
+	get type(): TextOptions['type'] {
 		return this.#type;
 	}
 	set type(value) {
@@ -86,7 +86,7 @@ export class Text extends Graphic implements IText {
 		this.#type = value;
 	}
 
-	get font() {
+	get font(): TextOptions['font'] {
 		return this.#font;
 	}
 	set font(value) {
@@ -94,7 +94,7 @@ export class Text extends Graphic implements IText {
 		this.#font = value;
 	}
 
-	get size() {
+	get size(): TextOptions['size'] {
 		return this.#size;
 	}
 	set size(value) {
@@ -102,7 +102,7 @@ export class Text extends Graphic implements IText {
 		this.#size = value;
 	}
 
-	get align() {
+	get align(): TextOptions['align'] {
 		return this.#align;
 	}
 	set align(value) {
@@ -110,7 +110,7 @@ export class Text extends Graphic implements IText {
 		this.#align = value;
 	}
 
-	get baseline() {
+	get baseline(): TextOptions['baseline'] {
 		return this.#baseline;
 	}
 	set baseline(value) {
@@ -118,11 +118,11 @@ export class Text extends Graphic implements IText {
 		this.#baseline = value;
 	}
 
-	get width() {
+	get width(): number {
 		this.#revalidate();
 		return this.#metrics.width;
 	}
-	get height() {
+	get height(): number {
 		this.#revalidate();
 		return (
 			this.#metrics.actualBoundingBoxAscent +
@@ -144,8 +144,10 @@ export class Text extends Graphic implements IText {
 		this.#revalidate();
 	}
 
-	#setOptions(options?: Partial<TextOptions> | string) {
-		let _options = Object.assign({}, textOptionPresetMap.get(undefined));
+	#setOptions(options?: Partial<TextOptions> | string): void {
+		const _options = {
+			...(textOptionPresetMap.get(undefined) as TextOptions),
+		};
 		if (options !== undefined) {
 			Object.assign(
 				_options,
@@ -163,15 +165,15 @@ export class Text extends Graphic implements IText {
 		this.baseline = _options.baseline;
 	}
 
-	setOptions(options: Partial<TextOptions>) {
+	setOptions(options: Partial<TextOptions>): void {
 		this.#setOptions(options);
 	}
 
-	resetToDefault() {
+	resetToDefault(): void {
 		this.#setOptions();
 	}
 
-	usePreset(name: string) {
+	usePreset(name: string): void {
 		this.#setOptions(name);
 	}
 
@@ -181,7 +183,7 @@ export class Text extends Graphic implements IText {
 		this.originY = this.height / 2;
 	}
 
-	#revalidate() {
+	#revalidate(): void {
 		if (!this.#invalided) return;
 		this.#invalided = false;
 
@@ -204,24 +206,24 @@ export class Text extends Graphic implements IText {
 		textCtx.restore();
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 		Draw.text(ctx, this, x, y, this.#str);
 	}
 
-	static addPreset(name: string, options: Partial<TextOptions>) {
-		if (name === undefined) throw new Error('');
-		textOptionPresetMap.set(
-			name,
-			Object.assign({}, textOptionPresetMap.get(undefined), options),
-		);
+	static addPreset(name: string, options: Partial<TextOptions>): void {
+		if ((name as unknown) === undefined) throw new Error('');
+		textOptionPresetMap.set(name, {
+			...(textOptionPresetMap.get(undefined) as TextOptions),
+			...options,
+		});
 	}
 
-	static updateDefaultOptions(options: Partial<TextOptions>) {
-		textOptionPresetMap.set(
-			undefined,
-			Object.assign({}, textOptionPresetMap.get(undefined), options),
-		);
+	static updateDefaultOptions(options: Partial<TextOptions>): void {
+		textOptionPresetMap.set(undefined, {
+			...(textOptionPresetMap.get(undefined) as TextOptions),
+			...options,
+		});
 	}
 }

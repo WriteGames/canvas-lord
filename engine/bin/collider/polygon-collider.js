@@ -46,7 +46,7 @@ export class PolygonCollider extends Collider {
     }
     get axes() {
         const axes = this.edges.map(([_x, _y]) => new Vec2(-_y, _x));
-        axes.forEach(Vec2.normalize);
+        axes.forEach((axis) => Vec2.normalize(axis));
         return axes;
     }
     // TODO(bret): throw error if points are invalid

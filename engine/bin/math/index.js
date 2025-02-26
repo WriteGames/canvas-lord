@@ -17,8 +17,8 @@ if (typeof Math.lerp === 'undefined') {
 }
 const X = 0;
 const Y = 1;
-const Z = 2;
-const W = 3;
+const _Z = 2;
+const _W = 3;
 export class Vec2 extends Array {
     // length: 2 = 2;
     constructor(x = 0, y = 0) {
@@ -144,8 +144,6 @@ export class Vec2 extends Array {
         return new Vec2(0, 1);
     }
 }
-const vec = new Vec2(1, 3);
-const [a, b, c, d, e] = vec;
 export const V2 = Object.defineProperties({}, {
     zero: {
         value: [0, 0],
@@ -172,7 +170,8 @@ export const scalePos = (p, s) => {
 export const posEqual = (a, b) => {
     const aa = [...a];
     const bb = [...b];
-    return (aa.length === bb.length && aa.every((v, i) => equal(v, bb[i])));
+    return (aa.length === bb.length &&
+        aa.every((v, i) => equal(v, bb[i])));
 };
 export const equal = (a, b) => {
     return Math.abs(a - b) < Number.EPSILON;

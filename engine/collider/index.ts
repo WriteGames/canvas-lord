@@ -18,7 +18,7 @@ export {
 	Collide,
 	Collision,
 	Collider,
-	ColliderTag,
+	type ColliderTag,
 	CircleCollider,
 	GridCollider,
 	LineCollider,

@@ -49,7 +49,7 @@ export abstract class Collider implements ICollider {
 		color: 'gray',
 	};
 
-	get options() {
+	get options(): DrawOptions {
 		return this.collidable
 			? Collider.#optionsCollidable
 			: Collider.#optionsNonCollidable;
@@ -60,15 +60,15 @@ export abstract class Collider implements ICollider {
 		this.y = y;
 	}
 
-	assignParent(parent: ColliderParent) {
+	assignParent(parent: ColliderParent): void {
 		this.parent = parent;
 	}
 
-	collide(other: Collider) {
+	collide(other: Collider): void {
 		collide(this, other);
 	}
 
-	render(ctx: Ctx, x: number, y: number): void {
+	render(_ctx: Ctx, _x: number, _y: number): void {
 		throw new Error('render() unimplemented');
 	}
 }

@@ -13,7 +13,7 @@ export class Random {
     #next() {
         return Number(xorShift32(this) / 0xffffffff);
     }
-    float(n = 0) {
+    float(n) {
         return this.#next() * n;
     }
     int(n) {

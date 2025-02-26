@@ -22,8 +22,7 @@ export class GraphicList extends Graphic {
         });
     }
     has(graphic) {
-        const index = this.graphics.indexOf(graphic);
-        return index > -1;
+        return this.graphics.includes(graphic);
     }
     remove(...graphics) {
         graphics.flat().forEach((graphic) => {
@@ -40,7 +39,6 @@ export class GraphicList extends Graphic {
     render(ctx, camera = Vec2.zero) {
         // TODO(bret): Set up transformations here!
         this.scrollX = this.scrollY = 0;
-        const r = 3;
         const preX = this.x;
         const preY = this.y;
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);

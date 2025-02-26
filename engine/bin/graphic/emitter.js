@@ -19,11 +19,12 @@ export class Emitter extends Graphic {
     // }
     constructor(asset, x, y) {
         super(x, y);
+        let _asset = asset;
         // TODO(bret): Figure out how we want to handle this
-        if (asset instanceof Sprite) {
-            asset = asset.asset;
+        if (_asset instanceof Sprite) {
+            _asset = _asset.asset;
         }
-        this.asset = asset;
+        this.asset = _asset;
         const { canvas } = generateCanvasAndCtx();
         if (!canvas)
             throw new Error();
@@ -77,10 +78,11 @@ export class Emitter extends Graphic {
         const samples = Array.from({ length: resolution }, (_, i) => {
             const { data } = ctx.getImageData(i, 0, 1, 1);
             const hex = [...data].map((c) => c.toString(16).padStart(2, '0'));
-            return '#' + hex.join('');
+            return `#${hex.join('')}`;
         });
         type.colorEase = ease;
-        return this.assignToType(type, 'color', { ctx, samples });
+        this.assignToType(type, 'color', { ctx, samples });
+        return type;
     }
     setMotion(name, moveAngle, distance, duration, moveAngleRange = 0, distanceRange = 0, durationRange = 0, ease) {
         const type = this.getType(name);
@@ -142,7 +144,7 @@ export class Emitter extends Graphic {
         type.particles.push(particle);
     }
     update() {
-        [...this.#types.entries()].forEach(([name, type]) => {
+        [...this.#types.entries()].forEach(([_, type]) => {
             type.particles = type.particles.filter((particle) => particle.elapsed < particle.duration);
             type.particles.forEach((particle) => {
                 const motionT = type.motionEase?.(particle.t) ?? particle.t;
@@ -170,7 +172,7 @@ export class Emitter extends Graphic {
         const blendCtx = blendCanvas.getContext('2d');
         if (!blendCtx)
             throw new Error();
-        [...this.#types.entries()].forEach(([name, type]) => {
+        [...this.#types.entries()].forEach(([_, type]) => {
             type.particles.forEach((particle) => {
                 this.alpha = 1;
                 if (particle.type.alpha) {

@@ -40,7 +40,8 @@ export class AnimatedSprite extends Graphic {
     constructor(asset, frameW, frameH, callback) {
         super();
         this.asset = asset;
-        if (frameW === undefined || frameH === undefined)
+        if (frameW === undefined ||
+            frameH === undefined)
             throw new Error('please supply frameW/frameH');
         this.frame = 0;
         this.frameId = 0;

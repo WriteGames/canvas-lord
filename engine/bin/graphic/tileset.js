@@ -10,7 +10,7 @@ export class Tileset {
         this.columns = Math.ceil(width / tileW);
         this.rows = Math.ceil(height / tileH);
         this.sprite = sprite;
-        this.data = Array.from({ length: this.columns * this.rows }, (v) => null);
+        this.data = Array.from({ length: this.columns * this.rows }, () => null);
         this.startX = options.startX ?? 1;
         this.startY = options.startY ?? 1;
         this.separation = options.separation ?? 1;
@@ -30,8 +30,8 @@ export class Tileset {
         const { sprite: image, separation, startX, startY, tileW, tileH, } = this;
         if (!image.image)
             throw new Error('Tileset is missing an image');
-        const srcCols = Math.floor(image.width / tileW);
-        const srcRows = Math.floor(image.height / tileH);
+        // const srcCols = Math.floor(image.width / tileW);
+        // const srcRows = Math.floor(image.height / tileH);
         const [cameraX, cameraY] = camera;
         const offsetX = this.parent?.x ?? 0;
         const offsetY = this.parent?.y ?? 0;

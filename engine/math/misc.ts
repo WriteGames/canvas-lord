@@ -6,20 +6,18 @@ import {
 	EPSILON,
 	hashPos,
 	subPos,
-	V4,
+	type V4,
 	Vec2,
-	type Vector,
+	// type Vector,
 } from './index.js';
-import { Tileset } from '../graphic/index.js';
+import type { Tileset } from '../graphic/index.js';
 
-type Writeable<T> = {
-	-readonly [P in keyof T]: T[P];
-};
+// type Writeable<T> = {
+// 	-readonly [P in keyof T]: T[P];
+// };
 
-type FuncReduceVector = <A extends Vector, B extends Vector>(
-	a: Vec2,
-	b: Vec2,
-) => number;
+// type FuncReduceVector = <A extends Vector, B extends Vector>(
+type FuncReduceVector = (a: Vec2, b: Vec2) => number;
 type FuncReduceNumber = (acc: number, v: number) => number;
 
 type VectorToObjectVectorHybrid<A extends readonly PropertyKey[]> = Pick<
@@ -30,7 +28,7 @@ type VectorToObjectVectorHybrid<A extends readonly PropertyKey[]> = Pick<
 >;
 
 const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
-const reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
+const _reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
 
 const distance = (dimensions: Vec2): number =>
 	Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
@@ -44,19 +42,16 @@ const interlaceArrays = <T, U>(
 	b: Readonly<U[]>,
 ): Array<T | U> => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
 
-export const mapByOffset = <V extends Vector>(
-	offset: Vec2,
-): ((pos: Vec2) => Vec2) => {
+// export const mapByOffset = <V extends Vector>(
+export const mapByOffset = (offset: Vec2): ((pos: Vec2) => Vec2) => {
 	return (pos: Vec2): Vec2 => addPos(offset, pos);
 };
-export const mapFindOffset = <V extends Vector>(
-	origin: Vec2,
-): ((pos: Vec2) => Vec2) => {
+// export const mapFindOffset = <V extends Vector>(
+export const mapFindOffset = (origin: Vec2): ((pos: Vec2) => Vec2) => {
 	return (pos: Vec2): Vec2 => subPos(pos, origin);
 };
-export const flatMapByOffsets = <V extends Vector>(
-	offsets: Vec2[],
-): ((pos: Vec2) => Vec2[]) => {
+// export const flatMapByOffsets = <V extends Vector>(
+export const flatMapByOffsets = (offsets: Vec2[]): ((pos: Vec2) => Vec2[]) => {
 	return (pos: Vec2): Vec2[] => offsets.map((offset) => addPos(offset, pos));
 };
 export const posDistance: FuncReduceVector = (a, b) => distance(subPos(b, a));
@@ -88,11 +83,8 @@ const getAngle: FuncReduceVector = (a, b) =>
 const getAngleBetween: FuncReduceNumber = (a, b) =>
 	((b - a + RAD_540) % RAD_360) - RAD_180;
 
-export const isPointOnLine = <V extends Vector>(
-	point: Vec2,
-	a: Vec2,
-	b: Vec2,
-): boolean =>
+// export const isPointOnLine = <V extends Vector>(
+export const isPointOnLine = (point: Vec2, a: Vec2, b: Vec2): boolean =>
 	Math.abs(
 		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
 	) < EPSILON;
@@ -104,8 +96,9 @@ export const isWithinBounds = (
 	[x2, y2]: Vec2,
 ): boolean => x >= x1 && y >= y1 && x < x2 && y < y2;
 
+// <V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 export const filterWithinBounds =
-	<V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
+	(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 	(pos: Vec2): boolean =>
 		a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&
 		b.every((p, i) => ([...pos][i] ?? Infinity) < p);
@@ -116,7 +109,10 @@ export const isPointInsidePath = (point: Vec2, path: Path): boolean => {
 	const wind = path
 		.map((vertex) => getAngle(point, vertex))
 		.map((angle, i, arr) =>
-			getAngleBetween(angle, arr[(i + 1) % arr.length] as number),
+			getAngleBetween(
+				angle,
+				arr[(i + 1) % arr.length] as unknown as number,
+			),
 		)
 		.reduce(reduceSum, 0);
 	return Math.abs(wind) > EPSILON;
@@ -186,6 +182,7 @@ export const cardinalNorms = interlaceArrays(orthogonalNorms, diagonalNorms);
 // TODO: also allow for non-readonly versions :)
 export type V2OrthogonalNorm = (typeof orthogonalNorms)[number];
 export type V2DiagonalNorm = (typeof diagonalNorms)[number];
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- this might change in the future, we'll see
 export type V2CardinalNorm = V2OrthogonalNorm | V2DiagonalNorm;
 
 // Starts right, goes counter-clockwise
@@ -323,7 +320,7 @@ export const rotateNormBy45Deg = (
 	curDir: V2CardinalNorm,
 	turns: number,
 ): V2CardinalNorm => {
-	const norms = cardinalNorms; // .flatMap(v => [v, v]);
+	// const norms = cardinalNorms; // .flatMap(v => [v, v]);
 	const index = cardinalNorms.indexOf(curDir);
 	if (index === -1) {
 		console.error('rotateNormBy45Deg expects a norm array');
@@ -331,7 +328,7 @@ export const rotateNormBy45Deg = (
 	}
 
 	const n = cardinalNorms.length;
-	return cardinalNorms[(index - turns + n) % n] as V2CardinalNorm;
+	return cardinalNorms[(index - turns + n) % n] as unknown as V2CardinalNorm;
 };
 
 // NOTE: The generic allows it to use V2's orthogonal or diagonal norm types, depending on the `curDir`

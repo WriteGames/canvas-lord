@@ -206,8 +206,8 @@ export class Input {
 		this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
 	}
 
-	onMouseDown(e: MouseEvent): boolean | void {
-		if (document.activeElement !== this.engine.focusElement) return;
+	onMouseDown(e: MouseEvent): boolean {
+		if (document.activeElement !== this.engine.focusElement) return true;
 
 		e.preventDefault();
 		if (!this.mouseCheck(e.button)) {
@@ -217,8 +217,8 @@ export class Input {
 		return false;
 	}
 
-	onMouseUp(e: MouseEvent): boolean | void {
-		if (document.activeElement !== this.engine.focusElement) return;
+	onMouseUp(e: MouseEvent): boolean {
+		if (document.activeElement !== this.engine.focusElement) return true;
 
 		e.preventDefault();
 		if (this.mouseCheck(e.button)) {
@@ -228,8 +228,8 @@ export class Input {
 		return false;
 	}
 
-	onKeyDown(e: KeyboardEvent): boolean | void {
-		if (document.activeElement !== this.engine.focusElement) return;
+	onKeyDown(e: KeyboardEvent): boolean {
+		if (document.activeElement !== this.engine.focusElement) return true;
 
 		e.preventDefault();
 		const { code } = e as { code: Key };
@@ -240,8 +240,8 @@ export class Input {
 		return false;
 	}
 
-	onKeyUp(e: KeyboardEvent): boolean | void {
-		if (document.activeElement !== this.engine.focusElement) return;
+	onKeyUp(e: KeyboardEvent): boolean {
+		if (document.activeElement !== this.engine.focusElement) return true;
 
 		e.preventDefault();
 		const { code } = e as { code: Key };
@@ -265,15 +265,15 @@ export class Input {
 		return value === 1;
 	}
 
-	mousePressed(button: number = 0): boolean {
+	mousePressed(button = 0): boolean {
 		return this._checkPressed(this.mouse._clicked[button]);
 	}
 
-	mouseCheck(button: number = 0): boolean {
+	mouseCheck(button = 0): boolean {
 		return this._checkHeld(this.mouse._clicked[button]);
 	}
 
-	mouseReleased(button: number = 0): boolean {
+	mouseReleased(button = 0): boolean {
 		return this._checkReleased(this.mouse._clicked[button]);
 	}
 
@@ -302,9 +302,11 @@ export class Input {
 	}
 
 	clear(): void {
-		this.keys = _keysArr.reduce((acc, v) => {
+		this.keys = _keysArr.reduce<typeof this.keys>((acc, v) => {
 			acc[v] = 0;
 			return acc;
+			// TODO(bret): revisit this
+			// eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter -- tee hee will fix later
 		}, {} as typeof this.keys);
 	}
 }

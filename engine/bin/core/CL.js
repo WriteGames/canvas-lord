@@ -1,7 +1,12 @@
+/* eslint-disable unicorn/filename-case -- don't worry about it */
 /* Canvas Lord v0.5.3 */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- we want a static class here
 export class CL {
     static #engine;
     static #scene;
+    constructor() {
+        throw new Error('this is a static class');
+    }
     static get engine() {
         if (CL.#engine === undefined)
             throw new Error('CL.#engine is undefined');
@@ -24,4 +29,5 @@ export class CL {
         CL.#scene = scene;
     }
 }
+/* eslint-enable unicorn/filename-case -- don't worry about it */
 //# sourceMappingURL=CL.js.map

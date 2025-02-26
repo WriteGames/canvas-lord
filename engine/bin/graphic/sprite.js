@@ -2,6 +2,7 @@
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import { Draw } from '../util/draw.js';
+const assetHasImage = (asset) => asset.image !== null;
 // TODO(bret): How to tile?
 export class Sprite extends Graphic {
     asset;
@@ -52,7 +53,8 @@ export class Sprite extends Graphic {
         };
         const img = new Image(width, height);
         img.onload = () => {
-            if ((asset.image = img)) {
+            asset.image = img;
+            if (assetHasImage(asset)) {
                 asset.width = width;
                 asset.height = height;
                 asset.loaded = true;

@@ -30,6 +30,6 @@ module.exports = {
 		'no-constant-condition': 0,
 		'no-extend-native': 0,
 		'no-lonely-if': 0,
-		'no-unused-vars': 0,
+		// 'no-unused-vars': 0,
 	},
 };

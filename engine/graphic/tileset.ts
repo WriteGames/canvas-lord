@@ -51,7 +51,7 @@ export class Tileset {
 
 		this.data = Array.from(
 			{ length: this.columns * this.rows },
-			(v) => null,
+			() => null,
 		);
 
 		this.startX = options.startX ?? 1;
@@ -83,8 +83,8 @@ export class Tileset {
 
 		if (!image.image) throw new Error('Tileset is missing an image');
 
-		const srcCols = Math.floor(image.width / tileW);
-		const srcRows = Math.floor(image.height / tileH);
+		// const srcCols = Math.floor(image.width / tileW);
+		// const srcRows = Math.floor(image.height / tileH);
 
 		const [cameraX, cameraY] = camera;
 

@@ -26,10 +26,11 @@ declare global {
 export type RequiredAndOmit<T, O extends keyof T> = Required<Omit<T, O>> &
 	Pick<T, O>;
 
-export type IEntityComponentType<T = any> = {
+export type RawComponent = object | unknown[];
+export interface IEntityComponentType<T = RawComponent> {
 	data: T;
 	__IEntityComponent: symbol;
-};
+}
 
 export interface IEntitySystem {
 	update?: (entity: Entity, input: Input) => void;

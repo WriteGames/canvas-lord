@@ -1,12 +1,18 @@
+/* eslint-disable unicorn/filename-case -- don't worry about it */
 /* Canvas Lord v0.5.3 */
 
 import type { Engine } from './engine.js';
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- we want a static class here
 export class CL {
 	static #engine: Engine | undefined;
 	static #scene: Scene | undefined;
+
+	constructor() {
+		throw new Error('this is a static class');
+	}
 
 	static get engine(): Engine {
 		if (CL.#engine === undefined)
@@ -25,11 +31,12 @@ export class CL {
 		return CL.#scene;
 	}
 
-	static __setEngine(engine: Engine | undefined) {
+	static __setEngine(engine: Engine | undefined): void {
 		CL.#engine = engine;
 	}
 
-	static __setScene(scene: Scene | undefined) {
+	static __setScene(scene: Scene | undefined): void {
 		CL.#scene = scene;
 	}
 }
+/* eslint-enable unicorn/filename-case -- don't worry about it */

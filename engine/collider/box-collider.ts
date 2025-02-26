@@ -15,30 +15,30 @@ export class BoxCollider extends Collider implements IBoxCollider {
 	width: number;
 	height: number;
 
-	get w() {
+	get w(): number {
 		return this.width;
 	}
 	set w(value) {
 		this.width = value;
 	}
 
-	get h() {
+	get h(): number {
 		return this.height;
 	}
 	set h(value) {
 		this.height = value;
 	}
 
-	get left() {
+	get left(): number {
 		return this.parent.x + this.x;
 	}
-	get right() {
+	get right(): number {
 		return this.parent.x + this.x + this.w - 1;
 	}
-	get top() {
+	get top(): number {
 		return this.parent.y + this.y;
 	}
-	get bottom() {
+	get bottom(): number {
 		return this.parent.y + this.y + this.h - 1;
 	}
 

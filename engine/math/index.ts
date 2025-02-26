@@ -34,8 +34,8 @@ export type Vector = V2 | Readonly<V2> | V3 | Readonly<V3> | V4 | Readonly<V4>;
 
 const X = 0;
 const Y = 1;
-const Z = 2;
-const W = 3;
+const _Z = 2;
+const _W = 3;
 
 export class Vec2 extends Array<number> {
 	// length: 2 = 2;
@@ -64,21 +64,21 @@ export class Vec2 extends Array<number> {
 		return magnitude2D(this);
 	}
 
-	set(v: Vec2) {
+	set(v: Vec2): void {
 		this.x = v.x;
 		this.y = v.y;
 	}
 
-	setXY(x: number, y: number) {
+	setXY(x: number, y: number): void {
 		this.x = x;
 		this.y = y;
 	}
 
-	normalize() {
+	normalize(): void {
 		Vec2.normalize(this);
 	}
 
-	static normalize(v: Vec2) {
+	static normalize(v: Vec2): void {
 		const mag = v.magnitude;
 		v.x /= mag;
 		v.y /= mag;
@@ -87,14 +87,14 @@ export class Vec2 extends Array<number> {
 	map<U>(
 		// TODO: index: 0 | 1 ?
 		callbackfn: (value: number, index: number, array: number[]) => U,
-		thisArg?: any,
+		thisArg?: unknown,
 	): [U, U] {
 		return super.map(callbackfn, thisArg) as [U, U];
 	}
 
 	every<S extends number>(
 		predicate: (value: number, index: number, array: number[]) => boolean,
-		thisArg?: any,
+		thisArg?: unknown,
 	): this is S[] {
 		return super.every(predicate, thisArg);
 	}
@@ -103,7 +103,7 @@ export class Vec2 extends Array<number> {
 		return super.join(separator);
 	}
 
-	[Symbol.iterator]() {
+	[Symbol.iterator](): ArrayIterator<number> {
 		return super.values();
 	}
 
@@ -165,19 +165,19 @@ export class Vec2 extends Array<number> {
 		return scalePos(v, 1 / s);
 	}
 
-	cross(v: Vec2) {
+	cross(v: Vec2): number {
 		return Vec2.cross(this, v);
 	}
 
-	static cross(a: Vec2, b: Vec2) {
+	static cross(a: Vec2, b: Vec2): number {
 		return crossProduct2D(a, b);
 	}
 
-	dot(v: Vec2) {
+	dot(v: Vec2): number {
 		return Vec2.dot(this, v);
 	}
 
-	static dot(a: Vec2, b: Vec2) {
+	static dot(a: Vec2, b: Vec2): number {
 		return dotProduct2D(a, b);
 	}
 
@@ -206,9 +206,6 @@ export class Vec2 extends Array<number> {
 	}
 }
 
-const vec = new Vec2(1, 3);
-const [a, b, c, d, e] = vec;
-
 export const V2 = Object.defineProperties(
 	{},
 	{
@@ -230,19 +227,15 @@ type FuncMapVector = <T extends Vector | Vec2, A extends T, B extends T>(
 	a: A,
 	b: B,
 ) => A;
-type FuncMapVectorByScalar = <P extends Vector>(
-	p: Vec2 | Vector,
-	s: number,
-) => Vec2;
+// type FuncMapVectorByScalar = <P extends Vector>(
+type FuncMapVectorByScalar = (p: Vec2 | Vector, s: number) => Vec2;
 
-type FuncReduceVector = <A extends Vector, B extends Vector>(
-	a: Vec2,
-	b: Vec2,
-) => number;
+// type FuncReduceVector = <A extends Vector, B extends Vector>(
+type FuncReduceVector = (a: Vec2, b: Vec2) => number;
 
-type FuncCompare<T extends any> = (a: T, b: T) => boolean;
+type FuncCompare<T> = (a: T, b: T) => boolean;
 
-export const hashPos = (pos: Vector | Vec2) => pos.join(',');
+export const hashPos = (pos: Vector | Vec2): string => pos.join(',');
 
 export const addPos: FuncMapVector = (a, b) => {
 	return a.map((v, i) => v + (b[i] ?? 0)) as typeof a;
@@ -264,7 +257,8 @@ export const posEqual = (a: Vector | Vec2, b: Vector | Vec2): boolean => {
 	const aa = [...a];
 	const bb = [...b];
 	return (
-		aa.length === bb.length && aa.every((v, i) => equal(v, bb[i] as number))
+		aa.length === bb.length &&
+		aa.every((v, i) => equal(v, bb[i] as unknown as number))
 	);
 };
 

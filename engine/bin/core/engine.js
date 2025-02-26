@@ -59,8 +59,14 @@ export class Game {
         this.canvas = canvas;
         this.ctx = ctx;
         // apply defaults to game settings
-        const engineSettings = Object.assign({}, defaultSettings, settings);
-        engineSettings.gameLoopSettings = Object.assign({}, defaultSettings.gameLoopSettings, settings?.gameLoopSettings);
+        const engineSettings = {
+            ...defaultSettings,
+            ...settings,
+        };
+        engineSettings.gameLoopSettings = {
+            ...defaultSettings.gameLoopSettings,
+            ...settings?.gameLoopSettings,
+        };
         // render a rectangle ASAP
         this.backgroundColor = engineSettings.backgroundColor;
         ctx.save();
@@ -85,9 +91,6 @@ export class Game {
         this.recentFrames = Array.from({ length: this.fps }, () => idealDuration);
         this.frameIndex = 0;
         this.frameRate = this.fps;
-        if (engineSettings.gameLoopSettings) {
-            this.gameLoopSettings = engineSettings.gameLoopSettings;
-        }
         this.assetManager = engineSettings.assetManager;
         if (engineSettings.devMode)
             this.debug = new Debug(this);
@@ -128,7 +131,6 @@ export class Game {
         let deltaTime = 0;
         const maxFrames = 5;
         let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
-        const engine = this;
         this.mainLoop = (time) => {
             const timeStep = 1e3 / this.fps;
             this.frameRequestId = requestAnimationFrame(this.mainLoop);
@@ -139,7 +141,7 @@ export class Game {
             const prevFrameIndex = this.frameIndex;
             // should we send a pre-/post- message in case there are
             // multiple updates that happen in a single while?
-            CL.__setEngine(engine);
+            CL.__setEngine(this);
             while (deltaTime >= timeStep) {
                 this.update();
                 this.input.update();
@@ -160,18 +162,18 @@ export class Game {
             }
         };
         this.eventListeners = [];
-        window.addEventListener('resize', (e) => {
+        window.addEventListener('resize', () => {
             computeCanvasSize(this.canvas);
         });
-        window.addEventListener('blur', (e) => this.onFocus(false));
+        window.addEventListener('blur', () => this.onFocus(false));
         // TODO: should we allow folks to customize this to be directly on the canvas?
         this.focusElement = this.wrapper;
-        this.focusElement.addEventListener('focusin', (e) => this.onFocus(true));
-        this.focusElement.addEventListener('focusout', (e) => this.onFocus(false));
+        this.focusElement.addEventListener('focusin', () => this.onFocus(true));
+        this.focusElement.addEventListener('focusout', () => this.onFocus(false));
         this.updateGameLoopSettings(this.gameLoopSettings);
     }
-    load(assetManager) {
-        assetManager.loadAssets();
+    async load(assetManager) {
+        return assetManager.loadAssets();
     }
     get width() {
         return this.canvas.width;
@@ -282,10 +284,10 @@ export class Game {
         if (this.focus === focus)
             return;
         if (this.focus) {
-            Sfx.audioCtx.suspend();
+            void Sfx.audioCtx.suspend();
         }
         else {
-            Sfx.audioCtx.resume();
+            void Sfx.audioCtx.resume();
         }
         this.focus = focus;
         this.sendEvent(focus ? 'focus' : 'blur');

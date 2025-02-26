@@ -52,8 +52,8 @@ type Callback<T extends unknown[], O extends DrawOptions> = (
 
 let tempCanvas: HTMLCanvasElement;
 let tempCtx: CanvasRenderingContext2D;
-const initTempCanvas = (ctx: Ctx) => {
-	if (tempCanvas) return;
+const initTempCanvas = (ctx: Ctx): void => {
+	if (tempCanvas as unknown) return;
 	// NOTE(bret): Do NOT make this an OffscreenCanvas, it will be slow!!
 	tempCanvas = document.createElement('canvas');
 	tempCanvas.width = ctx.canvas.width;
@@ -69,14 +69,10 @@ export const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 	callback: Callback<T, O>,
 ): Callback<T, O> => {
 	return (ctx, options, x, y, ...args: T): void => {
-		const {
-			angle = 0,
-			originX = 0,
-			originY = 0,
-			scaleX = 1,
-			scaleY = 1,
-			alpha = 1,
-		} = Object.assign({}, drawable, options);
+		const { angle, originX, originY, scaleX, scaleY, alpha } = {
+			...drawable,
+			...options,
+		};
 
 		ctx.save();
 		ctx.translate(x, y);
@@ -113,6 +109,7 @@ export const Draw = {
 
 			switch (options.type) {
 				case 'fill':
+				case undefined:
 					ctx.fillStyle = color;
 					ctx.fill();
 					break;
@@ -152,6 +149,7 @@ export const Draw = {
 			const args = [x, y, w, h] as const;
 			switch (options.type) {
 				case 'fill':
+				case undefined:
 					ctx.fillStyle = color;
 					ctx.fillRect(...args);
 					break;
@@ -164,7 +162,7 @@ export const Draw = {
 	),
 
 	polygon: moveCanvas(
-		(ctx, options: DrawOptions, x, y, _points: [number, number][]) => {
+		(ctx, options: DrawOptions, x, y, _points: Array<[number, number]>) => {
 			initTempCanvas(ctx);
 
 			const color = options.color ?? 'magenta';
@@ -179,6 +177,7 @@ export const Draw = {
 			}
 			switch (options.type) {
 				case 'fill':
+				case undefined:
 					ctx.fillStyle = color;
 					ctx.fill();
 					break;
@@ -194,16 +193,14 @@ export const Draw = {
 		(
 			ctx,
 			options: ImageOptions,
-			drawX: number = 0,
-			drawY: number = 0,
+			drawX = 0,
+			drawY = 0,
 			sourceX?: number,
 			sourceY?: number,
 			width?: number,
 			height?: number,
 		) => {
 			initTempCanvas(ctx);
-
-			const color = options.color ?? 'magenta';
 
 			const { imageSrc } = options;
 			if (!imageSrc) return;

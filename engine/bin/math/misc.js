@@ -2,17 +2,20 @@
 // TODO(bret): This file is a bunch of random stuff, will need to clean up
 import { addPos, EPSILON, hashPos, subPos, Vec2, } from './index.js';
 const reduceSum = (acc, v) => acc + v;
-const reduceProduct = (acc, v) => acc * v;
+const _reduceProduct = (acc, v) => acc * v;
 const distance = (dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
 const distanceSq = (dimensions) => Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 const isDefined = (v) => Boolean(v);
 const interlaceArrays = (a, b) => a.flatMap((v, i) => [v, b[i]]).filter(isDefined);
+// export const mapByOffset = <V extends Vector>(
 export const mapByOffset = (offset) => {
     return (pos) => addPos(offset, pos);
 };
+// export const mapFindOffset = <V extends Vector>(
 export const mapFindOffset = (origin) => {
     return (pos) => subPos(pos, origin);
 };
+// export const flatMapByOffsets = <V extends Vector>(
 export const flatMapByOffsets = (offsets) => {
     return (pos) => offsets.map((offset) => addPos(offset, pos));
 };
@@ -37,9 +40,11 @@ export const RAD_720 = 720 * DEG_TO_RAD;
 // const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
 const getAngle = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween = (a, b) => ((b - a + RAD_540) % RAD_360) - RAD_180;
+// export const isPointOnLine = <V extends Vector>(
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions
 export const isWithinBounds = ([x, y], [x1, y1], [x2, y2]) => x >= x1 && y >= y1 && x < x2 && y < y2;
+// <V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&
     b.every((p, i) => ([...pos][i] ?? Infinity) < p);
 export const isPointInsidePath = (point, path) => {
@@ -193,7 +198,7 @@ export const globalSetTile = (tileset, x, y, bitFlag) => {
 };
 // TODO(bret): Rewrite these to use Vectors once those are implemented :)
 export const rotateNormBy45Deg = (curDir, turns) => {
-    const norms = cardinalNorms; // .flatMap(v => [v, v]);
+    // const norms = cardinalNorms; // .flatMap(v => [v, v]);
     const index = cardinalNorms.indexOf(curDir);
     if (index === -1) {
         console.error('rotateNormBy45Deg expects a norm array');

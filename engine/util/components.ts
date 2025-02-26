@@ -1,8 +1,8 @@
 /* Canvas Lord v0.5.3 */
 
-import { IEntityComponentType } from './types.js';
+import type { IEntityComponentType, RawComponent } from './types.js';
 import { Vec2 } from '../math/index.js';
-import type { Canvas } from '../util/canvas.js';
+import type { Canvas } from './canvas.js';
 
 // NOTE: This is necessary since Components.createComponent() returns a Readonly<IEntityComponent> - we can use this to remove Readable<>
 export type ComponentProps<T extends IEntityComponentType> =
@@ -12,31 +12,31 @@ export type ComponentProps<T extends IEntityComponentType> =
 		  }
 		: never;
 
-type RawComponent = object | unknown[];
-
 type InferTuple<T> = T extends readonly [...infer Tuple] ? Tuple : T;
 export const copyObject = <T extends RawComponent, U = InferTuple<T>>(
 	obj: U,
-): U => (Array.isArray(obj) ? ([...obj] as U) : structuredClone(obj));
+): U => structuredClone(obj);
 
 // TODO: rename to registerComponent? And then do something with that?
 // TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
-export const createComponent = <T extends RawComponent>(initialState: T) =>
+export const createComponent = <T extends RawComponent>(
+	initialState: T,
+): IEntityComponentType<T> =>
 	Object.freeze(
 		copyObject({
 			data: initialState,
-		}),
-	) as IEntityComponentType<T>;
+		} as IEntityComponentType<T>),
+	);
 
 export const pos2D = createComponent(Vec2.zero);
 
 // TODO: export this from a better place lol
 interface DrawOptions {
-	originX?: number;
-	originY?: number;
-	angle?: number;
-	scaleX?: number;
-	scaleY?: number;
+	originX: number;
+	originY: number;
+	angle: number;
+	scaleX: number;
+	scaleY: number;
 	color?: string;
 	blend?: boolean;
 }

@@ -11,16 +11,16 @@ interface IPointCollider {
 export class PointCollider extends Collider implements IPointCollider {
 	type = 'point' as const;
 
-	get left() {
+	get left(): number {
 		return this.parent.x + this.x;
 	}
-	get right() {
+	get right(): number {
 		return this.parent.x + this.x;
 	}
-	get top() {
+	get top(): number {
 		return this.parent.y + this.y;
 	}
-	get bottom() {
+	get bottom(): number {
 		return this.parent.y + this.y;
 	}
 
