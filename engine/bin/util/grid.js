@@ -33,7 +33,7 @@ export class Grid {
             throw Error('pixelCtx failed to create');
         const width = sprite.width * tileW;
         const height = sprite.height * tileH;
-        const stride = sprite.width;
+        // const stride = sprite.width;
         const grid = new Grid(width, height, tileW, tileH);
         grid.forEach((_, [x, y]) => {
             pixelCtx.drawImage(sprite.image, -x, -y);

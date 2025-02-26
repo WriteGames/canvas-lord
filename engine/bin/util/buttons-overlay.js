@@ -22,7 +22,7 @@ export class ButtonsOverlay {
         const buttonSize = 10;
         const padding = 5;
         const fillStyle = (keyDown) => keyDown ? 'rgba(255, 255, 255, 1)' : 'rgba(0, 0, 0, 0.75)';
-        const strokeStyle = (keyDown) => (keyDown ? 'black' : 'white');
+        const strokeStyle = (keyDown) => keyDown ? 'black' : 'white';
         const drawButton = (keyDown, width, overlay) => {
             ctx.fillStyle = fillStyle(keyDown);
             ctx.fillRect(drawX, drawY, width, buttonSize);

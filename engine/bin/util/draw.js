@@ -26,7 +26,10 @@ const initTempCanvas = (ctx) => {
 // TODO(bret): un-export this!
 export const moveCanvas = (callback) => {
     return (ctx, options, x, y, ...args) => {
-        const { angle = 0, originX = 0, originY = 0, scaleX = 1, scaleY = 1, alpha = 1, } = Object.assign({}, drawable, options);
+        const { angle, originX, originY, scaleX, scaleY, alpha } = {
+            ...drawable,
+            ...options,
+        };
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(scaleX, scaleY);
@@ -55,6 +58,7 @@ export const Draw = {
         ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
         switch (options.type) {
             case 'fill':
+            case undefined:
                 ctx.fillStyle = color;
                 ctx.fill();
                 break;
@@ -81,6 +85,7 @@ export const Draw = {
         const args = [x, y, w, h];
         switch (options.type) {
             case 'fill':
+            case undefined:
                 ctx.fillStyle = color;
                 ctx.fillRect(...args);
                 break;
@@ -103,6 +108,7 @@ export const Draw = {
         }
         switch (options.type) {
             case 'fill':
+            case undefined:
                 ctx.fillStyle = color;
                 ctx.fill();
                 break;
@@ -114,7 +120,6 @@ export const Draw = {
     }),
     image: moveCanvas((ctx, options, drawX = 0, drawY = 0, sourceX, sourceY, width, height) => {
         initTempCanvas(ctx);
-        const color = options.color ?? 'magenta';
         const { imageSrc } = options;
         if (!imageSrc)
             return;

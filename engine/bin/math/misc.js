@@ -1,6 +1,8 @@
 /* Canvas Lord v0.5.3 */
 // TODO(bret): This file is a bunch of random stuff, will need to clean up
-import { addPos, EPSILON, hashPos, subPos, Vec2, } from './index.js';
+import { addPos, EPSILON, hashPos, subPos, Vec2,
+// type Vector,
+ } from './index.js';
 const reduceSum = (acc, v) => acc + v;
 const _reduceProduct = (acc, v) => acc * v;
 const distance = (dimensions) => Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));

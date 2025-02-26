@@ -159,7 +159,7 @@ export class Scene {
     render(gameCtx) {
         // TODO: this should maybe be in pre-render?
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
-        const ctx = this.ctx ?? gameCtx;
+        const ctx = (this.ctx ?? gameCtx);
         const { canvas } = ctx;
         const { camera } = this;
         let { backgroundColor } = this;
@@ -183,7 +183,7 @@ export class Scene {
                 const { render } = system;
                 if (!render)
                     return;
-                const entities = this.renderables.inScene.filter((e) => Boolean(e.component?.(component)));
+                const entities = this.renderables.inScene.filter((e) => Boolean(e.component(component)));
                 entities.forEach((entity) => {
                     render(entity, ctx, camera);
                 });
