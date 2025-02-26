@@ -5,9 +5,10 @@
 	"description": "An entity transpiler",
 	"main": "transpile.js",
 	"type": "module",
+	"packageManager": "pnpm@9.8.0",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^22",
+		"pnpm": "^9"
 	},
 	"scripts": {
 		"transpile": "node transpile.js"

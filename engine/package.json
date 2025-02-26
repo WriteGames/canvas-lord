@@ -9,9 +9,10 @@
 		".": "./bin/canvas-lord.js",
 		"./*": "./bin/*"
 	},
+	"packageManager": "pnpm@9.8.0",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^22",
+		"pnpm": "^9"
 	},
 	"scripts": {
 		"compile": "tsc --p tsconfig.json",
