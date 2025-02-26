@@ -30,16 +30,16 @@ export class BoxCollider extends Collider implements IBoxCollider {
 	}
 
 	get left(): number {
-		return this.parent.x + this.x;
+		return this.parent.x + this.x - this.originX;
 	}
 	get right(): number {
-		return this.parent.x + this.x + this.w - 1;
+		return this.parent.x + this.x - this.originX + this.w - 1;
 	}
 	get top(): number {
-		return this.parent.y + this.y;
+		return this.parent.y + this.y - this.originY;
 	}
 	get bottom(): number {
-		return this.parent.y + this.y + this.h - 1;
+		return this.parent.y + this.y - this.originY + this.h - 1;
 	}
 
 	constructor(w: number, h: number, x = 0, y = 0) {
@@ -48,6 +48,15 @@ export class BoxCollider extends Collider implements IBoxCollider {
 		if (h < 0) throw new Error('Invalid height');
 		this.width = w;
 		this.height = h;
+	}
+
+	centerOrigin(): void {
+		this.originX = this.w / 2;
+		this.originY = this.h / 2;
+	}
+
+	centerOO(): void {
+		this.centerOrigin();
 	}
 
 	render(ctx: Ctx, x = 0, y = 0): void {

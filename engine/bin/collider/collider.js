@@ -7,6 +7,8 @@ export class Collider {
     collidable = true;
     x;
     y;
+    originX = 0;
+    originY = 0;
     parent; // NOTE(bret): This gets set via Entity
     static #optionsCollidable = {
         type: 'stroke',

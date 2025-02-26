@@ -37,6 +37,8 @@ export abstract class Collider implements ICollider {
 	collidable = true;
 	x: number;
 	y: number;
+	originX = 0;
+	originY = 0;
 	parent!: ColliderParent; // NOTE(bret): This gets set via Entity
 
 	static #optionsCollidable: DrawOptions = {
