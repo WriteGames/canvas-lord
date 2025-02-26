@@ -119,8 +119,6 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	}
 
 	centerOrigin() {
-		this.offsetX = this.frameW >> 1;
-		this.offsetY = this.frameH >> 1;
 		this.originX = this.frameW >> 1;
 		this.originY = this.frameH >> 1;
 	}

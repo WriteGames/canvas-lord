@@ -301,10 +301,8 @@ export class Emitter extends Graphic {
 				const drawY = y + particle.y;
 				this.angle = particle.angle;
 				// TODO(bret): unhardcode centered particles!
-				this.offsetX = -(width >> 1);
-				this.originX = this.offsetX;
-				this.offsetY = -(height >> 1);
-				this.originY = this.offsetY;
+				this.originX = -(width >> 1);
+				this.originY = -(height >> 1);
 				Draw.image(ctx, this, drawX, drawY);
 			});
 		});

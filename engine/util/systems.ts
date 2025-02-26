@@ -14,10 +14,10 @@ export const imageSystem: IEntitySystem = {
 
 		// TODO(bret): Remove the ignore!
 		// @ts-ignore
-		const drawX = entity.x - camera.x - _image.offsetX;
+		const drawX = entity.x - camera.x - _image.originX;
 		// TODO(bret): Remove the ignore!
 		// @ts-ignore
-		const drawY = entity.y - camera.y - _image.offsetY;
+		const drawY = entity.y - camera.y - _image.originY;
 
 		const sourceX = _image.frame * _image.frameW;
 
@@ -52,10 +52,10 @@ export const rectSystem: IEntitySystem = {
 			_rect,
 			// TODO(bret): Remove the ignore!
 			// @ts-ignore
-			entity.x - camera.x - _rect.offsetX,
+			entity.x - camera.x - _rect.originX,
 			// TODO(bret): Remove the ignore!
 			// @ts-ignore
-			entity.y - camera.y - _rect.offsetY,
+			entity.y - camera.y - _rect.originY,
 			_rect.width,
 			_rect.height,
 		);
@@ -72,10 +72,10 @@ export const circleSystem: IEntitySystem = {
 			_circle,
 			// TODO(bret): Remove the ignore!
 			// @ts-ignore
-			entity.x - camera.x - _circle.offsetX,
+			entity.x - camera.x - _circle.originX,
 			// TODO(bret): Remove the ignore!
 			// @ts-ignore
-			entity.y - camera.y - _circle.offsetY,
+			entity.y - camera.y - _circle.originY,
 			_circle.radius || 5,
 		);
 	},

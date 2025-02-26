@@ -6,8 +6,6 @@ export const drawable = {
     scaleY: 1,
     originX: 0,
     originY: 0,
-    offsetX: 0,
-    offsetY: 0,
     alpha: 1,
     color: undefined,
 };
@@ -28,11 +26,11 @@ const initTempCanvas = (ctx) => {
 // TODO(bret): un-export this!
 export const moveCanvas = (callback) => {
     return (ctx, options, x, y, ...args) => {
-        const { offsetX = 0, offsetY = 0, angle = 0, originX = 0, originY = 0, scaleX = 1, scaleY = 1, alpha = 1, } = Object.assign({}, drawable, options);
+        const { angle = 0, originX = 0, originY = 0, scaleX = 1, scaleY = 1, alpha = 1, } = Object.assign({}, drawable, options);
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(scaleX, scaleY);
-        ctx.translate(-offsetX, -offsetY);
+        ctx.translate(-originX, -originY);
         if (angle !== 0) {
             ctx.translate(originX, originY);
             ctx.rotate((angle / 180) * Math.PI);

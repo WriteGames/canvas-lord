@@ -37,8 +37,6 @@ interface DrawOptions {
 	angle?: number;
 	scaleX?: number;
 	scaleY?: number;
-	offsetX?: number;
-	offsetY?: number;
 	color?: string;
 	blend?: boolean;
 }
@@ -49,8 +47,6 @@ const drawable = {
 	scaleY: 1,
 	originX: 0,
 	originY: 0,
-	offsetX: 0,
-	offsetY: 0,
 } as DrawOptions;
 
 const style = {

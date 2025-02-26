@@ -72,8 +72,6 @@ export class Sprite extends Graphic {
         });
     }
     centerOrigin() {
-        this.offsetX = this.width / 2;
-        this.offsetY = this.height / 2;
         this.originX = this.width / 2;
         this.originY = this.height / 2;
     }

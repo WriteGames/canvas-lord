@@ -124,9 +124,6 @@ export class Text extends Graphic {
     }
     centerOrigin() {
         this.#revalidate();
-        this.offsetX = this.width / 2;
-        this.offsetY = this.height / 2;
-        // TODO(bret): double check that adding these two lines below didn't break things
         this.originX = this.width / 2;
         this.originY = this.height / 2;
     }

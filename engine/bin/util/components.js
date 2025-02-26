@@ -13,8 +13,6 @@ const drawable = {
     scaleY: 1,
     originX: 0,
     originY: 0,
-    offsetX: 0,
-    offsetY: 0,
 };
 const style = {
     type: 'fill',

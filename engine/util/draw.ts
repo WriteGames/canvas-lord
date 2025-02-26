@@ -11,8 +11,6 @@ export const drawable = {
 	scaleY: 1,
 	originX: 0,
 	originY: 0,
-	offsetX: 0,
-	offsetY: 0,
 	alpha: 1,
 	color: undefined,
 };
@@ -24,8 +22,6 @@ export interface DrawOptions {
 	angle?: number;
 	scaleX?: number;
 	scaleY?: number;
-	offsetX?: number;
-	offsetY?: number;
 	alpha?: number;
 	color?: CSSColor;
 }
@@ -74,8 +70,6 @@ export const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 ): Callback<T, O> => {
 	return (ctx, options, x, y, ...args: T): void => {
 		const {
-			offsetX = 0,
-			offsetY = 0,
 			angle = 0,
 			originX = 0,
 			originY = 0,
@@ -87,7 +81,7 @@ export const moveCanvas = <T extends unknown[], O extends DrawOptions>(
 		ctx.save();
 		ctx.translate(x, y);
 		ctx.scale(scaleX, scaleY);
-		ctx.translate(-offsetX, -offsetY);
+		ctx.translate(-originX, -originY);
 		if (angle !== 0) {
 			ctx.translate(originX, originY);
 			ctx.rotate((angle / 180) * Math.PI);

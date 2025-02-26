@@ -152,7 +152,7 @@ export class Grid {
 		return this.data[y * this.columns + x] as number;
 	}
 
-	renderOutline(ctx: Ctx, camera: Camera, offsetX = 0, offsetY = 0): void {
+	renderOutline(ctx: Ctx, camera: Camera, x = 0, y = 0): void {
 		const stride = this.columns;
 		const width = this.tileW;
 		const height = this.tileH;
@@ -163,23 +163,23 @@ export class Grid {
 		ctx.strokeStyle = this.color;
 		ctx.lineWidth = 1;
 
-		for (let y = 0; y < this.rows; ++y) {
-			for (let x = 0; x < this.columns; ++x) {
-				if (this.data[y * stride + x] === 1) {
-					const x1 = x * this.tileW - cameraX + offsetX;
-					const y1 = y * this.tileH - cameraY + offsetY;
+		for (let yi = 0; yi < this.rows; ++yi) {
+			for (let xi = 0; xi < this.columns; ++xi) {
+				if (this.data[yi * stride + xi] === 1) {
+					const x1 = xi * this.tileW - cameraX + x;
+					const y1 = yi * this.tileH - cameraY + y;
 					const x2 = x1 + width - 1;
 					const y2 = y1 + height - 1;
-					if (!this.getTile(x - 1, y)) {
+					if (!this.getTile(xi - 1, yi)) {
 						Draw.line(ctx, drawable, x1, y1, x1, y2);
 					}
-					if (!this.getTile(x + 1, y)) {
+					if (!this.getTile(xi + 1, yi)) {
 						Draw.line(ctx, drawable, x2, y1, x2, y2);
 					}
-					if (!this.getTile(x, y - 1)) {
+					if (!this.getTile(xi, yi - 1)) {
 						Draw.line(ctx, drawable, x1, y1, x2, y1);
 					}
-					if (!this.getTile(x, y + 1)) {
+					if (!this.getTile(xi, yi + 1)) {
 						Draw.line(ctx, drawable, x1, y2, x2, y2);
 					}
 				}
