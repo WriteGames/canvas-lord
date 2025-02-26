@@ -21,7 +21,7 @@ interface TextOptions {
 }
 
 interface IText extends TextOptions {
-	str: string;
+	// str: string;
 	maxWidth?: number;
 }
 
@@ -39,7 +39,7 @@ textOptionPresetMap.set(undefined, {
 });
 
 export class Text extends Graphic implements IText {
-	str: string;
+	#str: string;
 
 	#count?: number;
 	#color!: TextOptions['color'];
@@ -53,6 +53,14 @@ export class Text extends Graphic implements IText {
 
 	#invalided: Boolean = true;
 	#metrics!: TextMetrics;
+
+	get str() {
+		return this.#str;
+	}
+	set str(value) {
+		this.#invalided = true;
+		this.#str = value;
+	}
 
 	get count() {
 		return this.#count;
@@ -129,7 +137,7 @@ export class Text extends Graphic implements IText {
 		options?: Partial<TextOptions> | string,
 	) {
 		super(x, y);
-		this.str = str;
+		this.#str = str;
 
 		this.#setOptions(options);
 
@@ -170,8 +178,11 @@ export class Text extends Graphic implements IText {
 	centerOrigin(): void {
 		this.#revalidate();
 
-		this.offsetX = -this.width / 2;
-		this.offsetY = -this.height / 2;
+		this.offsetX = this.width / 2;
+		this.offsetY = this.height / 2;
+		// TODO(bret): double check that adding these two lines below didn't break things
+		this.originX = this.width / 2;
+		this.originY = this.height / 2;
 	}
 
 	#revalidate() {
@@ -190,7 +201,7 @@ export class Text extends Graphic implements IText {
 		textCtx.textAlign = align;
 		textCtx.textBaseline = baseline;
 
-		let _str = this.str;
+		let _str = this.#str;
 		if (count !== undefined) _str = _str.slice(0, count);
 		this.#metrics = textCtx.measureText(_str);
 
@@ -200,7 +211,7 @@ export class Text extends Graphic implements IText {
 	render(ctx: Ctx, camera: Camera = Vec2.zero) {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
-		Draw.text(ctx, this, x, y, this.str);
+		Draw.text(ctx, this, x, y, this.#str);
 	}
 
 	static addPreset(name: string, options: Partial<TextOptions>) {

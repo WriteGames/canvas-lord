@@ -17,7 +17,7 @@ textOptionPresetMap.set(undefined, {
     baseline: 'top',
 });
 export class Text extends Graphic {
-    str;
+    #str;
     #count;
     #color;
     #type;
@@ -28,6 +28,13 @@ export class Text extends Graphic {
     maxWidth;
     #invalided = true;
     #metrics;
+    get str() {
+        return this.#str;
+    }
+    set str(value) {
+        this.#invalided = true;
+        this.#str = value;
+    }
     get count() {
         return this.#count;
     }
@@ -88,7 +95,7 @@ export class Text extends Graphic {
     }
     constructor(str, x, y, options) {
         super(x, y);
-        this.str = str;
+        this.#str = str;
         this.#setOptions(options);
         this.#revalidate();
     }
@@ -117,8 +124,11 @@ export class Text extends Graphic {
     }
     centerOrigin() {
         this.#revalidate();
-        this.offsetX = -this.width / 2;
-        this.offsetY = -this.height / 2;
+        this.offsetX = this.width / 2;
+        this.offsetY = this.height / 2;
+        // TODO(bret): double check that adding these two lines below didn't break things
+        this.originX = this.width / 2;
+        this.originY = this.height / 2;
     }
     #revalidate() {
         if (!this.#invalided)
@@ -133,7 +143,7 @@ export class Text extends Graphic {
         textCtx.font = `${_size} ${font}`;
         textCtx.textAlign = align;
         textCtx.textBaseline = baseline;
-        let _str = this.str;
+        let _str = this.#str;
         if (count !== undefined)
             _str = _str.slice(0, count);
         this.#metrics = textCtx.measureText(_str);
@@ -142,7 +152,7 @@ export class Text extends Graphic {
     render(ctx, camera = Vec2.zero) {
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
         const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
-        Draw.text(ctx, this, x, y, this.str);
+        Draw.text(ctx, this, x, y, this.#str);
     }
     static addPreset(name, options) {
         if (name === undefined)

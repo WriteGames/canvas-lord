@@ -72,11 +72,10 @@ export class Sprite extends Graphic {
         });
     }
     centerOrigin() {
-        // TODO(bret): How do we want to handle odd-width sprites w/ pixel art?
-        this.offsetX = -this.width / 2;
-        this.offsetY = -this.height / 2;
-        this.originX = -this.width / 2;
-        this.originY = -this.height / 2;
+        this.offsetX = this.width / 2;
+        this.offsetY = this.height / 2;
+        this.originX = this.width / 2;
+        this.originY = this.height / 2;
     }
     render(ctx, camera = Vec2.zero) {
         const { sourceX, sourceY, sourceW = this.width, sourceH = this.height, } = this;

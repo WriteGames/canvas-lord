@@ -32,11 +32,11 @@ export const moveCanvas = (callback) => {
         ctx.save();
         ctx.translate(x, y);
         ctx.scale(scaleX, scaleY);
-        ctx.translate(offsetX, offsetY);
+        ctx.translate(-offsetX, -offsetY);
         if (angle !== 0) {
-            ctx.translate(-originX, -originY);
-            ctx.rotate((angle / 180) * Math.PI);
             ctx.translate(originX, originY);
+            ctx.rotate((angle / 180) * Math.PI);
+            ctx.translate(-originX, -originY);
         }
         if (alpha < 1)
             ctx.globalAlpha = Math.max(0, alpha);

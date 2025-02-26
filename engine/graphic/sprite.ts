@@ -108,11 +108,10 @@ export class Sprite extends Graphic implements ISpriteLike {
 	}
 
 	centerOrigin() {
-		// TODO(bret): How do we want to handle odd-width sprites w/ pixel art?
-		this.offsetX = -this.width / 2;
-		this.offsetY = -this.height / 2;
-		this.originX = -this.width / 2;
-		this.originY = -this.height / 2;
+		this.offsetX = this.width / 2;
+		this.offsetY = this.height / 2;
+		this.originX = this.width / 2;
+		this.originY = this.height / 2;
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero) {

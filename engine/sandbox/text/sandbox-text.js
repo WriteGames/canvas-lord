@@ -90,6 +90,45 @@ class TextPresetScene extends Scene {
 	}
 }
 
+class TextCenterScene extends Scene {
+	constructor(engine) {
+		super(engine);
+
+		const halfW = engine.width >> 1;
+		const quarterH = engine.height >> 2;
+		const startY = quarterH >> 1;
+
+		let y = startY;
+		const texts = Array.from({ length: 3 }, () => {
+			const text = new Text('center me', halfW, y);
+			y += quarterH;
+			return text;
+		});
+
+		texts[0].str = 'align center';
+		texts[0].align = 'center';
+
+		texts[1].str = 'centerOrigin()';
+		texts[1].centerOO();
+
+		texts[2].str = 'both methods lol';
+		texts[2].align = 'center';
+		texts[2].centerOO();
+
+		texts.forEach((text) => {
+			this.addGraphic(text);
+		});
+	}
+
+	render(ctx, camera) {
+		const x = this.engine.width >> 1;
+		const h = this.engine.height;
+		Draw.line(ctx, { color: 'red' }, x, 0, x, h);
+
+		super.render(ctx, camera);
+	}
+}
+
 const gameSettings = {
 	backgroundColor: '#003300',
 	gameLoopSettings: {
@@ -103,6 +142,9 @@ init({
 			gameSettings,
 		}),
 		init.game('text-presets', TextPresetScene, {
+			gameSettings,
+		}),
+		init.game('text-offsets-and-centering', TextCenterScene, {
 			gameSettings,
 		}),
 	],
