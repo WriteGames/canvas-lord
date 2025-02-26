@@ -1,3 +1,5 @@
+/* Canvas Lord v0.5.3 */
+
 import type { Engine } from './engine.js';
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';

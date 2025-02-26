@@ -4,8 +4,8 @@ import { Graphic } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
-import type { Canvas, Ctx } from '../util/canvas.js';
-import { moveCanvas, Draw } from '../util/draw.js';
+import type { Ctx } from '../util/canvas.js';
+import { Draw } from '../util/draw.js';
 import type { CSSColor } from '../util/types';
 
 export interface ISpriteLike {

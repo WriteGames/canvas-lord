@@ -1,4 +1,4 @@
-import { AssetManager, Game, Tileset } from './bin/canvas-lord.js';
+import { Tileset } from './bin/canvas-lord.js';
 
 import {
 	cardinalNorms,

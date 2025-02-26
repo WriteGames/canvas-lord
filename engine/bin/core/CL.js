@@ -1,3 +1,4 @@
+/* Canvas Lord v0.5.3 */
 export class CL {
     static #engine;
     static #scene;
