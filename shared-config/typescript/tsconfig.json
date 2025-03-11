@@ -9,6 +9,8 @@
 		"strict": true,
 		"module": "ESNext",
 		"moduleResolution": "Node",
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
 
 		"noImplicitAny": true,
 		"strictNullChecks": true,
