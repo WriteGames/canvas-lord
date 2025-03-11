@@ -23,16 +23,16 @@ export class GridCollider extends Collider {
         return this.height;
     }
     get left() {
-        return this.parent.x + this.x;
+        return this.parent.x + this.x - this.originX;
     }
     get right() {
-        return this.parent.x + this.x + this.w - 1;
+        return this.parent.x + this.x - this.originX + this.w - 1;
     }
     get top() {
-        return this.parent.y + this.y;
+        return this.parent.y + this.y - this.originY;
     }
     get bottom() {
-        return this.parent.y + this.y + this.h - 1;
+        return this.parent.y + this.y - this.originY + this.h - 1;
     }
     render(ctx, x, y) {
         // TODO(bret): Isn't this backwards?

@@ -4,16 +4,16 @@ import { Draw } from '../util/draw.js';
 export class PointCollider extends Collider {
     type = 'point';
     get left() {
-        return this.parent.x + this.x;
+        return this.parent.x + this.x - this.originX;
     }
     get right() {
-        return this.parent.x + this.x;
+        return this.parent.x + this.x - this.originX;
     }
     get top() {
-        return this.parent.y + this.y;
+        return this.parent.y + this.y - this.originY;
     }
     get bottom() {
-        return this.parent.y + this.y;
+        return this.parent.y + this.y - this.originY;
     }
     constructor(x = 0, y = 0) {
         super(x, y);

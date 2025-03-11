@@ -87,16 +87,16 @@ export class RightTriangleCollider extends Collider {
         this.#computePoints(true);
     }
     get left() {
-        return this.x + this.parent.x;
+        return this.x + this.parent.x - this.originX;
     }
     get right() {
-        return this.x + this.parent.x + this.w - 1;
+        return this.x + this.parent.x - this.originX + this.w - 1;
     }
     get top() {
-        return this.y + this.parent.y;
+        return this.y + this.parent.y - this.originY;
     }
     get bottom() {
-        return this.y + this.parent.y + this.h - 1;
+        return this.y + this.parent.y - this.originY + this.h - 1;
     }
     get p1() {
         this.#computePoints();

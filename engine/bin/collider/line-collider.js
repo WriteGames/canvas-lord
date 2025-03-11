@@ -28,16 +28,16 @@ export class LineCollider extends Collider {
         };
     }
     get xStart() {
-        return this.x1 + this.parent.x;
+        return this.x1 + this.parent.x - this.originX;
     }
     get yStart() {
-        return this.y1 + this.parent.y;
+        return this.y1 + this.parent.y - this.originY;
     }
     get xEnd() {
-        return this.x2 + this.parent.x;
+        return this.x2 + this.parent.x - this.originX;
     }
     get yEnd() {
-        return this.y2 + this.parent.y;
+        return this.y2 + this.parent.y - this.originY;
     }
     constructor(x1, y1, x2, y2, x = 0, y = 0) {
         super(x, y);

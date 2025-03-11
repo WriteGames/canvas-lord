@@ -16,10 +16,10 @@ export class CircleCollider extends Collider {
         return new Vec2(this.centerX, this.centerY);
     }
     get centerX() {
-        return this.x + this.parent.x;
+        return this.x + this.parent.x - this.originX;
     }
     get centerY() {
-        return this.y + this.parent.y;
+        return this.y + this.parent.y - this.originY;
     }
     constructor(r, x = 0, y = 0) {
         super(x, y);

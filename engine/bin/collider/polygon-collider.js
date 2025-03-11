@@ -6,24 +6,24 @@ export class PolygonCollider extends Collider {
     type = 'polygon';
     #points;
     get left() {
-        return Math.min(...this.vertices.map(([x]) => x));
+        return Math.min(...this.vertices.map(([x]) => x - this.originX));
     }
     get top() {
-        return Math.min(...this.vertices.map(([_, y]) => y));
+        return Math.min(...this.vertices.map(([_, y]) => y - this.originY));
     }
     get right() {
-        return Math.max(...this.vertices.map(([x]) => x));
+        return Math.max(...this.vertices.map(([x]) => x - this.originX));
     }
     get bottom() {
-        return Math.max(...this.vertices.map(([_, y]) => y));
+        return Math.max(...this.vertices.map(([_, y]) => y - this.originY));
     }
     setPoints(value) {
         this.#points = value;
     }
     get vertices() {
         return this.#points.map(([x, y]) => [
-            x + this.x + this.parent.x,
-            y + this.y + this.parent.y,
+            x + this.x + this.parent.x - this.originX,
+            y + this.y + this.parent.y - this.originY,
         ]);
     }
     get lines() {
