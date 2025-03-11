@@ -25,16 +25,16 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 	#points: Points;
 
 	get left(): number {
-		return Math.min(...this.vertices.map(([x]) => x));
+		return Math.min(...this.vertices.map(([x]) => x - this.originX));
 	}
 	get top(): number {
-		return Math.min(...this.vertices.map(([_, y]) => y));
+		return Math.min(...this.vertices.map(([_, y]) => y - this.originY));
 	}
 	get right(): number {
-		return Math.max(...this.vertices.map(([x]) => x));
+		return Math.max(...this.vertices.map(([x]) => x - this.originX));
 	}
 	get bottom(): number {
-		return Math.max(...this.vertices.map(([_, y]) => y));
+		return Math.max(...this.vertices.map(([_, y]) => y - this.originY));
 	}
 
 	setPoints(value: Points): void {
@@ -43,8 +43,8 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 
 	get vertices(): Points {
 		return this.#points.map(([x, y]) => [
-			x + this.x + this.parent.x,
-			y + this.y + this.parent.y,
+			x + this.x + this.parent.x - this.originX,
+			y + this.y + this.parent.y - this.originY,
 		]) as Points;
 	}
 

@@ -51,17 +51,17 @@ export class LineCollider extends Collider implements ILineCollider {
 	}
 
 	get xStart(): number {
-		return this.x1 + this.parent.x;
+		return this.x1 + this.parent.x - this.originX;
 	}
 	get yStart(): number {
-		return this.y1 + this.parent.y;
+		return this.y1 + this.parent.y - this.originY;
 	}
 
 	get xEnd(): number {
-		return this.x2 + this.parent.x;
+		return this.x2 + this.parent.x - this.originX;
 	}
 	get yEnd(): number {
-		return this.y2 + this.parent.y;
+		return this.y2 + this.parent.y - this.originY;
 	}
 
 	constructor(x1: number, y1: number, x2: number, y2: number, x = 0, y = 0) {

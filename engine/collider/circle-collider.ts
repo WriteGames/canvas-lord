@@ -26,10 +26,10 @@ export class CircleCollider extends Collider implements ICircleCollider {
 		return new Vec2(this.centerX, this.centerY);
 	}
 	get centerX(): number {
-		return this.x + this.parent.x;
+		return this.x + this.parent.x - this.originX;
 	}
 	get centerY(): number {
-		return this.y + this.parent.y;
+		return this.y + this.parent.y - this.originY;
 	}
 
 	constructor(r: number, x = 0, y = 0) {

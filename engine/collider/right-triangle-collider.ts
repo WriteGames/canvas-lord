@@ -125,16 +125,16 @@ export class RightTriangleCollider
 	}
 
 	get left(): number {
-		return this.x + this.parent.x;
+		return this.x + this.parent.x - this.originX;
 	}
 	get right(): number {
-		return this.x + this.parent.x + this.w - 1;
+		return this.x + this.parent.x - this.originX + this.w - 1;
 	}
 	get top(): number {
-		return this.y + this.parent.y;
+		return this.y + this.parent.y - this.originY;
 	}
 	get bottom(): number {
-		return this.y + this.parent.y + this.h - 1;
+		return this.y + this.parent.y - this.originY + this.h - 1;
 	}
 
 	get p1(): Point {
