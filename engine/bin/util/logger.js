@@ -6,7 +6,10 @@ const defaultLoggerOptions = Object.freeze({
     logs: {
         defaults: {
             lifespan: 60,
-            parser: (val) => JSON.parse(JSON.stringify(val)).toString(),
+            parser: (val) => {
+                const json = JSON.parse(JSON.stringify(val));
+                return json?.toString() ?? '';
+            },
             visible: true,
             renderer: (ctx, log, drawX, drawY) => {
                 ctx.fillStyle = 'white';
@@ -59,7 +62,7 @@ export class Logger {
         this.y = y;
         // REVISIT(bret): Make this generic :)
         // NOTE(bret): structuredClone would be neat here, but it cannot copy functions (perhaps the``transfer` option would help there?)
-        this.options = Object.assign({}, defaultLoggerOptions);
+        this.options = { ...defaultLoggerOptions };
         Object.assign(this.options.logs, options.logs);
         // REVISIT(bret): Do we need these? Could they just be getter/setters?
         // this.defaultLifespan = this.options.defaultLifespan;
@@ -101,7 +104,8 @@ export class Logger {
         const lines = watched.length + logs.length;
         if (lines === 0)
             return;
-        let drawX = this.x, drawY = this.y;
+        const drawX = this.x;
+        let drawY = this.y;
         ctx.font = '10px Monospace';
         const glyph = ctx.measureText('0');
         const ascenderHeight = glyph.actualBoundingBoxAscent;

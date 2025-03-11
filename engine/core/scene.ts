@@ -14,7 +14,7 @@ import type {
 	IEntityComponentType,
 } from '../util/types.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
-import { Graphic } from '../graphic/graphic.js';
+import type { Graphic } from '../graphic/graphic.js';
 
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
@@ -79,7 +79,7 @@ export class Scene implements Scene {
 	}
 
 	#mouse = new Vec2(-1, -1);
-	get mouse() {
+	get mouse(): Vec2 {
 		const pos = this.engine.input.mouse.pos.add(this.camera);
 		this.#mouse.set(pos);
 		return this.#mouse;
@@ -87,7 +87,7 @@ export class Scene implements Scene {
 
 	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
 	setCanvasSize(width: number, height: number): void {
-		if (!this.canvas) {
+		if (!this.canvas as unknown) {
 			const { canvas, ctx } = generateCanvasAndCtx(width, height);
 			if (!ctx) throw new Error();
 			this.canvas = canvas;
@@ -95,13 +95,21 @@ export class Scene implements Scene {
 		}
 	}
 
-	begin(): void {}
+	begin(): void {
+		//
+	}
 
-	end(): void {}
+	end(): void {
+		//
+	}
 
-	pause(): void {}
+	pause(): void {
+		//
+	}
 
-	resume(): void {}
+	resume(): void {
+		//
+	}
 
 	addGraphic<T extends Graphic>(graphic: T, x = 0, y = 0): Entity {
 		const entity = new Entity(x, y);
@@ -127,7 +135,7 @@ export class Scene implements Scene {
 		const newEntities = this.entities.addQueue.splice(0);
 		for (let i = 0; i < newEntities.length; ++i) {
 			const e = newEntities[i];
-			if (this.entities.inScene.indexOf(e) > -1) continue;
+			if (this.entities.inScene.includes(e)) continue;
 			this.entities.inScene.push(e);
 		}
 	}
@@ -148,7 +156,7 @@ export class Scene implements Scene {
 		const newRenderables = this.renderables.addQueue.splice(0);
 		for (let i = 0; i < newRenderables.length; ++i) {
 			const r = newRenderables[i];
-			if (this.renderables.inScene.indexOf(r) > -1) continue;
+			if (this.renderables.inScene.includes(r)) continue;
 			this.renderables.inScene.push(r);
 		}
 	}
@@ -187,7 +195,9 @@ export class Scene implements Scene {
 		this.#removeRenderablesFromScene();
 	}
 
-	preUpdate(input: Input): void {}
+	preUpdate(_input: Input): void {
+		//
+	}
 
 	update(input: Input): void {
 		// TODO: move the following two to game probably
@@ -210,14 +220,16 @@ export class Scene implements Scene {
 				if (!update) return;
 
 				const entities = this.entities.inScene.filter((e) =>
-					Boolean(e.component?.(component)),
+					Boolean(e.component(component)),
 				);
 				entities.forEach((entity) => update(entity, input));
 			});
 		});
 	}
 
-	postUpdate(input: Input): void {}
+	postUpdate(_input: Input): void {
+		//
+	}
 
 	render(gameCtx: Ctx): void {
 		// TODO: this should maybe be in pre-render?
@@ -225,13 +237,13 @@ export class Scene implements Scene {
 			(a, b) => (b.depth ?? 0) - (a.depth ?? 0),
 		);
 
-		const ctx = this.ctx ?? gameCtx;
+		const ctx = ((this.ctx as unknown) ?? gameCtx) as Ctx;
 		const { canvas } = ctx;
 
 		const { camera } = this;
 		let { backgroundColor } = this;
 
-		if (this.ctx) {
+		if (this.ctx as unknown) {
 			// set to the engine's background color if this is a standalone canvas
 			backgroundColor ??= this.engine.backgroundColor;
 		}
@@ -258,7 +270,7 @@ export class Scene implements Scene {
 				if (!render) return;
 
 				const entities = this.renderables.inScene.filter((e) =>
-					Boolean((e as Entity).component?.(component)),
+					Boolean((e as Entity).component(component)),
 				);
 				entities.forEach((entity) => {
 					render(entity as Entity, ctx, camera);

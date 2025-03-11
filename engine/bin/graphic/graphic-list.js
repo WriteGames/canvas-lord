@@ -4,30 +4,34 @@ import { Vec2 } from '../math/index.js';
 import { moveCanvas } from '../util/draw.js';
 export class GraphicList extends Graphic {
     graphics;
-    constructor(x = 0, y = 0) {
-        super(x, y);
+    constructor(...graphics) {
+        super(0, 0);
         this.graphics = [];
+        this.add(graphics);
     }
     centerOrigin() {
         // TODO(bret): what should this actually do?
         this.graphics.forEach((graphic) => graphic.centerOrigin());
     }
-    add(graphic) {
-        if (this.has(graphic))
-            return;
-        graphic.parent = this;
-        this.graphics.push(graphic);
+    add(...graphics) {
+        graphics.flat().forEach((graphic) => {
+            if (this.has(graphic))
+                return;
+            graphic.parent = this;
+            this.graphics.push(graphic);
+        });
     }
     has(graphic) {
-        const index = this.graphics.indexOf(graphic);
-        return index > -1;
+        return this.graphics.includes(graphic);
     }
-    remove(graphic) {
-        if (!this.has(graphic))
-            return;
-        const index = this.graphics.indexOf(graphic);
-        graphic.parent = undefined;
-        this.graphics.splice(index, 1);
+    remove(...graphics) {
+        graphics.flat().forEach((graphic) => {
+            if (!this.has(graphic))
+                return;
+            const index = this.graphics.indexOf(graphic);
+            graphic.parent = undefined;
+            this.graphics.splice(index, 1);
+        });
     }
     update(input) {
         this.graphics.forEach((graphic) => graphic.update(input));
@@ -35,7 +39,6 @@ export class GraphicList extends Graphic {
     render(ctx, camera = Vec2.zero) {
         // TODO(bret): Set up transformations here!
         this.scrollX = this.scrollY = 0;
-        const r = 3;
         const preX = this.x;
         const preY = this.y;
         const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);

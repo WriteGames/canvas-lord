@@ -1,6 +1,7 @@
 /* Canvas Lord v0.5.3 */
 
 import type { Engine } from './core/engine.js';
+import type { Entity } from './core/entity.js';
 
 interface Item {
 	input: HTMLInputElement;
@@ -40,7 +41,7 @@ export class Inspector {
 		this.wrapper = inspectorElem;
 	}
 
-	watch(property: string, options?: InspectorWatchOptions) {
+	watch(property: string, options?: InspectorWatchOptions): void {
 		const input = document.createElement('input');
 		input.type = options?.type ?? 'number';
 		this.wrapper.append(property, input);
@@ -75,11 +76,12 @@ export class Inspector {
 		this.items.push(item);
 	}
 
-	onUpdate() {
+	onUpdate(): void {
 		const scene = this.engine.currentScenes?.[0];
 		if (!scene) return;
 
-		const player = scene.entities.inScene?.[0];
+		// TODO(bret): Adjust TS settings so this is undefined!
+		const player = scene.entities.inScene[0] as Entity | undefined;
 		if (!player) return;
 
 		this.items.forEach((item) => {
@@ -94,7 +96,7 @@ export class Inspector {
 			switch (item.options?.type) {
 				case 'checkbox': {
 					if (item.latestInput !== null)
-						newValue = JSON.parse(item.latestInput);
+						newValue = JSON.parse(item.latestInput) as string;
 					item.latestInput = null;
 					break;
 				}
@@ -110,14 +112,14 @@ export class Inspector {
 				}
 			}
 			if (newValue !== undefined) {
-				// @ts-expect-error
+				// @ts-expect-error -- TODO(bret): fix this
 				player[item.property] = newValue;
 			}
 		});
 
 		otherInputs.forEach((item) => {
-			// @ts-expect-error
-			item.input.value = player[item.property];
+			// @ts-expect-error -- TODO(bret): fix this
+			item.input.value = player[item.property] as string;
 		});
 	}
 }

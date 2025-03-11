@@ -116,6 +116,7 @@ export class Input {
             pos: new Vec2(-1, -1),
             realPos: new Vec2(-1, -1),
             _clicked: [0, 0, 0, 0, 0],
+            cursor: undefined,
         };
         const defineXYProperties = (mouse, prefix = null) => {
             const posName = prefix !== null ? `${prefix}Pos` : 'pos';
@@ -146,6 +147,7 @@ export class Input {
         _keysArr.forEach((key) => {
             this.keys[key] &= ~1;
         });
+        this.engine.canvas.style.cursor = this.mouse.cursor ?? 'auto';
     }
     // Events
     onMouseMove(e) {
@@ -161,7 +163,7 @@ export class Input {
     }
     onMouseDown(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         if (!this.mouseCheck(e.button)) {
             this.mouse._clicked[e.button] = 3;
@@ -170,7 +172,7 @@ export class Input {
     }
     onMouseUp(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         if (this.mouseCheck(e.button)) {
             this.mouse._clicked[e.button] = 1;
@@ -179,7 +181,7 @@ export class Input {
     }
     onKeyDown(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         const { code } = e;
         if (code in this.keys && !this.keyCheck(code)) {
@@ -189,7 +191,7 @@ export class Input {
     }
     onKeyUp(e) {
         if (document.activeElement !== this.engine.focusElement)
-            return;
+            return true;
         e.preventDefault();
         const { code } = e;
         if (code in this.keys && this.keyCheck(code)) {
@@ -241,6 +243,8 @@ export class Input {
         this.keys = _keysArr.reduce((acc, v) => {
             acc[v] = 0;
             return acc;
+            // TODO(bret): revisit this
+            // eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter -- tee hee will fix later
         }, {});
     }
 }

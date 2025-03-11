@@ -135,12 +135,9 @@ export class RightTriangleCollider extends Collider {
         return this.#points[2][1];
     }
     render(ctx, x = 0, y = 0) {
-        if (!this.parent)
-            console.warn(this);
-        // console.log(this.parent);
-        // TODO(bret): Fix this
         Draw.polygon(ctx, this.options, x, y, 
-        // @ts-expect-error
+        // TODO(bret): the types don't match
+        // @ts-expect-error -- idk
         this.#points);
     }
 }

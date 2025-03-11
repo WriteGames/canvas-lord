@@ -7,6 +7,8 @@ export class Collider {
     collidable = true;
     x;
     y;
+    originX = 0;
+    originY = 0;
     parent; // NOTE(bret): This gets set via Entity
     static #optionsCollidable = {
         type: 'stroke',
@@ -31,7 +33,7 @@ export class Collider {
     collide(other) {
         collide(this, other);
     }
-    render(ctx, x, y) {
+    render(_ctx, _x, _y) {
         throw new Error('render() unimplemented');
     }
 }

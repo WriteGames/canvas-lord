@@ -1,12 +1,13 @@
 /* Canvas Lord v0.5.3 */
 
-import { AssetManager, Sfx } from './asset-manager.js';
+import { type AssetManager, Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import type { Scene } from './scene.js';
 import type { Ctx } from '../util/canvas.js';
 import { Debug } from '../util/debug.js';
 
-import { CSSColor, RequiredAndOmit } from '../util/types.js';
+import type { CSSColor, RequiredAndOmit } from '../util/types.js';
+import { CL } from './CL.js';
 
 const defineUnwritableProperty: <T>(
 	obj: T,
@@ -50,7 +51,7 @@ const gameEvents = ['blur', 'focus', 'update'] as const;
 type GameEvent = (typeof gameEvents)[number];
 type EventCallback = () => void;
 
-export interface Game {
+export interface IEngine {
 	listeners: Record<GameEvent, Set<EventCallback>>;
 	focus: boolean;
 
@@ -58,7 +59,6 @@ export interface Game {
 	frameIndex: number;
 	recentFrames: number[];
 	frameRate: number;
-	_lastUpdate: number;
 
 	gameLoopSettings: GameLoopSettings;
 	sceneStack: Scene[][];
@@ -68,16 +68,34 @@ export interface Game {
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D;
 	input: Input;
-	_lastFrame: number;
-	mainLoop: (time: number) => void;
 	frameRequestId: number;
 	eventListeners: CachedEventListener[];
-	_onGameLoopSettingsUpdate?: EventCallback;
 	assetManager?: AssetManager;
 	debug?: Debug;
+
+	// getters & setters
+	readonly width: number;
+	readonly height: number;
+	readonly currentScenes: Scene[] | undefined;
+
+	// methods
+	load(assetManager: AssetManager): void;
+	updateGameLoopSettings(newGameLoopSettings: GameLoopSettings): void;
+	addEventListener(
+		element: Element | Window,
+		...rest: CachedEventListener['arguments']
+	): void;
+	pushScene(scene: Scene): void;
+	pushScenes(...scenes: Scene[]): void;
+	popScenes(): Scene[] | undefined;
+	updateScenes(scenes?: Scene[]): void;
+	update(): void;
+	sendEvent(event: GameEvent): void;
+	renderScenes(ctx: Ctx, scenes?: Scene[]): void;
+	render(): void;
 }
 
-export type Engine = Game;
+export type Engine = IEngine;
 
 interface InitialSettings {
 	fps: number;
@@ -100,19 +118,41 @@ const defaultSettings: Settings = {
 	devMode: false, // TODO(bret): Set this to false someday probably
 };
 
-export class Game {
+export class Game implements Engine {
 	gameLoopSettings: GameLoopSettings = {
 		updateMode: 'focus',
 		renderMode: 'onUpdate',
 	};
+
+	listeners: Record<'focus' | 'blur' | 'update', Set<EventCallback>>;
+	focus: boolean;
+
+	fps: number;
+	frameIndex: number;
+	recentFrames: number[];
+	frameRate: number;
+	_lastUpdate = 0;
+
+	sceneStack: Scene[][];
+	backgroundColor: string | CanvasGradient | CanvasPattern;
+	focusElement: HTMLElement;
+	wrapper: HTMLElement;
+	canvas: HTMLCanvasElement;
+	ctx: CanvasRenderingContext2D;
+	input: Input;
+	_lastFrame: number;
+	mainLoop: (time: number) => void;
+	frameRequestId = -1;
+	eventListeners: CachedEventListener[];
+	assetManager?: AssetManager | undefined;
+	debug?: Debug | undefined;
 
 	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
 			`canvas#${id}`,
 		);
 		if (canvas === null) {
-			console.error(`No canvas with id "${id}" was able to be found`);
-			return;
+			throw new Error(`No canvas with id "${id}" was able to be found`);
 		}
 
 		canvas._engine = this;
@@ -121,26 +161,24 @@ export class Game {
 			alpha: false,
 		});
 		if (ctx === null) {
-			console.error(
+			throw new Error(
 				`Context was not able to be created from canvas "#${id}"`,
 			);
-			return;
 		}
 
 		this.canvas = canvas;
 		this.ctx = ctx;
 
 		// apply defaults to game settings
-		const engineSettings: Settings = Object.assign(
-			{},
-			defaultSettings,
-			settings,
-		);
-		engineSettings.gameLoopSettings = Object.assign(
-			{},
-			defaultSettings.gameLoopSettings,
-			settings?.gameLoopSettings,
-		);
+		const engineSettings: Settings = {
+			...defaultSettings,
+			...settings,
+		};
+
+		engineSettings.gameLoopSettings = {
+			...defaultSettings.gameLoopSettings,
+			...settings?.gameLoopSettings,
+		};
 
 		// render a rectangle ASAP
 		this.backgroundColor = engineSettings.backgroundColor;
@@ -175,9 +213,6 @@ export class Game {
 		this.frameIndex = 0;
 		this.frameRate = this.fps;
 
-		if (engineSettings.gameLoopSettings) {
-			this.gameLoopSettings = engineSettings.gameLoopSettings;
-		}
 		this.assetManager = engineSettings.assetManager;
 
 		if (engineSettings.devMode) this.debug = new Debug(this);
@@ -234,7 +269,9 @@ export class Game {
 		this.ctx.imageSmoothingEnabled = false;
 
 		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
+		CL.__setEngine(this);
 		this.render();
+		CL.__setEngine(undefined);
 
 		this.input = new Input(this);
 
@@ -256,12 +293,14 @@ export class Game {
 			const prevFrameIndex = this.frameIndex;
 			// should we send a pre-/post- message in case there are
 			// multiple updates that happen in a single while?
+			CL.__setEngine(this);
 			while (deltaTime >= timeStep) {
 				this.update();
 				this.input.update();
 				deltaTime -= timeStep;
 				++this.frameIndex;
 			}
+			CL.__setEngine(undefined);
 
 			if (prevFrameIndex !== this.frameIndex) {
 				const finishedAt = performance.now();
@@ -280,26 +319,24 @@ export class Game {
 
 		this.eventListeners = [];
 
-		window.addEventListener('resize', (e) => {
+		window.addEventListener('resize', () => {
 			computeCanvasSize(this.canvas);
 		});
 
-		window.addEventListener('blur', (e) => this.onFocus(false));
+		window.addEventListener('blur', () => this.onFocus(false));
 
 		// TODO: should we allow folks to customize this to be directly on the canvas?
 		this.focusElement = this.wrapper;
-		this.focusElement.addEventListener('focusin', (e) =>
-			this.onFocus(true),
-		);
-		this.focusElement.addEventListener('focusout', (e) =>
+		this.focusElement.addEventListener('focusin', () => this.onFocus(true));
+		this.focusElement.addEventListener('focusout', () =>
 			this.onFocus(false),
 		);
 
 		this.updateGameLoopSettings(this.gameLoopSettings);
 	}
 
-	load(assetManager: AssetManager) {
-		assetManager.loadAssets();
+	async load(assetManager: AssetManager): Promise<void> {
+		return assetManager.loadAssets();
 	}
 
 	get width(): number {
@@ -314,6 +351,7 @@ export class Game {
 		return this.sceneStack.at(-1);
 	}
 
+	_onGameLoopSettingsUpdate?: EventCallback | undefined;
 	// TODO(bret): We're going to need to make a less clunky interface
 	updateGameLoopSettings(newGameLoopSettings: GameLoopSettings): void {
 		this._onGameLoopSettingsUpdate?.();
@@ -443,9 +481,9 @@ export class Game {
 	onFocus(focus: boolean): void {
 		if (this.focus === focus) return;
 		if (this.focus) {
-			Sfx.audioCtx.suspend();
+			void Sfx.audioCtx.suspend();
 		} else {
-			Sfx.audioCtx.resume();
+			void Sfx.audioCtx.resume();
 		}
 		this.focus = focus;
 		this.sendEvent(focus ? 'focus' : 'blur');
@@ -453,33 +491,45 @@ export class Game {
 		this._lastUpdate = performance.now();
 	}
 
+	_forEachScene<T extends Scene>(
+		scenes: T[] | undefined,
+		callbackfn: (value: T, index: number, array: T[]) => void,
+		thisArg?: unknown,
+	): void {
+		scenes?.forEach((scene, ...args) => {
+			CL.__setScene(scene);
+			callbackfn(scene, ...args);
+			CL.__setScene(undefined);
+		}, thisArg);
+	}
+
 	pushScene(scene: Scene): void {
 		this.pushScenes(scene);
 	}
 
 	pushScenes(...scenes: Scene[]): void {
-		this.currentScenes?.forEach((scene) => {
+		this._forEachScene(scenes, (scene) => {
 			scene.pause();
 		});
 
 		this.sceneStack.push(scenes);
 
-		scenes.forEach((scene) => {
+		this._forEachScene(scenes, (scene) => {
 			scene.engine = this;
 			scene.updateLists();
-			scene.begin();
+			CL.__setScene(undefined);
 		});
 	}
 
 	popScenes(): Scene[] | undefined {
-		this.currentScenes?.forEach((scene) => {
+		this._forEachScene(this.currentScenes, (scene) => {
 			// TODO(bret): Should we delete scene.engine?
 			scene.end();
 		});
 
 		const scenes = this.sceneStack.pop();
 
-		this.currentScenes?.forEach((scene) => {
+		this._forEachScene(this.currentScenes, (scene) => {
 			scene.updateLists();
 			scene.resume();
 		});
@@ -489,10 +539,18 @@ export class Game {
 
 	updateScenes(scenes?: Scene[]): void {
 		if (!scenes) return;
-		scenes.forEach((scene) => scene.updateLists());
-		scenes.forEach((scene) => scene.preUpdate(this.input));
-		scenes.forEach((scene) => scene.update(this.input));
-		scenes.forEach((scene) => scene.postUpdate(this.input));
+		this._forEachScene(scenes, (scene) => {
+			scene.updateLists();
+		});
+		this._forEachScene(scenes, (scene) => {
+			scene.preUpdate(this.input);
+		});
+		this._forEachScene(scenes, (scene) => {
+			scene.update(this.input);
+		});
+		this._forEachScene(scenes, (scene) => {
+			scene.postUpdate(this.input);
+		});
 	}
 
 	update(): void {
@@ -521,7 +579,9 @@ export class Game {
 
 		// TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
 		this.sceneStack.forEach((scenes) => {
-			scenes.forEach((scene) => scene.render(ctx));
+			this._forEachScene(scenes, (scene) => {
+				scene.render(ctx);
+			});
 		});
 
 		// Splitscreen
@@ -536,6 +596,8 @@ export class Game {
 	}
 
 	render(): void {
+		CL.__setEngine(this);
+
 		const { ctx } = this;
 
 		ctx.fillStyle = this.backgroundColor;
@@ -544,5 +606,7 @@ export class Game {
 		const { debug } = this;
 		this.renderScenes(ctx, []);
 		if (debug?.enabled) debug.render(ctx);
+
+		CL.__setEngine(undefined);
 	}
 }

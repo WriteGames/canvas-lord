@@ -13,7 +13,7 @@ export type ColliderType =
 	| 'right-triangle'
 	| 'polygon'
 	| 'grid';
-export type ColliderTag = string | undefined;
+export type ColliderTag = string;
 
 type ColliderParent = Entity;
 
@@ -37,6 +37,8 @@ export abstract class Collider implements ICollider {
 	collidable = true;
 	x: number;
 	y: number;
+	originX = 0;
+	originY = 0;
 	parent!: ColliderParent; // NOTE(bret): This gets set via Entity
 
 	static #optionsCollidable: DrawOptions = {
@@ -49,7 +51,7 @@ export abstract class Collider implements ICollider {
 		color: 'gray',
 	};
 
-	get options() {
+	get options(): DrawOptions {
 		return this.collidable
 			? Collider.#optionsCollidable
 			: Collider.#optionsNonCollidable;
@@ -60,15 +62,15 @@ export abstract class Collider implements ICollider {
 		this.y = y;
 	}
 
-	assignParent(parent: ColliderParent) {
+	assignParent(parent: ColliderParent): void {
 		this.parent = parent;
 	}
 
-	collide(other: Collider) {
+	collide(other: Collider): void {
 		collide(this, other);
 	}
 
-	render(ctx: Ctx, x: number, y: number): void {
+	render(_ctx: Ctx, _x: number, _y: number): void {
 		throw new Error('render() unimplemented');
 	}
 }

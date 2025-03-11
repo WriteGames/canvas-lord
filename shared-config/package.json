@@ -2,14 +2,14 @@
 	"name": "@writegames.com/style-guide",
 	"private": true,
 	"version": "1.0.0",
-	"packageManager": "pnpm@7.20.0",
 	"license": "ISC",
 	"exports": {
 		"./typescript": "./typescript/tsconfig.json"
 	},
+	"packageManager": "pnpm@9.8.0",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^22",
+		"pnpm": "^9"
 	},
 	"repository": {
 		"type": "git",
@@ -19,6 +19,6 @@
 	"devDependencies": {
 		"@vercel/style-guide": "5.1.0",
 		"eslint": "8.56.0",
-		"typescript": "5.4.3"
+		"typescript": "5.7.3"
 	}
 }

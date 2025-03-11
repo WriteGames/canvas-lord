@@ -3,14 +3,11 @@
 import { Graphic } from './graphic.js';
 import type { ISpriteLike } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';
-import type { Entity } from '../core/entity.js';
-import type { Input } from '../core/input.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
 import type { Ctx } from '../util/canvas.js';
-import { moveCanvas, Draw } from '../util/draw.js';
-import { Random } from '../util/random.js';
+import { Draw } from '../util/draw.js';
 
 const { canvas: tempCanvas } = generateCanvasAndCtx();
 
@@ -51,7 +48,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 		this.recalculate();
 	}
 
-	recalculate() {
+	recalculate(): void {
 		if (!tempCanvas) {
 			throw new Error('tempCanvas failed to create');
 		}
@@ -59,7 +56,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 		const { tileW: w, tileH: h } = this;
 		tempCanvas.width = this.tileW;
 		tempCanvas.height = this.tileH;
-		const ctx = tempCanvas.getContext('2d') as Ctx;
+		const ctx = tempCanvas.getContext('2d') as Ctx | null;
 		if (!ctx) throw new Error();
 		// top
 		ctx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
@@ -94,8 +91,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 	}
 
 	// TODO: hook up moveCanvas
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
-		const o = this;
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const x = this.x - camera.x * this.scrollX;
 		const y = this.y - camera.y * this.scrollY;
 		const { tileW: w, tileH: h } = this;

@@ -18,16 +18,16 @@ export class BoxCollider extends Collider {
         this.height = value;
     }
     get left() {
-        return this.parent.x + this.x;
+        return this.parent.x + this.x - this.originX;
     }
     get right() {
-        return this.parent.x + this.x + this.w - 1;
+        return this.parent.x + this.x - this.originX + this.w - 1;
     }
     get top() {
-        return this.parent.y + this.y;
+        return this.parent.y + this.y - this.originY;
     }
     get bottom() {
-        return this.parent.y + this.y + this.h - 1;
+        return this.parent.y + this.y - this.originY + this.h - 1;
     }
     constructor(w, h, x = 0, y = 0) {
         super(x, y);
@@ -37,6 +37,13 @@ export class BoxCollider extends Collider {
             throw new Error('Invalid height');
         this.width = w;
         this.height = h;
+    }
+    centerOrigin() {
+        this.originX = this.w / 2;
+        this.originY = this.h / 2;
+    }
+    centerOO() {
+        this.centerOrigin();
     }
     render(ctx, x = 0, y = 0) {
         Draw.rect(ctx, this.options, x + this.left, y + this.top, this.w, this.h);

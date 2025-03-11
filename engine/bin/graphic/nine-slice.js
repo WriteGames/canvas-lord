@@ -84,7 +84,6 @@ export class NineSlice extends Graphic {
     }
     // TODO: hook up moveCanvas
     render(ctx, camera = Vec2.zero) {
-        const o = this;
         const x = this.x - camera.x * this.scrollX;
         const y = this.y - camera.y * this.scrollY;
         const { tileW: w, tileH: h } = this;

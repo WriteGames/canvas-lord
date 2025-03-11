@@ -17,11 +17,12 @@ export class ButtonsOverlay {
         this.keyJumpCheck = input.keyCheck(this.keys.jump);
     }
     render(ctx) {
-        let drawX = this.x, drawY = this.y;
+        let drawX = this.x;
+        const drawY = this.y;
         const buttonSize = 10;
         const padding = 5;
         const fillStyle = (keyDown) => keyDown ? 'rgba(255, 255, 255, 1)' : 'rgba(0, 0, 0, 0.75)';
-        const strokeStyle = (keyDown) => (keyDown ? 'black' : 'white');
+        const strokeStyle = (keyDown) => keyDown ? 'black' : 'white';
         const drawButton = (keyDown, width, overlay) => {
             ctx.fillStyle = fillStyle(keyDown);
             ctx.fillRect(drawX, drawY, width, buttonSize);

@@ -31,6 +31,12 @@ export type AudioAsset = {
 	  }
 );
 
+const isLoaded = <T extends { loaded: boolean }>(
+	asset: T,
+): asset is T & {
+	loaded: true;
+} => asset.loaded;
+
 export interface AssetManager {
 	sprites: Map<string, ImageAsset>;
 	audio: Map<string, AudioAsset>;
@@ -67,7 +73,7 @@ export class AssetManager {
 		});
 	}
 
-	async loadAudio(src: string) {
+	async loadAudio(src: string): Promise<void> {
 		const fullPath = `${this.prefix}${src}`;
 
 		await fetch(fullPath)
@@ -81,10 +87,17 @@ export class AssetManager {
 					);
 				}
 				audio.loaded = true;
-				if ((audio.buffer = audioBuffer)) {
+				audio.buffer = audioBuffer;
+				if (isLoaded(audio)) {
 					audio.duration = audioBuffer.duration;
 				}
 				this.audioLoaded(src);
+				return audio;
+			})
+			.then((audio) => {
+				if (audio.buffer) {
+					audio.duration = 10;
+				}
 			});
 	}
 
@@ -105,7 +118,8 @@ export class AssetManager {
 				);
 			}
 			sprite.loaded = true;
-			if ((sprite.image = image)) {
+			sprite.image = image;
+			if (isLoaded(sprite)) {
 				sprite.width = image.width;
 				sprite.height = image.height;
 			}
@@ -114,7 +128,7 @@ export class AssetManager {
 		image.src = fullPath;
 	}
 
-	async loadAssets() {
+	async loadAssets(): Promise<void> {
 		const sprites = [...this.sprites.keys()];
 		const audio = [...this.audio.keys()];
 		const assets = [...sprites, ...audio];
@@ -126,7 +140,7 @@ export class AssetManager {
 		await Promise.all(audio.map(async (src) => this.loadAudio(src)));
 	}
 
-	emitOnLoad(src: string) {
+	emitOnLoad(src: string): void {
 		window.requestAnimationFrame(() => {
 			this.onLoadCallbacks.forEach((callback) => callback(src));
 		});
@@ -142,7 +156,7 @@ export class AssetManager {
 		});
 	}
 
-	_checkAllAssetsLoaded() {
+	_checkAllAssetsLoaded(): void {
 		if (
 			this.spritesLoaded === this.sprites.size &&
 			this.audioFilesLoaded === this.audio.size
@@ -151,12 +165,12 @@ export class AssetManager {
 		}
 	}
 
-	imageLoaded(src: string): void {
+	imageLoaded(_src: string): void {
 		++this.spritesLoaded;
 		this._checkAllAssetsLoaded();
 	}
 
-	audioLoaded(src: string): void {
+	audioLoaded(_src: string): void {
 		++this.audioFilesLoaded;
 		this._checkAllAssetsLoaded();
 	}
@@ -166,27 +180,28 @@ export class AssetManager {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- static class yo
 export class Sfx {
-	static #audioCtx: AudioContext;
-	static get audioCtx() {
+	static #audioCtx?: AudioContext;
+	static get audioCtx(): AudioContext {
 		Sfx.#audioCtx ??= new AudioContext();
 		return Sfx.#audioCtx;
 	}
 
 	static music = new Map<AudioAsset, AudioBufferSourceNode>();
 
-	static resetAudioCtx() {
+	static resetAudioCtx(): void {
 		Sfx.#audioCtx = new AudioContext();
 	}
 
-	static play(audio: AudioAsset) {
+	static play(audio: AudioAsset): void {
 		const source = Sfx.audioCtx.createBufferSource();
 		source.buffer = audio.buffer;
 		source.connect(Sfx.audioCtx.destination);
 		source.start();
 	}
 
-	static loop(audio: AudioAsset) {
+	static loop(audio: AudioAsset): void {
 		// TODO(bret): Make sure we're not looping twice!
 		const source = Sfx.audioCtx.createBufferSource();
 		source.buffer = audio.buffer;
@@ -197,7 +212,7 @@ export class Sfx {
 	}
 
 	// TODO(bret): Gonna need this to work for all audio, not just for music
-	static stop(audio: AudioAsset) {
+	static stop(audio: AudioAsset): void {
 		const source = this.music.get(audio);
 		if (source) {
 			source.stop();

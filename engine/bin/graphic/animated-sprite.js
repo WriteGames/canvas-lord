@@ -40,7 +40,8 @@ export class AnimatedSprite extends Graphic {
     constructor(asset, frameW, frameH, callback) {
         super();
         this.asset = asset;
-        if (frameW === undefined || frameH === undefined)
+        if (frameW === undefined ||
+            frameH === undefined)
             throw new Error('please supply frameW/frameH');
         this.frame = 0;
         this.frameId = 0;
@@ -81,10 +82,8 @@ export class AnimatedSprite extends Graphic {
         this.play();
     }
     centerOrigin() {
-        this.offsetX = -this.frameW >> 1;
-        this.offsetY = -this.frameH >> 1;
-        this.originX = -this.frameW >> 1;
-        this.originY = -this.frameH >> 1;
+        this.originX = this.frameW >> 1;
+        this.originY = this.frameH >> 1;
     }
     updateRect() {
         if (!this.currentAnimation)

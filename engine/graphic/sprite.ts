@@ -4,8 +4,8 @@ import { Graphic } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
-import type { Canvas, Ctx } from '../util/canvas.js';
-import { moveCanvas, Draw } from '../util/draw.js';
+import type { Ctx } from '../util/canvas.js';
+import { Draw } from '../util/draw.js';
 import type { CSSColor } from '../util/types';
 
 export interface ISpriteLike {
@@ -13,29 +13,35 @@ export interface ISpriteLike {
 	blend?: boolean;
 }
 
+const assetHasImage = (
+	asset: ImageAsset,
+): asset is ImageAsset & {
+	image: HTMLImageElement;
+} => asset.image !== null;
+
 // TODO(bret): How to tile?
 export class Sprite extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
 
-	sourceX: number = 0;
-	sourceY: number = 0;
+	sourceX = 0;
+	sourceY = 0;
 	sourceW: number | undefined;
 	sourceH: number | undefined;
 
 	color?: string;
 	blend?: boolean;
 
-	get width() {
+	get width(): number {
 		return this.imageSrc.width;
 	}
-	get w() {
+	get w(): number {
 		return this.width;
 	}
 
-	get height() {
+	get height(): number {
 		return this.imageSrc.height;
 	}
-	get h() {
+	get h(): number {
 		return this.height;
 	}
 
@@ -66,7 +72,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		height: number,
 		fileName: string,
 		callback: (ctx: Ctx) => void,
-	) {
+	): Sprite {
 		// TODO(bret): use generateCanvasAndCtx
 		// const { canvas, ctx } = generateCanvasAndCtx(width, height);
 		const canvas = document.createElement('canvas');
@@ -84,7 +90,8 @@ export class Sprite extends Graphic implements ISpriteLike {
 
 		const img = new Image(width, height);
 		img.onload = () => {
-			if ((asset.image = img)) {
+			asset.image = img;
+			if (assetHasImage(asset)) {
 				asset.width = width;
 				asset.height = height;
 				asset.loaded = true;
@@ -99,7 +106,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		return new Sprite(asset);
 	}
 
-	static createRect(width: number, height: number, color: string) {
+	static createRect(width: number, height: number, color: string): Sprite {
 		const fileName = [width, height, color].join('-');
 		return Sprite.createImage(width, height, fileName, (ctx: Ctx) => {
 			ctx.fillStyle = color;
@@ -107,15 +114,12 @@ export class Sprite extends Graphic implements ISpriteLike {
 		});
 	}
 
-	centerOrigin() {
-		// TODO(bret): How do we want to handle odd-width sprites w/ pixel art?
-		this.offsetX = -this.width / 2;
-		this.offsetY = -this.height / 2;
-		this.originX = -this.width / 2;
-		this.originY = -this.height / 2;
+	centerOrigin(): void {
+		this.originX = this.width / 2;
+		this.originY = this.height / 2;
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const {
 			sourceX,
 			sourceY,
@@ -127,7 +131,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
 
-	reset() {
+	reset(): void {
 		super.reset();
 
 		this.sourceX = 0;

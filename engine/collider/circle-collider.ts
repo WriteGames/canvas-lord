@@ -15,21 +15,21 @@ export class CircleCollider extends Collider implements ICircleCollider {
 	type = 'circle' as const;
 	radius: number;
 
-	get r() {
+	get r(): number {
 		return this.radius;
 	}
 	set r(value) {
 		this.radius = value;
 	}
 
-	get center() {
+	get center(): Vec2 {
 		return new Vec2(this.centerX, this.centerY);
 	}
-	get centerX() {
-		return this.x + this.parent.x;
+	get centerX(): number {
+		return this.x + this.parent.x - this.originX;
 	}
-	get centerY() {
-		return this.y + this.parent.y;
+	get centerY(): number {
+		return this.y + this.parent.y - this.originY;
 	}
 
 	constructor(r: number, x = 0, y = 0) {

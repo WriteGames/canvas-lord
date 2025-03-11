@@ -3,7 +3,8 @@ import * as Collide from '../collider/collide.js';
 import { PointCollider } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
-const mouseCollider = new PointCollider();
+// TODO(bret): hook this up
+const _mouseCollider = new PointCollider();
 export class Entity {
     scene; // NOTE: set by scene
     components = new Map();
@@ -76,7 +77,9 @@ export class Entity {
     get h() {
         return this.height;
     }
-    update(input) { }
+    update(_input) {
+        //
+    }
     render(ctx, camera) {
         // TODO(bret): .visible should probably be on the Graphic, not the Entity itself
         if (this.visible) {
@@ -86,25 +89,47 @@ export class Entity {
     renderCollider(ctx, camera = Vec2.zero) {
         if (!this.collider)
             return;
-        this.collider.render?.(ctx, -camera.x, -camera.y);
+        this.collider.render(ctx, -camera.x, -camera.y);
     }
-    _collide(x, y, tag, earlyOut) {
+    #collide(x, y, match, earlyOut) {
         if (!this.collider)
             return [];
         const _x = this.x;
         const _y = this.y;
         this.x = x;
         this.y = y;
-        const tags = tag ? [tag].flat() : [];
-        const n = this.scene.entities.inScene.length;
-        let collide = [];
+        let entities = this.scene.entities.inScene;
+        let tags = [];
+        switch (true) {
+            case match instanceof Entity: {
+                entities = [match];
+                break;
+            }
+            case typeof match === 'string': {
+                tags = [match];
+                break;
+            }
+            case Array.isArray(match): {
+                if (match.every((item) => item instanceof Entity)) {
+                    entities = match;
+                }
+                else {
+                    tags = match;
+                }
+                break;
+            }
+            default:
+                throw new Error('unknown error');
+        }
+        const n = entities.length;
+        const collide = [];
         for (let i = 0; i < n; ++i) {
-            const e = this.scene.entities.inScene[i];
+            const e = entities[i];
             if (e === this)
                 continue;
             if (!e.collider?.collidable)
                 continue;
-            if (tags.length && !tags.includes(e.collider.tag))
+            if (e.collider.tag && !tags.includes(e.collider.tag))
                 continue;
             const collision = Collide.collide(this.collider, e.collider);
             const result = collision ? e : null;
@@ -118,16 +143,14 @@ export class Entity {
         this.y = _y;
         return collide;
     }
-    collideEntity(x, y, tag) {
-        return this._collide(x, y, tag, true)[0] ?? null;
+    collideEntity(x, y, match) {
+        return this.#collide(x, y, match, true)[0] ?? null;
     }
-    collideEntities(x, y, tag) {
-        return this._collide(x, y, tag, false);
+    collideEntities(x, y, match) {
+        return this.#collide(x, y, match, false);
     }
-    collide(x, y, tag) {
-        if (!this.collider)
-            return false;
-        return this.collideEntity(x, y, tag) !== null;
+    collide(x, y, match) {
+        return this.#collide(x, y, match, true).length > 0;
     }
     collideMouse(x, y) {
         if (!this.collider)
@@ -144,7 +167,8 @@ export class Entity {
         {
             type: 'point',
             x: mouseX,
-            // @ts-expect-error
+            // TODO(bret): fix meeeee
+            // @ts-expect-error -- left and top don't exist??
             left: mouseX,
             y: mouseY,
             top: mouseY,

@@ -10,7 +10,7 @@ import {
 import { describe, expect, test } from 'vitest';
 
 // move to setupTests.ts using expect.extend
-const expectVec2Equal = (received: Vec2, expected: Vec2 | number[]) => {
+const expectVec2Equal = (received: Vec2, expected: Vec2 | number[]): void => {
 	expect(received).toHaveLength(expected.length);
 	expect([...received]).toEqual([...expected]);
 };

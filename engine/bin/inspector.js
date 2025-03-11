@@ -48,7 +48,8 @@ export class Inspector {
         const scene = this.engine.currentScenes?.[0];
         if (!scene)
             return;
-        const player = scene.entities.inScene?.[0];
+        // TODO(bret): Adjust TS settings so this is undefined!
+        const player = scene.entities.inScene[0];
         if (!player)
             return;
         this.items.forEach((item) => {
@@ -77,12 +78,12 @@ export class Inspector {
                 }
             }
             if (newValue !== undefined) {
-                // @ts-expect-error
+                // @ts-expect-error -- TODO(bret): fix this
                 player[item.property] = newValue;
             }
         });
         otherInputs.forEach((item) => {
-            // @ts-expect-error
+            // @ts-expect-error -- TODO(bret): fix this
             item.input.value = player[item.property];
         });
     }

@@ -8,9 +8,6 @@ export class Graphic {
     scaleY = 1;
     originX = 0;
     originY = 0;
-    // TODO(bret): get rid of these :) they're really just the x/y
-    offsetX = 0;
-    offsetY = 0;
     scrollX = 1;
     scrollY = 1;
     alpha = 1;
@@ -30,15 +27,17 @@ export class Graphic {
     centerOO() {
         this.centerOrigin();
     }
-    update(input) { }
-    render(ctx, camera = Vec2.zero) { }
+    update(_input) {
+        //
+    }
+    render(_ctx, _camera = Vec2.zero) {
+        //
+    }
     reset() {
         this.x = 0;
         this.y = 0;
         this.alpha = 1;
         this.angle = 0;
-        this.offsetX = 0;
-        this.offsetY = 0;
         this.scaleX = 0;
         this.scaleY = 0;
         this.scrollX = 1;

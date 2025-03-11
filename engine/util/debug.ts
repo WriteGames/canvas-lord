@@ -10,11 +10,12 @@ import { Camera } from './camera.js';
 import { Draw } from './draw.js';
 import {
 	AnimatedSprite,
-	Graphic,
+	type Graphic,
 	type GraphicClass,
 	Sprite,
 	Tileset,
 } from '../graphic/index.js';
+import type { ImageAsset } from '../core/asset-manager.js';
 
 interface DebugSceneData {
 	scene: Scene;
@@ -47,7 +48,7 @@ export class Debug implements Debug {
 	#enabled = false;
 
 	// TODO(bret): differentiate between "enabled" and "open"
-	get enabled() {
+	get enabled(): boolean {
 		return this.#enabled;
 	}
 
@@ -83,24 +84,17 @@ export class Debug implements Debug {
 	}
 
 	// TODO: gonna need to release this!
-	getGraphic(type: GraphicClass, options: {}) {
+	getGraphic(type: GraphicClass, options: { asset: ImageAsset }): void {
 		let graphic: Graphic;
 		switch (type) {
 			case Sprite:
-				graphic = this.graphic.sprite ??= new Sprite(
-					// @ts-expect-error
-					options.asset,
-				);
+				graphic = this.graphic.sprite ??= new Sprite(options.asset);
 				break;
 			case Tileset:
-				graphic = this.graphic.sprite ??= new Sprite(
-					// @ts-expect-error
-					options.asset,
-				);
+				graphic = this.graphic.sprite ??= new Sprite(options.asset);
 				break;
 			case AnimatedSprite:
 				graphic = this.graphic.animatedSprite ??= new AnimatedSprite(
-					// @ts-expect-error
 					options.asset,
 					100,
 					100,
@@ -114,15 +108,15 @@ export class Debug implements Debug {
 		graphic.reset();
 	}
 
-	toggle() {
+	toggle(): void {
 		this.enabled ? this.close() : this.open();
 	}
 
-	open() {
+	open(): void {
 		this.#enabled = true;
 	}
 
-	close() {
+	close(): void {
 		this.#enabled = false;
 
 		[...this.sceneData.entries()].forEach(([scene, data]) => {
@@ -131,7 +125,7 @@ export class Debug implements Debug {
 		this.sceneData.clear();
 	}
 
-	update(input: Input) {
+	update(input: Input): void {
 		if (input.keyPressed('Backquote')) {
 			this.toggle();
 		}
@@ -162,6 +156,7 @@ export class Debug implements Debug {
 
 			// TODO(bret): Multi-scene support for this!
 			// aka if (mouseInScene) { ... }
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- this is for testing purposes
 			if (true) {
 				if (input.mousePressed(0)) {
 					const entities = scene.entities.inScene.filter((e) => {
@@ -196,7 +191,7 @@ export class Debug implements Debug {
 		x: number,
 		y: number,
 		highlightRect?: { x: number; y: number; w: number; h: number },
-	) {
+	): void {
 		if (graphic instanceof Tileset || graphic instanceof Sprite) {
 			const asset = 'sprite' in graphic ? graphic.sprite : graphic.asset;
 			this.graphic.sprite ??= new Sprite(asset);
@@ -217,8 +212,8 @@ export class Debug implements Debug {
 
 			this.hiddenCtx.save();
 
-			const maxImageW = canvas.width - canvasPadding * 2;
-			const maxImageH = canvas.height - canvasPadding * 2;
+			// const maxImageW = canvas.width - canvasPadding * 2;
+			// const maxImageH = canvas.height - canvasPadding * 2;
 
 			this.hiddenCtx.fillStyle = 'black';
 			this.hiddenCtx.fillRect(0, 0, canvas.width, canvas.height);
@@ -315,7 +310,6 @@ export class Debug implements Debug {
 			{
 				type: 'fill',
 				color: '#101010',
-				// @ts-ignore
 				alpha: 0.5,
 				...rect,
 			},
@@ -329,7 +323,6 @@ export class Debug implements Debug {
 			{
 				type: 'stroke',
 				color: 'white',
-				// @ts-ignore
 				alpha: 0.5,
 				...rect,
 			},
@@ -344,7 +337,7 @@ export class Debug implements Debug {
 			y: number,
 			str: string,
 			align?: 'left' | 'right',
-		) => {
+		): void => {
 			Draw.text(
 				ctx,
 				{ type: 'fill', color: 'white', size: 16, align },
@@ -363,10 +356,11 @@ export class Debug implements Debug {
 		if (!graphic) return;
 
 		let assetStr = null;
-		// @ts-ignore
-		if ('asset' in graphic) assetStr = graphic.asset.fileName;
-		// @ts-ignore
-		if ('sprite' in graphic) assetStr = graphic.sprite.fileName;
+		// TODO(bret): Fix this shenanigans
+		if ('asset' in graphic)
+			assetStr = (graphic.asset as { fileName: string }).fileName;
+		if ('sprite' in graphic)
+			assetStr = (graphic.sprite as { fileName: string }).fileName;
 		if (assetStr) assetStr = `("${assetStr}")`;
 		const graphicStr = [graphic.constructor.name, assetStr].join(' ');
 		drawText(drawX + padding, drawY + padding + 30, graphicStr);
@@ -397,16 +391,13 @@ export class Debug implements Debug {
 		}
 
 		// TODO(bret): this is soooo dangerous, it gets set in renderGraphicWithRect!!
-		if (this.graphic) {
-			// @ts-expect-error
+		if (this.graphic.sprite) {
 			this.graphic.sprite.x = 0;
-			// @ts-expect-error
 			this.graphic.sprite.y = 0;
-			// @ts-expect-error
-			this.graphic.sprite?.render?.(this.ctx, {
+			this.graphic.sprite.render(this.ctx, {
 				x: -(drawX + w / 6),
 				y: -(drawY + padding + padding + 70),
-			});
+			} as Vec2);
 		}
 
 		drawText(
@@ -429,10 +420,8 @@ export class Debug implements Debug {
 				JSON.stringify({
 					x: entity.collider.x,
 					y: entity.collider.y,
-					// @ts-expect-error
-					w: entity.collider.width,
-					// @ts-expect-error
-					h: entity.collider.height,
+					w: 'width' in entity.collider ? entity.collider.width : 0,
+					h: 'height' in entity.collider ? entity.collider.height : 0,
 					points:
 						'points' in entity.collider
 							? entity.collider.points
@@ -444,14 +433,14 @@ export class Debug implements Debug {
 				drawX + padding,
 				drawY + padding + 310,
 				JSON.stringify({
-					// @ts-expect-error
-					left: entity.collider.left,
-					// @ts-expect-error
-					top: entity.collider.top,
-					// @ts-expect-error
-					right: entity.collider.right,
-					// @ts-expect-error
-					bottom: entity.collider.bottom,
+					left: 'left' in entity.collider ? entity.collider.left : 0,
+					top: 'top' in entity.collider ? entity.collider.top : 0,
+					right:
+						'right' in entity.collider ? entity.collider.right : 0,
+					bottom:
+						'bottom' in entity.collider
+							? entity.collider.bottom
+							: 0,
 				}),
 			);
 		}
@@ -475,7 +464,7 @@ export class Debug implements Debug {
 			height: number,
 			type: 'fill' | 'stroke',
 			color: string,
-		) => {
+		): void => {
 			const rect = { x, y, width, height };
 			Draw.rect(
 				ctx,
@@ -556,7 +545,7 @@ export class Debug implements Debug {
 		});
 	}
 
-	render(ctx: CanvasRenderingContext2D) {
+	render(ctx: CanvasRenderingContext2D): void {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 		if (!this.enabled) {

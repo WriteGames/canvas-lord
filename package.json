@@ -2,12 +2,12 @@
 	"name": "canvas-lord-root",
 	"private": true,
 	"version": "1.0.0",
-	"packageManager": "pnpm@7.20.0",
 	"main": "engine/canvas-lord.js",
 	"types": "engine/global.d.ts",
+	"packageManager": "pnpm@9.8.0",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^22",
+		"pnpm": "^9"
 	},
 	"scripts": {
 		"transpile": "pnpm -F canvas-lord-transpiler transpile",
@@ -26,6 +26,6 @@
 	"devDependencies": {
 		"@vercel/style-guide": "5.1.0",
 		"eslint": "8.56.0",
-		"typescript": "5.4.3"
+		"typescript": "5.7.3"
 	}
 }

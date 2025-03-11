@@ -44,7 +44,6 @@ import { Draw } from './bin/util/draw.js';
 import { Logger, YesNoLogParser } from './bin/util/logger.js';
 import { Inspector } from './bin/inspector.js';
 
-/* eslint-disable no-undef */
 const initGrid = () => {
 	return;
 	const grid = new Grid(320, 180, 16, 16);
@@ -692,4 +691,3 @@ export const initGames = (src = '', gamesMap = []) => {
 	});
 	assetManager.loadAssets();
 };
-/* eslint-enable no-undef */

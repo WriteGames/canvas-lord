@@ -5,9 +5,10 @@
 	"description": "An entity transpiler",
 	"main": "transpile.js",
 	"type": "module",
+	"packageManager": "pnpm@9.8.0",
 	"engines": {
-		"node": "^18",
-		"pnpm": "^7 || ^8"
+		"node": "^22",
+		"pnpm": "^9"
 	},
 	"scripts": {
 		"transpile": "node transpile.js"
@@ -21,7 +22,7 @@
 	"devDependencies": {
 		"@types/node": "20.11.3",
 		"@writegames.com/style-guide": "workspace:*",
-		"typescript": "5.4.3",
+		"typescript": "5.7.3",
 		"vitest": "^1.2.0"
 	}
 }

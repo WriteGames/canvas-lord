@@ -24,7 +24,7 @@ const collisionMap = {
         circle: (l, c) => collideLineCircle(...deLine(l), ...deCircle(c)),
         'right-triangle': (l, rt) => collideLineRightTriangle(...deLine(l), ...deRT(rt)),
         polygon: (l, p) => collideLinePolygon(...deLine(l), ...dePolygon(p)),
-        grid: (l, g) => undefined,
+        grid: (_l, _g) => undefined,
     },
     box: {
         point: (b, pt) => collidePointBox(...dePoint(pt), ...deBox(b)),
@@ -42,7 +42,7 @@ const collisionMap = {
         circle: (a, b) => collideCircleCircle(...deCircle(a), ...deCircle(b)),
         'right-triangle': (c, rt) => collideCircleRightTriangle(...deCircle(c), ...deRT(rt)),
         polygon: (c, p) => collideCirclePolygon(...deCircle(c), ...dePolygon(p)),
-        grid: (c, g) => undefined,
+        grid: (_c, _g) => undefined,
     },
     'right-triangle': {
         point: (rt, pt) => collidePointRightTriangle(...dePoint(pt), ...deRT(rt)),
@@ -51,7 +51,7 @@ const collisionMap = {
         circle: (rt, c) => collideCircleRightTriangle(...deCircle(c), ...deRT(rt)),
         'right-triangle': (a, b) => collideRightTriangleRightTriangle(...deRT(a), ...deRT(b)),
         polygon: (rt, p) => collideRightTrianglePolygon(...deRT(rt), ...dePolygon(p)),
-        grid: (rt) => undefined,
+        grid: (_rt) => undefined,
     },
     polygon: {
         point: (p, pt) => collidePointPolygon(...dePoint(pt), ...dePolygon(p)),
@@ -60,25 +60,26 @@ const collisionMap = {
         circle: (p, c) => collideCirclePolygon(...deCircle(c), ...dePolygon(p)),
         'right-triangle': (p, rt) => collideRightTrianglePolygon(...deRT(rt), ...dePolygon(p)),
         polygon: (a, b) => collidePolygonPolygon(...dePolygon(a), ...dePolygon(b)),
-        grid: (p, g) => undefined,
+        grid: (_p, _g) => undefined,
     },
     grid: {
         point: (g, pt) => collidePointGrid(...dePoint(pt), ...deGrid(g)),
-        line: (g, l) => undefined,
+        line: (_g, _l) => undefined,
         //collideLineGrid(l, g),
         box: (g, b) => collideBoxGrid(...deBox(b), ...deGrid(g)),
-        circle: (g, c) => undefined,
+        circle: (_g, _c) => undefined,
         //collideCircleGrid(c, g),
-        'right-triangle': (g, rt) => undefined,
+        'right-triangle': (_g, _rt) => undefined,
         // collideRightTriangleGrid(rt, g),
-        polygon: (g, p) => undefined,
+        polygon: (_g, _p) => undefined,
         //collidePolygonGrid(t, g),
-        grid: (a, b) => undefined,
+        grid: (_a, _b) => undefined,
         //collideGridGrid,
     },
 };
 export const collide = (shapeA, shapeB) => {
-    // @ts-expect-error
+    // TODO(bret): well, remove the error supression :)
+    // @ts-expect-error -- no idea how to fix this lol
     return collisionMap[shapeA.type][shapeB.type](shapeA, shapeB);
 };
 //# sourceMappingURL=collide.js.map

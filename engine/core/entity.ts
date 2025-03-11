@@ -2,7 +2,7 @@
 
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
-import { Collider } from '../collider/collider.js';
+import type { Collider } from '../collider/collider.js';
 import * as Collide from '../collider/collide.js';
 import { PointCollider, type ColliderTag } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
@@ -10,10 +10,18 @@ import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import * as Components from '../util/components.js';
 import { type ComponentProps } from '../util/components.js';
-import type { IRenderable, IEntityComponentType } from '../util/types.js';
+import type {
+	IRenderable,
+	IEntityComponentType,
+	RawComponent,
+} from '../util/types.js';
 
 // TODO(bret): Fix this type lol
 type Graphic = IRenderable;
+
+type ColliderType = ColliderTag | ColliderTag[] | Entity | Entity[];
+
+type ComponentMap = Map<IEntityComponentType, RawComponent>;
 
 export interface IEntity {
 	x: number;
@@ -24,7 +32,7 @@ export interface IEntity {
 	height: number;
 	scene: Scene;
 	graphic: Graphic | undefined;
-	components: Map<IEntityComponentType, any>;
+	components: ComponentMap;
 	collider: Collider | undefined;
 	visible: boolean;
 	update: (input: Input) => void;
@@ -35,35 +43,40 @@ export interface IEntity {
 	component: <T extends IEntityComponentType>(
 		component: T,
 	) => ComponentProps<T> | undefined;
-	collideEntity: (
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	) => Entity | null;
-	collideEntities: (
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	) => Entity[];
-	collide: (
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	) => boolean;
-	collideMouse: (x: number, y: number) => boolean;
+
+	collideEntity(x: number, y: number): Entity | null;
+	collideEntity(x: number, y: number, tag?: ColliderTag): Entity | null;
+	collideEntity(x: number, y: number, tags: ColliderTag[]): Entity | null;
+	collideEntity(x: number, y: number, entity: Entity): Entity | null;
+	collideEntity(x: number, y: number, entities: Entity[]): Entity | null;
+
+	collideEntities(x: number, y: number): Entity[];
+	collideEntities(x: number, y: number, tag?: ColliderTag): Entity[];
+	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
+	collideEntities(x: number, y: number, entity: Entity): Entity[];
+	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
+
+	collide(x: number, y: number): boolean;
+	collide(x: number, y: number, tag?: ColliderTag): boolean;
+	collide(x: number, y: number, tags: ColliderTag[]): boolean;
+	collide(x: number, y: number, entity: Entity): boolean;
+	collide(x: number, y: number, entities: Entity[]): boolean;
+
+	collideMouse(x: number, y: number): boolean;
 }
 
-const mouseCollider = new PointCollider();
+// TODO(bret): hook this up
+const _mouseCollider = new PointCollider();
 
 export class Entity implements IEntity, IRenderable {
 	scene!: Scene; // NOTE: set by scene
-	components = new Map<IEntityComponentType, any>();
+	components: ComponentMap = new Map();
 	depth = 0;
 	#collider: Collider | undefined = undefined;
 	visible = true;
 	#graphic: Graphic | undefined = undefined;
 
-	get collider() {
+	get collider(): Collider | undefined {
 		return this.#collider;
 	}
 
@@ -74,7 +87,7 @@ export class Entity implements IEntity, IRenderable {
 		this.#collider?.assignParent(this);
 	}
 
-	get graphic() {
+	get graphic(): Graphic | undefined {
 		return this.#graphic;
 	}
 
@@ -83,7 +96,7 @@ export class Entity implements IEntity, IRenderable {
 		if (this.#graphic) this.#graphic.parent = this;
 	}
 
-	constructor(x: number = 0, y: number = 0) {
+	constructor(x = 0, y = 0) {
 		this.addComponent(Components.pos2D);
 		this.x = x;
 		this.y = y;
@@ -105,7 +118,7 @@ export class Entity implements IEntity, IRenderable {
 		return c as ComponentProps<C>;
 	}
 
-	get x() {
+	get x(): number {
 		return this.component(Components.pos2D)![0];
 	}
 
@@ -113,7 +126,7 @@ export class Entity implements IEntity, IRenderable {
 		this.component(Components.pos2D)![0] = val;
 	}
 
-	get y() {
+	get y(): number {
 		return this.component(Components.pos2D)![1];
 	}
 
@@ -123,29 +136,31 @@ export class Entity implements IEntity, IRenderable {
 
 	// TODO(bret): Set up setters for these as well
 	// TODO(bret): Would be good to set up for non-rect shapes :)
-	get width() {
+	get width(): number {
 		if (this.collider && 'w' in this.collider)
 			// TODO(bret): fix "as number"
 			return this.collider.w as number;
 		return 0;
 	}
 
-	get w() {
+	get w(): number {
 		return this.width;
 	}
 
-	get height() {
+	get height(): number {
 		if (this.collider && 'h' in this.collider)
 			// TODO(bret): fix "as number"
 			return this.collider.h as number;
 		return 0;
 	}
 
-	get h() {
+	get h(): number {
 		return this.height;
 	}
 
-	update(input: Input): void {}
+	update(_input: Input): void {
+		//
+	}
 
 	render(ctx: Ctx, camera: Camera): void {
 		// TODO(bret): .visible should probably be on the Graphic, not the Entity itself
@@ -157,13 +172,13 @@ export class Entity implements IEntity, IRenderable {
 	renderCollider(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		if (!this.collider) return;
 
-		this.collider.render?.(ctx, -camera.x, -camera.y);
+		this.collider.render(ctx, -camera.x, -camera.y);
 	}
 
-	_collide(
+	#collide(
 		x: number,
 		y: number,
-		tag: ColliderTag | ColliderTag[],
+		match: ColliderType | undefined,
 		earlyOut: boolean,
 	): Entity[] {
 		if (!this.collider) return [];
@@ -173,14 +188,40 @@ export class Entity implements IEntity, IRenderable {
 		this.x = x;
 		this.y = y;
 
-		const tags = tag ? [tag].flat() : [];
-		const n = this.scene.entities.inScene.length;
-		let collide = [];
+		let entities: Entity[] = this.scene.entities.inScene;
+		let tags: ColliderTag[] = [];
+
+		switch (true) {
+			case match instanceof Entity: {
+				entities = [match];
+				break;
+			}
+
+			case typeof match === 'string': {
+				tags = [match];
+				break;
+			}
+
+			case Array.isArray(match): {
+				if (match.every((item) => item instanceof Entity)) {
+					entities = match;
+				} else {
+					tags = match;
+				}
+				break;
+			}
+
+			default:
+				throw new Error('unknown error');
+		}
+
+		const n = entities.length;
+		const collide: Entity[] = [];
 		for (let i = 0; i < n; ++i) {
-			const e = this.scene.entities.inScene[i];
+			const e = entities[i];
 			if (e === this) continue;
 			if (!e.collider?.collidable) continue;
-			if (tags.length && !tags.includes(e.collider.tag)) continue;
+			if (e.collider.tag && !tags.includes(e.collider.tag)) continue;
 
 			const collision = Collide.collide(this.collider, e.collider);
 			const result = collision ? e : null;
@@ -196,24 +237,34 @@ export class Entity implements IEntity, IRenderable {
 		return collide;
 	}
 
-	collideEntity(
-		x: number,
-		y: number,
-		tag: ColliderTag | ColliderTag[],
-	): Entity | null {
-		return this._collide(x, y, tag, true)[0] ?? null;
+	collideEntity(x: number, y: number): Entity;
+	collideEntity(x: number, y: number, tag?: ColliderTag): Entity;
+	collideEntity(x: number, y: number, tags: ColliderTag[]): Entity;
+	collideEntity(x: number, y: number, entity: Entity): Entity;
+	collideEntity(x: number, y: number, entities: Entity[]): Entity;
+	collideEntity(x: number, y: number, match?: unknown): Entity | null {
+		return this.#collide(x, y, match as ColliderType, true)[0] ?? null;
 	}
 
-	collideEntities(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		return this._collide(x, y, tag, false);
+	collideEntities(x: number, y: number): Entity[];
+	collideEntities(x: number, y: number, tag?: ColliderTag): Entity[];
+	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
+	collideEntities(x: number, y: number, entity: Entity): Entity[];
+	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
+	collideEntities(x: number, y: number, match?: unknown): Entity[] {
+		return this.#collide(x, y, match as ColliderType, false);
 	}
 
-	collide(x: number, y: number, tag: ColliderTag | ColliderTag[]) {
-		if (!this.collider) return false;
-		return this.collideEntity(x, y, tag) !== null;
+	collide(x: number, y: number): boolean;
+	collide(x: number, y: number, tag?: ColliderTag): boolean;
+	collide(x: number, y: number, tags: ColliderTag[]): boolean;
+	collide(x: number, y: number, entity: Entity): boolean;
+	collide(x: number, y: number, entities: Entity[]): boolean;
+	collide(x: number, y: number, match?: unknown): boolean {
+		return this.#collide(x, y, match as ColliderType, true).length > 0;
 	}
 
-	collideMouse(x: number, y: number) {
+	collideMouse(x: number, y: number): boolean {
 		if (!this.collider) return false;
 
 		const { input } = this.scene.engine;
@@ -230,7 +281,8 @@ export class Entity implements IEntity, IRenderable {
 			{
 				type: 'point',
 				x: mouseX,
-				// @ts-expect-error
+				// TODO(bret): fix meeeee
+				// @ts-expect-error -- left and top don't exist??
 				left: mouseX,
 				y: mouseY,
 				top: mouseY,

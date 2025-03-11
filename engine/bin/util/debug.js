@@ -41,19 +41,13 @@ export class Debug {
         let graphic;
         switch (type) {
             case Sprite:
-                graphic = this.graphic.sprite ??= new Sprite(
-                // @ts-expect-error
-                options.asset);
+                graphic = this.graphic.sprite ??= new Sprite(options.asset);
                 break;
             case Tileset:
-                graphic = this.graphic.sprite ??= new Sprite(
-                // @ts-expect-error
-                options.asset);
+                graphic = this.graphic.sprite ??= new Sprite(options.asset);
                 break;
             case AnimatedSprite:
-                graphic = this.graphic.animatedSprite ??= new AnimatedSprite(
-                // @ts-expect-error
-                options.asset, 100, 100);
+                graphic = this.graphic.animatedSprite ??= new AnimatedSprite(options.asset, 100, 100);
                 break;
             // TODO(bret): NineSlice, Emitter
             default:
@@ -100,6 +94,7 @@ export class Debug {
             const { originalCamera, dragStart, camera, cameraDelta } = sceneData;
             // TODO(bret): Multi-scene support for this!
             // aka if (mouseInScene) { ... }
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- this is for testing purposes
             if (true) {
                 if (input.mousePressed(0)) {
                     const entities = scene.entities.inScene.filter((e) => {
@@ -143,8 +138,8 @@ export class Debug {
             canvas.width = tempSprite.width + canvasPadding * 2;
             canvas.height = tempSprite.height + canvasPadding * 2;
             this.hiddenCtx.save();
-            const maxImageW = canvas.width - canvasPadding * 2;
-            const maxImageH = canvas.height - canvasPadding * 2;
+            // const maxImageW = canvas.width - canvasPadding * 2;
+            // const maxImageH = canvas.height - canvasPadding * 2;
             this.hiddenCtx.fillStyle = 'black';
             this.hiddenCtx.fillRect(0, 0, canvas.width, canvas.height);
             this.hiddenCtx.translate(canvasPadding, canvasPadding);
@@ -216,14 +211,12 @@ export class Debug {
         Draw.rect(ctx, {
             type: 'fill',
             color: '#101010',
-            // @ts-ignore
             alpha: 0.5,
             ...rect,
         }, rect.x, rect.y, rect.width, rect.height);
         Draw.rect(ctx, {
             type: 'stroke',
             color: 'white',
-            // @ts-ignore
             alpha: 0.5,
             ...rect,
         }, rect.x, rect.y, rect.width, rect.height);
@@ -237,10 +230,9 @@ export class Debug {
         if (!graphic)
             return;
         let assetStr = null;
-        // @ts-ignore
+        // TODO(bret): Fix this shenanigans
         if ('asset' in graphic)
             assetStr = graphic.asset.fileName;
-        // @ts-ignore
         if ('sprite' in graphic)
             assetStr = graphic.sprite.fileName;
         if (assetStr)
@@ -273,13 +265,10 @@ export class Debug {
             this.renderGraphicWithRect(ctx, graphic, x, y);
         }
         // TODO(bret): this is soooo dangerous, it gets set in renderGraphicWithRect!!
-        if (this.graphic) {
-            // @ts-expect-error
+        if (this.graphic.sprite) {
             this.graphic.sprite.x = 0;
-            // @ts-expect-error
             this.graphic.sprite.y = 0;
-            // @ts-expect-error
-            this.graphic.sprite?.render?.(this.ctx, {
+            this.graphic.sprite.render(this.ctx, {
                 x: -(drawX + w / 6),
                 y: -(drawY + padding + padding + 70),
             });
@@ -291,23 +280,19 @@ export class Debug {
             drawText(drawX + padding, drawY + padding + 290, JSON.stringify({
                 x: entity.collider.x,
                 y: entity.collider.y,
-                // @ts-expect-error
-                w: entity.collider.width,
-                // @ts-expect-error
-                h: entity.collider.height,
+                w: 'width' in entity.collider ? entity.collider.width : 0,
+                h: 'height' in entity.collider ? entity.collider.height : 0,
                 points: 'points' in entity.collider
                     ? entity.collider.points
                     : null,
             }));
             drawText(drawX + padding, drawY + padding + 310, JSON.stringify({
-                // @ts-expect-error
-                left: entity.collider.left,
-                // @ts-expect-error
-                top: entity.collider.top,
-                // @ts-expect-error
-                right: entity.collider.right,
-                // @ts-expect-error
-                bottom: entity.collider.bottom,
+                left: 'left' in entity.collider ? entity.collider.left : 0,
+                top: 'top' in entity.collider ? entity.collider.top : 0,
+                right: 'right' in entity.collider ? entity.collider.right : 0,
+                bottom: 'bottom' in entity.collider
+                    ? entity.collider.bottom
+                    : 0,
             }));
         }
     }

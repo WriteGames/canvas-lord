@@ -1,6 +1,6 @@
 /* Canvas Lord v0.5.3 */
 
-import { V3, addPos, scalePos, subPos, posEqual, Vec2 } from '../math/index.js';
+import { type V3, addPos, scalePos, posEqual, Vec2 } from '../math/index.js';
 
 // TODO: capacity, aka when it splits
 
@@ -17,7 +17,7 @@ type V2 = [x: number, y: number];
 
 type ItemPositionCallback<T> = (item: T) => V2;
 
-const arrayRemove = <T>(arr: Array<T>, value: T) => {
+const arrayRemove = <T>(arr: T[], value: T): T[] => {
 	const index = arr.indexOf(value);
 	if (index > -1) {
 		arr.splice(index, 1);
@@ -32,8 +32,8 @@ export interface QuadtreeNode<T> {
 	posB: V2;
 	radii: Vec2;
 	midPoint: Vec2;
-	rangeX: V2;
-	rangeY: V2;
+	rangeX: Vec2;
+	rangeY: Vec2;
 	itemPosCallback: ItemPositionCallback<T>;
 	type: 'node' | 'leaf';
 	children: T[] | Quadrants<T>;
@@ -73,8 +73,8 @@ const LEAF_THRESHOLD = 5; // set to 16 maybe?
 
 export class QuadtreeNode<T> implements QuadtreeNode<T> {
 	constructor(
-		rangeX: V2,
-		rangeY: V2,
+		rangeX: Vec2,
+		rangeY: Vec2,
 		itemPosCallback: ItemPositionCallback<T>,
 		leafThreshold = LEAF_THRESHOLD,
 	) {
@@ -89,22 +89,22 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		this.totalChildrenCount = 0;
 	}
 
-	setParent(parent: QuadtreeInternalNode<T>) {
+	setParent(parent: QuadtreeInternalNode<T>): void {
 		this.parent = parent;
 		this.depth = this.parent.depth + 1;
 	}
 
-	recompute(rangeX: V2, rangeY: V2) {
+	recompute(rangeX: Vec2, rangeY: Vec2): void {
 		const [x1, x2] = rangeX;
 		const [y1, y2] = rangeY;
 		this.posA = [x1, y1];
 		this.posB = [x2, y2];
 		this.rangeX = rangeX;
 		this.rangeY = rangeY;
-		this.radii = scalePos(
-			new Vec2(rangeX[1] - rangeX[0], rangeY[1] - rangeY[0]),
-			0.5,
-		);
+		this.radii = new Vec2(
+			rangeX[1] - rangeX[0],
+			rangeY[1] - rangeY[0],
+		).scale(0.5);
 		this.midPoint = new Vec2(...addPos(this.posA, this.radii));
 	}
 
@@ -114,7 +114,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		return ((isRight ? 1 : 0) + (isBottom ? 2 : 0)) as QuadIndex;
 	}
 
-	split() {
+	split(): void {
 		if (isQuadtreeNode(this)) {
 			throw new Error('cannot split a non-leaf');
 		}
@@ -130,8 +130,8 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 			const xIndex = i % 2;
 			const yIndex = Math.floor(i / 2);
 
-			const rangeX = [pointsX[xIndex], pointsX[xIndex + 1]] as V2;
-			const rangeY = [pointsY[yIndex], pointsY[yIndex + 1]] as V2;
+			const rangeX = new Vec2(pointsX[xIndex], pointsX[xIndex + 1]);
+			const rangeY = new Vec2(pointsY[yIndex], pointsY[yIndex + 1]);
 
 			const node = new QuadtreeNode<T>(
 				rangeX,
@@ -148,7 +148,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		displacedChildren.forEach((c) => this.addChild(c));
 	}
 
-	combine() {
+	combine(): void {
 		if (isQuadtreeLeaf(this)) {
 			throw new Error('cannot combine a leaf (no quads)');
 		}
@@ -166,12 +166,11 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		this.parent?.recomputeCounts();
 	}
 
-	expand() {
-		// @ts-ignore
+	expand(): void {
 		const newRangeX = scalePos(this.rangeX, 2);
-		// @ts-ignore
+
 		const newRangeY = scalePos(this.rangeY, 2);
-		// @ts-ignore
+
 		this.recompute(newRangeX, newRangeY);
 
 		if (this.type === 'leaf') return;
@@ -185,14 +184,8 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		oldQuads.forEach((quad, quadIndex) => {
 			const xIndex = quadIndex % 2;
 			const yIndex = Math.floor(quadIndex / 2);
-			const newRangeX = xPoints.slice(
-				xIndex,
-				xIndex + 2,
-			) as unknown as V2;
-			const newRangeY = yPoints.slice(
-				yIndex,
-				yIndex + 2,
-			) as unknown as V2;
+			const newRangeX = new Vec2(...xPoints.slice(xIndex, xIndex + 2));
+			const newRangeY = new Vec2(...yPoints.slice(yIndex, yIndex + 2));
 			quad.recompute(newRangeX, newRangeY);
 		});
 	}
@@ -219,7 +212,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		return this.findNode(this.itemPosCallback(child));
 	}
 
-	getChildAtPos(pos: V2) {
+	getChildAtPos(pos: V2): T | undefined {
 		const node = this.findNode(pos);
 		// return node;
 		return node?.children.find((child) => {
@@ -227,18 +220,18 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		});
 	}
 
-	hasChild(child: T) {
+	hasChild(child: T): boolean {
 		const node = this.findChildNode(child);
 		if (node === null) return false;
 		return node.children.includes(child);
 	}
 
-	addUniqueChild(child: T) {
+	addUniqueChild(child: T): void {
 		if (this.hasChild(child)) return;
 		this.addChild(child);
 	}
 
-	recomputeCounts() {
+	recomputeCounts(): void {
 		if (this.type === 'leaf') {
 			throw new Error('only call this for leaf nodes');
 		}
@@ -262,7 +255,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		}
 	}
 
-	addChild(child: T) {
+	addChild(child: T): void {
 		// TODO: rework this to make sure that we don't ever have an infinitely expanding node
 		let node = this.findChildNode(child);
 		if (node === null) {
@@ -281,7 +274,8 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 			node = this.findChildNode(child);
 		}
 
-		if (node == null) return;
+		// NOTE(bret): This was `node == null`
+		if (node === null) return;
 
 		// add child
 		node.children.push(child);
@@ -294,7 +288,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		}
 	}
 
-	removeChild(child: T) {
+	removeChild(child: T): void {
 		const node = this.findChildNode(child);
 		if (node === null) {
 			throw new Error('child does not exist in this tree');
@@ -303,7 +297,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		const children = node.children;
 		if (!children.includes(child)) return;
 
-		const before = children.length;
+		// const before = children.length;
 		arrayRemove(children, child);
 
 		node.totalChildrenCount = node.children.length;

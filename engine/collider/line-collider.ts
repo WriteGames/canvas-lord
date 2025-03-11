@@ -12,6 +12,15 @@ interface ILineCollider {
 	y2: number;
 }
 
+interface Point {
+	x: number;
+	left: number;
+	right: number;
+	y: number;
+	top: number;
+	bottom: number;
+}
+
 export class LineCollider extends Collider implements ILineCollider {
 	type = 'line' as const;
 
@@ -20,7 +29,7 @@ export class LineCollider extends Collider implements ILineCollider {
 	x2: number;
 	y2: number;
 
-	get start() {
+	get start(): Point {
 		return {
 			x: this.xStart,
 			left: this.xStart,
@@ -30,7 +39,7 @@ export class LineCollider extends Collider implements ILineCollider {
 			bottom: this.yStart,
 		};
 	}
-	get end() {
+	get end(): Point {
 		return {
 			x: this.xEnd,
 			left: this.xEnd,
@@ -41,18 +50,18 @@ export class LineCollider extends Collider implements ILineCollider {
 		};
 	}
 
-	get xStart() {
-		return this.x1 + this.parent.x;
+	get xStart(): number {
+		return this.x1 + this.parent.x - this.originX;
 	}
-	get yStart() {
-		return this.y1 + this.parent.y;
+	get yStart(): number {
+		return this.y1 + this.parent.y - this.originY;
 	}
 
-	get xEnd() {
-		return this.x2 + this.parent.x;
+	get xEnd(): number {
+		return this.x2 + this.parent.x - this.originX;
 	}
-	get yEnd() {
-		return this.y2 + this.parent.y;
+	get yEnd(): number {
+		return this.y2 + this.parent.y - this.originY;
 	}
 
 	constructor(x1: number, y1: number, x2: number, y2: number, x = 0, y = 0) {

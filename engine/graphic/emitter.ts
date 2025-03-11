@@ -86,22 +86,24 @@ export class Emitter extends Graphic {
 	constructor(asset: Sprite | ImageAsset, x: number, y: number) {
 		super(x, y);
 
+		let _asset = asset;
+
 		// TODO(bret): Figure out how we want to handle this
-		if (asset instanceof Sprite) {
-			asset = asset.asset;
+		if (_asset instanceof Sprite) {
+			_asset = _asset.asset;
 		}
 
-		this.asset = asset;
+		this.asset = _asset;
 		const { canvas } = generateCanvasAndCtx();
 		if (!canvas) throw new Error();
 		this.blendCanvas = canvas;
 	}
 
-	newType(name: string, frames?: number[]) {
+	newType(name: string, frames?: number[]): void {
 		this.#types.set(name, { frames, particles: [] });
 	}
 
-	getType(name: string) {
+	getType(name: string): ParticleType {
 		const type = this.#types.get(name);
 		if (!type) throw new Error(`${name} is not set`);
 		return type;
@@ -111,24 +113,34 @@ export class Emitter extends Graphic {
 		type: ParticleType,
 		field: T,
 		value: ParticleType[T],
-	) {
+	): void {
 		type[field] = Object.assign(type[field] ?? {}, value);
 	}
 
-	setAlpha(name: string, start: number, end: number, ease: Ease) {
+	setAlpha(
+		name: string,
+		start: number,
+		end: number,
+		ease: Ease,
+	): ParticleType {
 		const type = this.getType(name);
 		this.assignToType(type, 'alpha', { start, end });
 		type.alphaEase = ease;
 		return type;
 	}
 
-	setAngle(name: string, min: number, max: number) {
+	setAngle(name: string, min: number, max: number): ParticleType {
 		const type = this.getType(name);
 		this.assignToType(type, 'angle', { min, max });
 		return type;
 	}
 
-	setRotation(name: string, min: number, max: number, ease: Ease) {
+	setRotation(
+		name: string,
+		min: number,
+		max: number,
+		ease: Ease,
+	): ParticleType {
 		const type = this.getType(name);
 		this.assignToType(type, 'rotation', { min, max });
 		type.rotationEase = ease;
@@ -142,12 +154,14 @@ export class Emitter extends Graphic {
 		start: string,
 		end: string,
 		ease: Ease,
-		resolution: number = 250,
-	) {
+		resolution = 250,
+	): ParticleType {
 		const type = this.getType(name);
 		let ctx = type.color?.ctx ?? null;
 		if (!type.color) {
-			({ ctx } = generateCanvasAndCtx(resolution, 1));
+			({ ctx } = generateCanvasAndCtx(resolution, 1, {
+				willReadFrequently: true,
+			}));
 		}
 		if (!ctx) throw new Error();
 		const gradient = ctx.createLinearGradient(0, 0, resolution, 1);
@@ -158,10 +172,11 @@ export class Emitter extends Graphic {
 		const samples = Array.from({ length: resolution }, (_, i) => {
 			const { data } = ctx.getImageData(i, 0, 1, 1);
 			const hex = [...data].map((c) => c.toString(16).padStart(2, '0'));
-			return '#' + hex.join('');
+			return `#${hex.join('')}`;
 		});
 		type.colorEase = ease;
-		return this.assignToType(type, 'color', { ctx, samples });
+		this.assignToType(type, 'color', { ctx, samples });
+		return type;
 	}
 
 	setMotion(
@@ -169,11 +184,11 @@ export class Emitter extends Graphic {
 		moveAngle: number,
 		distance: number,
 		duration: number,
-		moveAngleRange: number = 0,
-		distanceRange: number = 0,
-		durationRange: number = 0,
-		ease: Ease,
-	) {
+		moveAngleRange = 0,
+		distanceRange = 0,
+		durationRange = 0,
+		ease?: Ease,
+	): ParticleType {
 		const type = this.getType(name);
 		this.assignToType(type, 'moveAngle', {
 			min: moveAngle,
@@ -191,7 +206,7 @@ export class Emitter extends Graphic {
 		return type;
 	}
 
-	emit(name: string, x: number, y: number) {
+	emit(name: string, x: number, y: number): void {
 		const type = this.#types.get(name);
 		if (!type) throw new Error(`${name} is not set`);
 
@@ -237,8 +252,8 @@ export class Emitter extends Graphic {
 		type.particles.push(particle);
 	}
 
-	update() {
-		[...this.#types.entries()].forEach(([name, type]) => {
+	update(): void {
+		[...this.#types.entries()].forEach(([_, type]) => {
 			type.particles = type.particles.filter(
 				(particle) => particle.elapsed < particle.duration,
 			);
@@ -255,7 +270,7 @@ export class Emitter extends Graphic {
 		});
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
 
@@ -267,10 +282,10 @@ export class Emitter extends Graphic {
 		blendCanvas.height = image.height;
 		const { width, height } = blendCanvas;
 		// TODO(bret): We might want to cache this
-		const blendCtx = blendCanvas.getContext('2d') as Ctx;
+		const blendCtx = blendCanvas.getContext('2d') as Ctx | null;
 		if (!blendCtx) throw new Error();
 
-		[...this.#types.entries()].forEach(([name, type]) => {
+		[...this.#types.entries()].forEach(([_, type]) => {
 			type.particles.forEach((particle) => {
 				this.alpha = 1;
 				if (particle.type.alpha) {
@@ -299,10 +314,8 @@ export class Emitter extends Graphic {
 				const drawY = y + particle.y;
 				this.angle = particle.angle;
 				// TODO(bret): unhardcode centered particles!
-				this.offsetX = -(width >> 1);
-				this.originX = this.offsetX;
-				this.offsetY = -(height >> 1);
-				this.originY = this.offsetY;
+				this.originX = -(width >> 1);
+				this.originY = -(height >> 1);
 				Draw.image(ctx, this, drawX, drawY);
 			});
 		});

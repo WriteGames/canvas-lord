@@ -4,7 +4,7 @@ import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import { Entity } from '../canvas-lord.js';
+import type { Entity } from '../canvas-lord.js';
 
 type Orientation = 'NW' | 'NE' | 'SW' | 'SE';
 
@@ -35,12 +35,12 @@ export class RightTriangleCollider
 	#lastW!: number;
 	#lastH!: number;
 
-	get points() {
+	get points(): Points {
 		this.#computePoints();
 		return this.#points;
 	}
 
-	#computePoints(compute = false) {
+	#computePoints(compute = false): void {
 		if (
 			this.left === this.#lastLeft &&
 			this.top === this.#lastTop &&
@@ -78,7 +78,11 @@ export class RightTriangleCollider
 				break;
 			}
 			default:
-				throw new Error(`Invalid orientation (${this.orientation})`);
+				throw new Error(
+					`Invalid orientation (${
+						(this as unknown as RightTriangleCollider).orientation
+					})`,
+				);
 		}
 		this.#points = points;
 	}
@@ -93,14 +97,14 @@ export class RightTriangleCollider
 		this.#computePoints(true);
 	}
 
-	get w() {
+	get w(): number {
 		return this.width;
 	}
 	set w(value) {
 		this.width = value;
 	}
 
-	get h() {
+	get h(): number {
 		return this.height;
 	}
 	set h(value) {
@@ -120,67 +124,65 @@ export class RightTriangleCollider
 		this.#computePoints(true);
 	}
 
-	get left() {
-		return this.x + this.parent.x;
+	get left(): number {
+		return this.x + this.parent.x - this.originX;
 	}
-	get right() {
-		return this.x + this.parent.x + this.w - 1;
+	get right(): number {
+		return this.x + this.parent.x - this.originX + this.w - 1;
 	}
-	get top() {
-		return this.y + this.parent.y;
+	get top(): number {
+		return this.y + this.parent.y - this.originY;
 	}
-	get bottom() {
-		return this.y + this.parent.y + this.h - 1;
+	get bottom(): number {
+		return this.y + this.parent.y - this.originY + this.h - 1;
 	}
 
-	get p1() {
+	get p1(): Point {
 		this.#computePoints();
 		return this.#points[0];
 	}
-	get p2() {
+	get p2(): Point {
 		this.#computePoints();
 		return this.#points[1];
 	}
-	get p3() {
+	get p3(): Point {
 		this.#computePoints();
 		return this.#points[2];
 	}
 
-	get x1() {
+	get x1(): number {
 		this.#computePoints();
 		return this.#points[0][0];
 	}
-	get y1() {
+	get y1(): number {
 		this.#computePoints();
 		return this.#points[0][1];
 	}
-	get x2() {
+	get x2(): number {
 		this.#computePoints();
 		return this.#points[1][0];
 	}
-	get y2() {
+	get y2(): number {
 		this.#computePoints();
 		return this.#points[1][1];
 	}
-	get x3() {
+	get x3(): number {
 		this.#computePoints();
 		return this.#points[2][0];
 	}
-	get y3() {
+	get y3(): number {
 		this.#computePoints();
 		return this.#points[2][1];
 	}
 
 	render(ctx: Ctx, x = 0, y = 0): void {
-		if (!this.parent) console.warn(this);
-		// console.log(this.parent);
-		// TODO(bret): Fix this
 		Draw.polygon(
 			ctx,
 			this.options,
 			x,
 			y,
-			// @ts-expect-error
+			// TODO(bret): the types don't match
+			// @ts-expect-error -- idk
 			this.#points,
 		);
 	}

@@ -20,24 +20,26 @@ interface TextOptions {
 	count?: number;
 }
 
-// TODO(bret): Make this a global ?
-const defaultTextOptions: TextOptions = {
-	color: 'white', // what do we want for default?
-	type: 'fill',
-	font: 'sans-serif',
-	size: 10,
-	align: 'left',
-	// TODO(bret): check if this is the default we want :/
-	baseline: 'top',
-};
-
 interface IText extends TextOptions {
-	str: string;
+	// str: string;
 	maxWidth?: number;
 }
 
+// TODO(bret): Note that this is global, not just per-Game!
+// we're going to want to move all the global things into a special Game._globals probably
+const textOptionPresetMap = new Map<string | undefined, TextOptions>();
+textOptionPresetMap.set(undefined, {
+	color: 'white', // what do we want for default?
+	type: 'fill',
+	font: 'monospace',
+	size: 16,
+	align: 'left',
+	// TODO(bret): check if this is the default we want :/
+	baseline: 'top',
+});
+
 export class Text extends Graphic implements IText {
-	str: string;
+	#str: string;
 
 	#count?: number;
 	#color!: TextOptions['color'];
@@ -49,10 +51,18 @@ export class Text extends Graphic implements IText {
 
 	maxWidth?: number;
 
-	#invalided: Boolean = true;
+	#invalided = true;
 	#metrics!: TextMetrics;
 
-	get count() {
+	get str(): string {
+		return this.#str;
+	}
+	set str(value) {
+		this.#invalided = true;
+		this.#str = value;
+	}
+
+	get count(): TextOptions['count'] {
 		return this.#count;
 	}
 	set count(value) {
@@ -60,7 +70,7 @@ export class Text extends Graphic implements IText {
 		this.#count = value;
 	}
 
-	get color() {
+	get color(): CSSColor {
 		return this.#color;
 	}
 	set color(value) {
@@ -68,7 +78,7 @@ export class Text extends Graphic implements IText {
 		this.#color = value;
 	}
 
-	get type() {
+	get type(): TextOptions['type'] {
 		return this.#type;
 	}
 	set type(value) {
@@ -76,7 +86,7 @@ export class Text extends Graphic implements IText {
 		this.#type = value;
 	}
 
-	get font() {
+	get font(): TextOptions['font'] {
 		return this.#font;
 	}
 	set font(value) {
@@ -84,7 +94,7 @@ export class Text extends Graphic implements IText {
 		this.#font = value;
 	}
 
-	get size() {
+	get size(): TextOptions['size'] {
 		return this.#size;
 	}
 	set size(value) {
@@ -92,7 +102,7 @@ export class Text extends Graphic implements IText {
 		this.#size = value;
 	}
 
-	get align() {
+	get align(): TextOptions['align'] {
 		return this.#align;
 	}
 	set align(value) {
@@ -100,7 +110,7 @@ export class Text extends Graphic implements IText {
 		this.#align = value;
 	}
 
-	get baseline() {
+	get baseline(): TextOptions['baseline'] {
 		return this.#baseline;
 	}
 	set baseline(value) {
@@ -108,11 +118,11 @@ export class Text extends Graphic implements IText {
 		this.#baseline = value;
 	}
 
-	get width() {
+	get width(): number {
 		this.#revalidate();
 		return this.#metrics.width;
 	}
-	get height() {
+	get height(): number {
 		this.#revalidate();
 		return (
 			this.#metrics.actualBoundingBoxAscent +
@@ -124,12 +134,28 @@ export class Text extends Graphic implements IText {
 		str: string,
 		x: number,
 		y: number,
-		options: Partial<TextOptions> = {},
+		options?: Partial<TextOptions> | string,
 	) {
 		super(x, y);
-		this.str = str;
+		this.#str = str;
 
-		const _options = Object.assign({}, defaultTextOptions, options);
+		this.#setOptions(options);
+
+		this.#revalidate();
+	}
+
+	#setOptions(options?: Partial<TextOptions> | string): void {
+		const _options = {
+			...(textOptionPresetMap.get(undefined) as TextOptions),
+		};
+		if (options !== undefined) {
+			Object.assign(
+				_options,
+				typeof options === 'string'
+					? textOptionPresetMap.get(options)
+					: options,
+			);
+		}
 
 		this.color = _options.color;
 		this.type = _options.type;
@@ -137,18 +163,27 @@ export class Text extends Graphic implements IText {
 		this.size = _options.size;
 		this.align = _options.align;
 		this.baseline = _options.baseline;
+	}
 
-		this.#revalidate();
+	setOptions(options: Partial<TextOptions>): void {
+		this.#setOptions(options);
+	}
+
+	resetToDefault(): void {
+		this.#setOptions();
+	}
+
+	usePreset(name: string): void {
+		this.#setOptions(name);
 	}
 
 	centerOrigin(): void {
 		this.#revalidate();
-
-		this.offsetX = -this.width / 2;
-		this.offsetY = -this.height / 2;
+		this.originX = this.width / 2;
+		this.originY = this.height / 2;
 	}
 
-	#revalidate() {
+	#revalidate(): void {
 		if (!this.#invalided) return;
 		this.#invalided = false;
 
@@ -164,16 +199,31 @@ export class Text extends Graphic implements IText {
 		textCtx.textAlign = align;
 		textCtx.textBaseline = baseline;
 
-		let _str = this.str;
+		let _str = this.#str;
 		if (count !== undefined) _str = _str.slice(0, count);
 		this.#metrics = textCtx.measureText(_str);
 
 		textCtx.restore();
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero) {
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
 		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
-		Draw.text(ctx, this, x, y, this.str);
+		Draw.text(ctx, this, x, y, this.#str);
+	}
+
+	static addPreset(name: string, options: Partial<TextOptions>): void {
+		if ((name as unknown) === undefined) throw new Error('');
+		textOptionPresetMap.set(name, {
+			...(textOptionPresetMap.get(undefined) as TextOptions),
+			...options,
+		});
+	}
+
+	static updateDefaultOptions(options: Partial<TextOptions>): void {
+		textOptionPresetMap.set(undefined, {
+			...(textOptionPresetMap.get(undefined) as TextOptions),
+			...options,
+		});
 	}
 }
