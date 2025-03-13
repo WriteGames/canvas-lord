@@ -40,6 +40,31 @@ class TweenScene extends Scene {
 		this.myEntities.forEach((e) => {
 			this.addEntity(e);
 		});
+
+		let x = 0;
+		let y = 0;
+		let yDiff = 20;
+		this.texts = ['One', 'Two', '333'].map((str) => {
+			return new Text(str, x, y++ * yDiff);
+		});
+		this.texts.forEach((text) => this.addGraphic(text));
+
+		this.updateStrings();
+	}
+
+	updateStrings() {
+		const [e] = this.myEntities;
+		const step = e.tween?.step !== undefined ? e.tween.step + 1 : undefined;
+		this.texts[0].str =
+			'Step: ' +
+			step +
+			' / ' +
+			e.tween?.queue.length +
+			` (index: ${e.tween?.step})`;
+		this.texts[1].str =
+			'Elapsed: ' +
+			e.tween?.current?.map((t) => t.elapsed.toFixed(2)).join(', ');
+		this.texts[2].str = 'Current: ' + e.tween?.current;
 	}
 
 	begin() {
@@ -47,9 +72,10 @@ class TweenScene extends Scene {
 			e.added();
 		});
 	}
-	
-	render(gameCtx) {
-		
+
+	update() {
+		super.update(...arguments);
+		this.updateStrings();
 	}
 }
 

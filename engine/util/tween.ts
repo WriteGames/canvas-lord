@@ -148,6 +148,7 @@ export class Tween implements ITween {
 			if (this.queue.length === 0) this.queue.push([]);
 			this.queue.at(-1)?.push(tweener);
 			this.#nextParallel = this.#allParallel;
+			return tweener;
 		}
 		this.queue.push([tweener]);
 		return tweener;

@@ -95,6 +95,7 @@ export class Tween {
                 this.queue.push([]);
             this.queue.at(-1)?.push(tweener);
             this.#nextParallel = this.#allParallel;
+            return tweener;
         }
         this.queue.push([tweener]);
         return tweener;
