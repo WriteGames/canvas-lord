@@ -2,12 +2,12 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "tsc: watch - engine/tsconfig.build.json",
 			"type": "typescript",
 			"tsconfig": "engine/tsconfig.build.json",
 			"option": "watch",
 			"problemMatcher": ["$tsc-watch"],
 			"group": "build",
-			"label": "tsc: watch - engine/tsconfig.build.json",
 			"presentation": {
 				"reveal": "always",
 				"panel": "new"
@@ -17,12 +17,12 @@
 			}
 		},
 		{
+			"label": "tsc: watch - transpiler/tsconfig.json",
 			"type": "typescript",
 			"tsconfig": "transpiler/tsconfig.json",
 			"option": "watch",
 			"problemMatcher": ["$tsc-watch"],
 			"group": "build",
-			"label": "tsc: watch - transpiler/tsconfig.json",
 			"presentation": {
 				"reveal": "always",
 				"panel": "new"
