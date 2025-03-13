@@ -12,7 +12,9 @@ export class Graphic {
     scrollY = 1;
     alpha = 1;
     parent;
-    // TODO(bret): What should get scale() return??
+    get scale() {
+        return this.scaleX;
+    }
     set scale(value) {
         this.scaleX = this.scaleY = value;
     }

@@ -16,7 +16,7 @@ export interface IGraphic {
 	x: number;
 	y: number;
 	angle: number;
-	// scale: number;
+	scale: number;
 	scaleX: number;
 	scaleY: number;
 	originX: number;
@@ -45,7 +45,9 @@ export class Graphic implements IGraphic {
 	alpha = 1;
 	parent: GraphicParent | undefined;
 
-	// TODO(bret): What should get scale() return??
+	get scale(): number {
+		return this.scaleX;
+	}
 
 	set scale(value: number) {
 		this.scaleX = this.scaleY = value;
