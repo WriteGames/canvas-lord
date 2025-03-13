@@ -1,7 +1,7 @@
 import { Entity, Scene } from '../../bin/canvas-lord.js';
 import { init } from '../sandbox.js';
 import { Ease } from '../../bin/util/ease.js';
-import { Tween } from '../../bin/util/tween.js';
+import { EaseType, Tween } from '../../bin/util/tween.js';
 import { Sprite } from '../../bin/graphic/sprite.js';
 import { Text } from '../../bin/graphic/text.js';
 import { Draw } from '../../bin/util/draw.js';
@@ -14,18 +14,36 @@ class TweenEntity extends Entity {
 		this.graphic.centerOO();
 	}
 
-	added() {
-		console.log('added?');
-		this.tween = new Tween();
-		const dur = 1;
-		this.tween.tweenProperty(this, 'x', 350, dur);
-		this.tween.parallel().tweenProperty(this, 'y', 350, dur);
-		this.tween.tweenProperty(this, 'x', 100, dur).asRelative().setDelay(1);
-		this.tween.tweenProperty(this.graphic, 'scale', 3, dur);
-	}
+	update(input) {
+		if (input.mousePressed(0)) {
+			// TODO(bret): this.tween.kill()
 
-	update() {
-		this.tween.update();
+			const tween = new Tween().setTrans(7).setEase(EaseType.EaseInOut);
+			const dur = 1;
+
+			tween.tweenProperty(this, 'x', input.mouse.x, 1);
+			tween.parallel().tweenProperty(this, 'y', input.mouse.y, 1);
+
+			// do a rotate bc cool
+
+			// tween.tweenProperty(this, 'x', 350, dur).setTrans(3);
+
+			// tween
+			// 	.parallel()
+			// 	.tweenProperty(this, 'y', 350, dur)
+			// 	.setTrans(3);
+
+			// tween
+			// 	.tweenProperty(this, 'x', 100, dur)
+			// 	.asRelative()
+			// 	.setDelay(1);
+			// tween.tweenProperty(this.graphic, 'scale', 3, dur);
+
+			this.tween = tween;
+		}
+
+		this.tween?.update();
+		if (this.tween?.finished) this.tween = null;
 	}
 }
 
@@ -69,7 +87,7 @@ class TweenScene extends Scene {
 
 	begin() {
 		this.myEntities.forEach((e) => {
-			e.added();
+			e.added?.();
 		});
 	}
 

@@ -1,8 +1,34 @@
 import { CL } from "../canvas-lord.js";
+import { Ease, easeInOut, easeOut, easeOutIn } from "./ease.js";
+export var EaseType;
+(function (EaseType) {
+    EaseType[EaseType["EaseIn"] = 0] = "EaseIn";
+    EaseType[EaseType["EaseInOut"] = 1] = "EaseInOut";
+    EaseType[EaseType["EaseOut"] = 2] = "EaseOut";
+    EaseType[EaseType["EaseOutIn"] = 3] = "EaseOutIn";
+})(EaseType || (EaseType = {}));
+export var TransType;
+(function (TransType) {
+    TransType[TransType["Linear"] = 0] = "Linear";
+    TransType[TransType["Sine"] = 1] = "Sine";
+    TransType[TransType["Quint"] = 2] = "Quint";
+    TransType[TransType["Quart"] = 3] = "Quart";
+    TransType[TransType["Quad"] = 4] = "Quad";
+    TransType[TransType["Expo"] = 5] = "Expo";
+    TransType[TransType["Elastic"] = 6] = "Elastic";
+    TransType[TransType["Cubic"] = 7] = "Cubic";
+    TransType[TransType["Circ"] = 8] = "Circ";
+    TransType[TransType["Bounce"] = 9] = "Bounce";
+    TransType[TransType["Back"] = 10] = "Back";
+    TransType[TransType["Spring"] = 11] = "Spring";
+})(TransType || (TransType = {}));
 class Tweener {
     #delay;
     #elapsed = 0;
     #duration;
+    #ease;
+    #trans;
+    #parent;
     get elapsed() {
         return Math.clamp(this.#elapsed / (this.#duration - 1), 0, 1);
     }
@@ -17,14 +43,82 @@ class Tweener {
         this.#delay = 0;
         this.#duration = duration * CL.engine.fps;
     }
+    getT() {
+        let func;
+        switch (this.#trans ?? this.#parent.trans) {
+            case TransType.Linear:
+                return this.elapsed;
+            case TransType.Sine:
+                func = Ease.sine;
+                break;
+            case TransType.Quint:
+                func = Ease.quint;
+                break;
+            case TransType.Quart:
+                func = Ease.quart;
+                break;
+            case TransType.Quad:
+                func = Ease.quad;
+                break;
+            case TransType.Expo:
+                func = Ease.expo;
+                break;
+            // case TransType.Elastic:
+            // 	func = Ease.elastic;
+            // 	break;
+            case TransType.Cubic:
+                func = Ease.cube;
+                break;
+            case TransType.Circ:
+                func = Ease.circ;
+                break;
+            case TransType.Bounce:
+                func = Ease.bounce;
+                break;
+            case TransType.Back:
+                func = Ease.back;
+                break;
+            // case TransType.Spring:
+            // 	func = Ease.spring;
+            // 	break;
+            default:
+                throw new Error('Uh oh');
+        }
+        switch (this.#ease ?? this.#parent.ease) {
+            case EaseType.EaseIn:
+                break;
+            case EaseType.EaseInOut:
+                func = easeInOut(func);
+                break;
+            case EaseType.EaseOut:
+                func = easeOut(func);
+                break;
+            case EaseType.EaseOutIn:
+                func = easeOutIn(func);
+                break;
+        }
+        return func(this.elapsed);
+    }
     start() {
         this.#elapsed = -this.#delay;
     }
     update() {
         this.#elapsed++;
     }
+    setParent(parent) {
+        this.#parent = parent;
+        return this;
+    }
     setDelay(delay) {
         this.#delay = delay * CL.engine.fps;
+        return this;
+    }
+    setEase(ease) {
+        this.#ease = ease;
+        return this;
+    }
+    setTrans(trans) {
+        this.#trans = trans;
         return this;
     }
 }
@@ -51,7 +145,7 @@ export class PropertyTweener extends Tweener {
             this.#target += this.#start;
     }
     update() {
-        const t = this.elapsed;
+        const t = this.getT();
         super.update();
         if (typeof this.#start !== 'number' ||
             typeof this.#target !== 'number') {
@@ -94,6 +188,8 @@ export class PropertyTweener extends Tweener {
 export class Tween {
     #lastStep = -1;
     #step = 0;
+    #ease = EaseType.EaseInOut;
+    #trans = TransType.Linear;
     queue = [];
     #nextParallel = false;
     #allParallel = false;
@@ -105,6 +201,15 @@ export class Tween {
     }
     get current() {
         return this.step < this.queue.length ? this.queue[this.step] : null;
+    }
+    get finished() {
+        return this.#step >= this.queue.length;
+    }
+    get ease() {
+        return this.#ease;
+    }
+    get trans() {
+        return this.#trans;
     }
     setParallel(parallel) {
         this.#allParallel = parallel;
@@ -126,7 +231,15 @@ export class Tween {
         return tweener;
     }
     tweenProperty(obj, prop, target, duration) {
-        return this.#addTweener(new PropertyTweener(obj, prop, target, duration));
+        return this.#addTweener(new PropertyTweener(obj, prop, target, duration).setParent(this));
+    }
+    setEase(ease) {
+        this.#ease = ease;
+        return this;
+    }
+    setTrans(trans) {
+        this.#trans = trans;
+        return this;
     }
     update() {
         if (this.current?.every((t) => t.finished)) {

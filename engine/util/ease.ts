@@ -23,13 +23,13 @@ const circ = (t: number): number => -(Math.sqrt(1 - t * t) - 1);
 const expo = (t: number): number => Math.pow(2, 10 * (t - 1));
 const back = (t: number): number => t * t * (2.70158 * t - 1.70158);
 
-type EaseFunc = (t: number) => number;
+export type EaseFunc = (t: number) => number;
 type EaseWrap = (func: EaseFunc) => EaseFunc;
 
-const easeOut: EaseWrap = (func) => (t) => 1 - func(1 - t);
-const easeInOut: EaseWrap = (func) => (t) =>
+export const easeOut: EaseWrap = (func) => (t) => 1 - func(1 - t);
+export const easeInOut: EaseWrap = (func) => (t) =>
 	0.5 * (t <= 0.5 ? func(2 * t) : 2 - func(2 * (1 - t)));
-const easeOutIn: EaseWrap = (func) => (t) =>
+export const easeOutIn: EaseWrap = (func) => (t) =>
 	0.5 * (t <= 0.5 ? 1 - func(1 - t * 2) : func(t * 2 - 1) + 1);
 
 type EaseMatrix<T extends string> = Record<

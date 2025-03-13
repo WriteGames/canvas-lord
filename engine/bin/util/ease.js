@@ -25,9 +25,9 @@ const bounce = (t) => {
 const circ = (t) => -(Math.sqrt(1 - t * t) - 1);
 const expo = (t) => Math.pow(2, 10 * (t - 1));
 const back = (t) => t * t * (2.70158 * t - 1.70158);
-const easeOut = (func) => (t) => 1 - func(1 - t);
-const easeInOut = (func) => (t) => 0.5 * (t <= 0.5 ? func(2 * t) : 2 - func(2 * (1 - t)));
-const easeOutIn = (func) => (t) => 0.5 * (t <= 0.5 ? 1 - func(1 - t * 2) : func(t * 2 - 1) + 1);
+export const easeOut = (func) => (t) => 1 - func(1 - t);
+export const easeInOut = (func) => (t) => 0.5 * (t <= 0.5 ? func(2 * t) : 2 - func(2 * (1 - t)));
+export const easeOutIn = (func) => (t) => 0.5 * (t <= 0.5 ? 1 - func(1 - t * 2) : func(t * 2 - 1) + 1);
 const generateMatrix = (name, func) => {
     return {
         [`${name}In`]: func,
