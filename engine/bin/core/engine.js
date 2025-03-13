@@ -327,9 +327,16 @@ export class Game {
         });
         return scenes;
     }
+    lastScene;
     updateScenes(scenes) {
         if (!scenes)
             return;
+        if (this.lastScene !== scenes) {
+            this._forEachScene(scenes, (scene) => {
+                scene.begin();
+            });
+            this.lastScene = scenes;
+        }
         this._forEachScene(scenes, (scene) => {
             scene.updateLists();
         });

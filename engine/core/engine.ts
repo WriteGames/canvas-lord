@@ -537,8 +537,15 @@ export class Game implements Engine {
 		return scenes;
 	}
 
+	lastScene?: Scene[];
 	updateScenes(scenes?: Scene[]): void {
 		if (!scenes) return;
+		if (this.lastScene !== scenes) {
+			this._forEachScene(scenes, (scene) => {
+				scene.begin();
+			});
+			this.lastScene = scenes;
+		}
 		this._forEachScene(scenes, (scene) => {
 			scene.updateLists();
 		});
