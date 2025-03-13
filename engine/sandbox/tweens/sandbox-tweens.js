@@ -20,7 +20,7 @@ class TweenEntity extends Entity {
 		const dur = 1;
 		this.tween.tweenProperty(this, 'x', 350, dur);
 		this.tween.parallel().tweenProperty(this, 'y', 350, dur);
-		this.tween.tweenProperty(this, 'x', 100, dur).asRelative();
+		this.tween.tweenProperty(this, 'x', 100, dur).asRelative().setDelay(1);
 		this.tween.tweenProperty(this.graphic, 'scale', 3, dur);
 	}
 

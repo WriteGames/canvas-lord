@@ -2,37 +2,20 @@ import type { Entity } from '../canvas-lord.ts';
 import { CL } from '../canvas-lord.ts';
 
 interface ITweener {
-	readonly finished: boolean;
+	readonly delay: number;
 	readonly elapsed: number;
+	readonly finished: boolean;
 	start(): void;
 	update(): void;
-	asRelative(): this;
+	setDelay(delay: number): this;
 }
 
 type PropType<T, U extends PropertyTweener<T>> = T[U['prop']];
 
-export class PropertyTweener<T> implements ITweener {
-	obj: T;
-	prop: keyof T;
-	#start: PropType<T, this>;
-	#target: PropType<T, this>;
-	#from?: PropType<T, this>;
+abstract class Tweener implements ITweener {
+	#delay: number;
 	#elapsed = 0;
 	#duration: number;
-	#relative = false;
-
-	constructor(
-		obj: T,
-		prop: keyof T,
-		target: T[typeof prop],
-		duration: number,
-	) {
-		this.obj = obj;
-		this.prop = prop;
-		this.#start = this.obj[this.prop];
-		this.#target = target;
-		this.#duration = duration * CL.engine.fps;
-	}
 
 	get elapsed(): number {
 		return Math.clamp(this.#elapsed / (this.#duration - 1), 0, 1);
@@ -42,8 +25,52 @@ export class PropertyTweener<T> implements ITweener {
 	get finished(): boolean {
 		return this.#elapsed >= this.#duration - 1;
 	}
+	get delay(): number {
+		return this.#delay;
+	}
+
+	constructor(duration: number) {
+		this.#delay = 0;
+		this.#duration = duration * CL.engine.fps;
+	}
 
 	start(): void {
+		this.#elapsed = -this.#delay;
+	}
+
+	update(): void {
+		this.#elapsed++;
+	}
+
+	setDelay(delay: number): this {
+		this.#delay = delay * CL.engine.fps;
+		return this;
+	}
+}
+
+export class PropertyTweener<T> extends Tweener {
+	obj: T;
+	prop: keyof T;
+	#start: PropType<T, this>;
+	#target: PropType<T, this>;
+	#from?: PropType<T, this>;
+	#relative = false;
+
+	constructor(
+		obj: T,
+		prop: keyof T,
+		target: T[typeof prop],
+		duration: number,
+	) {
+		super(duration);
+		this.obj = obj;
+		this.prop = prop;
+		this.#start = this.obj[this.prop];
+		this.#target = target;
+	}
+
+	start(): void {
+		super.start();
 		// TODO(bret): move this to when it starts
 		this.#start = this.#from ?? this.obj[this.prop];
 		if (this.#relative)
@@ -53,7 +80,7 @@ export class PropertyTweener<T> implements ITweener {
 
 	update(): void {
 		const t = this.elapsed;
-		this.#elapsed++;
+		super.update();
 
 		if (
 			typeof this.#start !== 'number' ||
@@ -88,6 +115,11 @@ export class PropertyTweener<T> implements ITweener {
 
 	from(value: PropType<T, this>): this {
 		this.#from = value;
+		return this;
+	}
+
+	fromCurrent(): this {
+		this.#from = this.obj[this.prop];
 		return this;
 	}
 

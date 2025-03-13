@@ -1,20 +1,8 @@
 import { CL } from "../canvas-lord.js";
-export class PropertyTweener {
-    obj;
-    prop;
-    #start;
-    #target;
-    #from;
+class Tweener {
+    #delay;
     #elapsed = 0;
     #duration;
-    #relative = false;
-    constructor(obj, prop, target, duration) {
-        this.obj = obj;
-        this.prop = prop;
-        this.#start = this.obj[this.prop];
-        this.#target = target;
-        this.#duration = duration * CL.engine.fps;
-    }
     get elapsed() {
         return Math.clamp(this.#elapsed / (this.#duration - 1), 0, 1);
     }
@@ -22,7 +10,40 @@ export class PropertyTweener {
     get finished() {
         return this.#elapsed >= this.#duration - 1;
     }
+    get delay() {
+        return this.#delay;
+    }
+    constructor(duration) {
+        this.#delay = 0;
+        this.#duration = duration * CL.engine.fps;
+    }
     start() {
+        this.#elapsed = -this.#delay;
+    }
+    update() {
+        this.#elapsed++;
+    }
+    setDelay(delay) {
+        this.#delay = delay * CL.engine.fps;
+        return this;
+    }
+}
+export class PropertyTweener extends Tweener {
+    obj;
+    prop;
+    #start;
+    #target;
+    #from;
+    #relative = false;
+    constructor(obj, prop, target, duration) {
+        super(duration);
+        this.obj = obj;
+        this.prop = prop;
+        this.#start = this.obj[this.prop];
+        this.#target = target;
+    }
+    start() {
+        super.start();
         // TODO(bret): move this to when it starts
         this.#start = this.#from ?? this.obj[this.prop];
         if (this.#relative)
@@ -31,7 +52,7 @@ export class PropertyTweener {
     }
     update() {
         const t = this.elapsed;
-        this.#elapsed++;
+        super.update();
         if (typeof this.#start !== 'number' ||
             typeof this.#target !== 'number') {
             console.log({
@@ -57,6 +78,10 @@ export class PropertyTweener {
     }
     from(value) {
         this.#from = value;
+        return this;
+    }
+    fromCurrent() {
+        this.#from = this.obj[this.prop];
         return this;
     }
     asRelative() {
