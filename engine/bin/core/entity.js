@@ -110,6 +110,9 @@ export class Entity {
         this.tweens.splice(index, 1);
         return tween;
     }
+    clearTweens() {
+        this.tweens.splice(0, this.tweens.length);
+    }
     updateTweens() {
         this.tweens.forEach((t) => t.update());
     }

@@ -51,6 +51,7 @@ export interface IEntity {
 
 	addTween(tween: Tween): Tween;
 	removeTween(tween: Tween): Tween;
+	clearTweens(): void;
 
 	updateTweens(): void;
 	update: (input: Input) => void;
@@ -205,6 +206,10 @@ export class Entity implements IEntity, IRenderable {
 		if (index < 0) return tween;
 		this.tweens.splice(index, 1);
 		return tween;
+	}
+
+	clearTweens(): void {
+		this.tweens.splice(0, this.tweens.length);
 	}
 
 	updateTweens(): void {
