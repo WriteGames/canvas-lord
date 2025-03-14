@@ -619,6 +619,7 @@ export class Game implements Engine {
 	}
 
 	render(): void {
+		const engine = CL.isEngineSet ? CL.engine : undefined;
 		CL.__setEngine(this);
 
 		const { ctx } = this;
@@ -630,6 +631,6 @@ export class Game implements Engine {
 		this.renderScenes(ctx, []);
 		if (debug?.enabled) debug.render(ctx);
 
-		CL.__setEngine(undefined);
+		CL.__setEngine(engine);
 	}
 }

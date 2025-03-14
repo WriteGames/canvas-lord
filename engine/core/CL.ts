@@ -14,6 +14,10 @@ export class CL {
 		throw new Error('this is a static class');
 	}
 
+	static get isEngineSet(): boolean {
+		return CL.#engine !== undefined;
+	}
+
 	static get engine(): Engine {
 		if (CL.#engine === undefined)
 			throw new Error('CL.#engine is undefined');

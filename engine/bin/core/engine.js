@@ -395,6 +395,7 @@ export class Game {
         }
     }
     render() {
+        const engine = CL.isEngineSet ? CL.engine : undefined;
         CL.__setEngine(this);
         const { ctx } = this;
         ctx.fillStyle = this.backgroundColor;
@@ -403,7 +404,7 @@ export class Game {
         this.renderScenes(ctx, []);
         if (debug?.enabled)
             debug.render(ctx);
-        CL.__setEngine(undefined);
+        CL.__setEngine(engine);
     }
 }
 //# sourceMappingURL=engine.js.map
