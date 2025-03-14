@@ -174,6 +174,35 @@ const lerpAngle = (a: number, b: number, t: number): number => {
 	return range * t + a;
 };
 
+interface Operations<T, U extends HasProp<T>> {
+	add: AddFunc<T, U>;
+	lerp: LerpFunc<T, U>;
+}
+
+const _defaultAdd = (a: number, b: number): number => a + b;
+const _defaultLerp = Math.lerp;
+const getOperations = <T, U extends HasProp<T>>(
+	value: PropType<T, U>,
+): Operations<T, U> => {
+	const math: Operations<T, U> = {
+		add: _defaultAdd as unknown as AddFunc<T, U>,
+		lerp: _defaultLerp as unknown as AddFunc<T, U>,
+	};
+	switch (true) {
+		case typeof value === 'number':
+			// intentionally left blank
+			break;
+		case value instanceof Vec2:
+			math.add = Vec2.add as unknown as AddFunc<T, U>;
+			math.lerp = Vec2.lerp as unknown as LerpFunc<T, U>;
+			break;
+		default:
+			throw new Error('no matching lerp');
+	}
+
+	return math;
+};
+
 export class PropertyTweener<T> extends Tweener {
 	obj: T;
 	prop: keyof T;
@@ -181,8 +210,7 @@ export class PropertyTweener<T> extends Tweener {
 	#target: PropType<T, this>;
 	#from?: PropType<T, this>;
 	#relative = false;
-	#add: AddFunc<T, this>;
-	#lerp: LerpFunc<T, this>;
+	#operations: Operations<T, this>;
 
 	constructor(
 		obj: T,
@@ -196,50 +224,25 @@ export class PropertyTweener<T> extends Tweener {
 		this.#start = this.obj[this.prop];
 		this.#target = target;
 
-		switch (true) {
-			case typeof this.#start === 'number' &&
-				typeof this.#target === 'number':
-				this.#add = ((a: number, b: number) =>
-					a + b) as unknown as AddFunc<T, this>;
-				this.#lerp = Math.lerp as unknown as LerpFunc<T, this>;
-				break;
-			case this.#start instanceof Vec2 && this.#target instanceof Vec2:
-				this.#add = Vec2.add as unknown as AddFunc<T, this>;
-				this.#lerp = Vec2.lerp as unknown as LerpFunc<T, this>;
-				break;
-			default:
-				throw new Error('no matching lerp');
-		}
+		this.#operations = getOperations(this.obj[this.prop]);
 	}
 
 	start(): void {
 		super.start();
-		// TODO(bret): move this to when it starts
 		this.#start = this.#from ?? this.obj[this.prop];
-		if (this.#relative) this.#target = this.#add(this.#start, this.#target);
+		if (this.#relative)
+			this.#target = this.#operations.add(this.#start, this.#target);
 	}
 
 	update(): void {
 		const t = this.getT();
 		super.update();
 
-		let newValue = this.obj[this.prop];
-		switch (t) {
-			case 0:
-				newValue = this.#start;
-				break;
-			case 1:
-				newValue = this.#target;
-				break;
-			default:
-				newValue = this.#lerp(
-					this.#start,
-					this.#target,
-					t,
-				) as typeof newValue;
-				break;
-		}
-		this.obj[this.prop] = newValue;
+		this.obj[this.prop] = this.#operations.lerp(
+			this.#start,
+			this.#target,
+			t,
+		);
 	}
 
 	from(value: PropType<T, this>): this {
@@ -259,12 +262,12 @@ export class PropertyTweener<T> extends Tweener {
 	}
 
 	asAngle(): this {
-		this.#lerp = lerpAngle as unknown as LerpFunc<T, this>;
+		this.#operations.lerp = lerpAngle as unknown as LerpFunc<T, this>;
 		return this;
 	}
 
 	setLerp(lerp: LerpFunc<T, this>): this {
-		this.#lerp = lerp;
+		this.#operations.lerp = lerp;
 		return this;
 	}
 }

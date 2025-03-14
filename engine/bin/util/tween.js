@@ -129,6 +129,26 @@ const lerpAngle = (a, b, t) => {
     const range = ((2 * d) % 360) - d;
     return range * t + a;
 };
+const _defaultAdd = (a, b) => a + b;
+const _defaultLerp = Math.lerp;
+const getOperations = (value) => {
+    const math = {
+        add: _defaultAdd,
+        lerp: _defaultLerp,
+    };
+    switch (true) {
+        case typeof value === 'number':
+            // intentionally left blank
+            break;
+        case value instanceof Vec2:
+            math.add = Vec2.add;
+            math.lerp = Vec2.lerp;
+            break;
+        default:
+            throw new Error('no matching lerp');
+    }
+    return math;
+};
 export class PropertyTweener extends Tweener {
     obj;
     prop;
@@ -136,51 +156,25 @@ export class PropertyTweener extends Tweener {
     #target;
     #from;
     #relative = false;
-    #add;
-    #lerp;
+    #operations;
     constructor(obj, prop, target, duration) {
         super(duration);
         this.obj = obj;
         this.prop = prop;
         this.#start = this.obj[this.prop];
         this.#target = target;
-        switch (true) {
-            case typeof this.#start === 'number' &&
-                typeof this.#target === 'number':
-                this.#add = ((a, b) => a + b);
-                this.#lerp = Math.lerp;
-                break;
-            case this.#start instanceof Vec2 && this.#target instanceof Vec2:
-                this.#add = Vec2.add;
-                this.#lerp = Vec2.lerp;
-                break;
-            default:
-                throw new Error('no matching lerp');
-        }
+        this.#operations = getOperations(this.obj[this.prop]);
     }
     start() {
         super.start();
-        // TODO(bret): move this to when it starts
         this.#start = this.#from ?? this.obj[this.prop];
         if (this.#relative)
-            this.#target = this.#add(this.#start, this.#target);
+            this.#target = this.#operations.add(this.#start, this.#target);
     }
     update() {
         const t = this.getT();
         super.update();
-        let newValue = this.obj[this.prop];
-        switch (t) {
-            case 0:
-                newValue = this.#start;
-                break;
-            case 1:
-                newValue = this.#target;
-                break;
-            default:
-                newValue = this.#lerp(this.#start, this.#target, t);
-                break;
-        }
-        this.obj[this.prop] = newValue;
+        this.obj[this.prop] = this.#operations.lerp(this.#start, this.#target, t);
     }
     from(value) {
         this.#from = value;
@@ -197,11 +191,11 @@ export class PropertyTweener extends Tweener {
         return this;
     }
     asAngle() {
-        this.#lerp = lerpAngle;
+        this.#operations.lerp = lerpAngle;
         return this;
     }
     setLerp(lerp) {
-        this.#lerp = lerp;
+        this.#operations.lerp = lerp;
         return this;
     }
 }
