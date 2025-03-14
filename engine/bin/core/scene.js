@@ -29,6 +29,7 @@ export class Scene {
         this.bounds = null;
         this.onPreUpdate = new Delegate();
         this.onUpdate = new Delegate();
+        this.onPostUpdate = new Delegate();
         this.onRender = new Delegate();
         this.onBegin = new Delegate();
         this.onEnd = new Delegate();

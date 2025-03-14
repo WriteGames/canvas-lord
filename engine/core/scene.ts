@@ -89,6 +89,7 @@ export class Scene implements Scene {
 
 		this.onPreUpdate = new Delegate();
 		this.onUpdate = new Delegate();
+		this.onPostUpdate = new Delegate();
 		this.onRender = new Delegate();
 		this.onBegin = new Delegate();
 		this.onEnd = new Delegate();
