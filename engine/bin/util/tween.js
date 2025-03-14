@@ -224,11 +224,9 @@ export class Tween {
     #ease = EaseType.EaseInOut;
     #trans = TransType.Linear;
     queue = [];
+    #paused = false;
     #nextParallel = false;
     #allParallel = false;
-    // constructor() {
-    // 	//
-    // }
     get step() {
         return this.#step;
     }
@@ -243,6 +241,12 @@ export class Tween {
     }
     get trans() {
         return this.#trans;
+    }
+    get playing() {
+        return !this.#paused;
+    }
+    get paused() {
+        return this.#paused;
     }
     setParallel(parallel) {
         this.#allParallel = parallel;
@@ -278,6 +282,8 @@ export class Tween {
         return this;
     }
     update() {
+        if (this.#paused)
+            return;
         if (this.current?.every((t) => t.finished)) {
             ++this.#step;
         }
@@ -288,6 +294,12 @@ export class Tween {
             this.#lastStep = this.step;
         }
         this.current.forEach((t) => t.update());
+    }
+    pause() {
+        this.#paused = true;
+    }
+    play() {
+        this.#paused = false;
     }
 }
 //# sourceMappingURL=tween.js.map

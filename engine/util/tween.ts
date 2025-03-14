@@ -301,6 +301,8 @@ interface ITween {
 	readonly finished: boolean;
 	readonly ease: EaseType;
 	readonly trans: TransType;
+	readonly playing: boolean;
+	readonly paused: boolean;
 	setParallel(parallel: boolean): this;
 	parallel(): this;
 	tweenProperty<T extends Entity>(
@@ -312,6 +314,8 @@ interface ITween {
 	setEase(ease: EaseType): this;
 	setTrans(trans: TransType): this;
 	update(): void;
+	pause(): void;
+	play(): void;
 }
 
 export class Tween implements ITween {
@@ -322,12 +326,10 @@ export class Tween implements ITween {
 
 	queue: TweenGroup[] = [];
 
+	#paused = false;
+
 	#nextParallel = false;
 	#allParallel = false;
-
-	// constructor() {
-	// 	//
-	// }
 
 	get step(): number {
 		return this.#step;
@@ -347,6 +349,14 @@ export class Tween implements ITween {
 
 	get trans(): TransType {
 		return this.#trans;
+	}
+
+	get playing(): boolean {
+		return !this.#paused;
+	}
+
+	get paused(): boolean {
+		return this.#paused;
 	}
 
 	setParallel(parallel: boolean): this {
@@ -396,6 +406,8 @@ export class Tween implements ITween {
 	}
 
 	update(): void {
+		if (this.#paused) return;
+
 		if (this.current?.every((t) => t.finished)) {
 			++this.#step;
 		}
@@ -408,5 +420,13 @@ export class Tween implements ITween {
 		}
 
 		this.current.forEach((t) => t.update());
+	}
+
+	pause(): void {
+		this.#paused = true;
+	}
+
+	play(): void {
+		this.#paused = false;
 	}
 }

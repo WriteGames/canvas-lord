@@ -1,4 +1,4 @@
-import { CL, Entity, Scene } from '../../bin/canvas-lord.js';
+import { CL, Entity, Keys, Scene } from '../../bin/canvas-lord.js';
 import { init } from '../sandbox.js';
 import { EaseType, TransType, Tween } from '../../bin/util/tween.js';
 import { Sprite } from '../../bin/graphic/sprite.js';
@@ -97,9 +97,15 @@ class Card extends Entity {
 		this.graphic.centerOO();
 	}
 
-	update() {
+	update(input) {
 		this.tween?.update();
 		if (this.tween?.finished) this.tween = null;
+
+		if (input.keyPressed(Keys.Space)) {
+			if (this.tween) {
+				this.tween.paused ? this.tween.play() : this.tween.pause();
+			}
+		}
 	}
 }
 
@@ -185,7 +191,7 @@ const gameOptions = {
 
 init({
 	games: [
-		init.game('tweens', TweenScene, gameOptions),
 		init.game('cards', CardScene, gameOptions),
+		init.game('tweens', TweenScene, gameOptions),
 	],
 });
