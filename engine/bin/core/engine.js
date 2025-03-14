@@ -306,7 +306,7 @@ export class Game {
     }
     pushScenes(...scenes) {
         this._forEachScene(scenes, (scene) => {
-            scene.pause();
+            scene.pauseInternal();
         });
         this.sceneStack.push(scenes);
         this._forEachScene(scenes, (scene) => {
@@ -318,12 +318,12 @@ export class Game {
     popScenes() {
         this._forEachScene(this.currentScenes, (scene) => {
             // TODO(bret): Should we delete scene.engine?
-            scene.end();
+            scene.endInternal();
         });
         const scenes = this.sceneStack.pop();
         this._forEachScene(this.currentScenes, (scene) => {
             scene.updateLists();
-            scene.resume();
+            scene.resumeInternal();
         });
         return scenes;
     }
@@ -333,7 +333,7 @@ export class Game {
             return;
         if (this.lastScene !== scenes) {
             this._forEachScene(scenes, (scene) => {
-                scene.begin();
+                scene.beginInternal();
             });
             this.lastScene = scenes;
         }
@@ -341,13 +341,13 @@ export class Game {
             scene.updateLists();
         });
         this._forEachScene(scenes, (scene) => {
-            scene.preUpdate(this.input);
+            scene.preUpdateInternal(this.input);
         });
         this._forEachScene(scenes, (scene) => {
-            scene.update(this.input);
+            scene.updateInternal(this.input);
         });
         this._forEachScene(scenes, (scene) => {
-            scene.postUpdate(this.input);
+            scene.postUpdateInternal(this.input);
         });
     }
     update() {
@@ -372,7 +372,7 @@ export class Game {
         // TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
         this.sceneStack.forEach((scenes) => {
             this._forEachScene(scenes, (scene) => {
-                scene.render(ctx);
+                scene.renderInternal(ctx);
             });
         });
         // Splitscreen

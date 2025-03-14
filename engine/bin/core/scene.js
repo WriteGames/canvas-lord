@@ -43,14 +43,26 @@ export class Scene {
             this.ctx = ctx;
         }
     }
+    beginInternal() {
+        this.begin();
+    }
     begin() {
         //
+    }
+    endInternal() {
+        this.end();
     }
     end() {
         //
     }
+    pauseInternal() {
+        this.pause();
+    }
     pause() {
         //
+    }
+    resumeInternal() {
+        this.resume();
     }
     resume() {
         //
@@ -129,10 +141,13 @@ export class Scene {
         this.#addRenderablesToScene();
         this.#removeRenderablesFromScene();
     }
+    preUpdateInternal(input) {
+        this.preUpdate(input);
+    }
     preUpdate(_input) {
         //
     }
-    update(input) {
+    updateInternal(input) {
         // TODO: move the following two to game probably
         if (this.allowRefresh && input.keyPressed('F5'))
             location.reload();
@@ -140,6 +155,7 @@ export class Scene {
             this.engine.canvas.blur();
         if (!this.shouldUpdate)
             return;
+        this.update(input);
         this.entities.inScene.forEach((entity) => {
             entity.updateTweens();
             entity.update(input);
@@ -156,10 +172,16 @@ export class Scene {
             });
         });
     }
+    update(_input) {
+        //
+    }
+    postUpdateInternal(input) {
+        this.postUpdate(input);
+    }
     postUpdate(_input) {
         //
     }
-    render(gameCtx) {
+    renderInternal(gameCtx) {
         // TODO: this should maybe be in pre-render?
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const ctx = (this.ctx ?? gameCtx);
@@ -192,10 +214,14 @@ export class Scene {
                 });
             });
         });
+        this.render(ctx);
         if (ctx !== gameCtx) {
             const [x, y] = this.screenPos;
             gameCtx.drawImage(ctx.canvas, x, y);
         }
+    }
+    render(_ctx) {
+        //
     }
 }
 //# sourceMappingURL=scene.js.map

@@ -95,16 +95,32 @@ export class Scene implements Scene {
 		}
 	}
 
+	beginInternal(): void {
+		this.begin();
+	}
+
 	begin(): void {
 		//
+	}
+
+	endInternal(): void {
+		this.end();
 	}
 
 	end(): void {
 		//
 	}
 
+	pauseInternal(): void {
+		this.pause();
+	}
+
 	pause(): void {
 		//
+	}
+
+	resumeInternal(): void {
+		this.resume();
 	}
 
 	resume(): void {
@@ -195,11 +211,15 @@ export class Scene implements Scene {
 		this.#removeRenderablesFromScene();
 	}
 
+	preUpdateInternal(input: Input): void {
+		this.preUpdate(input);
+	}
+
 	preUpdate(_input: Input): void {
 		//
 	}
 
-	update(input: Input): void {
+	updateInternal(input: Input): void {
 		// TODO: move the following two to game probably
 		if (this.allowRefresh && input.keyPressed('F5')) location.reload();
 
@@ -207,6 +227,8 @@ export class Scene implements Scene {
 			this.engine.canvas.blur();
 
 		if (!this.shouldUpdate) return;
+
+		this.update(input);
 
 		this.entities.inScene.forEach((entity) => {
 			entity.updateTweens();
@@ -230,11 +252,19 @@ export class Scene implements Scene {
 		});
 	}
 
+	update(_input: Input): void {
+		//
+	}
+
+	postUpdateInternal(input: Input): void {
+		this.postUpdate(input);
+	}
+
 	postUpdate(_input: Input): void {
 		//
 	}
 
-	render(gameCtx: Ctx): void {
+	renderInternal(gameCtx: Ctx): void {
 		// TODO: this should maybe be in pre-render?
 		this.renderables.inScene.sort(
 			(a, b) => (b.depth ?? 0) - (a.depth ?? 0),
@@ -281,9 +311,15 @@ export class Scene implements Scene {
 			});
 		});
 
+		this.render(ctx);
+
 		if (ctx !== gameCtx) {
 			const [x, y] = this.screenPos;
 			gameCtx.drawImage(ctx.canvas, x, y);
 		}
+	}
+
+	render(_ctx: Ctx): void {
+		//
 	}
 }

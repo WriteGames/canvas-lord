@@ -509,7 +509,7 @@ export class Game implements Engine {
 
 	pushScenes(...scenes: Scene[]): void {
 		this._forEachScene(scenes, (scene) => {
-			scene.pause();
+			scene.pauseInternal();
 		});
 
 		this.sceneStack.push(scenes);
@@ -524,14 +524,14 @@ export class Game implements Engine {
 	popScenes(): Scene[] | undefined {
 		this._forEachScene(this.currentScenes, (scene) => {
 			// TODO(bret): Should we delete scene.engine?
-			scene.end();
+			scene.endInternal();
 		});
 
 		const scenes = this.sceneStack.pop();
 
 		this._forEachScene(this.currentScenes, (scene) => {
 			scene.updateLists();
-			scene.resume();
+			scene.resumeInternal();
 		});
 
 		return scenes;
@@ -542,7 +542,7 @@ export class Game implements Engine {
 		if (!scenes) return;
 		if (this.lastScene !== scenes) {
 			this._forEachScene(scenes, (scene) => {
-				scene.begin();
+				scene.beginInternal();
 			});
 			this.lastScene = scenes;
 		}
@@ -550,13 +550,13 @@ export class Game implements Engine {
 			scene.updateLists();
 		});
 		this._forEachScene(scenes, (scene) => {
-			scene.preUpdate(this.input);
+			scene.preUpdateInternal(this.input);
 		});
 		this._forEachScene(scenes, (scene) => {
-			scene.update(this.input);
+			scene.updateInternal(this.input);
 		});
 		this._forEachScene(scenes, (scene) => {
-			scene.postUpdate(this.input);
+			scene.postUpdateInternal(this.input);
 		});
 	}
 
@@ -587,7 +587,7 @@ export class Game implements Engine {
 		// TODO(bret): Set this up so scenes can toggle whether or not they're transparent!
 		this.sceneStack.forEach((scenes) => {
 			this._forEachScene(scenes, (scene) => {
-				scene.render(ctx);
+				scene.renderInternal(ctx);
 			});
 		});
 
