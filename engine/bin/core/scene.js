@@ -52,6 +52,7 @@ export class Scene {
         }
     }
     beginInternal() {
+        this.engine.onSceneBegin.invoke(this);
         this.onBegin.invoke();
         this.begin();
     }
@@ -59,6 +60,7 @@ export class Scene {
         //
     }
     endInternal() {
+        this.engine.onSceneEnd.invoke(this);
         this.onEnd.invoke();
         this.end();
     }

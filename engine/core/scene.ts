@@ -114,6 +114,7 @@ export class Scene implements Scene {
 	}
 
 	beginInternal(): void {
+		this.engine.onSceneBegin.invoke(this);
 		this.onBegin.invoke();
 
 		this.begin();
@@ -124,6 +125,7 @@ export class Scene implements Scene {
 	}
 
 	endInternal(): void {
+		this.engine.onSceneEnd.invoke(this);
 		this.onEnd.invoke();
 
 		this.end();

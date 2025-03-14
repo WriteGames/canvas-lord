@@ -3,6 +3,7 @@ import { Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import { Debug } from '../util/debug.js';
 import { CL } from './CL.js';
+import { Delegate } from '../util/delegate.js';
 const defineUnwritableProperty = (obj, prop, value, attributes = {}) => Object.defineProperty(obj, prop, {
     ...attributes,
     value,
@@ -44,11 +45,18 @@ export class Game {
     eventListeners;
     assetManager;
     debug;
+    // TODO(bret): onInit: Delegate<[]>; & others from Otter2d
+    onUpdate;
+    onSceneBegin;
+    onSceneEnd;
     constructor(id, settings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
             throw new Error(`No canvas with id "${id}" was able to be found`);
         }
+        this.onUpdate = new Delegate();
+        this.onSceneBegin = new Delegate();
+        this.onSceneEnd = new Delegate();
         canvas._engine = this;
         const ctx = canvas.getContext('2d', {
             alpha: false,
@@ -145,6 +153,7 @@ export class Game {
             while (deltaTime >= timeStep) {
                 this.update();
                 this.input.update();
+                this.onUpdate.invoke();
                 deltaTime -= timeStep;
                 ++this.frameIndex;
             }

@@ -8,6 +8,7 @@ import { Debug } from '../util/debug.js';
 
 import type { CSSColor, RequiredAndOmit } from '../util/types.js';
 import { CL } from './CL.js';
+import { Delegate } from '../util/delegate.js';
 
 const defineUnwritableProperty: <T>(
 	obj: T,
@@ -72,6 +73,11 @@ export interface IEngine {
 	eventListeners: CachedEventListener[];
 	assetManager?: AssetManager;
 	debug?: Debug;
+
+	// delegates
+	onUpdate: Delegate<[]>;
+	onSceneBegin: Delegate<[Scene]>;
+	onSceneEnd: Delegate<[Scene]>;
 
 	// getters & setters
 	readonly width: number;
@@ -147,6 +153,11 @@ export class Game implements Engine {
 	assetManager?: AssetManager | undefined;
 	debug?: Debug | undefined;
 
+	// TODO(bret): onInit: Delegate<[]>; & others from Otter2d
+	onUpdate: Delegate<[]>;
+	onSceneBegin: Delegate<[Scene]>;
+	onSceneEnd: Delegate<[Scene]>;
+
 	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
 			`canvas#${id}`,
@@ -154,6 +165,10 @@ export class Game implements Engine {
 		if (canvas === null) {
 			throw new Error(`No canvas with id "${id}" was able to be found`);
 		}
+
+		this.onUpdate = new Delegate();
+		this.onSceneBegin = new Delegate();
+		this.onSceneEnd = new Delegate();
 
 		canvas._engine = this;
 
@@ -297,6 +312,7 @@ export class Game implements Engine {
 			while (deltaTime >= timeStep) {
 				this.update();
 				this.input.update();
+				this.onUpdate.invoke();
 				deltaTime -= timeStep;
 				++this.frameIndex;
 			}
