@@ -15,6 +15,7 @@ import type {
 	IEntityComponentType,
 	RawComponent,
 } from '../util/types.js';
+import type { Tween } from '../util/tween.js';
 
 // TODO(bret): Fix this type lol
 type Graphic = IRenderable;
@@ -47,6 +48,9 @@ export interface IEntity {
 	component: <T extends IEntityComponentType>(
 		component: T,
 	) => ComponentProps<T> | undefined;
+
+	addTween(tween: Tween): Tween;
+	removeTween(tween: Tween): Tween;
 
 	update: (input: Input) => void;
 
@@ -184,6 +188,14 @@ export class Entity implements IEntity, IRenderable {
 		const c = this.components.get(component);
 		if (!c) return undefined;
 		return c as ComponentProps<C>;
+	}
+
+	addTween(tween: Tween): Tween {
+		//
+	}
+
+	removeTween(tween: Tween): Tween {
+		//
 	}
 
 	update(_input: Input): void {

@@ -95,6 +95,12 @@ export class Entity {
             return undefined;
         return c;
     }
+    addTween(tween) {
+        //
+    }
+    removeTween(tween) {
+        //
+    }
     update(_input) {
         //
     }
