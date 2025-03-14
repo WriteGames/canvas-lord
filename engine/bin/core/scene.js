@@ -104,6 +104,7 @@ export class Scene {
             if (this.entities.inScene.includes(e))
                 continue;
             this.entities.inScene.push(e);
+            e.onAdded.invoke();
         }
     }
     addRenderable(renderable) {
@@ -134,6 +135,7 @@ export class Scene {
         oldEntities.forEach((e) => {
             const index = this.entities.inScene.indexOf(e);
             this.entities.inScene.splice(index, 1);
+            e.onRemoved.invoke();
         });
     }
     removeRenderable(renderable) {

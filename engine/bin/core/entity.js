@@ -3,6 +3,7 @@ import * as Collide from '../collider/collide.js';
 import { PointCollider } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
+import { Delegate } from '../util/delegate.js';
 // TODO(bret): hook this up
 const _mouseCollider = new PointCollider();
 export class Entity {
@@ -12,6 +13,14 @@ export class Entity {
     #collider = undefined;
     visible = true;
     #graphic = undefined;
+    // TODO(bret): below
+    onAdded = new Delegate();
+    onPreUpdate = new Delegate();
+    onUpdate = new Delegate();
+    onPostUpdate = new Delegate();
+    // TODO(bret): below
+    onRemoved = new Delegate();
+    onRender = new Delegate();
     get x() {
         return this.component(Components.pos2D)[0];
     }
@@ -117,12 +126,14 @@ export class Entity {
         this.tweens.forEach((t) => t.update());
     }
     preUpdateInternal(input) {
+        this.onPreUpdate.invoke(input);
         this.preUpdate(input);
     }
     preUpdate(_input) {
         //
     }
     updateInternal(input) {
+        this.onUpdate.invoke(input);
         this.updateTweens();
         this.update(input);
     }
@@ -131,6 +142,7 @@ export class Entity {
     }
     postUpdateInternal(input) {
         this.postUpdate(input);
+        this.onPostUpdate.invoke(input);
         this.graphic?.update?.(input);
     }
     postUpdate(_input) {
@@ -141,6 +153,7 @@ export class Entity {
         if (this.visible) {
             this.#graphic?.render(ctx, camera);
         }
+        this.onRender.invoke(ctx, camera);
     }
     renderCollider(ctx, camera = Vec2.zero) {
         if (!this.collider)

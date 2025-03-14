@@ -16,6 +16,7 @@ import type {
 	RawComponent,
 } from '../util/types.js';
 import type { Tween } from '../util/tween.js';
+import { Delegate } from '../util/delegate.js';
 
 // TODO(bret): Fix this type lol
 type Graphic = IRenderable;
@@ -37,6 +38,13 @@ export interface IEntity {
 	collider: Collider | undefined;
 	components: ComponentMap;
 	visible: boolean;
+
+	onAdded: Delegate<[]>;
+	onPreUpdate: Delegate<[Input]>;
+	onUpdate: Delegate<[Input]>;
+	onPostUpdate: Delegate<[Input]>;
+	onRemoved: Delegate<[]>;
+	onRender: Delegate<[Ctx, Camera]>;
 
 	setPos(x: number, y: number): void;
 	setPos(pos: Vec2): void;
@@ -89,6 +97,15 @@ export class Entity implements IEntity, IRenderable {
 	#collider: Collider | undefined = undefined;
 	visible = true;
 	#graphic: Graphic | undefined = undefined;
+
+	// TODO(bret): below
+	onAdded = new Delegate<[]>();
+	onPreUpdate = new Delegate<[Input]>();
+	onUpdate = new Delegate<[Input]>();
+	onPostUpdate = new Delegate<[Input]>();
+	// TODO(bret): below
+	onRemoved = new Delegate<[]>();
+	onRender = new Delegate<[Ctx, Camera]>();
 
 	get x(): number {
 		return this.component(Components.pos2D)![0];
@@ -219,6 +236,7 @@ export class Entity implements IEntity, IRenderable {
 	}
 
 	preUpdateInternal(input: Input): void {
+		this.onPreUpdate.invoke(input);
 		this.preUpdate(input);
 	}
 
@@ -227,6 +245,7 @@ export class Entity implements IEntity, IRenderable {
 	}
 
 	updateInternal(input: Input): void {
+		this.onUpdate.invoke(input);
 		this.updateTweens();
 		this.update(input);
 	}
@@ -237,6 +256,7 @@ export class Entity implements IEntity, IRenderable {
 
 	postUpdateInternal(input: Input): void {
 		this.postUpdate(input);
+		this.onPostUpdate.invoke(input);
 
 		this.graphic?.update?.(input);
 	}
@@ -250,6 +270,8 @@ export class Entity implements IEntity, IRenderable {
 		if (this.visible) {
 			this.#graphic?.render(ctx, camera);
 		}
+
+		this.onRender.invoke(ctx, camera);
 	}
 
 	renderCollider(ctx: Ctx, camera: Camera = Vec2.zero): void {
