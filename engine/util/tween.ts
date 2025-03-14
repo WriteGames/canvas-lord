@@ -1,5 +1,6 @@
 import type { Entity } from '../canvas-lord.ts';
 import { CL } from '../canvas-lord.ts';
+import { Vec2 } from '../math/index.ts';
 import { Ease, easeInOut, easeOut, easeOutIn, type EaseFunc } from './ease.ts';
 
 interface ITweener {
@@ -150,7 +151,28 @@ abstract class Tweener implements ITweener {
 	}
 }
 
-type PropType<T, U extends PropertyTweener<T>> = T[U['prop']];
+interface HasProp<T> {
+	obj: T;
+	prop: keyof T;
+}
+
+type PropType<T, U extends HasProp<T>> = T[U['prop']];
+type AddFunc<T, U extends HasProp<T>> = (
+	a: PropType<T, U>,
+	b: PropType<T, U>,
+) => PropType<T, U>;
+type LerpFunc<T, U extends HasProp<T>> = (
+	a: PropType<T, U>,
+	b: PropType<T, U>,
+	t: number,
+) => PropType<T, U>;
+
+// TODO(bret): Find a better place for this to live
+const lerpAngle = (a: number, b: number, t: number): number => {
+	const d = (b - a) % 360;
+	const range = ((2 * d) % 360) - d;
+	return range * t + a;
+};
 
 export class PropertyTweener<T> extends Tweener {
 	obj: T;
@@ -159,6 +181,8 @@ export class PropertyTweener<T> extends Tweener {
 	#target: PropType<T, this>;
 	#from?: PropType<T, this>;
 	#relative = false;
+	#add: AddFunc<T, this>;
+	#lerp: LerpFunc<T, this>;
 
 	constructor(
 		obj: T,
@@ -171,32 +195,33 @@ export class PropertyTweener<T> extends Tweener {
 		this.prop = prop;
 		this.#start = this.obj[this.prop];
 		this.#target = target;
+
+		switch (true) {
+			case typeof this.#start === 'number' &&
+				typeof this.#target === 'number':
+				this.#add = ((a: number, b: number) =>
+					a + b) as unknown as AddFunc<T, this>;
+				this.#lerp = Math.lerp as unknown as LerpFunc<T, this>;
+				break;
+			case this.#start instanceof Vec2 && this.#target instanceof Vec2:
+				this.#add = Vec2.add as unknown as AddFunc<T, this>;
+				this.#lerp = Vec2.lerp as unknown as LerpFunc<T, this>;
+				break;
+			default:
+				throw new Error('no matching lerp');
+		}
 	}
 
 	start(): void {
 		super.start();
 		// TODO(bret): move this to when it starts
 		this.#start = this.#from ?? this.obj[this.prop];
-		if (this.#relative)
-			// @ts-expect-error -- TODO(bret): Gonna need to update this
-			this.#target += this.#start;
+		if (this.#relative) this.#target = this.#add(this.#start, this.#target);
 	}
 
 	update(): void {
 		const t = this.getT();
 		super.update();
-
-		if (
-			typeof this.#start !== 'number' ||
-			typeof this.#target !== 'number'
-		) {
-			console.log({
-				prop: this.prop,
-				start: typeof this.#start,
-				target: typeof this.#target,
-			});
-			throw new Error('uh oh');
-		}
 
 		let newValue = this.obj[this.prop];
 		switch (t) {
@@ -207,7 +232,7 @@ export class PropertyTweener<T> extends Tweener {
 				newValue = this.#target;
 				break;
 			default:
-				newValue = Math.lerp(
+				newValue = this.#lerp(
 					this.#start,
 					this.#target,
 					t,
@@ -230,6 +255,16 @@ export class PropertyTweener<T> extends Tweener {
 	asRelative(): this {
 		if (!this.#target) throw new Error('ruh roh');
 		this.#relative = true;
+		return this;
+	}
+
+	asAngle(): this {
+		this.#lerp = lerpAngle as unknown as LerpFunc<T, this>;
+		return this;
+	}
+
+	setLerp(lerp: LerpFunc<T, this>): this {
+		this.#lerp = lerp;
 		return this;
 	}
 }
@@ -345,8 +380,3 @@ export class Tween implements ITween {
 		this.current.forEach((t) => t.update());
 	}
 }
-
-// const player = new Entity();
-
-// const tween = new Tween();
-// tween.tweenProperty(player, 'x', 30, 1);

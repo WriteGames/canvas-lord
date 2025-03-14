@@ -50,11 +50,11 @@ export class Vec2 extends Array {
     normalize() {
         Vec2.normalize(this);
     }
-    static normalize(v) {
+    static normalize = (v) => {
         const mag = v.magnitude;
         v.x /= mag;
         v.y /= mag;
-    }
+    };
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {
@@ -80,57 +80,60 @@ export class Vec2 extends Array {
     add(v) {
         return Vec2.add(this, v);
     }
-    static add(a, b) {
+    static add = (a, b) => {
         return addPos(a, b);
-    }
+    };
     plus(v) {
         return this.add(v);
     }
-    static plus(a, b) {
+    static plus = (a, b) => {
         return Vec2.add(a, b);
-    }
+    };
     sub(v) {
         return Vec2.sub(this, v);
     }
-    static sub(a, b) {
+    static sub = (a, b) => {
         return subPos(a, b);
-    }
+    };
     minus(v) {
         return this.sub(v);
     }
-    static minus(a, b) {
+    static minus = (a, b) => {
         return Vec2.sub(a, b);
-    }
+    };
     scale(s) {
         return Vec2.scale(this, s);
     }
-    static scale(v, s) {
+    static scale = (v, s) => {
         return scalePos(v, s);
-    }
+    };
     invScale(s) {
         return Vec2.scale(this, 1 / s);
     }
-    static invScale(v, s) {
+    static invScale = (v, s) => {
         return scalePos(v, 1 / s);
-    }
+    };
     cross(v) {
         return Vec2.cross(this, v);
     }
-    static cross(a, b) {
+    static cross = (a, b) => {
         return crossProduct2D(a, b);
-    }
+    };
     dot(v) {
         return Vec2.dot(this, v);
     }
-    static dot(a, b) {
+    static dot = (a, b) => {
         return dotProduct2D(a, b);
-    }
+    };
     equal(v) {
         return Vec2.equal(this, v);
     }
-    static equal(a, b) {
+    static equal = (a, b) => {
         return posEqual(a, b);
-    }
+    };
+    static lerp = (a, b, t) => {
+        return b.sub(a).scale(t).add(a);
+    };
     static get zero() {
         return new Vec2(0, 0);
     }

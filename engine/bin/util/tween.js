@@ -1,4 +1,5 @@
 import { CL } from "../canvas-lord.js";
+import { Vec2 } from "../math/index.js";
 import { Ease, easeInOut, easeOut, easeOutIn } from "./ease.js";
 export var EaseType;
 (function (EaseType) {
@@ -122,6 +123,12 @@ class Tweener {
         return this;
     }
 }
+// TODO(bret): Find a better place for this to live
+const lerpAngle = (a, b, t) => {
+    const d = (b - a) % 360;
+    const range = ((2 * d) % 360) - d;
+    return range * t + a;
+};
 export class PropertyTweener extends Tweener {
     obj;
     prop;
@@ -129,33 +136,38 @@ export class PropertyTweener extends Tweener {
     #target;
     #from;
     #relative = false;
+    #add;
+    #lerp;
     constructor(obj, prop, target, duration) {
         super(duration);
         this.obj = obj;
         this.prop = prop;
         this.#start = this.obj[this.prop];
         this.#target = target;
+        switch (true) {
+            case typeof this.#start === 'number' &&
+                typeof this.#target === 'number':
+                this.#add = ((a, b) => a + b);
+                this.#lerp = Math.lerp;
+                break;
+            case this.#start instanceof Vec2 && this.#target instanceof Vec2:
+                this.#add = Vec2.add;
+                this.#lerp = Vec2.lerp;
+                break;
+            default:
+                throw new Error('no matching lerp');
+        }
     }
     start() {
         super.start();
         // TODO(bret): move this to when it starts
         this.#start = this.#from ?? this.obj[this.prop];
         if (this.#relative)
-            // @ts-expect-error -- TODO(bret): Gonna need to update this
-            this.#target += this.#start;
+            this.#target = this.#add(this.#start, this.#target);
     }
     update() {
         const t = this.getT();
         super.update();
-        if (typeof this.#start !== 'number' ||
-            typeof this.#target !== 'number') {
-            console.log({
-                prop: this.prop,
-                start: typeof this.#start,
-                target: typeof this.#target,
-            });
-            throw new Error('uh oh');
-        }
         let newValue = this.obj[this.prop];
         switch (t) {
             case 0:
@@ -165,7 +177,7 @@ export class PropertyTweener extends Tweener {
                 newValue = this.#target;
                 break;
             default:
-                newValue = Math.lerp(this.#start, this.#target, t);
+                newValue = this.#lerp(this.#start, this.#target, t);
                 break;
         }
         this.obj[this.prop] = newValue;
@@ -182,6 +194,14 @@ export class PropertyTweener extends Tweener {
         if (!this.#target)
             throw new Error('ruh roh');
         this.#relative = true;
+        return this;
+    }
+    asAngle() {
+        this.#lerp = lerpAngle;
+        return this;
+    }
+    setLerp(lerp) {
+        this.#lerp = lerp;
         return this;
     }
 }
@@ -254,7 +274,4 @@ export class Tween {
         this.current.forEach((t) => t.update());
     }
 }
-// const player = new Entity();
-// const tween = new Tween();
-// tween.tweenProperty(player, 'x', 30, 1);
 //# sourceMappingURL=tween.js.map

@@ -26,16 +26,20 @@ type ComponentMap = Map<IEntityComponentType, RawComponent>;
 export interface IEntity {
 	x: number;
 	y: number;
+	pos: Vec2;
 	w: number;
 	width: number;
 	h: number;
 	height: number;
 	scene: Scene;
 	graphic: Graphic | undefined;
-	components: ComponentMap;
 	collider: Collider | undefined;
+	components: ComponentMap;
 	visible: boolean;
-	update: (input: Input) => void;
+
+	setPos(x: number, y: number): void;
+	setPos(pos: Vec2): void;
+
 	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
 	addComponent: <T extends IEntityComponentType>(
 		component: T,
@@ -43,6 +47,8 @@ export interface IEntity {
 	component: <T extends IEntityComponentType>(
 		component: T,
 	) => ComponentProps<T> | undefined;
+
+	update: (input: Input) => void;
 
 	collideEntity(x: number, y: number): Entity | null;
 	collideEntity(x: number, y: number, tag?: ColliderTag): Entity | null;
@@ -76,48 +82,6 @@ export class Entity implements IEntity, IRenderable {
 	visible = true;
 	#graphic: Graphic | undefined = undefined;
 
-	get collider(): Collider | undefined {
-		return this.#collider;
-	}
-
-	set collider(value) {
-		// TODO(bret): Might be good to do this, not sure yet
-		// this.#collider?.assignParent(null);
-		this.#collider = value;
-		this.#collider?.assignParent(this);
-	}
-
-	get graphic(): Graphic | undefined {
-		return this.#graphic;
-	}
-
-	set graphic(graphic) {
-		this.#graphic = graphic;
-		if (this.#graphic) this.#graphic.parent = this;
-	}
-
-	constructor(x = 0, y = 0) {
-		this.addComponent(Components.pos2D);
-		this.x = x;
-		this.y = y;
-	}
-
-	addComponent<C extends IEntityComponentType>(
-		component: C,
-	): ReturnType<typeof this.component<C>> {
-		// TODO: we'll want to make sure we use a deepCopy
-		this.components.set(component, Components.copyObject(component.data));
-		return this.component(component);
-	}
-
-	component<C extends IEntityComponentType>(
-		component: C,
-	): ComponentProps<C> | undefined {
-		const c = this.components.get(component);
-		if (!c) return undefined;
-		return c as ComponentProps<C>;
-	}
-
 	get x(): number {
 		return this.component(Components.pos2D)![0];
 	}
@@ -132,6 +96,14 @@ export class Entity implements IEntity, IRenderable {
 
 	set y(val) {
 		this.component(Components.pos2D)![1] = val;
+	}
+
+	get pos(): Vec2 {
+		return this.component(Components.pos2D)!.clone();
+	}
+
+	set pos(val: Vec2) {
+		this.component(Components.pos2D)!.set(val);
 	}
 
 	// TODO(bret): Set up setters for these as well
@@ -156,6 +128,62 @@ export class Entity implements IEntity, IRenderable {
 
 	get h(): number {
 		return this.height;
+	}
+
+	get graphic(): Graphic | undefined {
+		return this.#graphic;
+	}
+
+	set graphic(graphic) {
+		this.#graphic = graphic;
+		if (this.#graphic) this.#graphic.parent = this;
+	}
+
+	get collider(): Collider | undefined {
+		return this.#collider;
+	}
+
+	set collider(value) {
+		// TODO(bret): Might be good to do this, not sure yet
+		// this.#collider?.assignParent(null);
+		this.#collider = value;
+		this.#collider?.assignParent(this);
+	}
+
+	constructor(x = 0, y = 0) {
+		this.addComponent(Components.pos2D);
+		this.x = x;
+		this.y = y;
+	}
+
+	setPos(x: number, y: number): void;
+	setPos(pos: Vec2): void;
+	setPos(...args: unknown[]): void {
+		if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+			const [x, y] = args;
+			this.x = x;
+			this.y = y;
+		} else if (args[0] instanceof Vec2) {
+			const [vec] = args;
+			this.x = vec[0];
+			this.y = vec[1];
+		}
+	}
+
+	addComponent<C extends IEntityComponentType>(
+		component: C,
+	): ReturnType<typeof this.component<C>> {
+		// TODO: we'll want to make sure we use a deepCopy
+		this.components.set(component, Components.copyObject(component).data);
+		return this.component(component);
+	}
+
+	component<C extends IEntityComponentType>(
+		component: C,
+	): ComponentProps<C> | undefined {
+		const c = this.components.get(component);
+		if (!c) return undefined;
+		return c as ComponentProps<C>;
 	}
 
 	update(_input: Input): void {

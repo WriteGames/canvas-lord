@@ -1,6 +1,20 @@
 /* Canvas Lord v0.5.3 */
 import { Vec2 } from '../math/index.js';
-export const copyObject = (obj) => structuredClone(obj);
+export const copyObject = (obj) => {
+    const { data: rawData } = obj;
+    let data;
+    switch (true) {
+        case rawData instanceof Vec2:
+            data = rawData.clone();
+            break;
+        default:
+            data = rawData;
+            break;
+    }
+    const newObj = structuredClone(obj);
+    newObj.data = data;
+    return newObj;
+};
 // TODO: rename to registerComponent? And then do something with that?
 // TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
 export const createComponent = (initialState) => Object.freeze(copyObject({

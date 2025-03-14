@@ -1,10 +1,10 @@
 import { Entity, Scene } from '../../bin/canvas-lord.js';
 import { init } from '../sandbox.js';
-import { Ease } from '../../bin/util/ease.js';
 import { EaseType, Tween } from '../../bin/util/tween.js';
 import { Sprite } from '../../bin/graphic/sprite.js';
 import { Text } from '../../bin/graphic/text.js';
-import { Draw } from '../../bin/util/draw.js';
+import { Vec2 } from '../../bin/math/index.js';
+import { RAD_TO_DEG } from '../../bin/math/misc.js';
 
 class TweenEntity extends Entity {
 	constructor(x, y) {
@@ -12,32 +12,24 @@ class TweenEntity extends Entity {
 
 		this.graphic = Sprite.createRect(32, 32, 'red');
 		this.graphic.centerOO();
+
+		this.pos = new Vec2(10, 10);
 	}
 
 	update(input) {
 		if (input.mousePressed(0)) {
 			// TODO(bret): this.tween.kill()
-
 			const tween = new Tween().setTrans(7).setEase(EaseType.EaseInOut);
-			const dur = 1;
+			const target = input.mouse.pos.clone();
+			tween.tweenProperty(this, 'pos', target, 1);
+			const delta = target.sub(this.pos);
 
-			tween.tweenProperty(this, 'x', input.mouse.x, 1);
-			tween.parallel().tweenProperty(this, 'y', input.mouse.y, 1);
+			const angle = Math.atan2(delta.y, delta.x) * RAD_TO_DEG;
 
-			// do a rotate bc cool
-
-			// tween.tweenProperty(this, 'x', 350, dur).setTrans(3);
-
-			// tween
-			// 	.parallel()
-			// 	.tweenProperty(this, 'y', 350, dur)
-			// 	.setTrans(3);
-
-			// tween
-			// 	.tweenProperty(this, 'x', 100, dur)
-			// 	.asRelative()
-			// 	.setDelay(1);
-			// tween.tweenProperty(this.graphic, 'scale', 3, dur);
+			tween
+				.parallel()
+				.tweenProperty(this.graphic, 'angle', angle, 0.5)
+				.asAngle();
 
 			this.tween = tween;
 		}

@@ -78,11 +78,11 @@ export class Vec2 extends Array<number> {
 		Vec2.normalize(this);
 	}
 
-	static normalize(v: Vec2): void {
+	static normalize = (v: Vec2): void => {
 		const mag = v.magnitude;
 		v.x /= mag;
 		v.y /= mag;
-	}
+	};
 
 	map<U>(
 		// TODO: index: 0 | 1 ?
@@ -121,73 +121,77 @@ export class Vec2 extends Array<number> {
 		return Vec2.add(this, v);
 	}
 
-	static add(a: Vec2, b: Vec2): Vec2 {
+	static add = (a: Vec2, b: Vec2): Vec2 => {
 		return addPos(a, b);
-	}
+	};
 
 	plus(v: Vec2): Vec2 {
 		return this.add(v);
 	}
 
-	static plus(a: Vec2, b: Vec2): Vec2 {
+	static plus = (a: Vec2, b: Vec2): Vec2 => {
 		return Vec2.add(a, b);
-	}
+	};
 
 	sub(v: Vec2): Vec2 {
 		return Vec2.sub(this, v);
 	}
 
-	static sub(a: Vec2, b: Vec2): Vec2 {
+	static sub = (a: Vec2, b: Vec2): Vec2 => {
 		return subPos(a, b);
-	}
+	};
 
 	minus(v: Vec2): Vec2 {
 		return this.sub(v);
 	}
 
-	static minus(a: Vec2, b: Vec2): Vec2 {
+	static minus = (a: Vec2, b: Vec2): Vec2 => {
 		return Vec2.sub(a, b);
-	}
+	};
 
 	scale(s: number): Vec2 {
 		return Vec2.scale(this, s);
 	}
 
-	static scale(v: Vec2, s: number): Vec2 {
+	static scale = (v: Vec2, s: number): Vec2 => {
 		return scalePos(v, s);
-	}
+	};
 
 	invScale(s: number): Vec2 {
 		return Vec2.scale(this, 1 / s);
 	}
 
-	static invScale(v: Vec2, s: number): Vec2 {
+	static invScale = (v: Vec2, s: number): Vec2 => {
 		return scalePos(v, 1 / s);
-	}
+	};
 
 	cross(v: Vec2): number {
 		return Vec2.cross(this, v);
 	}
 
-	static cross(a: Vec2, b: Vec2): number {
+	static cross = (a: Vec2, b: Vec2): number => {
 		return crossProduct2D(a, b);
-	}
+	};
 
 	dot(v: Vec2): number {
 		return Vec2.dot(this, v);
 	}
 
-	static dot(a: Vec2, b: Vec2): number {
+	static dot = (a: Vec2, b: Vec2): number => {
 		return dotProduct2D(a, b);
-	}
+	};
 
 	equal(v: Vec2): boolean {
 		return Vec2.equal(this, v);
 	}
 
-	static equal(a: Vec2, b: Vec2): boolean {
+	static equal = (a: Vec2, b: Vec2): boolean => {
 		return posEqual(a, b);
-	}
+	};
+
+	static lerp = (a: Vec2, b: Vec2, t: number): Vec2 => {
+		return b.sub(a).scale(t).add(a);
+	};
 
 	static get zero(): Vec2 {
 		return new Vec2(0, 0);

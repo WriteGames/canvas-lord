@@ -12,39 +12,6 @@ export class Entity {
     #collider = undefined;
     visible = true;
     #graphic = undefined;
-    get collider() {
-        return this.#collider;
-    }
-    set collider(value) {
-        // TODO(bret): Might be good to do this, not sure yet
-        // this.#collider?.assignParent(null);
-        this.#collider = value;
-        this.#collider?.assignParent(this);
-    }
-    get graphic() {
-        return this.#graphic;
-    }
-    set graphic(graphic) {
-        this.#graphic = graphic;
-        if (this.#graphic)
-            this.#graphic.parent = this;
-    }
-    constructor(x = 0, y = 0) {
-        this.addComponent(Components.pos2D);
-        this.x = x;
-        this.y = y;
-    }
-    addComponent(component) {
-        // TODO: we'll want to make sure we use a deepCopy
-        this.components.set(component, Components.copyObject(component.data));
-        return this.component(component);
-    }
-    component(component) {
-        const c = this.components.get(component);
-        if (!c)
-            return undefined;
-        return c;
-    }
     get x() {
         return this.component(Components.pos2D)[0];
     }
@@ -56,6 +23,12 @@ export class Entity {
     }
     set y(val) {
         this.component(Components.pos2D)[1] = val;
+    }
+    get pos() {
+        return this.component(Components.pos2D).clone();
+    }
+    set pos(val) {
+        this.component(Components.pos2D).set(val);
     }
     // TODO(bret): Set up setters for these as well
     // TODO(bret): Would be good to set up for non-rect shapes :)
@@ -76,6 +49,51 @@ export class Entity {
     }
     get h() {
         return this.height;
+    }
+    get graphic() {
+        return this.#graphic;
+    }
+    set graphic(graphic) {
+        this.#graphic = graphic;
+        if (this.#graphic)
+            this.#graphic.parent = this;
+    }
+    get collider() {
+        return this.#collider;
+    }
+    set collider(value) {
+        // TODO(bret): Might be good to do this, not sure yet
+        // this.#collider?.assignParent(null);
+        this.#collider = value;
+        this.#collider?.assignParent(this);
+    }
+    constructor(x = 0, y = 0) {
+        this.addComponent(Components.pos2D);
+        this.x = x;
+        this.y = y;
+    }
+    setPos(...args) {
+        if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+            const [x, y] = args;
+            this.x = x;
+            this.y = y;
+        }
+        else if (args[0] instanceof Vec2) {
+            const [vec] = args;
+            this.x = vec[0];
+            this.y = vec[1];
+        }
+    }
+    addComponent(component) {
+        // TODO: we'll want to make sure we use a deepCopy
+        this.components.set(component, Components.copyObject(component).data);
+        return this.component(component);
+    }
+    component(component) {
+        const c = this.components.get(component);
+        if (!c)
+            return undefined;
+        return c;
     }
     update(_input) {
         //

@@ -12,10 +12,23 @@ export type ComponentProps<T extends IEntityComponentType> =
 		  }
 		: never;
 
-type InferTuple<T> = T extends readonly [...infer Tuple] ? Tuple : T;
-export const copyObject = <T extends RawComponent, U = InferTuple<T>>(
-	obj: U,
-): U => structuredClone(obj);
+export const copyObject = <T extends RawComponent>(
+	obj: IEntityComponentType<T>,
+): IEntityComponentType<T> => {
+	const { data: rawData } = obj;
+	let data: typeof rawData;
+	switch (true) {
+		case rawData instanceof Vec2:
+			data = rawData.clone() as T;
+			break;
+		default:
+			data = rawData;
+			break;
+	}
+	const newObj = structuredClone(obj);
+	newObj.data = data;
+	return newObj;
+};
 
 // TODO: rename to registerComponent? And then do something with that?
 // TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
