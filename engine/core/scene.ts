@@ -15,6 +15,7 @@ import type {
 } from '../util/types.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
 import type { Graphic } from '../graphic/graphic.js';
+import { Delegate } from '../util/delegate.js';
 
 // TODO: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
@@ -44,6 +45,15 @@ export interface Scene {
 
 	canvas: Canvas;
 	ctx: Ctx;
+
+	onPreUpdate: Delegate<[Input]>;
+	onUpdate: Delegate<[Input]>;
+	onPostUpdate: Delegate<[Input]>;
+	onRender: Delegate<[Ctx]>;
+	onBegin: Delegate<[]>;
+	onEnd: Delegate<[]>;
+	onResume: Delegate<[]>;
+	onPause: Delegate<[]>;
 }
 
 export class Scene implements Scene {
@@ -76,6 +86,14 @@ export class Scene implements Scene {
 		this.allowRefresh = true;
 
 		this.bounds = null;
+
+		this.onPreUpdate = new Delegate();
+		this.onUpdate = new Delegate();
+		this.onRender = new Delegate();
+		this.onBegin = new Delegate();
+		this.onEnd = new Delegate();
+		this.onResume = new Delegate();
+		this.onPause = new Delegate();
 	}
 
 	#mouse = new Vec2(-1, -1);
@@ -96,6 +114,8 @@ export class Scene implements Scene {
 	}
 
 	beginInternal(): void {
+		this.onBegin.invoke();
+
 		this.begin();
 	}
 
@@ -104,6 +124,8 @@ export class Scene implements Scene {
 	}
 
 	endInternal(): void {
+		this.onEnd.invoke();
+
 		this.end();
 	}
 
@@ -112,6 +134,8 @@ export class Scene implements Scene {
 	}
 
 	pauseInternal(): void {
+		this.onPause.invoke();
+
 		this.pause();
 	}
 
@@ -120,6 +144,8 @@ export class Scene implements Scene {
 	}
 
 	resumeInternal(): void {
+		this.onResume.invoke();
+
 		this.resume();
 	}
 
@@ -212,7 +238,13 @@ export class Scene implements Scene {
 	}
 
 	preUpdateInternal(input: Input): void {
+		this.onPreUpdate.invoke(input);
+
 		this.preUpdate(input);
+
+		this.entities.inScene.forEach((entity) => {
+			entity.preUpdateInternal(input);
+		});
 	}
 
 	preUpdate(_input: Input): void {
@@ -228,15 +260,13 @@ export class Scene implements Scene {
 
 		if (!this.shouldUpdate) return;
 
+		this.onUpdate.invoke(input);
+
 		this.update(input);
 
 		this.entities.inScene.forEach((entity) => {
-			entity.updateTweens();
-			entity.update(input);
+			entity.updateInternal(input);
 		});
-		this.entities.inScene.forEach((entity) =>
-			entity.graphic?.update?.(input),
-		);
 		// this.renderables = this.renderables.filter(e => e).sort();
 
 		this.componentSystemMap.forEach((systems, component) => {
@@ -257,7 +287,13 @@ export class Scene implements Scene {
 	}
 
 	postUpdateInternal(input: Input): void {
+		this.onPostUpdate.invoke(input);
+
 		this.postUpdate(input);
+
+		this.entities.inScene.forEach((entity) => {
+			entity.postUpdateInternal(input);
+		});
 	}
 
 	postUpdate(_input: Input): void {
@@ -265,13 +301,15 @@ export class Scene implements Scene {
 	}
 
 	renderInternal(gameCtx: Ctx): void {
+		const ctx = ((this.ctx as unknown) ?? gameCtx) as Ctx;
+		const { canvas } = ctx;
+
+		this.onRender.invoke(ctx);
+
 		// TODO: this should maybe be in pre-render?
 		this.renderables.inScene.sort(
 			(a, b) => (b.depth ?? 0) - (a.depth ?? 0),
 		);
-
-		const ctx = ((this.ctx as unknown) ?? gameCtx) as Ctx;
-		const { canvas } = ctx;
 
 		const { camera } = this;
 		let { backgroundColor } = this;

@@ -116,7 +116,24 @@ export class Entity {
     updateTweens() {
         this.tweens.forEach((t) => t.update());
     }
+    preUpdateInternal(input) {
+        this.preUpdate(input);
+    }
+    preUpdate(_input) {
+        //
+    }
+    updateInternal(input) {
+        this.updateTweens();
+        this.update(input);
+    }
     update(_input) {
+        //
+    }
+    postUpdateInternal(input) {
+        this.postUpdate(input);
+        this.graphic?.update?.(input);
+    }
+    postUpdate(_input) {
         //
     }
     render(ctx, camera) {

@@ -4,6 +4,7 @@ import { Vec2 } from '../math/index.js';
 import { Camera } from '../util/camera.js';
 import { Messages } from '../util/messages.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
+import { Delegate } from '../util/delegate.js';
 export class Scene {
     constructor(engine) {
         this.engine = engine;
@@ -26,6 +27,13 @@ export class Scene {
         this.escapeToBlur = true;
         this.allowRefresh = true;
         this.bounds = null;
+        this.onPreUpdate = new Delegate();
+        this.onUpdate = new Delegate();
+        this.onRender = new Delegate();
+        this.onBegin = new Delegate();
+        this.onEnd = new Delegate();
+        this.onResume = new Delegate();
+        this.onPause = new Delegate();
     }
     #mouse = new Vec2(-1, -1);
     get mouse() {
@@ -44,24 +52,28 @@ export class Scene {
         }
     }
     beginInternal() {
+        this.onBegin.invoke();
         this.begin();
     }
     begin() {
         //
     }
     endInternal() {
+        this.onEnd.invoke();
         this.end();
     }
     end() {
         //
     }
     pauseInternal() {
+        this.onPause.invoke();
         this.pause();
     }
     pause() {
         //
     }
     resumeInternal() {
+        this.onResume.invoke();
         this.resume();
     }
     resume() {
@@ -142,7 +154,11 @@ export class Scene {
         this.#removeRenderablesFromScene();
     }
     preUpdateInternal(input) {
+        this.onPreUpdate.invoke(input);
         this.preUpdate(input);
+        this.entities.inScene.forEach((entity) => {
+            entity.preUpdateInternal(input);
+        });
     }
     preUpdate(_input) {
         //
@@ -155,12 +171,11 @@ export class Scene {
             this.engine.canvas.blur();
         if (!this.shouldUpdate)
             return;
+        this.onUpdate.invoke(input);
         this.update(input);
         this.entities.inScene.forEach((entity) => {
-            entity.updateTweens();
-            entity.update(input);
+            entity.updateInternal(input);
         });
-        this.entities.inScene.forEach((entity) => entity.graphic?.update?.(input));
         // this.renderables = this.renderables.filter(e => e).sort();
         this.componentSystemMap.forEach((systems, component) => {
             systems.forEach((system) => {
@@ -176,16 +191,21 @@ export class Scene {
         //
     }
     postUpdateInternal(input) {
+        this.onPostUpdate.invoke(input);
         this.postUpdate(input);
+        this.entities.inScene.forEach((entity) => {
+            entity.postUpdateInternal(input);
+        });
     }
     postUpdate(_input) {
         //
     }
     renderInternal(gameCtx) {
-        // TODO: this should maybe be in pre-render?
-        this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const ctx = (this.ctx ?? gameCtx);
         const { canvas } = ctx;
+        this.onRender.invoke(ctx);
+        // TODO: this should maybe be in pre-render?
+        this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const { camera } = this;
         let { backgroundColor } = this;
         if (this.ctx) {

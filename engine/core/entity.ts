@@ -54,7 +54,9 @@ export interface IEntity {
 	clearTweens(): void;
 
 	updateTweens(): void;
+	preUpdate(input: Input): void;
 	update: (input: Input) => void;
+	postUpdate(input: Input): void;
 
 	collideEntity(x: number, y: number): Entity | null;
 	collideEntity(x: number, y: number, tag?: ColliderTag): Entity | null;
@@ -216,7 +218,30 @@ export class Entity implements IEntity, IRenderable {
 		this.tweens.forEach((t) => t.update());
 	}
 
+	preUpdateInternal(input: Input): void {
+		this.preUpdate(input);
+	}
+
+	preUpdate(_input: Input): void {
+		//
+	}
+
+	updateInternal(input: Input): void {
+		this.updateTweens();
+		this.update(input);
+	}
+
 	update(_input: Input): void {
+		//
+	}
+
+	postUpdateInternal(input: Input): void {
+		this.postUpdate(input);
+
+		this.graphic?.update?.(input);
+	}
+
+	postUpdate(_input: Input): void {
 		//
 	}
 
