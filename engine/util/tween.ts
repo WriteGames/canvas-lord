@@ -52,6 +52,10 @@ abstract class Tweener implements ITweener {
 		return Math.clamp(this.#elapsed / (this.#duration - 1), 0, 1);
 	}
 
+	get started(): boolean {
+		return this.#elapsed >= 0;
+	}
+
 	// TODO(bret): Do smth different for this
 	get finished(): boolean {
 		return this.#elapsed >= this.#duration - 1;
@@ -272,6 +276,25 @@ export class PropertyTweener<T> extends Tweener {
 	}
 }
 
+export class SubtweenTweener extends Tweener {
+	#tween: Tween;
+
+	// TODO(bret): Do smth different for this
+	get finished(): boolean {
+		return this.#tween.finished;
+	}
+
+	constructor(tween: Tween) {
+		super(0);
+		this.#tween = tween;
+	}
+
+	update(): void {
+		if (this.started) this.#tween.update();
+		super.update();
+	}
+}
+
 interface ITween {
 	readonly step: number;
 	readonly current: TweenGroup | null;
@@ -356,6 +379,10 @@ export class Tween implements ITween {
 		return this.#addTweener(
 			new PropertyTweener<T>(obj, prop, target, duration).setParent(this),
 		);
+	}
+
+	tweenSubtween(tween: Tween): SubtweenTweener {
+		return this.#addTweener(new SubtweenTweener(tween));
 	}
 
 	setEase(ease: EaseType): this {

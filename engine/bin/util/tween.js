@@ -33,6 +33,9 @@ class Tweener {
     get elapsed() {
         return Math.clamp(this.#elapsed / (this.#duration - 1), 0, 1);
     }
+    get started() {
+        return this.#elapsed >= 0;
+    }
     // TODO(bret): Do smth different for this
     get finished() {
         return this.#elapsed >= this.#duration - 1;
@@ -199,6 +202,22 @@ export class PropertyTweener extends Tweener {
         return this;
     }
 }
+export class SubtweenTweener extends Tweener {
+    #tween;
+    // TODO(bret): Do smth different for this
+    get finished() {
+        return this.#tween.finished;
+    }
+    constructor(tween) {
+        super(0);
+        this.#tween = tween;
+    }
+    update() {
+        if (this.started)
+            this.#tween.update();
+        super.update();
+    }
+}
 export class Tween {
     #lastStep = -1;
     #step = 0;
@@ -246,6 +265,9 @@ export class Tween {
     }
     tweenProperty(obj, prop, target, duration) {
         return this.#addTweener(new PropertyTweener(obj, prop, target, duration).setParent(this));
+    }
+    tweenSubtween(tween) {
+        return this.#addTweener(new SubtweenTweener(tween));
     }
     setEase(ease) {
         this.#ease = ease;
