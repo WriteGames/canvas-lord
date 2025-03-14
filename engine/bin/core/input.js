@@ -266,8 +266,7 @@ export class Input {
             return false;
         };
         const upCallback = (e) => {
-            if (e.target !== _element)
-                return true;
+            // if (e.target !== _element) return true;
             e.preventDefault();
             _keys.forEach((key) => {
                 const event = new KeyboardEvent('keyup', {
@@ -279,8 +278,9 @@ export class Input {
         };
         _element.addEventListener('mousedown', downCallback);
         _element.addEventListener('touchstart', downCallback);
-        _element.addEventListener('mouseup', upCallback);
+        window.addEventListener('mouseup', upCallback);
         _element.addEventListener('touchend', upCallback);
+        _element.addEventListener('touchcancel', upCallback);
         this.htmlButtons.push({
             element: _element,
             downCallback,
@@ -298,8 +298,10 @@ export class Input {
         const { downCallback, upCallback } = data;
         _element.removeEventListener('mousedown', downCallback);
         _element.removeEventListener('touchstart', downCallback);
-        _element.removeEventListener('mouseup', upCallback);
+        window.addEventListener('mouseup', upCallback);
         _element.removeEventListener('touchend', upCallback);
+        _element.removeEventListener('mouseleave', upCallback);
+        _element.removeEventListener('touchcancel', upCallback);
         delete _element.dataset.keys;
     }
     clear() {

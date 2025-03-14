@@ -74,17 +74,23 @@ class ButtonEntity extends Entity {
 	constructor(x, y, key) {
 		super(x, y);
 
-		this.graphic = Sprite.createRect(32, 32, 'red');
-		this.graphic.centerOO();
+		this.box = Sprite.createRect(32, 32, 'red');
+		this.box.centerOO();
+
+		const text = new Text(key.slice(-1), 0, 0);
+		text.size = 16;
+		text.baseline = 'middle';
+		text.centerOO();
+		this.graphic = new GraphicList(this.box, text);
 
 		this.key = key;
 	}
 
 	update(input) {
 		if (input.keyCheck(this.key)) {
-			this.graphic.color = 'lime';
+			this.box.color = 'lime';
 		} else {
-			this.graphic.color = 'red';
+			this.box.color = 'red';
 		}
 	}
 }
