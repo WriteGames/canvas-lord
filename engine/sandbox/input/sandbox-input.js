@@ -1,4 +1,5 @@
 import { Scene, Entity } from '../../bin/canvas-lord.js';
+import { Keys } from '../../bin/core/input.js';
 import { CL } from '../../bin/core/CL.js';
 import { BoxCollider } from '../../bin/collider/box-collider.js';
 import { GraphicList } from '../../bin/graphic/graphic-list.js';
@@ -69,7 +70,45 @@ class MouseScene extends Scene {
 	}
 }
 
-init({
-	games: [init.game('mouse', MouseScene)],
+class ButtonEntity extends Entity {
+	constructor(x, y, key) {
+		super(x, y);
+
+		this.graphic = Sprite.createRect(32, 32, 'red');
+		this.graphic.centerOO();
+
+		this.key = key;
+	}
+
+	update(input) {
+		if (input.keyCheck(this.key)) {
+			this.graphic.color = 'lime';
+		} else {
+			this.graphic.color = 'red';
+		}
+	}
+}
+
+class ButtonScene extends Scene {
+	begin() {
+		const { width, height } = this.engine;
+		const hWidth = width >> 1;
+		const hHeight = height >> 1;
+		const spacing = 50;
+		this.addEntities(new ButtonEntity(hWidth - spacing, hHeight, Keys.X));
+		this.addEntities(new ButtonEntity(hWidth + spacing, hHeight, Keys.Z));
+	}
+}
+
+const xxx = init({
+	games: [
+		init.game('mouse', MouseScene, { remove: false }),
+		init.game('button', ButtonScene, { remove: false }),
+	],
+	onLoad: (games) => {
+		games[1].registerHTMLButton('button-x', Keys.X);
+
+		games[1].registerHTMLButton('button-z', Keys.Z);
+	},
 	assetSrc: '../../img/',
 });

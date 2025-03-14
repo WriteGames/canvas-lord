@@ -406,5 +406,11 @@ export class Game {
             debug.render(ctx);
         CL.__setEngine(engine);
     }
+    registerHTMLButton(element, ...keys) {
+        this.input.registerHTMLButton(element, ...keys);
+    }
+    unregisterHTMLButton(element, ...keys) {
+        this.input.unregisterHTMLButton(element, ...keys);
+    }
 }
 //# sourceMappingURL=engine.js.map

@@ -1,7 +1,7 @@
 /* Canvas Lord v0.5.3 */
 
 import { type AssetManager, Sfx } from './asset-manager.js';
-import { Input } from './input.js';
+import { Input, type Key } from './input.js';
 import type { Scene } from './scene.js';
 import type { Ctx } from '../util/canvas.js';
 import { Debug } from '../util/debug.js';
@@ -99,6 +99,15 @@ export interface IEngine {
 	sendEvent(event: GameEvent): void;
 	renderScenes(ctx: Ctx, scenes?: Scene[]): void;
 	render(): void;
+
+	registerHTMLButton(
+		element: string | HTMLElement,
+		...keys: Key[] | Key[][]
+	): void;
+	unregisterHTMLButton(
+		element: string | HTMLElement,
+		...keys: Key[] | Key[][]
+	): void;
 }
 
 export type Engine = IEngine;
@@ -632,5 +641,19 @@ export class Game implements Engine {
 		if (debug?.enabled) debug.render(ctx);
 
 		CL.__setEngine(engine);
+	}
+
+	registerHTMLButton(
+		element: string | HTMLElement,
+		...keys: Key[] | Key[][]
+	): void {
+		this.input.registerHTMLButton(element, ...keys);
+	}
+
+	unregisterHTMLButton(
+		element: string | HTMLElement,
+		...keys: Key[] | Key[][]
+	): void {
+		this.input.unregisterHTMLButton(element, ...keys);
 	}
 }
