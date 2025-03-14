@@ -5,6 +5,14 @@ const quart = (t: number): number => t * t * t * t;
 const quint = (t: number): number => t * t * t * t * t;
 const HALF_PI: number = Math.PI / 2;
 const sine = (t: number): number => -Math.cos(HALF_PI * t) + 1;
+const elastic = (t: number): number => {
+	const c4 = (2 * Math.PI) / 3;
+
+	if (t === 0) return 0;
+	return t === 1
+		? 1
+		: -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * c4);
+};
 const B_DENOM = 2.75;
 const B1: number = 1 / B_DENOM;
 const B2: number = 2 / B_DENOM;
@@ -55,6 +63,7 @@ export const Ease = Object.freeze({
 	quart,
 	quint,
 	sine,
+	elastic,
 	bounce,
 	circ,
 	expo,

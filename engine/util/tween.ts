@@ -58,7 +58,7 @@ abstract class Tweener implements ITweener {
 
 	// TODO(bret): Do smth different for this
 	get finished(): boolean {
-		return this.#elapsed >= this.#duration - 1;
+		return this.#elapsed >= this.#duration;
 	}
 	get delay(): number {
 		return this.#delay;
@@ -89,9 +89,9 @@ abstract class Tweener implements ITweener {
 			case TransType.Expo:
 				func = Ease.expo;
 				break;
-			// case TransType.Elastic:
-			// 	func = Ease.elastic;
-			// 	break;
+			case TransType.Elastic:
+				func = Ease.elastic;
+				break;
 			case TransType.Cubic:
 				func = Ease.cube;
 				break;

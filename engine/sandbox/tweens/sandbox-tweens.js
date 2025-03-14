@@ -1,6 +1,6 @@
 import { CL, Entity, Scene } from '../../bin/canvas-lord.js';
 import { init } from '../sandbox.js';
-import { EaseType, Tween } from '../../bin/util/tween.js';
+import { EaseType, TransType, Tween } from '../../bin/util/tween.js';
 import { Sprite } from '../../bin/graphic/sprite.js';
 import { Text } from '../../bin/graphic/text.js';
 import { Vec2 } from '../../bin/math/index.js';
@@ -116,32 +116,48 @@ class CardScene extends Scene {
 		const spacingX = 100;
 		const spacingY = 140;
 
+		const getDelay = (i) => 0.5 + i * (7 / 60);
+
 		for (let i = 0; i < 8; ++i) {
 			const card = new Card(hWidth, hHeight);
 
 			const x = hWidth + (i % 4) * spacingX - spacingX * 1.5;
 			const y = hHeight + Math.floor(i / 4) * spacingY - spacingY * 0.5;
-			const delay = 0.5 + i * (3 / 60) + Math.floor(i / 4) * 0.12;
+			const delay = getDelay(i); // + Math.floor(i / 4) * 0.08;
 
-			const duration = 0.5;
+			const duration = 0.7;
 			const scaleDur = duration - 0.2;
 
 			card.graphic.scale = 0.5;
 
-			// TODO(bret): Perfect opportunity to work on subtween
-			const tween = new Tween().setTrans(7);
+			const tween = new Tween().setTrans(TransType.Cubic);
+			tween.tweenProperty(card.graphic, 'alpha', 1, 0.3).from(0);
 
-			const subtween = new Tween().setParallel(true).setTrans(7);
-			subtween.tweenProperty(card.graphic, 'scale', 0.8, scaleDur);
+			const subtween = new Tween()
+				.setParallel(true)
+				.setTrans(TransType.Back);
+			subtween.tweenProperty(card.graphic, 'scale', 0.7, scaleDur);
 			subtween
-				.tweenProperty(card.graphic, 'angle', 0, duration)
-				.from(-180);
-			subtween.tweenProperty(card, 'x', x, duration);
+				.tweenProperty(card.graphic, 'angle', -7, duration)
+				.from(-180)
+				.setTrans(TransType.Linear);
+			subtween
+				.tweenProperty(card, 'x', x, duration)
+				.setTrans(TransType.Quart)
+				.setEase(EaseType.EaseIn);
 			subtween.tweenProperty(card, 'y', y, duration);
 
-			tween.tweenProperty(card.graphic, 'alpha', 1, 0.3).from(0);
 			tween.tweenSubtween(subtween).setDelay(delay);
-			tween.tweenProperty(card.graphic, 'scale', 1, 0.2);
+			tween
+				.tweenProperty(card.graphic, 'scale', 1.2, 1.2)
+				.setTrans(TransType.Elastic);
+
+			const rowOffset = Math.floor(i / 4) ? 1 : -1;
+			tween
+				.tweenProperty(card, 'x', 20 * rowOffset, 0.7)
+				.asRelative()
+				.setTrans(TransType.Back)
+				.setDelay(getDelay(7) - delay);
 			card.tween = tween;
 
 			this.addEntity(card);

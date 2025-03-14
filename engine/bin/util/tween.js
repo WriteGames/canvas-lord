@@ -38,7 +38,7 @@ class Tweener {
     }
     // TODO(bret): Do smth different for this
     get finished() {
-        return this.#elapsed >= this.#duration - 1;
+        return this.#elapsed >= this.#duration;
     }
     get delay() {
         return this.#delay;
@@ -67,9 +67,9 @@ class Tweener {
             case TransType.Expo:
                 func = Ease.expo;
                 break;
-            // case TransType.Elastic:
-            // 	func = Ease.elastic;
-            // 	break;
+            case TransType.Elastic:
+                func = Ease.elastic;
+                break;
             case TransType.Cubic:
                 func = Ease.cube;
                 break;
