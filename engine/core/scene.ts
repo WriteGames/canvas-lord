@@ -208,7 +208,10 @@ export class Scene implements Scene {
 
 		if (!this.shouldUpdate) return;
 
-		this.entities.inScene.forEach((entity) => entity.update(input));
+		this.entities.inScene.forEach((entity) => {
+			entity.updateTweens();
+			entity.update(input);
+		});
 		this.entities.inScene.forEach((entity) =>
 			entity.graphic?.update?.(input),
 		);

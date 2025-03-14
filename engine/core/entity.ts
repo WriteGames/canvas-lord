@@ -52,6 +52,7 @@ export interface IEntity {
 	addTween(tween: Tween): Tween;
 	removeTween(tween: Tween): Tween;
 
+	updateTweens(): void;
 	update: (input: Input) => void;
 
 	collideEntity(x: number, y: number): Entity | null;
@@ -190,12 +191,24 @@ export class Entity implements IEntity, IRenderable {
 		return c as ComponentProps<C>;
 	}
 
+	tweens: Tween[] = [];
+
 	addTween(tween: Tween): Tween {
-		//
+		if (tween.parent) throw new Error('Tween already has parent');
+		this.tweens.push(tween);
+		tween.parent = this;
+		return tween;
 	}
 
 	removeTween(tween: Tween): Tween {
-		//
+		const index = this.tweens.indexOf(tween);
+		if (index < 0) return tween;
+		this.tweens.splice(index, 1);
+		return tween;
+	}
+
+	updateTweens(): void {
+		this.tweens.forEach((t) => t.update());
 	}
 
 	update(_input: Input): void {

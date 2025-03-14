@@ -18,7 +18,11 @@ class TweenEntity extends Entity {
 
 	update(input) {
 		if (input.mousePressed(0)) {
-			// TODO(bret): this.tween.kill()
+			if (this.tween) {
+				this.removeTween(this.tween);
+				this.tween = null;
+			}
+
 			const tween = new Tween().setTrans(7).setEase(EaseType.EaseInOut);
 			const target = input.mouse.pos.clone();
 			tween.tweenProperty(this, 'pos', target, 1);
@@ -32,10 +36,8 @@ class TweenEntity extends Entity {
 				.asAngle();
 
 			this.tween = tween;
+			this.addTween(tween);
 		}
-
-		this.tween?.update();
-		if (this.tween?.finished) this.tween = null;
 	}
 }
 
@@ -98,8 +100,8 @@ class Card extends Entity {
 	}
 
 	update(input) {
-		this.tween?.update();
-		if (this.tween?.finished) this.tween = null;
+		// this.tween?.update();
+		// if (this.tween?.finished) this.tween = null;
 
 		if (input.keyPressed(Keys.Space)) {
 			if (this.tween) {
@@ -165,6 +167,8 @@ class CardScene extends Scene {
 				.setTrans(TransType.Back)
 				.setDelay(getDelay(7) - delay);
 			card.tween = tween;
+
+			card.addTween(tween);
 
 			this.addEntity(card);
 		}

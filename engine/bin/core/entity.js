@@ -95,11 +95,23 @@ export class Entity {
             return undefined;
         return c;
     }
+    tweens = [];
     addTween(tween) {
-        //
+        if (tween.parent)
+            throw new Error('Tween already has parent');
+        this.tweens.push(tween);
+        tween.parent = this;
+        return tween;
     }
     removeTween(tween) {
-        //
+        const index = this.tweens.indexOf(tween);
+        if (index < 0)
+            return tween;
+        this.tweens.splice(index, 1);
+        return tween;
+    }
+    updateTweens() {
+        this.tweens.forEach((t) => t.update());
     }
     update(_input) {
         //

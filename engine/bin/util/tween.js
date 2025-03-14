@@ -5,6 +5,7 @@ export class Tween {
     #step = 0;
     #ease = EaseType.EaseInOut;
     #trans = TransType.Linear;
+    parent;
     queue = [];
     #paused = false;
     #nextParallel = false;
@@ -69,8 +70,10 @@ export class Tween {
         if (this.current?.every((t) => t.finished)) {
             ++this.#step;
         }
-        if (this.current === null)
+        if (this.current === null) {
+            this.parent?.removeTween(this);
             return;
+        }
         if (this.#lastStep !== this.step) {
             this.current.forEach((t) => t.start());
             this.#lastStep = this.step;

@@ -1,3 +1,4 @@
+import type { Entity } from '../core/entity.ts';
 import {
 	EaseType,
 	type ITweener,
@@ -39,6 +40,8 @@ export class Tween implements ITween {
 	#step = 0;
 	#ease: EaseType = EaseType.EaseInOut;
 	#trans: TransType = TransType.Linear;
+
+	parent?: Entity;
 
 	queue: TweenGroup[] = [];
 
@@ -128,7 +131,10 @@ export class Tween implements ITween {
 			++this.#step;
 		}
 
-		if (this.current === null) return;
+		if (this.current === null) {
+			this.parent?.removeTween(this);
+			return;
+		}
 
 		if (this.#lastStep !== this.step) {
 			this.current.forEach((t) => t.start());
