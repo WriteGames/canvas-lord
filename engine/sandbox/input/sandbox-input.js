@@ -56,11 +56,6 @@ class MouseScene extends Scene {
 			const y = 32 + Math.floor(i / perRow) * 92;
 			this.addEntity(new CursorChanger(x, y, cursorStyle));
 		});
-
-		// lil' hack bc of Sprite.createRect taking a frame
-		window.requestAnimationFrame(() => {
-			this.engine.render();
-		});
 	}
 
 	update(...args) {

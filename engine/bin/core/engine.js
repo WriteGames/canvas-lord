@@ -45,15 +45,17 @@ export class Game {
     eventListeners;
     assetManager;
     debug;
-    // TODO(bret): onInit: Delegate<[]>; & others from Otter2d
+    onInit;
     onUpdate;
     onSceneBegin;
     onSceneEnd;
+    // TODO(bret): other delgates from Otter2d
     constructor(id, settings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
             throw new Error(`No canvas with id "${id}" was able to be found`);
         }
+        this.onInit = new Delegate();
         this.onUpdate = new Delegate();
         this.onSceneBegin = new Delegate();
         this.onSceneEnd = new Delegate();
@@ -100,6 +102,7 @@ export class Game {
         this.frameIndex = 0;
         this.frameRate = this.fps;
         this.assetManager = engineSettings.assetManager;
+        // TODO(bret): Move this to init?
         if (engineSettings.devMode)
             this.debug = new Debug(this);
         this.sceneStack = [];
@@ -129,47 +132,9 @@ export class Game {
             defineUnwritableProperty(canvas, '_scale', canvas._scaleX);
         };
         computeCanvasSize(this.canvas);
+        // TODO(bret): Add as option
         this.ctx.imageSmoothingEnabled = false;
-        // TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
-        CL.__setEngine(this);
-        this.render();
-        CL.__setEngine(undefined);
         this.input = new Input(this);
-        this._lastFrame = 0; // TODO: rename this - this is actually since last mainLoop() call
-        let deltaTime = 0;
-        const maxFrames = 5;
-        let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
-        this.mainLoop = (time) => {
-            const timeStep = 1e3 / this.fps;
-            this.frameRequestId = requestAnimationFrame(this.mainLoop);
-            const timeSinceLastFrame = time - this._lastFrame;
-            deltaTime += timeSinceLastFrame;
-            this._lastFrame = time;
-            deltaTime = Math.min(deltaTime, timeStep * maxFrames + 0.01);
-            const prevFrameIndex = this.frameIndex;
-            // should we send a pre-/post- message in case there are
-            // multiple updates that happen in a single while?
-            CL.__setEngine(this);
-            while (deltaTime >= timeStep) {
-                this.update();
-                this.input.update();
-                this.onUpdate.invoke();
-                deltaTime -= timeStep;
-                ++this.frameIndex;
-            }
-            CL.__setEngine(undefined);
-            if (prevFrameIndex !== this.frameIndex) {
-                const finishedAt = performance.now();
-                const { duration } = performance.measure('frame', {
-                    start: this._lastUpdate,
-                });
-                recentFramesSum += duration;
-                this.recentFrames.push(duration);
-                recentFramesSum -= this.recentFrames.shift() ?? 0;
-                this.frameRate = Math.round(1e3 / (recentFramesSum / this.recentFrames.length));
-                this._lastUpdate = finishedAt;
-            }
-        };
         this.eventListeners = [];
         window.addEventListener('resize', () => {
             computeCanvasSize(this.canvas);
@@ -179,7 +144,6 @@ export class Game {
         this.focusElement = this.wrapper;
         this.focusElement.addEventListener('focusin', () => this.onFocus(true));
         this.focusElement.addEventListener('focusout', () => this.onFocus(false));
-        this.updateGameLoopSettings(this.gameLoopSettings);
     }
     async load(assetManager) {
         return assetManager.loadAssets();
@@ -252,6 +216,58 @@ export class Game {
         };
         element.addEventListener(...eventListener.arguments);
         this.eventListeners.push(eventListener);
+    }
+    #init() {
+        this.onInit.invoke(this);
+    }
+    start() {
+        this.#init();
+        this._lastFrame = 0; // TODO: rename this - this is actually since last mainLoop() call
+        let deltaTime = 0;
+        const maxFrames = 5;
+        let recentFramesSum = this.recentFrames.reduce((a, v) => a + v, 0);
+        this.mainLoop = (time) => {
+            const timeStep = 1e3 / this.fps;
+            this.frameRequestId = requestAnimationFrame(this.mainLoop);
+            const timeSinceLastFrame = time - this._lastFrame;
+            deltaTime += timeSinceLastFrame;
+            this._lastFrame = time;
+            deltaTime = Math.min(deltaTime, timeStep * maxFrames + 0.01);
+            const prevFrameIndex = this.frameIndex;
+            // should we send a pre-/post- message in case there are
+            // multiple updates that happen in a single while?
+            CL.__setEngine(this);
+            while (deltaTime >= timeStep) {
+                this.update();
+                this.input.update();
+                this.onUpdate.invoke();
+                deltaTime -= timeStep;
+                ++this.frameIndex;
+            }
+            CL.__setEngine(undefined);
+            if (prevFrameIndex !== this.frameIndex) {
+                const finishedAt = performance.now();
+                const { duration } = performance.measure('frame', {
+                    start: this._lastUpdate,
+                });
+                recentFramesSum += duration;
+                this.recentFrames.push(duration);
+                recentFramesSum -= this.recentFrames.shift() ?? 0;
+                this.frameRate = Math.round(1e3 / (recentFramesSum / this.recentFrames.length));
+                this._lastUpdate = finishedAt;
+            }
+        };
+        this.updateGameLoopSettings(this.gameLoopSettings);
+        // TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
+        CL.__setEngine(this);
+        this.updateScenes();
+        this.update();
+        this.input.update();
+        // NOTE(bret): Hack for Sprite.createRect
+        window.requestAnimationFrame(() => {
+            this.render();
+        });
+        CL.__setEngine(undefined);
     }
     startMainLoop() {
         this._lastFrame = performance.now();

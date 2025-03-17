@@ -57,10 +57,8 @@ const startGame = (
 
 	const scene = new Scene(game, ...sceneArgs);
 	game.pushScene(scene);
-
-	game.render();
-
-	onStart?.(game);
+	if (onStart) game.onInit.add(onStart);
+	game.start();
 
 	return game;
 };
