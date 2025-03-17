@@ -260,9 +260,9 @@ export class Input {
                 const event = new KeyboardEvent('keydown', {
                     code: key,
                 });
+                this.engine.focusElement.focus();
                 this.onKeyDown(event);
             });
-            console.log('it be clicked');
             return false;
         };
         const upCallback = (e) => {
