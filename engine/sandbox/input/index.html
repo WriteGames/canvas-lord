@@ -5,8 +5,46 @@
 		<title>[Sandbox] Testing CL</title>
 		<meta name="color-scheme" content="dark light" />
 		<link rel="stylesheet" href="../css/sandbox.css" media="screen" />
+		<style>
+			.buttons {
+				display: flex;
+				justify-content: center;
+				margin-block: 1rem;
+				gap: 0.75rem;
+			}
+
+			.button {
+				align-content: center;
+				text-align: center;
+				background: red;
+				width: 2rem;
+				font-size: 1.25rem;
+				font-weight: 700;
+				font-family: sans-serif;
+				aspect-ratio: 1 / 1;
+				cursor: pointer;
+				user-select: none;
+				border: 2px solid transparent;
+				border-radius: 4px;
+			}
+
+			.button:hover {
+				border-color: yellow;
+			}
+
+			.button:active {
+				background: lime;
+				color: black;
+			}
+		</style>
 	</head>
 	<body>
+		<canvas id="button"></canvas>
+		<div class="buttons">
+			<div class="button" id="button-x">X</div>
+			<div class="button" id="button-z">Z</div>
+		</div>
+		<canvas id="mouse"></canvas>
 		<script type="module" src="sandbox-input.js"></script>
 	</body>
 </html>

@@ -16,6 +16,13 @@ interface Mouse {
 	_clicked: [InputStatus, InputStatus, InputStatus, InputStatus, InputStatus];
 }
 
+interface HTMLElementData {
+	element: HTMLElement;
+	downCallback: (e: MouseEvent | TouchEvent) => boolean;
+	upCallback: (e: MouseEvent | TouchEvent) => boolean;
+	keys: Key[];
+}
+
 // TODO(bret): Could be nice to do a custom binding, so:
 // AltLeft/AltRight also activate Alt
 // Digit1/Numpad1 also activate some "Generic1"
@@ -299,6 +306,92 @@ export class Input {
 				throw new Error(`"${key}" is not a valid KeyboardEvent code`);
 			return this._checkReleased(this.keys[key as Key]);
 		});
+	}
+
+	_findHTMLElement(element: string | HTMLElement): HTMLElement {
+		if (typeof element !== 'string') return element;
+
+		const foundElement = document.getElementById(element);
+		if (foundElement === null)
+			throw new Error(`Could not find element "${element}"`);
+		return foundElement;
+	}
+
+	htmlButtons: HTMLElementData[] = [];
+
+	registerHTMLButton(
+		element: string | HTMLElement,
+		...keys: Key[] | Key[][]
+	): void {
+		const _element = this._findHTMLElement(element);
+		const _keys = keys.flat();
+
+		_element.dataset.keys = _keys.join(',');
+
+		const downCallback = (e: MouseEvent | TouchEvent): boolean => {
+			if (e.target !== _element) return true;
+
+			e.preventDefault();
+			_keys.forEach((key) => {
+				const event = new KeyboardEvent('keydown', {
+					code: key,
+				});
+				this.engine.focusElement.focus();
+				this.onKeyDown(event);
+			});
+			return false;
+		};
+
+		const upCallback = (e: MouseEvent | TouchEvent): boolean => {
+			// if (e.target !== _element) return true;
+
+			e.preventDefault();
+			_keys.forEach((key) => {
+				const event = new KeyboardEvent('keyup', {
+					code: key,
+				});
+				this.onKeyUp(event);
+			});
+			return false;
+		};
+
+		_element.addEventListener('mousedown', downCallback);
+		_element.addEventListener('touchstart', downCallback);
+		window.addEventListener('mouseup', upCallback);
+		_element.addEventListener('touchend', upCallback);
+		_element.addEventListener('touchcancel', upCallback);
+
+		this.htmlButtons.push({
+			element: _element,
+			downCallback,
+			upCallback,
+			keys: _keys,
+		});
+	}
+
+	// TODO(bret): Make it so it conditionally unregisters keys
+	unregisterHTMLButton(
+		element: string | HTMLElement,
+		...keys: Key[] | Key[][]
+	): void {
+		const _element = this._findHTMLElement(element);
+		const _keys = keys.flat();
+
+		const data = this.htmlButtons.find(
+			({ element }) => element === _element,
+		);
+		if (!data) return;
+
+		const { downCallback, upCallback } = data;
+
+		_element.removeEventListener('mousedown', downCallback);
+		_element.removeEventListener('touchstart', downCallback);
+		window.addEventListener('mouseup', upCallback);
+		_element.removeEventListener('touchend', upCallback);
+		_element.removeEventListener('mouseleave', upCallback);
+		_element.removeEventListener('touchcancel', upCallback);
+
+		delete _element.dataset.keys;
 	}
 
 	clear(): void {

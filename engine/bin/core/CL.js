@@ -7,6 +7,9 @@ export class CL {
     constructor() {
         throw new Error('this is a static class');
     }
+    static get isEngineSet() {
+        return CL.#engine !== undefined;
+    }
     static get engine() {
         if (CL.#engine === undefined)
             throw new Error('CL.#engine is undefined');

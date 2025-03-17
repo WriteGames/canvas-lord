@@ -239,6 +239,71 @@ export class Input {
             return this._checkReleased(this.keys[key]);
         });
     }
+    _findHTMLElement(element) {
+        if (typeof element !== 'string')
+            return element;
+        const foundElement = document.getElementById(element);
+        if (foundElement === null)
+            throw new Error(`Could not find element "${element}"`);
+        return foundElement;
+    }
+    htmlButtons = [];
+    registerHTMLButton(element, ...keys) {
+        const _element = this._findHTMLElement(element);
+        const _keys = keys.flat();
+        _element.dataset.keys = _keys.join(',');
+        const downCallback = (e) => {
+            if (e.target !== _element)
+                return true;
+            e.preventDefault();
+            _keys.forEach((key) => {
+                const event = new KeyboardEvent('keydown', {
+                    code: key,
+                });
+                this.engine.focusElement.focus();
+                this.onKeyDown(event);
+            });
+            return false;
+        };
+        const upCallback = (e) => {
+            // if (e.target !== _element) return true;
+            e.preventDefault();
+            _keys.forEach((key) => {
+                const event = new KeyboardEvent('keyup', {
+                    code: key,
+                });
+                this.onKeyUp(event);
+            });
+            return false;
+        };
+        _element.addEventListener('mousedown', downCallback);
+        _element.addEventListener('touchstart', downCallback);
+        window.addEventListener('mouseup', upCallback);
+        _element.addEventListener('touchend', upCallback);
+        _element.addEventListener('touchcancel', upCallback);
+        this.htmlButtons.push({
+            element: _element,
+            downCallback,
+            upCallback,
+            keys: _keys,
+        });
+    }
+    // TODO(bret): Make it so it conditionally unregisters keys
+    unregisterHTMLButton(element, ...keys) {
+        const _element = this._findHTMLElement(element);
+        const _keys = keys.flat();
+        const data = this.htmlButtons.find(({ element }) => element === _element);
+        if (!data)
+            return;
+        const { downCallback, upCallback } = data;
+        _element.removeEventListener('mousedown', downCallback);
+        _element.removeEventListener('touchstart', downCallback);
+        window.addEventListener('mouseup', upCallback);
+        _element.removeEventListener('touchend', upCallback);
+        _element.removeEventListener('mouseleave', upCallback);
+        _element.removeEventListener('touchcancel', upCallback);
+        delete _element.dataset.keys;
+    }
     clear() {
         this.keys = _keysArr.reduce((acc, v) => {
             acc[v] = 0;

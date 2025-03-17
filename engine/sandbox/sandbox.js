@@ -57,16 +57,17 @@ const startGame = (
 
 	const scene = new Scene(game, ...sceneArgs);
 	game.pushScene(scene);
+	if (onStart) game.onInit.add(onStart);
+	game.start();
 
-	game.render();
-
-	onStart?.(game);
+	return game;
 };
 
-export const init = ({ games, assetSrc, assets }) => {
+export const init = ({ games, assetSrc, assets, onLoad }) => {
 	let loaded = false;
 	if (!assetSrc) {
-		games.forEach((game) => startGame(game));
+		const _games = games.map((game) => startGame(game));
+		onLoad(_games);
 		return {};
 	}
 
@@ -77,9 +78,8 @@ export const init = ({ games, assetSrc, assets }) => {
 		if (loaded) return;
 		loaded = true;
 
-		games.forEach((game) => {
-			startGame(game, assetManager);
-		});
+		const _games = games.map((game) => startGame(game, assetManager));
+		onLoad(_games);
 	});
 	assetManager.loadAssets();
 	return { assetManager };
