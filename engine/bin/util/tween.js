@@ -1,3 +1,4 @@
+import { Delegate } from "./delegate.js";
 import { EaseType, PropertyTweener, SubtweenTweener, TransType, } from "./tweener.js";
 export { EaseType, TransType } from "./tweener.js";
 export class Tween {
@@ -7,6 +8,7 @@ export class Tween {
     #trans = TransType.Linear;
     parent;
     queue = [];
+    onFinish = new Delegate();
     #paused = false;
     #nextParallel = false;
     #allParallel = false;
@@ -71,7 +73,7 @@ export class Tween {
             ++this.#step;
         }
         if (this.current === null) {
-            this.parent?.removeTween(this);
+            this.#finish();
             return;
         }
         if (this.#lastStep !== this.step) {
@@ -79,6 +81,15 @@ export class Tween {
             this.#lastStep = this.step;
         }
         this.current.forEach((t) => t.update());
+        if (this.current.every((t) => t.finished)) {
+            if (this.#step + 1 === this.queue.length) {
+                this.#finish();
+            }
+        }
+    }
+    #finish() {
+        this.parent?.removeTween(this);
+        this.onFinish.invoke();
     }
     pause() {
         this.#paused = true;

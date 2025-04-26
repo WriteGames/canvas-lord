@@ -14,6 +14,8 @@ export interface Tileset {
 	columns: number;
 	rows: number;
 
+	relative: boolean;
+	visible: boolean;
 	sprite: ImageAsset;
 	parent: GraphicParent | undefined;
 
@@ -32,6 +34,9 @@ export interface TilesetOptions {
 
 // TODO(bret): extend Graphic!!
 export class Tileset {
+	relative = true;
+	visible = true;
+
 	constructor(
 		sprite: ImageAsset,
 		width: number,
@@ -54,9 +59,9 @@ export class Tileset {
 			() => null,
 		);
 
-		this.startX = options.startX ?? 1;
-		this.startY = options.startY ?? 1;
-		this.separation = options.separation ?? 1;
+		this.startX = options.startX ?? 0;
+		this.startY = options.startY ?? 0;
+		this.separation = options.separation ?? 0;
 	}
 
 	setTile(x: number, y: number, tileX: number, tileY: number): void {
@@ -70,6 +75,8 @@ export class Tileset {
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
+		if (!this.visible) return;
+
 		const scale = 1;
 
 		const {
@@ -88,8 +95,8 @@ export class Tileset {
 
 		const [cameraX, cameraY] = camera;
 
-		const offsetX = this.parent?.x ?? 0;
-		const offsetY = this.parent?.y ?? 0;
+		const offsetX = (this.relative ? this.parent?.x : 0) ?? 0;
+		const offsetY = (this.relative ? this.parent?.y : 0) ?? 0;
 
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {

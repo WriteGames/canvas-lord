@@ -29,7 +29,7 @@ let color = 0;
 class EaseEntity extends Entity {
 	constructor(x, y, ease) {
 		super(x, y + 8);
-		if (ease) this.ease = FPEase[ease];
+		if (ease) this.ease = FPEase[ease] ?? EASEYBOY[ease];
 		else this.ease = (x) => x;
 
 		this.graphic = Sprite.createRect(16, 16, colors[color]);

@@ -1,4 +1,5 @@
 import type { Entity } from '../core/entity.ts';
+import { Delegate } from './delegate.ts';
 import {
 	EaseType,
 	type ITweener,
@@ -44,6 +45,8 @@ export class Tween implements ITween {
 	parent?: Entity;
 
 	queue: TweenGroup[] = [];
+
+	onFinish = new Delegate();
 
 	#paused = false;
 
@@ -132,7 +135,7 @@ export class Tween implements ITween {
 		}
 
 		if (this.current === null) {
-			this.parent?.removeTween(this);
+			this.#finish();
 			return;
 		}
 
@@ -142,6 +145,17 @@ export class Tween implements ITween {
 		}
 
 		this.current.forEach((t) => t.update());
+
+		if (this.current.every((t) => t.finished)) {
+			if (this.#step + 1 === this.queue.length) {
+				this.#finish();
+			}
+		}
+	}
+
+	#finish(): void {
+		this.parent?.removeTween(this);
+		this.onFinish.invoke();
 	}
 
 	pause(): void {

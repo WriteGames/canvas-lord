@@ -120,12 +120,18 @@ export class AnimatedSprite extends Graphic {
         }
     }
     render(ctx, camera = Vec2.zero) {
+        if (!this.visible)
+            return;
         const { frameId, frameW, frameH } = this;
         this.framesPerRow = Math.floor(this.imageSrc.width / frameW);
         const sourceX = (frameId % this.framesPerRow) * frameW;
         const sourceY = Math.floor(frameId / this.framesPerRow) * frameH;
-        const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-        const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+        let x = this.x - camera.x * this.scrollX;
+        let y = this.y - camera.y * this.scrollY;
+        if (this.relative) {
+            x += this.parent?.x ?? 0;
+            y += this.parent?.y ?? 0;
+        }
         Draw.image(ctx, this, x, y, sourceX, sourceY, frameW, frameH);
     }
     reset() {

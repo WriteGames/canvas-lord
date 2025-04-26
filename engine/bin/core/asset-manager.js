@@ -1,4 +1,5 @@
 /* Canvas Lord v0.5.3 */
+import { Delegate } from '../util/delegate.js';
 const isLoaded = (asset) => asset.loaded;
 export class AssetManager {
     constructor(prefix = '') {
@@ -6,7 +7,7 @@ export class AssetManager {
         this.audio = new Map();
         this.spritesLoaded = 0;
         this.audioFilesLoaded = 0;
-        this.onLoadCallbacks = [];
+        this.onLoad = new Delegate();
         this.prefix = prefix;
     }
     get progress() {
@@ -24,7 +25,7 @@ export class AssetManager {
         });
     }
     async loadAudio(src) {
-        const fullPath = `${this.prefix}${src}`;
+        const fullPath = src.startsWith('http') ? src : `${this.prefix}${src}`;
         await fetch(fullPath)
             .then((res) => res.arrayBuffer())
             .then((arrayBuffer) => Sfx.audioCtx.decodeAudioData(arrayBuffer))
@@ -49,7 +50,7 @@ export class AssetManager {
     }
     loadImage(src) {
         const image = new Image();
-        const fullPath = `${this.prefix}${src}`;
+        const fullPath = src.startsWith('http') ? src : `${this.prefix}${src}`;
         if (fullPath.startsWith('http') &&
             !fullPath.startsWith(location.origin)) {
             image.crossOrigin = 'Anonymous';
@@ -83,7 +84,7 @@ export class AssetManager {
     }
     emitOnLoad(src) {
         window.requestAnimationFrame(() => {
-            this.onLoadCallbacks.forEach((callback) => callback(src));
+            this.onLoad.invoke(src);
         });
     }
     reloadAssets() {
@@ -109,9 +110,6 @@ export class AssetManager {
     audioLoaded(_src) {
         ++this.audioFilesLoaded;
         this._checkAllAssetsLoaded();
-    }
-    onLoad(callback) {
-        this.onLoadCallbacks.push(callback);
     }
 }
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- static class yo

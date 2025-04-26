@@ -633,6 +633,9 @@ class EntityMethodCollisionScene extends Scene {
 		this.taggedEntity.collider.tag = colliderTag;
 		this.targetEntity = createEntity(300, 150);
 
+		this.doubleEntity = createEntity(200, 200);
+		this.doubleEntity.collider.tag = colliderTag;
+
 		this.mouseEntity = createEntity(0, 0);
 
 		this.collidingText = this.addGraphic(
@@ -643,6 +646,13 @@ class EntityMethodCollisionScene extends Scene {
 		).graphic;
 		this.collidingEntityText = this.addGraphic(
 			new Text('Colliding with target entity: false', 20, 300 + 100),
+		).graphic;
+		this.collidingSpecialEntitiesText = this.addGraphic(
+			new Text(
+				'Colliding with target or double entity: false',
+				20,
+				300 + 150,
+			),
 		).graphic;
 
 		// lil' hack
@@ -670,6 +680,13 @@ class EntityMethodCollisionScene extends Scene {
 		transform(
 			this.collidingEntityText,
 			this.mouseEntity.collide(x, y, [this.targetEntity]),
+		);
+		transform(
+			this.collidingSpecialEntitiesText,
+			this.mouseEntity.collide(x, y, [
+				this.targetEntity,
+				this.doubleEntity,
+			]),
 		);
 	}
 

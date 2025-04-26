@@ -75,22 +75,27 @@ export interface IEngine {
 	debug?: Debug;
 
 	// delegates
-	onUpdate: Delegate<[]>;
-	onSceneBegin: Delegate<[Scene]>;
-	onSceneEnd: Delegate<[Scene]>;
+	onInit: Delegate<(game: Game) => void>;
+	onUpdate: Delegate;
+	onSceneBegin: Delegate<(scene: Scene) => void>;
+	onSceneEnd: Delegate<(scene: Scene) => void>;
 
 	// getters & setters
 	readonly width: number;
+	readonly halfWidth: number;
 	readonly height: number;
+	readonly halfHeight: number;
 	readonly currentScenes: Scene[] | undefined;
 
 	// methods
 	load(assetManager: AssetManager): void;
+	start(): void;
 	updateGameLoopSettings(newGameLoopSettings: GameLoopSettings): void;
 	addEventListener(
 		element: Element | Window,
 		...rest: CachedEventListener['arguments']
 	): void;
+	clearScenes(): void;
 	pushScene(scene: Scene): void;
 	pushScenes(...scenes: Scene[]): void;
 	popScenes(): Scene[] | undefined;
@@ -162,10 +167,10 @@ export class Game implements Engine {
 	assetManager?: AssetManager | undefined;
 	debug?: Debug | undefined;
 
-	onInit: Delegate<[Game]>;
-	onUpdate: Delegate<[]>;
-	onSceneBegin: Delegate<[Scene]>;
-	onSceneEnd: Delegate<[Scene]>;
+	onInit: Delegate<(game: Game) => void>;
+	onUpdate: Delegate;
+	onSceneBegin: Delegate<(scene: Scene) => void>;
+	onSceneEnd: Delegate<(scene: Scene) => void>;
 	// TODO(bret): other delgates from Otter2d
 
 	constructor(id: string, settings?: InitialSettings) {
@@ -322,8 +327,16 @@ export class Game implements Engine {
 		return this.canvas.width;
 	}
 
+	get halfWidth(): number {
+		return this.canvas.width / 2;
+	}
+
 	get height(): number {
 		return this.canvas.height;
+	}
+
+	get halfHeight(): number {
+		return this.canvas.height / 2;
 	}
 
 	get currentScenes(): Scene[] | undefined {
@@ -434,15 +447,15 @@ export class Game implements Engine {
 			const prevFrameIndex = this.frameIndex;
 			// should we send a pre-/post- message in case there are
 			// multiple updates that happen in a single while?
-			CL.__setEngine(this);
-			while (deltaTime >= timeStep) {
-				this.update();
-				this.input.update();
-				this.onUpdate.invoke();
-				deltaTime -= timeStep;
-				++this.frameIndex;
-			}
-			CL.__setEngine(undefined);
+			CL.useEngine(this, () => {
+				while (deltaTime >= timeStep) {
+					this.update();
+					this.input.update();
+					this.onUpdate.invoke();
+					deltaTime -= timeStep;
+					++this.frameIndex;
+				}
+			});
 
 			if (prevFrameIndex !== this.frameIndex) {
 				const finishedAt = performance.now();
@@ -462,15 +475,15 @@ export class Game implements Engine {
 		this.updateGameLoopSettings(this.gameLoopSettings);
 
 		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
-		CL.__setEngine(this);
-		this.updateScenes();
-		this.update();
-		this.input.update();
-		// NOTE(bret): Hack for Sprite.createRect
-		window.requestAnimationFrame(() => {
-			this.render();
+		CL.useEngine(this, () => {
+			this.updateScenes();
+			this.update();
+			this.input.update();
+			// NOTE(bret): Hack for Sprite.createRect
+			window.requestAnimationFrame(() => {
+				this.render();
+			});
 		});
-		CL.__setEngine(undefined);
 	}
 
 	startMainLoop(): void {
@@ -509,6 +522,12 @@ export class Game implements Engine {
 		this.addEventListener(this.focusElement, 'keyup', onKeyUp, false);
 	}
 
+	clearScenes(): void {
+		CL.useEngine(this, () => {
+			while (this.currentScenes) this.popScenes();
+		});
+	}
+
 	killMainLoop(): void {
 		cancelAnimationFrame(this.frameRequestId);
 		this.input.clear();
@@ -540,9 +559,9 @@ export class Game implements Engine {
 		thisArg?: unknown,
 	): void {
 		scenes?.forEach((scene, ...args) => {
-			CL.__setScene(scene);
-			callbackfn(scene, ...args);
-			CL.__setScene(undefined);
+			CL.useScene(scene, () => {
+				callbackfn(scene, ...args);
+			});
 		}, thisArg);
 	}
 
@@ -558,9 +577,10 @@ export class Game implements Engine {
 		this.sceneStack.push(scenes);
 
 		this._forEachScene(scenes, (scene) => {
-			scene.engine = this;
-			scene.updateLists();
-			CL.__setScene(undefined);
+			CL.useScene(scene, () => {
+				scene.initInternal(this);
+				scene.updateLists();
+			});
 		});
 	}
 
@@ -646,19 +666,16 @@ export class Game implements Engine {
 	}
 
 	render(): void {
-		const engine = CL.isEngineSet ? CL.engine : undefined;
-		CL.__setEngine(this);
+		CL.useEngine(this, () => {
+			const { ctx } = this;
 
-		const { ctx } = this;
+			ctx.fillStyle = this.backgroundColor;
+			ctx.fillRect(0, 0, this.width, this.height);
 
-		ctx.fillStyle = this.backgroundColor;
-		ctx.fillRect(0, 0, this.width, this.height);
-
-		const { debug } = this;
-		this.renderScenes(ctx, []);
-		if (debug?.enabled) debug.render(ctx);
-
-		CL.__setEngine(engine);
+			const { debug } = this;
+			this.renderScenes(ctx, []);
+			if (debug?.enabled) debug.render(ctx);
+		});
 	}
 
 	registerHTMLButton(

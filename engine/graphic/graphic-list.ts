@@ -50,12 +50,18 @@ export class GraphicList extends Graphic {
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
+		if (!this.visible) return;
+
 		// TODO(bret): Set up transformations here!
 		this.scrollX = this.scrollY = 0;
 		const preX = this.x;
 		const preY = this.y;
-		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+		let x = this.x - camera.x * this.scrollX;
+		let y = this.y - camera.y * this.scrollY;
+		if (this.relative) {
+			x += this.parent?.x ?? 0;
+			y += this.parent?.y ?? 0;
+		}
 		this.x = x;
 		this.y = y;
 		moveCanvas(() => {

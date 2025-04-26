@@ -56,8 +56,8 @@ export class Sprite extends Graphic implements ISpriteLike {
 		y = 0,
 		sourceX = 0,
 		sourceY = 0,
-		sourceW = undefined,
-		sourceH = undefined,
+		sourceW: number | undefined = undefined,
+		sourceH: number | undefined = undefined,
 	) {
 		super(x, y);
 		this.asset = asset;
@@ -76,6 +76,8 @@ export class Sprite extends Graphic implements ISpriteLike {
 		// TODO(bret): use generateCanvasAndCtx
 		// const { canvas, ctx } = generateCanvasAndCtx(width, height);
 		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
 		const ctx = canvas.getContext('2d');
 		if (!ctx) throw new Error('[Sprite.createRect()] getContext() failed');
 
@@ -107,10 +109,22 @@ export class Sprite extends Graphic implements ISpriteLike {
 	}
 
 	static createRect(width: number, height: number, color: string): Sprite {
-		const fileName = [width, height, color].join('-');
+		const fileName = ['createRect', width, height, color].join('-');
 		return Sprite.createImage(width, height, fileName, (ctx: Ctx) => {
 			ctx.fillStyle = color;
 			ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		});
+	}
+
+	static createCircle(size: number, color: string): Sprite {
+		const fileName = ['createCircle', size, color].join('-');
+		const halfSize = size * 0.5;
+		return Sprite.createImage(size, size, fileName, (ctx: Ctx) => {
+			ctx.translate(halfSize, halfSize);
+			ctx.fillStyle = color;
+			ctx.beginPath();
+			ctx.arc(0, 0, halfSize, 0, Math.PI * 2);
+			ctx.fill();
 		});
 	}
 
@@ -120,14 +134,20 @@ export class Sprite extends Graphic implements ISpriteLike {
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
+		if (!this.visible) return;
+
 		const {
 			sourceX,
 			sourceY,
 			sourceW = this.width,
 			sourceH = this.height,
 		} = this;
-		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+		let x = this.x - camera.x * this.scrollX;
+		let y = this.y - camera.y * this.scrollY;
+		if (this.relative) {
+			x += this.parent?.x ?? 0;
+			y += this.parent?.y ?? 0;
+		}
 		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
 

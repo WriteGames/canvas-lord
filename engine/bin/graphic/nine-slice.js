@@ -83,9 +83,16 @@ export class NineSlice extends Graphic {
         this.patternC = patternC;
     }
     // TODO: hook up moveCanvas
+    // TODO(bret): Set up relative & parent x/y
     render(ctx, camera = Vec2.zero) {
-        const x = this.x - camera.x * this.scrollX;
-        const y = this.y - camera.y * this.scrollY;
+        if (!this.visible)
+            return;
+        let x = this.x - camera.x * this.scrollX;
+        let y = this.y - camera.y * this.scrollY;
+        if (this.relative) {
+            x += this.parent?.x ?? 0;
+            y += this.parent?.y ?? 0;
+        }
         const { tileW: w, tileH: h } = this;
         const right = x + this.width - w;
         const bottom = y + this.height - h;
@@ -95,6 +102,7 @@ export class NineSlice extends Graphic {
         Draw.image(ctx, this, x, bottom, 0, h * 2, w, h); // bottom left
         Draw.image(ctx, this, right, y, w * 2, 0, w, h); // top right
         Draw.image(ctx, this, right, bottom, w * 2, h * 2, w, h); // bottom right
+        // TODO(bret): Hook up color :O
         ctx.save();
         ctx.fillStyle = this.patternT; // top
         ctx.translate(x + w, y);

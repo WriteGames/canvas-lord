@@ -1,22 +1,30 @@
+export type GetDelegateCallback<T> = T extends Delegate<infer C> ? C : never;
+export type GetDelegateParameters<T> = T extends Delegate<infer C>
+	? Parameters<C>
+	: never;
+export type GetDelegateReturnType<T> = T extends Delegate<infer C>
+	? ReturnType<C>
+	: never;
+
 export class Delegate<
-	T extends unknown[],
-	C extends (...args: T) => void = (...args: T) => void,
+	T extends (...args: P) => void = () => void,
+	P extends [] = Parameters<T>,
 > {
-	#callbacks: C[];
+	#callbacks: T[];
 
 	constructor() {
 		this.#callbacks = [];
 	}
 
-	invoke(...args: T): void {
+	invoke(...args: P): void {
 		this.#callbacks.forEach((callback) => callback(...args));
 	}
 
-	add(callback: C): void {
+	add(callback: T): void {
 		this.#callbacks.push(callback);
 	}
 
-	remove(callback: C): void {
+	remove(callback: T): void {
 		const index = this.#callbacks.indexOf(callback);
 		if (index < 0) return;
 		this.#callbacks.splice(index, 1);

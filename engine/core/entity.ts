@@ -25,7 +25,7 @@ type ColliderType = ColliderTag | ColliderTag[] | Entity | Entity[];
 
 type ComponentMap = Map<IEntityComponentType, RawComponent>;
 
-export interface IEntity {
+export interface IEntity<TScene extends Scene = Scene> {
 	x: number;
 	y: number;
 	pos: Vec2;
@@ -33,18 +33,19 @@ export interface IEntity {
 	width: number;
 	h: number;
 	height: number;
-	scene: Scene;
+	scene: TScene;
 	graphic: Graphic | undefined;
 	collider: Collider | undefined;
 	components: ComponentMap;
 	visible: boolean;
+	colliderVisible: boolean;
 
-	onAdded: Delegate<[]>;
-	onPreUpdate: Delegate<[Input]>;
-	onUpdate: Delegate<[Input]>;
-	onPostUpdate: Delegate<[Input]>;
-	onRemoved: Delegate<[]>;
-	onRender: Delegate<[Ctx, Camera]>;
+	onAdded: Delegate;
+	onPreUpdate: Delegate<(input: Input) => void>;
+	onUpdate: Delegate<(input: Input) => void>;
+	onPostUpdate: Delegate<(input: Input) => void>;
+	onRemoved: Delegate;
+	onRender: Delegate<(ctx: Ctx, camera: Camera) => void>;
 
 	setPos(x: number, y: number): void;
 	setPos(pos: Vec2): void;
@@ -90,22 +91,26 @@ export interface IEntity {
 // TODO(bret): hook this up
 const _mouseCollider = new PointCollider();
 
-export class Entity implements IEntity, IRenderable {
-	scene!: Scene; // NOTE: set by scene
+export class Entity<TScene extends Scene = Scene>
+	implements IEntity<TScene>, IRenderable
+{
+	#scene!: TScene; // NOTE: set by scene
 	components: ComponentMap = new Map();
 	depth = 0;
 	#collider: Collider | undefined = undefined;
 	visible = true;
+	colliderVisible = false;
 	#graphic: Graphic | undefined = undefined;
+	#graphics: Graphic[] = [];
 
 	// TODO(bret): below
-	onAdded = new Delegate<[]>();
-	onPreUpdate = new Delegate<[Input]>();
-	onUpdate = new Delegate<[Input]>();
-	onPostUpdate = new Delegate<[Input]>();
+	onAdded = new Delegate();
+	onPreUpdate = new Delegate<(input: Input) => void>();
+	onUpdate = new Delegate<(input: Input) => void>();
+	onPostUpdate = new Delegate<(input: Input) => void>();
 	// TODO(bret): below
-	onRemoved = new Delegate<[]>();
-	onRender = new Delegate<[Ctx, Camera]>();
+	onRemoved = new Delegate();
+	onRender = new Delegate<(ctx: Ctx, camera: Camera) => void>();
 
 	get x(): number {
 		return this.component(Components.pos2D)![0];
@@ -175,10 +180,20 @@ export class Entity implements IEntity, IRenderable {
 		this.#collider?.assignParent(this);
 	}
 
-	constructor(x = 0, y = 0) {
+	get scene(): TScene {
+		return this.#scene;
+	}
+
+	z__setScene(value: TScene): void {
+		this.#scene = value;
+	}
+
+	constructor(x = 0, y = 0, graphic?: Graphic, collider?: Collider) {
 		this.addComponent(Components.pos2D);
 		this.x = x;
 		this.y = y;
+		this.graphic = graphic;
+		this.collider = collider;
 	}
 
 	setPos(x: number, y: number): void;
@@ -211,6 +226,53 @@ export class Entity implements IEntity, IRenderable {
 		return c as ComponentProps<C>;
 	}
 
+	resetComponent<C extends IEntityComponentType>(
+		component: C,
+	): ReturnType<typeof this.component<C>> {
+		if (!this.components.has(component)) return undefined;
+
+		// TODO(bret): We might want to be smarter about this and not create a new object each time
+		this.components.set(component, Components.copyObject(component).data);
+		return this.component(component);
+	}
+
+	removeComponent<C extends IEntityComponentType>(
+		component: C,
+	): ReturnType<typeof this.component<C>> {
+		if (!this.components.has(component)) return undefined;
+
+		const comp = this.component(component);
+		this.components.delete(component);
+		return comp;
+	}
+
+	addGraphic<T extends Graphic>(graphic: T): T {
+		this.#graphics.push(graphic);
+		graphic.parent = this;
+		return graphic;
+	}
+
+	addGraphics<T extends Graphic[]>(graphics: T): T {
+		graphics.forEach((g) => this.addGraphic(g));
+		return graphics;
+	}
+
+	removeGraphic<T extends Graphic>(graphic: T): T {
+		const index = this.#graphics.indexOf(graphic);
+		if (index < 0) return graphic;
+		this.#graphics.splice(index, 1);
+		return graphic;
+	}
+
+	removeGraphics<T extends Graphic[]>(graphics: T): T {
+		graphics.forEach((g) => this.removeGraphic(g));
+		return graphics;
+	}
+
+	getScene<T extends TScene>(): T {
+		return this.#scene as T;
+	}
+
 	tweens: Tween[] = [];
 
 	addTween(tween: Tween): Tween {
@@ -233,6 +295,14 @@ export class Entity implements IEntity, IRenderable {
 
 	updateTweens(): void {
 		this.tweens.forEach((t) => t.update());
+	}
+
+	addedInternal(): void {
+		this.added();
+	}
+
+	added(): void {
+		//
 	}
 
 	preUpdateInternal(input: Input): void {
@@ -265,13 +335,19 @@ export class Entity implements IEntity, IRenderable {
 		//
 	}
 
-	render(ctx: Ctx, camera: Camera): void {
+	renderInternal(ctx: Ctx, camera: Camera): void {
 		// TODO(bret): .visible should probably be on the Graphic, not the Entity itself
-		if (this.visible) {
-			this.#graphic?.render(ctx, camera);
-		}
+		if (!this.visible) return;
 
+		this.#graphic?.render(ctx, camera);
+		this.#graphics.forEach((g) => g.render(ctx, camera));
+		this.render(ctx, camera);
+		if (this.colliderVisible) this.renderCollider(ctx, camera);
 		this.onRender.invoke(ctx, camera);
+	}
+
+	render(_ctx: Ctx, _camera: Camera): void {
+		//
 	}
 
 	renderCollider(ctx: Ctx, camera: Camera = Vec2.zero): void {
@@ -280,12 +356,12 @@ export class Entity implements IEntity, IRenderable {
 		this.collider.render(ctx, -camera.x, -camera.y);
 	}
 
-	#collide(
+	#collide<T extends Entity>(
 		x: number,
 		y: number,
 		match: ColliderType | undefined,
 		earlyOut: boolean,
-	): Entity[] {
+	): T[] {
 		if (!this.collider) return [];
 
 		const _x = this.x;
@@ -293,10 +369,13 @@ export class Entity implements IEntity, IRenderable {
 		this.x = x;
 		this.y = y;
 
-		let entities: Entity[] = this.scene.entities.inScene;
+		let entities: Entity[] = this.#scene.entities.inScene;
 		let tags: ColliderTag[] = [];
 
 		switch (true) {
+			case match === undefined:
+				break;
+
 			case match instanceof Entity: {
 				entities = [match];
 				break;
@@ -317,22 +396,26 @@ export class Entity implements IEntity, IRenderable {
 			}
 
 			default:
-				throw new Error('unknown error');
+				console.log(match);
+				throw new Error('unknown error!!');
 		}
 
 		const n = entities.length;
-		const collide: Entity[] = [];
+		const collide: T[] = [];
 		for (let i = 0; i < n; ++i) {
 			const e = entities[i];
 			if (e === this) continue;
 			if (!e.collider?.collidable) continue;
-			if (e.collider.tag && !tags.includes(e.collider.tag)) continue;
+			if (tags.length > 0) {
+				if (!e.collider.tag) continue;
+				if (!tags.includes(e.collider.tag)) continue;
+			}
 
 			const collision = Collide.collide(this.collider, e.collider);
 			const result = collision ? e : null;
 			if (result === null) continue;
 
-			collide.push(result);
+			collide.push(result as T);
 			if (earlyOut) break;
 		}
 
@@ -342,13 +425,25 @@ export class Entity implements IEntity, IRenderable {
 		return collide;
 	}
 
-	collideEntity(x: number, y: number): Entity;
-	collideEntity(x: number, y: number, tag?: ColliderTag): Entity;
-	collideEntity(x: number, y: number, tags: ColliderTag[]): Entity;
-	collideEntity(x: number, y: number, entity: Entity): Entity;
-	collideEntity(x: number, y: number, entities: Entity[]): Entity;
-	collideEntity(x: number, y: number, match?: unknown): Entity | null {
-		return this.#collide(x, y, match as ColliderType, true)[0] ?? null;
+	collideEntity<T extends Entity>(x: number, y: number): T;
+	collideEntity<T extends Entity>(x: number, y: number, tag?: ColliderTag): T;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		tags: ColliderTag[],
+	): T;
+	collideEntity<T extends Entity>(x: number, y: number, entity: Entity): T;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		entities: Entity[],
+	): T;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		match?: unknown,
+	): T | null {
+		return this.#collide<T>(x, y, match as ColliderType, true)[0] ?? null;
 	}
 
 	collideEntities(x: number, y: number): Entity[];
@@ -369,13 +464,15 @@ export class Entity implements IEntity, IRenderable {
 		return this.#collide(x, y, match as ColliderType, true).length > 0;
 	}
 
-	collideMouse(x: number, y: number): boolean {
+	collideMouse(x: number, y: number, cameraRelative = true): boolean {
 		if (!this.collider) return false;
 
-		const { input } = this.scene.engine;
+		const { input } = this.#scene.engine;
 
-		const mouseX = input.mouse.x + this.scene.camera.x;
-		const mouseY = input.mouse.y + this.scene.camera.y;
+		const mouseX =
+			input.mouse.x + (cameraRelative ? this.#scene.camera.x : 0);
+		const mouseY =
+			input.mouse.y + (cameraRelative ? this.#scene.camera.y : 0);
 
 		const _x = this.x;
 		const _y = this.y;

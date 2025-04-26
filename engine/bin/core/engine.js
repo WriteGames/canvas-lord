@@ -151,8 +151,14 @@ export class Game {
     get width() {
         return this.canvas.width;
     }
+    get halfWidth() {
+        return this.canvas.width / 2;
+    }
     get height() {
         return this.canvas.height;
+    }
+    get halfHeight() {
+        return this.canvas.height / 2;
     }
     get currentScenes() {
         return this.sceneStack.at(-1);
@@ -236,15 +242,15 @@ export class Game {
             const prevFrameIndex = this.frameIndex;
             // should we send a pre-/post- message in case there are
             // multiple updates that happen in a single while?
-            CL.__setEngine(this);
-            while (deltaTime >= timeStep) {
-                this.update();
-                this.input.update();
-                this.onUpdate.invoke();
-                deltaTime -= timeStep;
-                ++this.frameIndex;
-            }
-            CL.__setEngine(undefined);
+            CL.useEngine(this, () => {
+                while (deltaTime >= timeStep) {
+                    this.update();
+                    this.input.update();
+                    this.onUpdate.invoke();
+                    deltaTime -= timeStep;
+                    ++this.frameIndex;
+                }
+            });
             if (prevFrameIndex !== this.frameIndex) {
                 const finishedAt = performance.now();
                 const { duration } = performance.measure('frame', {
@@ -259,15 +265,15 @@ export class Game {
         };
         this.updateGameLoopSettings(this.gameLoopSettings);
         // TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
-        CL.__setEngine(this);
-        this.updateScenes();
-        this.update();
-        this.input.update();
-        // NOTE(bret): Hack for Sprite.createRect
-        window.requestAnimationFrame(() => {
-            this.render();
+        CL.useEngine(this, () => {
+            this.updateScenes();
+            this.update();
+            this.input.update();
+            // NOTE(bret): Hack for Sprite.createRect
+            window.requestAnimationFrame(() => {
+                this.render();
+            });
         });
-        CL.__setEngine(undefined);
     }
     startMainLoop() {
         this._lastFrame = performance.now();
@@ -295,6 +301,12 @@ export class Game {
         this.addEventListener(this.focusElement, 'keydown', onKeyDown, false);
         this.addEventListener(this.focusElement, 'keyup', onKeyUp, false);
     }
+    clearScenes() {
+        CL.useEngine(this, () => {
+            while (this.currentScenes)
+                this.popScenes();
+        });
+    }
     killMainLoop() {
         cancelAnimationFrame(this.frameRequestId);
         this.input.clear();
@@ -321,9 +333,9 @@ export class Game {
     }
     _forEachScene(scenes, callbackfn, thisArg) {
         scenes?.forEach((scene, ...args) => {
-            CL.__setScene(scene);
-            callbackfn(scene, ...args);
-            CL.__setScene(undefined);
+            CL.useScene(scene, () => {
+                callbackfn(scene, ...args);
+            });
         }, thisArg);
     }
     pushScene(scene) {
@@ -335,9 +347,10 @@ export class Game {
         });
         this.sceneStack.push(scenes);
         this._forEachScene(scenes, (scene) => {
-            scene.engine = this;
-            scene.updateLists();
-            CL.__setScene(undefined);
+            CL.useScene(scene, () => {
+                scene.initInternal(this);
+                scene.updateLists();
+            });
         });
     }
     popScenes() {
@@ -411,16 +424,15 @@ export class Game {
         }
     }
     render() {
-        const engine = CL.isEngineSet ? CL.engine : undefined;
-        CL.__setEngine(this);
-        const { ctx } = this;
-        ctx.fillStyle = this.backgroundColor;
-        ctx.fillRect(0, 0, this.width, this.height);
-        const { debug } = this;
-        this.renderScenes(ctx, []);
-        if (debug?.enabled)
-            debug.render(ctx);
-        CL.__setEngine(engine);
+        CL.useEngine(this, () => {
+            const { ctx } = this;
+            ctx.fillStyle = this.backgroundColor;
+            ctx.fillRect(0, 0, this.width, this.height);
+            const { debug } = this;
+            this.renderScenes(ctx, []);
+            if (debug?.enabled)
+                debug.render(ctx);
+        });
     }
     registerHTMLButton(element, ...keys) {
         this.input.registerHTMLButton(element, ...keys);

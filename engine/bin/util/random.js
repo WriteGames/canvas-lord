@@ -35,4 +35,26 @@ export class Random {
         return items[this.int(items.length)];
     }
 }
+const defaultRandom = new Random();
+// Array prototype fun :~)
+if (typeof Array.prototype.shuffle === 'undefined') {
+    Array.prototype.shuffle = function shuffle(random = defaultRandom) {
+        let m = this.length;
+        let t;
+        let i;
+        while (m) {
+            i = random.int(m--);
+            t = this[m];
+            this[m] = this[i];
+            this[i] = t;
+        }
+        return this;
+    };
+}
+if (typeof Array.prototype.toShuffled === 'undefined') {
+    Array.prototype.toShuffled = function toShuffle(random = defaultRandom) {
+        const newArr = [...this];
+        return newArr.shuffle(random);
+    };
+}
 //# sourceMappingURL=random.js.map

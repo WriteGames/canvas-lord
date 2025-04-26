@@ -21,7 +21,6 @@ import { Delegate } from '../util/delegate.js';
 // it would increment, well, every frame :)
 // TODO: should there be one in Game as well?
 export interface Scene {
-	engine: Engine;
 	backgroundColor?: CSSColor;
 	entities: {
 		addQueue: Entity[];
@@ -46,19 +45,29 @@ export interface Scene {
 	canvas: Canvas;
 	ctx: Ctx;
 
-	onPreUpdate: Delegate<[Input]>;
-	onUpdate: Delegate<[Input]>;
-	onPostUpdate: Delegate<[Input]>;
-	onRender: Delegate<[Ctx]>;
-	onBegin: Delegate<[]>;
-	onEnd: Delegate<[]>;
-	onResume: Delegate<[]>;
-	onPause: Delegate<[]>;
+	onPreUpdate: Delegate<(input: Input) => void>;
+	onUpdate: Delegate<(input: Input) => void>;
+	onPostUpdate: Delegate<(input: Input) => void>;
+	onRender: Delegate<(ctx: Ctx) => void>;
+	onInit: Delegate;
+	onBegin: Delegate;
+	onEnd: Delegate;
+	onResume: Delegate;
+	onPause: Delegate;
+
+	render(ctx: Ctx, camera: Camera): void;
 }
 
 export class Scene implements Scene {
-	constructor(engine: Engine) {
-		this.engine = engine;
+	#engine!: Engine;
+
+	get engine(): Engine {
+		return this.#engine;
+	}
+
+	constructor(engine?: Engine) {
+		// TODO(bret): this is depreciated, engine now gets set in initInternal()
+		if (engine) this.#engine = engine;
 
 		this.componentSystemMap = new Map();
 
@@ -91,6 +100,7 @@ export class Scene implements Scene {
 		this.onUpdate = new Delegate();
 		this.onPostUpdate = new Delegate();
 		this.onRender = new Delegate();
+		this.onInit = new Delegate();
 		this.onBegin = new Delegate();
 		this.onEnd = new Delegate();
 		this.onResume = new Delegate();
@@ -112,6 +122,18 @@ export class Scene implements Scene {
 			this.canvas = canvas;
 			this.ctx = ctx;
 		}
+	}
+
+	initInternal(engine: Engine): void {
+		this.#engine = engine;
+
+		this.onInit.invoke();
+
+		this.init();
+	}
+
+	init(): void {
+		//
 	}
 
 	beginInternal(): void {
@@ -164,7 +186,7 @@ export class Scene implements Scene {
 	}
 
 	addEntity<T extends Entity>(entity: T, renderable = true): T {
-		entity.scene = this;
+		entity.z__setScene(this);
 		this.entities.addQueue.push(entity);
 		if (renderable) this.addRenderable(entity);
 		return entity;
@@ -182,6 +204,7 @@ export class Scene implements Scene {
 			const e = newEntities[i];
 			if (this.entities.inScene.includes(e)) continue;
 			this.entities.inScene.push(e);
+			e.addedInternal();
 			e.onAdded.invoke();
 		}
 	}
@@ -329,8 +352,9 @@ export class Scene implements Scene {
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
 		}
 
+		// TODO(bret): Fix how render/renderInternal works for renderables
 		this.renderables.inScene.forEach((entity) =>
-			entity.render(ctx, camera),
+			(entity as unknown as Entity).renderInternal(ctx, camera),
 		);
 
 		// const width = 2;
@@ -354,7 +378,7 @@ export class Scene implements Scene {
 			});
 		});
 
-		this.render(ctx);
+		this.render(ctx, camera);
 
 		if (ctx !== gameCtx) {
 			const [x, y] = this.screenPos;
@@ -362,7 +386,7 @@ export class Scene implements Scene {
 		}
 	}
 
-	render(_ctx: Ctx): void {
+	render(_ctx: Ctx, _camera: Camera): void {
 		//
 	}
 }

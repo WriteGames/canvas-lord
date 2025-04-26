@@ -2,6 +2,8 @@
 import { Vec2 } from '../math/index.js';
 // TODO(bret): extend Graphic!!
 export class Tileset {
+    relative = true;
+    visible = true;
     constructor(sprite, width, height, tileW, tileH, options = {}) {
         this.width = width;
         this.height = height;
@@ -11,9 +13,9 @@ export class Tileset {
         this.rows = Math.ceil(height / tileH);
         this.sprite = sprite;
         this.data = Array.from({ length: this.columns * this.rows }, () => null);
-        this.startX = options.startX ?? 1;
-        this.startY = options.startY ?? 1;
-        this.separation = options.separation ?? 1;
+        this.startX = options.startX ?? 0;
+        this.startY = options.startY ?? 0;
+        this.separation = options.separation ?? 0;
     }
     setTile(x, y, tileX, tileY) {
         if (x < 0 || y < 0 || x >= this.columns || y >= this.rows)
@@ -26,6 +28,8 @@ export class Tileset {
         return this.data[y * this.columns + x];
     }
     render(ctx, camera = Vec2.zero) {
+        if (!this.visible)
+            return;
         const scale = 1;
         const { sprite: image, separation, startX, startY, tileW, tileH, } = this;
         if (!image.image)
@@ -33,8 +37,8 @@ export class Tileset {
         // const srcCols = Math.floor(image.width / tileW);
         // const srcRows = Math.floor(image.height / tileH);
         const [cameraX, cameraY] = camera;
-        const offsetX = this.parent?.x ?? 0;
-        const offsetY = this.parent?.y ?? 0;
+        const offsetX = (this.relative ? this.parent?.x : 0) ?? 0;
+        const offsetY = (this.relative ? this.parent?.y : 0) ?? 0;
         for (let y = 0; y < this.rows; ++y) {
             for (let x = 0; x < this.columns; ++x) {
                 const val = this.data[y * this.columns + x];

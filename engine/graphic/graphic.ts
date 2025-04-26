@@ -23,6 +23,8 @@ export interface IGraphic {
 	originY: number;
 	scrollX: number;
 	scrollY: number;
+	relative: boolean;
+	visible: boolean;
 	alpha: number;
 	parent: GraphicParent | undefined;
 	centerOrigin: () => void;
@@ -44,6 +46,8 @@ export class Graphic implements IGraphic {
 	scrollY = 1;
 	alpha = 1;
 	parent: GraphicParent | undefined;
+	relative = true;
+	visible = true;
 
 	get scale(): number {
 		return this.scaleX;
@@ -84,5 +88,6 @@ export class Graphic implements IGraphic {
 		this.scaleY = 0;
 		this.scrollX = 1;
 		this.scrollY = 1;
+		this.relative = true;
 	}
 }

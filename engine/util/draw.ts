@@ -205,9 +205,6 @@ export const Draw = {
 			const { imageSrc } = options;
 			if (!imageSrc) return;
 
-			// TODO(bret): Expose this at the image level (and default to a global setting in Game!)
-			ctx.imageSmoothingEnabled = false;
-
 			const x = sourceX ?? 0;
 			const y = sourceY ?? 0;
 			const _width = width ?? imageSrc.width;

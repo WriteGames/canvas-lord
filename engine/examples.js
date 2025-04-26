@@ -626,7 +626,7 @@ export const initGames = (src = '', gamesMap = []) => {
 	assetManager.addImage('grid.bmp');
 	assetManager.addImage('radiohead_spritesheet.png');
 	assetManager.addImage('tileset.png');
-	assetManager.onLoad(() => {
+	assetManager.onLoad.add(() => {
 		console.log('== AssetManager::onLoad()');
 
 		if (gamesRendered) return;

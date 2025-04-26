@@ -93,7 +93,7 @@ export class Text extends Graphic {
         return (this.#metrics.actualBoundingBoxAscent +
             this.#metrics.actualBoundingBoxDescent);
     }
-    constructor(str, x, y, options) {
+    constructor(str, x = 0, y = 0, options) {
         super(x, y);
         this.#str = str;
         this.#setOptions(options);
@@ -149,8 +149,14 @@ export class Text extends Graphic {
         textCtx.restore();
     }
     render(ctx, camera = Vec2.zero) {
-        const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-        const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+        if (!this.visible)
+            return;
+        let x = this.x - camera.x * this.scrollX;
+        let y = this.y - camera.y * this.scrollY;
+        if (this.relative) {
+            x += this.parent?.x ?? 0;
+            y += this.parent?.y ?? 0;
+        }
         Draw.text(ctx, this, x, y, this.#str);
     }
     static addPreset(name, options) {

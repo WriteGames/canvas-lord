@@ -271,8 +271,14 @@ export class Emitter extends Graphic {
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
-		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+		if (!this.visible) return;
+
+		let x = this.x - camera.x * this.scrollX;
+		let y = this.y - camera.y * this.scrollY;
+		if (this.relative) {
+			x += this.parent?.x ?? 0;
+			y += this.parent?.y ?? 0;
+		}
 
 		const { image } = this.asset;
 		if (!image) throw new Error();

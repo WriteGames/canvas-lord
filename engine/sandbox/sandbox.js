@@ -67,19 +67,19 @@ export const init = ({ games, assetSrc, assets, onLoad }) => {
 	let loaded = false;
 	if (!assetSrc) {
 		const _games = games.map((game) => startGame(game));
-		onLoad(_games);
+		onLoad?.(_games);
 		return {};
 	}
 
 	const assetManager = new AssetManager(assetSrc);
 	assets?.images?.forEach((asset) => assetManager.addImage(asset));
 	assets?.audio?.forEach((asset) => assetManager.addAudio(asset));
-	assetManager.onLoad(() => {
+	assetManager.onLoad.add(() => {
 		if (loaded) return;
 		loaded = true;
 
 		const _games = games.map((game) => startGame(game, assetManager));
-		onLoad(_games);
+		onLoad?.(_games);
 	});
 	assetManager.loadAssets();
 	return { assetManager };

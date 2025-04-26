@@ -10,7 +10,7 @@ import type { CSSColor } from '../util/types.js';
 
 const { ctx: textCtx } = generateCanvasAndCtx();
 
-interface TextOptions {
+export interface TextOptions {
 	color: CSSColor;
 	type: 'fill' | 'stroke';
 	font: string;
@@ -132,8 +132,8 @@ export class Text extends Graphic implements IText {
 
 	constructor(
 		str: string,
-		x: number,
-		y: number,
+		x = 0,
+		y = 0,
 		options?: Partial<TextOptions> | string,
 	) {
 		super(x, y);
@@ -207,8 +207,14 @@ export class Text extends Graphic implements IText {
 	}
 
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
-		const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-		const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+		if (!this.visible) return;
+
+		let x = this.x - camera.x * this.scrollX;
+		let y = this.y - camera.y * this.scrollY;
+		if (this.relative) {
+			x += this.parent?.x ?? 0;
+			y += this.parent?.y ?? 0;
+		}
 		Draw.text(ctx, this, x, y, this.#str);
 	}
 

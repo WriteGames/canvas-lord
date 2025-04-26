@@ -12,6 +12,8 @@ export class Graphic {
     scrollY = 1;
     alpha = 1;
     parent;
+    relative = true;
+    visible = true;
     get scale() {
         return this.scaleX;
     }
@@ -44,6 +46,7 @@ export class Graphic {
         this.scaleY = 0;
         this.scrollX = 1;
         this.scrollY = 1;
+        this.relative = true;
     }
 }
 //# sourceMappingURL=graphic.js.map

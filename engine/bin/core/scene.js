@@ -6,8 +6,14 @@ import { Messages } from '../util/messages.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Delegate } from '../util/delegate.js';
 export class Scene {
+    #engine;
+    get engine() {
+        return this.#engine;
+    }
     constructor(engine) {
-        this.engine = engine;
+        // TODO(bret): this is depreciated, engine now gets set in initInternal()
+        if (engine)
+            this.#engine = engine;
         this.componentSystemMap = new Map();
         this.entities = {
             addQueue: [],
@@ -31,6 +37,7 @@ export class Scene {
         this.onUpdate = new Delegate();
         this.onPostUpdate = new Delegate();
         this.onRender = new Delegate();
+        this.onInit = new Delegate();
         this.onBegin = new Delegate();
         this.onEnd = new Delegate();
         this.onResume = new Delegate();
@@ -51,6 +58,14 @@ export class Scene {
             this.canvas = canvas;
             this.ctx = ctx;
         }
+    }
+    initInternal(engine) {
+        this.#engine = engine;
+        this.onInit.invoke();
+        this.init();
+    }
+    init() {
+        //
     }
     beginInternal() {
         this.engine.onSceneBegin.invoke(this);
@@ -89,7 +104,7 @@ export class Scene {
         return entity;
     }
     addEntity(entity, renderable = true) {
-        entity.scene = this;
+        entity.z__setScene(this);
         this.entities.addQueue.push(entity);
         if (renderable)
             this.addRenderable(entity);
@@ -107,6 +122,7 @@ export class Scene {
             if (this.entities.inScene.includes(e))
                 continue;
             this.entities.inScene.push(e);
+            e.addedInternal();
             e.onAdded.invoke();
         }
     }
@@ -221,7 +237,8 @@ export class Scene {
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-        this.renderables.inScene.forEach((entity) => entity.render(ctx, camera));
+        // TODO(bret): Fix how render/renderInternal works for renderables
+        this.renderables.inScene.forEach((entity) => entity.renderInternal(ctx, camera));
         // const width = 2;
         // const posOffset = 0.5;
         // const widthOffset = width;
@@ -239,13 +256,13 @@ export class Scene {
                 });
             });
         });
-        this.render(ctx);
+        this.render(ctx, camera);
         if (ctx !== gameCtx) {
             const [x, y] = this.screenPos;
             gameCtx.drawImage(ctx.canvas, x, y);
         }
     }
-    render(_ctx) {
+    render(_ctx, _camera) {
         //
     }
 }

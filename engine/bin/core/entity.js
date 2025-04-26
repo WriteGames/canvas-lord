@@ -7,12 +7,14 @@ import { Delegate } from '../util/delegate.js';
 // TODO(bret): hook this up
 const _mouseCollider = new PointCollider();
 export class Entity {
-    scene; // NOTE: set by scene
+    #scene; // NOTE: set by scene
     components = new Map();
     depth = 0;
     #collider = undefined;
     visible = true;
+    colliderVisible = false;
     #graphic = undefined;
+    #graphics = [];
     // TODO(bret): below
     onAdded = new Delegate();
     onPreUpdate = new Delegate();
@@ -76,10 +78,18 @@ export class Entity {
         this.#collider = value;
         this.#collider?.assignParent(this);
     }
-    constructor(x = 0, y = 0) {
+    get scene() {
+        return this.#scene;
+    }
+    z__setScene(value) {
+        this.#scene = value;
+    }
+    constructor(x = 0, y = 0, graphic, collider) {
         this.addComponent(Components.pos2D);
         this.x = x;
         this.y = y;
+        this.graphic = graphic;
+        this.collider = collider;
     }
     setPos(...args) {
         if (typeof args[0] === 'number' && typeof args[1] === 'number') {
@@ -104,6 +114,43 @@ export class Entity {
             return undefined;
         return c;
     }
+    resetComponent(component) {
+        if (!this.components.has(component))
+            return undefined;
+        // TODO(bret): We might want to be smarter about this and not create a new object each time
+        this.components.set(component, Components.copyObject(component).data);
+        return this.component(component);
+    }
+    removeComponent(component) {
+        if (!this.components.has(component))
+            return undefined;
+        const comp = this.component(component);
+        this.components.delete(component);
+        return comp;
+    }
+    addGraphic(graphic) {
+        this.#graphics.push(graphic);
+        graphic.parent = this;
+        return graphic;
+    }
+    addGraphics(graphics) {
+        graphics.forEach((g) => this.addGraphic(g));
+        return graphics;
+    }
+    removeGraphic(graphic) {
+        const index = this.#graphics.indexOf(graphic);
+        if (index < 0)
+            return graphic;
+        this.#graphics.splice(index, 1);
+        return graphic;
+    }
+    removeGraphics(graphics) {
+        graphics.forEach((g) => this.removeGraphic(g));
+        return graphics;
+    }
+    getScene() {
+        return this.#scene;
+    }
     tweens = [];
     addTween(tween) {
         if (tween.parent)
@@ -124,6 +171,12 @@ export class Entity {
     }
     updateTweens() {
         this.tweens.forEach((t) => t.update());
+    }
+    addedInternal() {
+        this.added();
+    }
+    added() {
+        //
     }
     preUpdateInternal(input) {
         this.onPreUpdate.invoke(input);
@@ -148,12 +201,19 @@ export class Entity {
     postUpdate(_input) {
         //
     }
-    render(ctx, camera) {
+    renderInternal(ctx, camera) {
         // TODO(bret): .visible should probably be on the Graphic, not the Entity itself
-        if (this.visible) {
-            this.#graphic?.render(ctx, camera);
-        }
+        if (!this.visible)
+            return;
+        this.#graphic?.render(ctx, camera);
+        this.#graphics.forEach((g) => g.render(ctx, camera));
+        this.render(ctx, camera);
+        if (this.colliderVisible)
+            this.renderCollider(ctx, camera);
         this.onRender.invoke(ctx, camera);
+    }
+    render(_ctx, _camera) {
+        //
     }
     renderCollider(ctx, camera = Vec2.zero) {
         if (!this.collider)
@@ -167,9 +227,11 @@ export class Entity {
         const _y = this.y;
         this.x = x;
         this.y = y;
-        let entities = this.scene.entities.inScene;
+        let entities = this.#scene.entities.inScene;
         let tags = [];
         switch (true) {
+            case match === undefined:
+                break;
             case match instanceof Entity: {
                 entities = [match];
                 break;
@@ -188,7 +250,8 @@ export class Entity {
                 break;
             }
             default:
-                throw new Error('unknown error');
+                console.log(match);
+                throw new Error('unknown error!!');
         }
         const n = entities.length;
         const collide = [];
@@ -198,8 +261,12 @@ export class Entity {
                 continue;
             if (!e.collider?.collidable)
                 continue;
-            if (e.collider.tag && !tags.includes(e.collider.tag))
-                continue;
+            if (tags.length > 0) {
+                if (!e.collider.tag)
+                    continue;
+                if (!tags.includes(e.collider.tag))
+                    continue;
+            }
             const collision = Collide.collide(this.collider, e.collider);
             const result = collision ? e : null;
             if (result === null)
@@ -221,12 +288,12 @@ export class Entity {
     collide(x, y, match) {
         return this.#collide(x, y, match, true).length > 0;
     }
-    collideMouse(x, y) {
+    collideMouse(x, y, cameraRelative = true) {
         if (!this.collider)
             return false;
-        const { input } = this.scene.engine;
-        const mouseX = input.mouse.x + this.scene.camera.x;
-        const mouseY = input.mouse.y + this.scene.camera.y;
+        const { input } = this.#scene.engine;
+        const mouseX = input.mouse.x + (cameraRelative ? this.#scene.camera.x : 0);
+        const mouseY = input.mouse.y + (cameraRelative ? this.#scene.camera.y : 0);
         const _x = this.x;
         const _y = this.y;
         this.x = x;

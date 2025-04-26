@@ -49,3 +49,49 @@ export class Random {
 		return items[this.int(items.length)];
 	}
 }
+
+declare global {
+	interface Array<T> {
+		shuffle: (random?: Random) => this;
+		toShuffled: (random?: Random) => T[];
+	}
+}
+
+declare global {
+	interface Array<T> {
+		remove(): T[];
+	}
+}
+
+const defaultRandom = new Random();
+
+// Array prototype fun :~)
+if (typeof Array.prototype.shuffle === 'undefined') {
+	Array.prototype.shuffle = function shuffle<T>(
+		this: T[],
+		random: Random = defaultRandom,
+	): T[] {
+		let m = this.length;
+		let t: T;
+		let i: number;
+		while (m) {
+			i = random.int(m--);
+
+			t = this[m];
+			this[m] = this[i];
+			this[i] = t;
+		}
+
+		return this;
+	};
+}
+
+if (typeof Array.prototype.toShuffled === 'undefined') {
+	Array.prototype.toShuffled = function toShuffle<T>(
+		this: T[],
+		random: Random = defaultRandom,
+	): T[] {
+		const newArr = [...this];
+		return newArr.shuffle(random);
+	};
+}

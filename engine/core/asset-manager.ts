@@ -1,6 +1,6 @@
 /* Canvas Lord v0.5.3 */
 
-type AssetManagerOnLoadCallback = (src: string) => void;
+import { Delegate } from '../util/delegate.js';
 
 export type ImageAsset = {
 	fileName: string;
@@ -42,7 +42,7 @@ export interface AssetManager {
 	audio: Map<string, AudioAsset>;
 	spritesLoaded: number;
 	audioFilesLoaded: number;
-	onLoadCallbacks: AssetManagerOnLoadCallback[];
+	onLoad: Delegate<(src: string) => void>;
 	prefix: string;
 }
 
@@ -52,7 +52,7 @@ export class AssetManager {
 		this.audio = new Map();
 		this.spritesLoaded = 0;
 		this.audioFilesLoaded = 0;
-		this.onLoadCallbacks = [];
+		this.onLoad = new Delegate();
 		this.prefix = prefix;
 	}
 
@@ -74,7 +74,7 @@ export class AssetManager {
 	}
 
 	async loadAudio(src: string): Promise<void> {
-		const fullPath = `${this.prefix}${src}`;
+		const fullPath = src.startsWith('http') ? src : `${this.prefix}${src}`;
 
 		await fetch(fullPath)
 			.then((res) => res.arrayBuffer())
@@ -103,7 +103,7 @@ export class AssetManager {
 
 	loadImage(src: string): void {
 		const image = new Image();
-		const fullPath = `${this.prefix}${src}`;
+		const fullPath = src.startsWith('http') ? src : `${this.prefix}${src}`;
 		if (
 			fullPath.startsWith('http') &&
 			!fullPath.startsWith(location.origin)
@@ -142,7 +142,7 @@ export class AssetManager {
 
 	emitOnLoad(src: string): void {
 		window.requestAnimationFrame(() => {
-			this.onLoadCallbacks.forEach((callback) => callback(src));
+			this.onLoad.invoke(src);
 		});
 	}
 
@@ -173,10 +173,6 @@ export class AssetManager {
 	audioLoaded(_src: string): void {
 		++this.audioFilesLoaded;
 		this._checkAllAssetsLoaded();
-	}
-
-	onLoad(callback: AssetManagerOnLoadCallback): void {
-		this.onLoadCallbacks.push(callback);
 	}
 }
 

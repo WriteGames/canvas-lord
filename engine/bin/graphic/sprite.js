@@ -41,6 +41,8 @@ export class Sprite extends Graphic {
         // TODO(bret): use generateCanvasAndCtx
         // const { canvas, ctx } = generateCanvasAndCtx(width, height);
         const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx)
             throw new Error('[Sprite.createRect()] getContext() failed');
@@ -67,10 +69,21 @@ export class Sprite extends Graphic {
         return new Sprite(asset);
     }
     static createRect(width, height, color) {
-        const fileName = [width, height, color].join('-');
+        const fileName = ['createRect', width, height, color].join('-');
         return Sprite.createImage(width, height, fileName, (ctx) => {
             ctx.fillStyle = color;
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        });
+    }
+    static createCircle(size, color) {
+        const fileName = ['createCircle', size, color].join('-');
+        const halfSize = size * 0.5;
+        return Sprite.createImage(size, size, fileName, (ctx) => {
+            ctx.translate(halfSize, halfSize);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(0, 0, halfSize, 0, Math.PI * 2);
+            ctx.fill();
         });
     }
     centerOrigin() {
@@ -78,9 +91,15 @@ export class Sprite extends Graphic {
         this.originY = this.height / 2;
     }
     render(ctx, camera = Vec2.zero) {
+        if (!this.visible)
+            return;
         const { sourceX, sourceY, sourceW = this.width, sourceH = this.height, } = this;
-        const x = this.x - camera.x * this.scrollX + (this.parent?.x ?? 0);
-        const y = this.y - camera.y * this.scrollY + (this.parent?.y ?? 0);
+        let x = this.x - camera.x * this.scrollX;
+        let y = this.y - camera.y * this.scrollY;
+        if (this.relative) {
+            x += this.parent?.x ?? 0;
+            y += this.parent?.y ?? 0;
+        }
         Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
     }
     reset() {
