@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 import { Delegate } from '../util/delegate.js';
 const isLoaded = (asset) => asset.loaded;
 export class AssetManager {

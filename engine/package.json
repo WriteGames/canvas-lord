@@ -1,7 +1,7 @@
 {
 	"name": "canvas-lord",
 	"private": true,
-	"version": "0.5.3",
+	"version": "0.6.0",
 	"description": "An HTML5 game engine",
 	"main": "canvas-lord.js",
 	"type": "module",

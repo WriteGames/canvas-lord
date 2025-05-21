@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 
 import type { IEntitySystem } from './types.js';
 import { Draw } from './draw.js';

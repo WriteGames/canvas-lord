@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 
 import { type V3, addPos, scalePos, posEqual, Vec2 } from '../math/index.js';
 

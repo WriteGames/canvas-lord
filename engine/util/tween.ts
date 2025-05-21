@@ -1,3 +1,5 @@
+/* Canvas Lord v0.6.0 */
+
 import type { Entity } from '../core/entity.ts';
 import { Delegate } from './delegate.ts';
 import {

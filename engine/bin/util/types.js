@@ -1,3 +1,3 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 export {};
 //# sourceMappingURL=types.js.map

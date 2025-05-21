@@ -1,5 +1,4 @@
-/* eslint-disable unicorn/filename-case -- don't worry about it */
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- we want a static class here
 export class CL {
     static #engine;

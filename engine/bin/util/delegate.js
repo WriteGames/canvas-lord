@@ -1,3 +1,4 @@
+/* Canvas Lord v0.6.0 */
 export class Delegate {
     #callbacks;
     constructor() {

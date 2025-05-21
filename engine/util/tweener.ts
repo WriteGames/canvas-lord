@@ -1,3 +1,5 @@
+/* Canvas Lord v0.6.0 */
+
 import { CL } from '../canvas-lord.ts';
 
 import { Vec2 } from '../math/index.ts';

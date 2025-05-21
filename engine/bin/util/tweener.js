@@ -1,3 +1,4 @@
+/* Canvas Lord v0.6.0 */
 import { CL } from "../canvas-lord.js";
 import { Vec2 } from "../math/index.js";
 import { Ease, easeInOut, easeOut, easeOutIn } from "./ease.js";

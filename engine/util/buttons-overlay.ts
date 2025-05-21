@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 
 import type { Input, Key } from '../core/input.js';
 import type { Ctx } from './canvas.js';

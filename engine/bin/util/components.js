@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 import { Vec2 } from '../math/index.js';
 export const copyObject = (obj) => {
     const { data: rawData } = obj;

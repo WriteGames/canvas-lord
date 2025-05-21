@@ -1,4 +1,4 @@
-/* Canvas Lord v0.5.3 */
+/* Canvas Lord v0.6.0 */
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
 export class BoxCollider extends Collider {
