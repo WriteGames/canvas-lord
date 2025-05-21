@@ -1,0 +1,25 @@
+name: Create ZIP
+
+on: 
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Zip Release
+      uses: TheDoctor0/zip-release@0.7.6
+      with:
+        directory: './engine/bin'
+        type: 'zip'
+        filename: 'canvas-lord-${{ github.ref_name }}.zip'
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "./engine/bin/canvas-lord-${{ github.ref_name }}.zip"
+        draft: true
+        token: ${{ secrets.GITHUB_TOKEN }}
