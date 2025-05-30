@@ -19,7 +19,7 @@ jobs:
                   directory: './template'
                   type: 'zip'
                   filename: 'canvas-lord-${{ github.ref_name }}-with-template.zip'
-                  command: 'mv -v ../engine/bin/.[!.]* ./js'
+                  command: 'mv -v ./engine/bin/* ./template/js'
             - uses: ncipollo/release-action@v1
               with:
                   artifacts: './engine/bin/canvas-lord-${{ github.ref_name }}-with-template.zip'
