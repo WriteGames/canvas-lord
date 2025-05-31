@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 
 /* eslint-disable unicorn/filename-case -- don't worry about it */
 /* Canvas Lord v0.5.3 */

@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 
 export type GetDelegateCallback<T> = T extends Delegate<infer C> ? C : never;
 export type GetDelegateParameters<T> = T extends Delegate<infer C>

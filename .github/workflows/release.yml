@@ -12,7 +12,14 @@ jobs:
             contents: write
         steps:
             - uses: actions/checkout@v4
-            - name: Zip Release
+            - name: Zip - Template
+              uses: TheDoctor0/zip-release@0.7.6
+              with:
+                  directory: './template'
+                  type: 'zip'
+                  filename: 'canvas-lord-${{ github.ref_name }}-with-template.zip'
+                  command: 'cp -r -a ./engine/bin/* ./template/js'
+            - name: Zip - Engine
               uses: TheDoctor0/zip-release@0.7.6
               with:
                   directory: './engine/bin'
@@ -20,6 +27,6 @@ jobs:
                   filename: 'canvas-lord-${{ github.ref_name }}.zip'
             - uses: ncipollo/release-action@v1
               with:
-                  artifacts: './engine/bin/canvas-lord-${{ github.ref_name }}.zip'
+                  artifacts: './engine/bin/*.zip,./template/*.zip'
                   draft: true
                   token: ${{ secrets.GITHUB_TOKEN }}

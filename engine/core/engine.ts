@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 
 import { type AssetManager, Sfx } from './asset-manager.js';
 import { Input, type Key } from './input.js';
