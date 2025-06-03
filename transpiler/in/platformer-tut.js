@@ -27,7 +27,7 @@ export const initGame = (Player, properties) => (id, src = '') => {
     assetManager.addImage('grid.bmp');
     assetManager.addImage('radiohead_spritesheet.png');
     assetManager.addImage('tileset.png');
-    assetManager.onLoad(() => {
+    assetManager.onLoad.add(() => {
         console.log('== AssetManager::onLoad()');
         const splitScreen = true;
         const sceneLeft = new PlayerScene(Player, game, assetManager);

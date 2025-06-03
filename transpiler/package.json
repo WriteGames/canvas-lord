@@ -17,7 +17,8 @@
 	"author": "Write Games",
 	"license": "ISC",
 	"dependencies": {
-		"canvas-lord": "workspace:*"
+		"canvas-lord": "workspace:*",
+		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
 		"@types/node": "20.11.3",

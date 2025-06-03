@@ -1,0 +1,76 @@
+@layer layout {
+	.three-column-layout {
+		--padding: 1rem;
+		--max-width: 60ch;
+		display: grid;
+		grid-template-columns:
+			[full-start] minmax(1rem, 1fr)
+			[padding-start] var(--padding)
+			[main-start] minmax(0, calc(var(--max-width) - 2 * var(--padding)))
+			[main-end]
+			var(--padding) [padding-end]
+			minmax(1rem, 1fr) [full-end];
+		> * {
+			display: grid;
+			grid-template-columns: var(--padding) [main-start] auto [main-end] var(
+					--padding
+				);
+			grid-template-columns: subgrid;
+			grid-column: padding;
+			> * {
+				grid-column: main;
+			}
+		}
+	}
+}
+
+html {
+	font-family: sans-serif;
+}
+
+body {
+	grid-template-rows: auto 1fr auto;
+}
+
+header,
+footer {
+	padding-block: 1rem;
+	grid-column: full;
+	background-color: color-mix(in lch, Canvas, CanvasText 30%);
+	text-align: center;
+}
+
+main {
+	align-content: start;
+	> div {
+		padding-block: 1rem;
+	}
+}
+
+script {
+	display: none;
+}
+
+code {
+	font-family: monospace;
+	color: #ccd;
+	background: #223;
+	padding: 2px 4px;
+}
+
+label {
+	display: inline-block;
+	font-size: 1.25rem;
+	font-weight: 700;
+	margin-bottom: 0.5rem;
+}
+
+summary {
+	background: #444;
+	padding: 0.25rem;
+	margin-bottom: 0.5rem;
+}
+
+[id='tree-root'] ul {
+	color: #eef;
+}

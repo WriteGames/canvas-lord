@@ -32,7 +32,7 @@ export const initGame =
 		assetManager.addImage('radiohead_spritesheet.png');
 		assetManager.addImage('tileset.png');
 
-		assetManager.onLoad(() => {
+		assetManager.onLoad.add(() => {
 			console.log('== AssetManager::onLoad()');
 
 			const splitScreen = true;
