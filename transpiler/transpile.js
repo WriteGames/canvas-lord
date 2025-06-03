@@ -1,38 +1,9 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
 // // components & systems
 import { testComponent, moveRightSystem, moveLeftSystem, deleteSelfSystem, } from './in/test.js';
 import { horizontalMovementComponent, verticalMovementComponent2, horizontalMovementSystem, verticalMovementSystem2, moveXSystem, moveYSystem, } from './in/player.js';
-const parseComponent = (component) => {
-    return component.data;
-};
-const regexComponentVar = /\s*const (?<varName>\w+) = entity\.component\?\.\(\w+\);\n/g;
-const generateTokenRegex = (token) => {
-    return new RegExp(`([^\w])${token}([^\w])`, 'g');
-};
-const parseSystem = (system) => {
-    return Object.fromEntries(Object.entries(system)
-        .filter(([_, v]) => typeof v === 'function')
-        .map(([k, v]) => {
-        const updateStr = v.toString();
-        const args = updateStr
-            .substring(updateStr.indexOf('(') + 1, updateStr.indexOf(')'))
-            .split(', ');
-        const bodyExt = updateStr.substring(updateStr.indexOf('{'), updateStr.lastIndexOf('}') + 1);
-        let body = bodyExt.substring(bodyExt.indexOf('\n') + 1, bodyExt.lastIndexOf('\n'));
-        const vars = [...body.matchAll(regexComponentVar)];
-        vars.forEach((v) => {
-            if (!v.groups)
-                return;
-            body = body
-                .replace(v[0], '')
-                .replaceAll(v.groups.varName, 'this');
-        });
-        body = body
-            .replaceAll(generateTokenRegex('entity'), '$1this$2')
-            .replaceAll(/    /g, '\t');
-        return [k, { args, body }];
-    }));
-};
+import { generateTokenRegex, getComponentFromFile, parseComponent, parseSystem, } from './shared.js';
 const componentMap = new Map();
 const systemsMap = new Map();
 const nonNull = (u) => Boolean(u);
@@ -121,11 +92,11 @@ const generateEntity = ({ entityName, components, systems }) => {
         classDefinition,
     };
 };
-if (!fs.existsSync('out')) {
-    fs.mkdirSync('out');
+if (!fs.existsSync('out2')) {
+    fs.mkdirSync('out2');
 }
-if (!fs.existsSync('../website/out')) {
-    fs.mkdirSync('../website/out');
+if (!fs.existsSync('../website/out2')) {
+    fs.mkdirSync('../website/out2');
 }
 const entityToFile = (fileName, entityData) => {
     fs.writeFileSync(fileName, `${entityData.imports.join('\n')}\n\n${entityData.classDefinition}`);
@@ -143,7 +114,7 @@ const testOutput = generateEntity({
         },
     ],
 });
-entityToFile('out/test.js', testOutput);
+// entityToFile('out/test.js', testOutput);
 const playerOutput = generateEntity({
     entityName: 'GenPlayer',
     components: [horizontalMovementComponent, verticalMovementComponent2],
@@ -173,8 +144,8 @@ const playerOutput = generateEntity({
         },
     ],
 });
-entityToFile('out/player.js', playerOutput);
-entityToFile('../website/examples/out/player.js', playerOutput);
+// entityToFile('out/player.js', playerOutput);
+// entityToFile('../website/examples/out/player.js', playerOutput);
 // TODO: be able to mark systems as functions
 //	- any system that is marked as a function would be added as a method of the entity and called `this.moveX()` or w/e
 // TODO: probably remove all logger stuff :)
@@ -248,13 +219,82 @@ const platformerTutorial = {
         },
     ],
 };
+const testingTutorial = {
+    name: 'Testing',
+    slug: 'test',
+    blocks: [
+        {
+            file: 'in/test-game.js',
+        },
+        {
+            file: 'in/test.js',
+        },
+        {
+            file: 'in/player.js',
+        },
+    ],
+    steps: [
+        {
+            name: 'Step One',
+            slug: 'one',
+            dynamic: [
+                {
+                    file: 'in/player.js',
+                    entityName: 'GenPlayer',
+                    components: [
+                        horizontalMovementComponent,
+                        verticalMovementComponent2,
+                    ],
+                    systems: [
+                        {
+                            outputType: 'inline',
+                            system: horizontalMovementSystem,
+                        },
+                        {
+                            outputType: 'inline',
+                            system: verticalMovementSystem2,
+                        },
+                        {
+                            outputType: 'function',
+                            alias: 'moveX',
+                            system: moveXSystem,
+                        },
+                        {
+                            outputType: 'function',
+                            // TODO: allow for aliases to work for render
+                            alias: 'moveY',
+                            system: moveYSystem,
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            name: 'Step Tne',
+            slug: 'two',
+            dynamic: [
+                {
+                    file: 'in/player.js',
+                    entityName: 'GenPlayer',
+                    components: [horizontalMovementComponent],
+                    systems: [
+                        {
+                            outputType: 'inline',
+                            system: horizontalMovementSystem,
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+};
 const makeDir = (dir) => {
     if (fs.existsSync(dir))
         return;
     fs.mkdirSync(dir, { recursive: true });
 };
 const generateTutorial = (tutorial) => {
-    const dest = '../website/out';
+    const dest = '../website/out2';
     const folder = `${dest}/${tutorial.slug}`;
     makeDir(folder);
     const createTutorialDir = (fileName) => `${folder}/${fileName}`;
@@ -302,11 +342,20 @@ const generateTutorial = (tutorial) => {
     const genTutorial = {
         steps: genSteps,
     };
-    fs.writeFileSync(createTutorialDir('data.json'), JSON.stringify(genTutorial));
+    fs.writeFileSync(createTutorialDir('data.json'), JSON.stringify(genTutorial, null, '\t'));
     const markdown = fs.readFileSync('in/content.md', 'utf8');
     fs.writeFileSync(createTutorialDir('content.mdx'), markdown);
 };
-generateTutorial(platformerTutorial);
+// generateTutorial(platformerTutorial);
+// generateTutorial(testingTutorial);
+// brand new thang
+const component = horizontalMovementComponent;
+const componentName = 'horizontalMovementComponent';
+const inDir = `./in`;
+console.log(component, componentName);
+const filePath = path.join(inDir, 'test.ts');
+const contents = getComponentFromFile(filePath, componentName);
+console.log('mycomp', contents);
 /*                                                                  */
 /*                                                                  */
 /*                            SCENE                                 */
