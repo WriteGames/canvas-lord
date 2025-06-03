@@ -108,6 +108,7 @@ const extractComponent = (fileData, comp) => {
         data.properties.push({
             name: prop.getChildAt(0).getText(sourceFile).trim(),
             type: checker.typeToString(type),
+            initialValue: prop.getChildAt(2).getText(sourceFile).trim(),
         });
     });
     return data;

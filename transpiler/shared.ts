@@ -135,6 +135,7 @@ interface FileData {
 interface ComponentProperty {
 	name: string;
 	type: string;
+	initialValue: any;
 }
 
 export interface ComponentData {
@@ -197,6 +198,7 @@ const extractComponent = (fileData: FileData, comp: Data): ComponentData => {
 		data.properties.push({
 			name: prop.getChildAt(0).getText(sourceFile).trim(),
 			type: checker.typeToString(type),
+			initialValue: prop.getChildAt(2).getText(sourceFile).trim(),
 		});
 	});
 
