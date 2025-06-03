@@ -60,11 +60,13 @@
 						componentsTree.append(li);
 						const ul = document.createElement('ul');
 						li.append(ul);
-						c.properties?.forEach(({ name, type }) => {
-							const li = document.createElement('li');
-							li.innerHTML = `<code>${name}: ${type}</code>`;
-							ul.append(li);
-						});
+						c.properties?.forEach(
+							({ name, type, initialValue }) => {
+								const li = document.createElement('li');
+								li.innerHTML = `<code>${name}: ${type} = ${initialValue}</code>`;
+								ul.append(li);
+							},
+						);
 					});
 
 					data.exports.systems.forEach((c) => {
