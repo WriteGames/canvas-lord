@@ -19,6 +19,9 @@
 
 			clSocket.on('connect', () => {
 				console.clear();
+
+				const root = document.getElementById('tree-root');
+				root.replaceChildren();
 			});
 
 			clSocket.on('contents', (msg) => {
@@ -69,10 +72,33 @@
 						);
 					});
 
-					data.exports.systems.forEach((c) => {
+					data.exports.systems.forEach((s) => {
 						const li = document.createElement('li');
-						li.innerHTML = `<code>${c.name}</code>`;
+						li.innerHTML = `<code>${s.name}</code>`;
 						systemsTree.append(li);
+						const ul = document.createElement('ul');
+						li.append(ul);
+						if (s.functions) {
+							Object.entries(s.functions).forEach(
+								([name, data]) => {
+									console.log(data);
+									const li = document.createElement('li');
+									const args = data.arguments
+										.map(
+											({ name, type }) =>
+												`${name}: ${type}`,
+										)
+										.join(', ');
+									li.innerHTML = `<code>${name}(${args})</code>`;
+									ul.append(li);
+									{
+										const li = document.createElement('li');
+										li.innerHTML = `<pre><code>${data.body}</code></pre>`;
+										ul.append(li);
+									}
+								},
+							);
+						}
 					});
 
 					details.append(subTree);

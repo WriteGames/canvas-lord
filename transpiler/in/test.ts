@@ -1,15 +1,12 @@
 import { Entity, Input, Keys } from 'canvas-lord';
-import * as Components from 'canvas-lord/util/components.js';
-import { IEntitySystem } from 'canvas-lord/util/types.ts';
+import * as Components from 'canvas-lord/util/components';
+import { IEntitySystem } from 'canvas-lord/util/types';
 
 interface PlayerEntity {
 	moveX: () => void;
 }
 
-export const horizontalMovementComponent = Components.createComponent({
-	foo: 123,
-	bar: new Entity(),
-});
+export const horizontalMovementComponent = Components.createComponent({});
 export const horizontalMovementSystem = {
 	update(entity: PlayerEntity) {
 		entity.moveX();

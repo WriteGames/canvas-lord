@@ -27,7 +27,7 @@ export const Canvas = ({
 		const importGame = async () => {
 			const module = await import(`@/examples/${src}`);
 			const { initGames } = module;
-			initGames(id, 'https://sandbox.canvaslord.com/');
+			initGames?.(id, 'https://sandbox.canvaslord.com/');
 		};
 
 		if (src) {

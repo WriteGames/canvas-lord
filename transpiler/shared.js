@@ -1,10 +1,46 @@
 import ts from 'typescript';
 export const isExportKeyword = (m) => m.kind === ts.SyntaxKind.ExportKeyword;
 export const prepareTSFile = (filePath) => {
+    // TODO(bret): Add some sort of caching
     const program = ts.createProgram([filePath], {});
     const checker = program.getTypeChecker();
     const sourceFile = program.getSourceFile(filePath);
     return { program, checker, sourceFile };
+};
+export const getFileImports = (filePath) => {
+    const { sourceFile } = prepareTSFile(filePath);
+    if (!sourceFile)
+        throw new Error();
+    const imports = [];
+    ts.forEachChild(sourceFile, (node) => {
+        if (!ts.isImportDeclaration(node))
+            return;
+        if (!ts.isStringLiteral(node.moduleSpecifier))
+            return;
+        const moduleSpecifier = node.moduleSpecifier.text;
+        const importClause = node.importClause;
+        const entry = {
+            moduleSpecifier,
+            namedImports: [],
+        };
+        if (importClause) {
+            if (importClause.name)
+                entry.defaultImport = importClause.name.text;
+            if (importClause.namedBindings) {
+                if (ts.isNamedImports(importClause.namedBindings)) {
+                    entry.namedImports =
+                        importClause.namedBindings.elements.map((e) => e.propertyName
+                            ? `${e.propertyName.text} as ${e.name.text}`
+                            : e.name.text);
+                }
+                else if (ts.isNamespaceImport(importClause.namedBindings)) {
+                    entry.namespaceImport = `* as ${importClause.namedBindings.name.text}`;
+                }
+            }
+        }
+        imports.push(entry);
+    });
+    return imports;
 };
 export const readTSFile = (filePath) => {
     const { checker, sourceFile } = prepareTSFile(filePath);
@@ -12,11 +48,10 @@ export const readTSFile = (filePath) => {
         throw new Error('oh no');
     const exports = {
         sourceFile,
+        imports: getFileImports(filePath),
         components: [],
         systems: [],
     };
-    if (!sourceFile)
-        return exports;
     const saveExport = (node, name, symbol) => {
         if (!symbol?.valueDeclaration)
             return;
@@ -26,13 +61,20 @@ export const readTSFile = (filePath) => {
         const type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
         const typeStr = checker.typeToString(type);
         switch (true) {
-            case typeStr.startsWith('IEntitySystem'):
-                exports.systems.push({ name, content, type: typeStr });
+            case typeStr.startsWith('IEntitySystem'): {
+                const s = {
+                    name,
+                    content,
+                    type: typeStr,
+                    functions: {},
+                };
+                s.functions = getSystemContents(exports, name);
+                exports.systems.push(s);
                 break;
+            }
             case typeStr.startsWith('IEntityComponentType'): {
                 const c = { name, content, type: typeStr };
-                const d = extractComponent({ sourceFile }, c);
-                c.properties = d.properties;
+                c.properties = getComponentProperties(exports, name);
                 exports.components.push(c);
                 break;
             }
@@ -60,7 +102,6 @@ export const readTSFile = (filePath) => {
             saveExport(node, name, symbol);
         }
     });
-    // console.log(exports);
     return exports;
 };
 const findNode = (root, predicate) => {
@@ -68,7 +109,15 @@ const findNode = (root, predicate) => {
         return root;
     return ts.forEachChild(root, (child) => findNode(child, predicate));
 };
-const extractComponent = (fileData, comp) => {
+const getType = (checker, name) => {
+    const symbol = checker.getSymbolAtLocation(name);
+    if (!symbol?.valueDeclaration)
+        throw new Error();
+    const type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
+    // TODO(bret): Fix this, this is a hack to remove template arguments, but we only want to remove _default_ template arguments
+    return type.getSymbol()?.getName() ?? checker.typeToString(type);
+};
+const getComponentProperties = (fileData, componentName) => {
     const { checker, sourceFile } = prepareTSFile(fileData.sourceFile.fileName);
     if (!sourceFile)
         throw new Error();
@@ -76,7 +125,7 @@ const extractComponent = (fileData, comp) => {
     ts.forEachChild(sourceFile, (node) => {
         if (ts.isVariableStatement(node)) {
             const decl = node.declarationList.declarations.find((decl) => {
-                return decl.name.getText() === comp.name;
+                return decl.name.getText() === componentName;
             });
             if (!decl)
                 return;
@@ -88,41 +137,163 @@ const extractComponent = (fileData, comp) => {
         return;
     const node = compNode;
     const decl = node.declarationList.declarations.find((decl) => {
-        return decl.name.getText() === comp.name;
+        return decl.name.getText() === componentName;
     });
     if (!decl)
         throw new Error();
     const componentData = findNode(compNode, (node) => ts.isObjectLiteralExpression(node));
     if (!componentData)
         throw new Error();
-    const data = {
-        properties: [],
-    };
+    const properties = [];
     ts.forEachChild(componentData, (prop) => {
         if (!ts.isPropertyAssignment(prop))
             return;
-        const symbol = checker.getSymbolAtLocation(prop.name);
-        if (!symbol?.valueDeclaration)
-            return;
-        const type = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
-        data.properties.push({
-            name: prop.getChildAt(0).getText(sourceFile).trim(),
-            type: checker.typeToString(type),
-            initialValue: prop.getChildAt(2).getText(sourceFile).trim(),
+        properties.push({
+            name: prop.getChildAt(0).getText().trim(),
+            type: getType(checker, prop.name),
+            initialValue: prop.getChildAt(2).getText().trim(),
         });
     });
-    return data;
+    return properties;
+};
+const getSystemContents = (fileData, systemName) => {
+    const { checker, sourceFile } = prepareTSFile(fileData.sourceFile.fileName);
+    if (!sourceFile)
+        throw new Error();
+    let systemNode;
+    ts.forEachChild(sourceFile, (node) => {
+        if (ts.isVariableStatement(node)) {
+            const decl = node.declarationList.declarations.find((decl) => {
+                return decl.name.getText() === systemName;
+            });
+            if (!decl)
+                return;
+            systemNode = node;
+        }
+    });
+    if (!systemNode)
+        throw new Error();
+    const object = findNode(systemNode, (node) => ts.isObjectLiteralExpression(node));
+    if (!object)
+        throw new Error();
+    const systemFuncs = {};
+    ts.forEachChild(object, (methodNode) => {
+        if (!ts.isMethodDeclaration(methodNode))
+            return;
+        let firstArg = true; // NOTE(bret): we want to skip `entity: Entity`
+        const _arguments = [];
+        ts.forEachChild(methodNode, (child) => {
+            if (!ts.isParameter(child))
+                return;
+            if (firstArg) {
+                firstArg = false;
+                return;
+            }
+            const p = {
+                name: child.name.getText(),
+                type: getType(checker, child.name),
+                // initialValue: null,
+            };
+            _arguments.push(p);
+        });
+        const block = findNode(methodNode, (node) => ts.isBlock(node));
+        if (!block)
+            throw new Error();
+        // TODO(bret): remove entity.component() calls
+        // TODO(bret): replace entity. with this.
+        const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+        const body = block.statements
+            .map((stmt) => printer.printNode(ts.EmitHint.Unspecified, stmt, sourceFile))
+            .join('\n');
+        const func = {
+            name: methodNode.name.getText(),
+            arguments: _arguments,
+            body,
+        };
+        switch (func.name) {
+            case 'update':
+            case 'render':
+                systemFuncs[func.name] = func;
+                break;
+            default:
+                break;
+        }
+        // console.log(node.name!);
+    });
+    return systemFuncs;
+    // const scope = findNode(systemNode!, (node) => ts.isMethodDeclaration(node));
+    // ts.forEachChild(scope, (child) => {
+    // 	//
+    // });
+    // console.log(scope?.getText());
+    // switch (systemName) {
+    // 	case 'update':
+    // 		break;
+    // 	case 'render':
+    // 		break;
+    // 	default:
+    // 		console.log({ systemName });
+    // 		throw new Error('not a valid system');
+    // }
 };
 export const getComponentFromFile = (filePath, componentName) => {
-    const fileData = readTSFile(filePath);
-    const comp = fileData.components.find(({ name }) => name === componentName);
-    if (!comp)
-        return null;
-    return extractComponent(fileData, comp);
+    const component = readTSFile(filePath).components.find(({ name }) => {
+        return name === componentName;
+    });
+    return component ?? null;
 };
 /** @deprecated */
 export const parseComponent = (component) => {
     return component.data;
+};
+function createImportDeclaration(namedImports, moduleSpecifier, defaultImport, namespaceImport) {
+    let importClause;
+    if (namespaceImport) {
+        importClause = ts.factory.createImportClause(false, undefined, ts.factory.createNamespaceImport(ts.factory.createIdentifier(namespaceImport.split(' as ')[1])));
+    }
+    else {
+        const namedBindings = namedImports.length > 0
+            ? ts.factory.createNamedImports(namedImports.map((name) => {
+                const [orig, alias] = name.split(' as ');
+                return ts.factory.createImportSpecifier(false, alias
+                    ? ts.factory.createIdentifier(orig)
+                    : undefined, ts.factory.createIdentifier(alias || orig));
+            }))
+            : undefined;
+        importClause = ts.factory.createImportClause(false, defaultImport
+            ? ts.factory.createIdentifier(defaultImport)
+            : undefined, namedBindings);
+    }
+    return ts.factory.createImportDeclaration(undefined, importClause, ts.factory.createStringLiteral(moduleSpecifier));
+}
+export const createClass = (fileData) => {
+    const _body = ts.factory.createClassExpression(undefined, 'MyEntity', undefined, undefined, []);
+    const extendsClass = ts.factory.createIdentifier('Entity');
+    const expr = ts.factory.createExpressionWithTypeArguments(extendsClass, undefined);
+    const heritageClause = ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [expr]);
+    const properties = fileData.components.flatMap((c) => {
+        return (c.properties?.map((p) => {
+            const ref = ts.factory.createTypeReferenceNode(p.type, []);
+            const sf = ts.createSourceFile('temp', `(${p.initialValue})`, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
+            let expr;
+            const stmt = sf.statements[0];
+            if (ts.isExpressionStatement(stmt) &&
+                ts.isParenthesizedExpression(stmt.expression)) {
+                expr = stmt.expression.expression;
+            }
+            return ts.factory.createPropertyDeclaration(undefined, p.name, undefined, ref, expr);
+        }) ?? []);
+    });
+    const body = ts.factory.createClassDeclaration([ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)], 'MyEntity', undefined, [heritageClause], properties);
+    return {
+        body,
+        imports: fileData.imports.map(({ namedImports, moduleSpecifier, defaultImport, namespaceImport, }) => createImportDeclaration(namedImports, moduleSpecifier, defaultImport, namespaceImport)),
+    };
+};
+export const printFile = (statements) => {
+    const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+    const sourceFile = ts.factory.createSourceFile(statements, ts.factory.createToken(ts.SyntaxKind.EndOfFileToken), ts.NodeFlags.None);
+    return printer.printFile(sourceFile);
 };
 const regexComponentVar = /\s*const (?<varName>\w+) = entity\.component\?\.\(\w+\);\n/g;
 export const generateTokenRegex = (token) => {
@@ -151,5 +322,8 @@ export const parseSystem = (system) => {
             .replaceAll(/    /g, '\t');
         return [k, { args, body }];
     }));
+};
+export const vitestOnly = {
+    getComponentProperties,
 };
 //# sourceMappingURL=shared.js.map
