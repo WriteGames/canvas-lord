@@ -18,11 +18,15 @@
 	"license": "ISC",
 	"dependencies": {
 		"canvas-lord": "workspace:*",
+		"globby": "^14.1.0",
 		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
+		"@types/eslint": "8.56.0",
 		"@types/node": "20.11.3",
 		"@writegames.com/style-guide": "workspace:*",
+		"eslint": "8.56.0",
+		"prettier": "3.5.3",
 		"typescript": "5.9.3",
 		"vitest": "^1.2.0"
 	}
