@@ -1,8 +1,8 @@
 const { resolve } = require('node:path');
 
-const project = resolve(process.cwd(), 'tsconfig.json');
+const project = resolve(__dirname, 'tsconfig.json');
 
-const baseESLintConfig = require('../.eslintrc');
+const baseESLintConfig = require('../.eslintrc.cjs');
 
 // canvas-lord
 module.exports = {
@@ -31,6 +31,15 @@ module.exports = {
 				selector: ['typeLike', 'enumMember'],
 			},
 		],
+
+		'@typescript-eslint/prefer-for-of': 0,
+
+		// revisit
+		'@typescript-eslint/method-signature-style': 0,
+		'@typescript-eslint/unified-signatures': 0,
+		'@typescript-eslint/no-non-null-assertion': 0,
+
+		'import/order': 0,
 
 		// temporary
 		'@typescript-eslint/no-unsafe-declaration-merging': 0,
