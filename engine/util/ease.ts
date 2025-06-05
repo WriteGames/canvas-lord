@@ -75,6 +75,7 @@ export const Ease = Object.freeze({
 	...generateMatrix('quart', quart),
 	...generateMatrix('quint', quint),
 	...generateMatrix('sine', sine),
+	...generateMatrix('elastic', bounce),
 	...generateMatrix('bounce', bounce),
 	...generateMatrix('circ', circ),
 	...generateMatrix('expo', expo),
