@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type -- blah */
+import crypto from 'node:crypto';
 import ts from 'typescript';
 export const isExportKeyword = (m) => m.kind === ts.SyntaxKind.ExportKeyword;
 const map = new Map();
@@ -45,6 +47,9 @@ export const getFileImports = (filePath) => {
         imports.push(entry);
     });
     return imports;
+};
+const createChecksum = (str) => {
+    return crypto.createHash('sha256').update(str, 'utf-8').digest('hex');
 };
 export const readTSFile = (filePath) => {
     console.time('prepare');
@@ -388,11 +393,14 @@ const transformerRemoveUnusedImports = (context) => {
         return ts.visitNode(sourceFile, visit, ts.isSourceFile);
     };
 };
-export const createClass = (fileData) => {
+export const createClass = (fileData, options) => {
+    const { name, components, systems } = options;
     const extendsClass = ts.factory.createIdentifier('Entity');
     const expr = ts.factory.createExpressionWithTypeArguments(extendsClass, undefined);
     const heritageClause = ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [expr]);
     const properties = fileData.components.flatMap((c) => {
+        if (!components.includes(c.name))
+            return [];
         return (c.properties?.map((p) => {
             const ref = ts.factory.createTypeReferenceNode(p.type, []);
             const sf = ts.createSourceFile('temp', 
@@ -408,28 +416,52 @@ export const createClass = (fileData) => {
         }) ?? []);
     });
     const imports = fileData.imports.map(({ namedImports, moduleSpecifier, defaultImport, namespaceImport }) => createImportDeclaration(namedImports, moduleSpecifier, defaultImport, namespaceImport));
+    const typeInput = ts.factory.createTypeReferenceNode('Input');
+    const param = ts.factory.createParameterDeclaration(undefined, undefined, ts.factory.createIdentifier('input'), undefined, typeInput);
     const updateStatements = [];
     // const renderStatements: ts.Statement[] = [];
+    const methods = [];
     // TODO(bret): merge params?
     fileData.systems.forEach((system) => {
+        const systemOptions = systems.find(({ name }) => name === system.name);
+        if (!systemOptions)
+            return;
         const { update,
         // render
          } = system.functions;
         if (update) {
-            const wrapped = update.body;
-            const file = ts.createSourceFile('temp2.ts', wrapped, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-            updateStatements.push(...file.statements);
+            const checksum = createChecksum(update.body);
+            let updateBodySource = ts.createSourceFile(`${checksum}.ts`, update.body, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+            // expression statement
+            if (systemOptions.outputType === 'function') {
+                const file = updateBodySource;
+                const args = update.arguments.map(({ name }) => name);
+                const params = update.arguments.map(({ name, type }) => {
+                    const typeInput = ts.factory.createTypeReferenceNode(type);
+                    const param = ts.factory.createParameterDeclaration(undefined, undefined, ts.factory.createIdentifier(name), undefined, typeInput);
+                    return param;
+                });
+                const block = ts.factory.createBlock(file.statements, true);
+                const method = ts.factory.createMethodDeclaration(undefined, undefined, systemOptions.alias, undefined, [], params, ts.factory.createTypeReferenceNode('void'), block);
+                methods.push(method);
+                // update the output for updateStatements
+                const str = `this.${systemOptions.alias}(${args.join(', ')});`;
+                const checksum = createChecksum(str);
+                updateBodySource = ts.createSourceFile(`${checksum}.ts`, str, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+            }
+            else {
+                // outputType: 'function'
+            }
+            updateStatements.push(...updateBodySource.statements);
         }
     });
     const updateBody = ts.factory.createBlock(updateStatements, true);
-    const typeInput = ts.factory.createTypeReferenceNode('Input');
-    const param = ts.factory.createParameterDeclaration(undefined, undefined, ts.factory.createIdentifier('input'), undefined, typeInput);
     const _update = ['update', updateBody];
     // const _render = ['render', renderBody] as const;
     const [updateMethod] = [_update].map(([methodName, updateBody]) => {
         return ts.factory.createMethodDeclaration(undefined, undefined, methodName, undefined, [], [param], ts.factory.createTypeReferenceNode('void'), updateBody);
     });
-    const _body = ts.factory.createClassDeclaration([ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)], 'MyEntity', undefined, [heritageClause], [...properties, updateMethod]);
+    const _body = ts.factory.createClassDeclaration([ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)], name, undefined, [heritageClause], [...properties, updateMethod, ...methods]);
     const body = ts.transform(_body, [
         transformerRemoveComponentDeclarations,
         transformerReplaceEntity,

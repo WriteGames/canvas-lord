@@ -5,7 +5,7 @@ import { ESLint } from 'eslint';
 // eslint-disable-next-line import/no-extraneous-dependencies -- i don't know why we're getting this error
 import { globby } from 'globby';
 
-import { createClass, printFile, readTSFile } from './shared.js';
+import { createClass, printFile, readTSFile, System } from './shared.js';
 
 const testOutputPath = './out3/boo.ts';
 
@@ -18,8 +18,23 @@ if (true as boolean) {
 	console.timeEnd('readTSFile');
 	// const contents = fileData.components.find((c) => c.name === componentName);
 
+	const components = [
+		// 'horizontalMovementComponent',
+		'testComponent',
+	];
+	const systems: System[] = [
+		// { name: 'horizontalMovementSystem', outputType: 'inline' },
+		{ name: 'moveLeftSystem', outputType: 'inline' },
+		{ name: 'moveRightSystem', outputType: 'inline' },
+		{
+			name: 'deleteSelfSystem',
+			outputType: 'function',
+			alias: 'deleteSelf',
+		},
+	];
+
 	console.time('createClass');
-	const c = createClass(fileData);
+	const c = createClass(fileData, { name: 'Player', components, systems });
 	console.timeEnd('createClass');
 
 	console.time('printFile');

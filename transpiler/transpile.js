@@ -14,8 +14,22 @@ if (true) {
     const fileData = readTSFile(filePath);
     console.timeEnd('readTSFile');
     // const contents = fileData.components.find((c) => c.name === componentName);
+    const components = [
+        // 'horizontalMovementComponent',
+        'testComponent',
+    ];
+    const systems = [
+        // { name: 'horizontalMovementSystem', outputType: 'inline' },
+        { name: 'moveLeftSystem', outputType: 'inline' },
+        { name: 'moveRightSystem', outputType: 'inline' },
+        {
+            name: 'deleteSelfSystem',
+            outputType: 'function',
+            alias: 'deleteSelf',
+        },
+    ];
     console.time('createClass');
-    const c = createClass(fileData);
+    const c = createClass(fileData, { name: 'Player', components, systems });
     console.timeEnd('createClass');
     console.time('printFile');
     const output = printFile(c);
