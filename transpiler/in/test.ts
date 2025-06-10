@@ -6,8 +6,17 @@ interface PlayerEntity {
 	moveX: () => void;
 }
 
+export const moveXSystem: IEntitySystem = {
+	update(entity: Entity) {
+		console.log(entity, 'moveX');
+		console.log(`"${entity.speed}"`);
+		console.log('testing', 'one');
+	},
+};
+
 export const horizontalMovementComponent = Components.createComponent({});
-export const horizontalMovementSystem = {
+export const horizontalMovementSystem: IEntitySystem = {
+	// @ts-expect-error -- blah
 	update(entity: PlayerEntity) {
 		entity.moveX();
 	},

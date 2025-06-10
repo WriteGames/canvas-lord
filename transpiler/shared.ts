@@ -654,6 +654,7 @@ export type System = {
 	| {
 			outputType: 'function';
 			alias: string;
+			omitFromOutput?: boolean;
 	  }
 );
 
@@ -741,9 +742,15 @@ export const createClass = (
 	const methods: ts.MethodDeclaration[] = [];
 
 	// TODO(bret): merge params?
-	fileData.systems.forEach((system) => {
-		const systemOptions = systems.find(({ name }) => name === system.name);
-		if (!systemOptions) return;
+	systems.forEach((systemOptions) => {
+		const system = fileData.systems.find(
+			({ name }) => name === systemOptions.name,
+		);
+		if (!system) throw new Error('System does not exist');
+		// });
+		// fileData.systems.forEach((system) => {
+		// 	const systemOptions = systems.find(({ name }) => name === system.name);
+		// 	if (!systemOptions) return;
 
 		const {
 			update,
@@ -751,6 +758,7 @@ export const createClass = (
 		} = system.functions;
 		if (update) {
 			const checksum = createChecksum(update.body);
+			console.log(update.body);
 			let updateBodySource = ts.createSourceFile(
 				`${checksum}.ts`,
 				update.body,
@@ -792,11 +800,12 @@ export const createClass = (
 				methods.push(method);
 
 				// update the output for updateStatements
+
 				const str = `this.${systemOptions.alias}(${args.join(', ')});`;
 				const checksum = createChecksum(str);
 				updateBodySource = ts.createSourceFile(
 					`${checksum}.ts`,
-					str,
+					systemOptions.omitFromOutput ? '' : str,
 					ts.ScriptTarget.Latest,
 					true,
 					ts.ScriptKind.TS,
@@ -826,12 +835,26 @@ export const createClass = (
 		);
 	});
 
+	// remove any unused properties
+	const filteredProps = properties.filter((prop) => {
+		const name = (prop.name as ts.Identifier).escapedText;
+		const node = findNode(updateMethod, (node) => {
+			if (!node.parent as unknown) return false;
+			return (
+				ts.isIdentifier(node) &&
+				ts.isPropertyAccessExpression(node.parent) &&
+				node.escapedText === name
+			);
+		});
+		return node !== undefined;
+	});
+
 	const _body = ts.factory.createClassDeclaration(
 		[ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)],
 		name,
 		undefined,
 		[heritageClause],
-		[...properties, updateMethod, ...methods],
+		[...filteredProps, updateMethod, ...methods],
 	);
 
 	const body = ts.transform(_body, [
@@ -853,11 +876,113 @@ export const createClass = (
 	return [...imports, body];
 };
 
+function cloneNode<T extends ts.Node>(node: T): T {
+	function visitor(n: ts.Node): ts.VisitResult<ts.Node> {
+		if (ts.isStringLiteral(n)) {
+			return ts.factory.createStringLiteral(n.text);
+		}
+		if (ts.isNumericLiteral(n)) {
+			return ts.factory.createNumericLiteral(n.text);
+		}
+		if (ts.isIdentifier(n)) {
+			return ts.factory.createIdentifier(n.text);
+		}
+		if (ts.isPropertyAccessExpression(n)) {
+			return ts.factory.createPropertyAccessExpression(
+				ts.visitNode(n.expression, visitor) as ts.Expression,
+				ts.visitNode(n.name, visitor) as ts.Identifier,
+			);
+		}
+		if (ts.isVariableDeclaration(n)) {
+			return ts.factory.createVariableDeclaration(
+				ts.visitNode(n.name, visitor) as ts.BindingName,
+				undefined,
+				undefined,
+				n.initializer
+					? (ts.visitNode(n.initializer, visitor) as ts.Expression)
+					: undefined,
+			);
+		}
+		if (ts.isVariableDeclarationList(n)) {
+			return ts.factory.createVariableDeclarationList(
+				n.declarations.map(
+					(d) => ts.visitNode(d, visitor) as ts.VariableDeclaration,
+				),
+				n.flags,
+			);
+		}
+		if (ts.isVariableStatement(n)) {
+			return ts.factory.createVariableStatement(
+				undefined,
+				ts.visitNode(
+					n.declarationList,
+					visitor,
+				) as ts.VariableDeclarationList,
+			);
+		}
+		if (ts.isExpressionStatement(n)) {
+			return ts.factory.createExpressionStatement(
+				ts.visitNode(n.expression, visitor) as ts.Expression,
+			);
+		}
+		if (ts.isCallExpression(n)) {
+			return ts.factory.createCallExpression(
+				ts.visitNode(n.expression, visitor) as ts.Expression,
+				undefined,
+				n.arguments.map(
+					(arg) => ts.visitNode(arg, visitor) as ts.Expression,
+				),
+			);
+		}
+
+		return ts.visitEachChild(n, visitor, nullTransformationContext);
+	}
+
+	const emptyFunc = () => {
+		//
+	};
+
+	const nullTransformationContext: ts.TransformationContext = {
+		factory: ts.factory,
+		getCompilerOptions: () => ({}),
+
+		startLexicalEnvironment: emptyFunc,
+		suspendLexicalEnvironment: emptyFunc,
+		resumeLexicalEnvironment: emptyFunc,
+		endLexicalEnvironment: () => [],
+
+		hoistFunctionDeclaration: emptyFunc,
+		hoistVariableDeclaration: emptyFunc,
+
+		readEmitHelpers: () => undefined,
+		requestEmitHelper: emptyFunc,
+
+		enableEmitNotification: emptyFunc,
+		enableSubstitution: emptyFunc,
+		isEmitNotificationEnabled: () => false,
+		isSubstitutionEnabled: () => false,
+
+		// @ts-expect-error - this are required
+		setLexicalEnvironmentFlags: emptyFunc,
+		getLexicalEnvironmentFlags: () => 0,
+
+		onEmitNode: (_hint, node, emit) => emit(_hint, node),
+		onSubstituteNode: (_hint, node) => node,
+	};
+
+	// @ts-expect-error -- ugh
+	return ts.visitNode(node, visitor);
+}
+
 export const printFile = (statements: ts.Statement[]) => {
-	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+	const printer = ts.createPrinter({
+		newLine: ts.NewLineKind.LineFeed,
+		removeComments: false,
+		omitTrailingSemicolon: true,
+	});
 
 	const _sourceFile = ts.factory.createSourceFile(
-		statements,
+		statements.map((stmt) => cloneNode(stmt)),
 		ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
 		ts.NodeFlags.None,
 	);
