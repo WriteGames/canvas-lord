@@ -422,15 +422,20 @@ export const createClass = (fileData, options) => {
     // const renderStatements: ts.Statement[] = [];
     const methods = [];
     // TODO(bret): merge params?
-    fileData.systems.forEach((system) => {
-        const systemOptions = systems.find(({ name }) => name === system.name);
-        if (!systemOptions)
-            return;
+    systems.forEach((systemOptions) => {
+        const system = fileData.systems.find(({ name }) => name === systemOptions.name);
+        if (!system)
+            throw new Error('System does not exist');
+        // });
+        // fileData.systems.forEach((system) => {
+        // 	const systemOptions = systems.find(({ name }) => name === system.name);
+        // 	if (!systemOptions) return;
         const { update,
         // render
          } = system.functions;
         if (update) {
             const checksum = createChecksum(update.body);
+            console.log(update.body);
             let updateBodySource = ts.createSourceFile(`${checksum}.ts`, update.body, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
             // expression statement
             if (systemOptions.outputType === 'function') {
@@ -447,7 +452,7 @@ export const createClass = (fileData, options) => {
                 // update the output for updateStatements
                 const str = `this.${systemOptions.alias}(${args.join(', ')});`;
                 const checksum = createChecksum(str);
-                updateBodySource = ts.createSourceFile(`${checksum}.ts`, str, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+                updateBodySource = ts.createSourceFile(`${checksum}.ts`, systemOptions.omitFromOutput ? '' : str, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
             }
             else {
                 // outputType: 'function'
@@ -461,7 +466,19 @@ export const createClass = (fileData, options) => {
     const [updateMethod] = [_update].map(([methodName, updateBody]) => {
         return ts.factory.createMethodDeclaration(undefined, undefined, methodName, undefined, [], [param], ts.factory.createTypeReferenceNode('void'), updateBody);
     });
-    const _body = ts.factory.createClassDeclaration([ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)], name, undefined, [heritageClause], [...properties, updateMethod, ...methods]);
+    // remove any unused properties
+    const filteredProps = properties.filter((prop) => {
+        const name = prop.name.escapedText;
+        const node = findNode(updateMethod, (node) => {
+            if (!node.parent)
+                return false;
+            return (ts.isIdentifier(node) &&
+                ts.isPropertyAccessExpression(node.parent) &&
+                node.escapedText === name);
+        });
+        return node !== undefined;
+    });
+    const _body = ts.factory.createClassDeclaration([ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)], name, undefined, [heritageClause], [...filteredProps, updateMethod, ...methods]);
     const body = ts.transform(_body, [
         transformerRemoveComponentDeclarations,
         transformerReplaceEntity,
@@ -478,9 +495,73 @@ export const createClass = (fileData, options) => {
     // };
     return [...imports, body];
 };
+function cloneNode(node) {
+    function visitor(n) {
+        if (ts.isStringLiteral(n)) {
+            return ts.factory.createStringLiteral(n.text);
+        }
+        if (ts.isNumericLiteral(n)) {
+            return ts.factory.createNumericLiteral(n.text);
+        }
+        if (ts.isIdentifier(n)) {
+            return ts.factory.createIdentifier(n.text);
+        }
+        if (ts.isPropertyAccessExpression(n)) {
+            return ts.factory.createPropertyAccessExpression(ts.visitNode(n.expression, visitor), ts.visitNode(n.name, visitor));
+        }
+        if (ts.isVariableDeclaration(n)) {
+            return ts.factory.createVariableDeclaration(ts.visitNode(n.name, visitor), undefined, undefined, n.initializer
+                ? ts.visitNode(n.initializer, visitor)
+                : undefined);
+        }
+        if (ts.isVariableDeclarationList(n)) {
+            return ts.factory.createVariableDeclarationList(n.declarations.map((d) => ts.visitNode(d, visitor)), n.flags);
+        }
+        if (ts.isVariableStatement(n)) {
+            return ts.factory.createVariableStatement(undefined, ts.visitNode(n.declarationList, visitor));
+        }
+        if (ts.isExpressionStatement(n)) {
+            return ts.factory.createExpressionStatement(ts.visitNode(n.expression, visitor));
+        }
+        if (ts.isCallExpression(n)) {
+            return ts.factory.createCallExpression(ts.visitNode(n.expression, visitor), undefined, n.arguments.map((arg) => ts.visitNode(arg, visitor)));
+        }
+        return ts.visitEachChild(n, visitor, nullTransformationContext);
+    }
+    const emptyFunc = () => {
+        //
+    };
+    const nullTransformationContext = {
+        factory: ts.factory,
+        getCompilerOptions: () => ({}),
+        startLexicalEnvironment: emptyFunc,
+        suspendLexicalEnvironment: emptyFunc,
+        resumeLexicalEnvironment: emptyFunc,
+        endLexicalEnvironment: () => [],
+        hoistFunctionDeclaration: emptyFunc,
+        hoistVariableDeclaration: emptyFunc,
+        readEmitHelpers: () => undefined,
+        requestEmitHelper: emptyFunc,
+        enableEmitNotification: emptyFunc,
+        enableSubstitution: emptyFunc,
+        isEmitNotificationEnabled: () => false,
+        isSubstitutionEnabled: () => false,
+        // @ts-expect-error - this are required
+        setLexicalEnvironmentFlags: emptyFunc,
+        getLexicalEnvironmentFlags: () => 0,
+        onEmitNode: (_hint, node, emit) => emit(_hint, node),
+        onSubstituteNode: (_hint, node) => node,
+    };
+    // @ts-expect-error -- ugh
+    return ts.visitNode(node, visitor);
+}
 export const printFile = (statements) => {
-    const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-    const _sourceFile = ts.factory.createSourceFile(statements, ts.factory.createToken(ts.SyntaxKind.EndOfFileToken), ts.NodeFlags.None);
+    const printer = ts.createPrinter({
+        newLine: ts.NewLineKind.LineFeed,
+        removeComments: false,
+        omitTrailingSemicolon: true,
+    });
+    const _sourceFile = ts.factory.createSourceFile(statements.map((stmt) => cloneNode(stmt)), ts.factory.createToken(ts.SyntaxKind.EndOfFileToken), ts.NodeFlags.None);
     const [sourceFile] = ts.transform(_sourceFile, [
         transformerRemoveUnusedImports,
     ]).transformed;

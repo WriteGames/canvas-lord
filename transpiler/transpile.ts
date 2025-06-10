@@ -23,9 +23,15 @@ if (true as boolean) {
 		'testComponent',
 	];
 	const systems: System[] = [
-		// { name: 'horizontalMovementSystem', outputType: 'inline' },
-		{ name: 'moveLeftSystem', outputType: 'inline' },
+		{
+			name: 'moveXSystem',
+			outputType: 'function',
+			alias: 'moveX',
+			omitFromOutput: true,
+		},
+		{ name: 'horizontalMovementSystem', outputType: 'inline' },
 		{ name: 'moveRightSystem', outputType: 'inline' },
+		{ name: 'moveLeftSystem', outputType: 'inline' },
 		{
 			name: 'deleteSelfSystem',
 			outputType: 'function',
