@@ -4,7 +4,7 @@ import type { IEntitySystem } from 'canvas-lord/util/types';
 import { Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
 
-interface PlayerEntity extends Entity {
+interface Player extends Entity {
 	speed: number;
 	moveX: () => void;
 }
@@ -12,7 +12,7 @@ interface PlayerEntity extends Entity {
 export const moveXSystem: IEntitySystem = {
 	update(entity: Entity) {
 		console.log(entity, 'moveX');
-		console.log(`"${(entity as PlayerEntity).speed}"`);
+		console.log(`"${(entity as Player).speed}"`);
 		console.log('testing', 'one');
 	},
 };
@@ -20,7 +20,7 @@ export const moveXSystem: IEntitySystem = {
 export const horizontalMovementComponent = Components.createComponent({});
 export const horizontalMovementSystem: IEntitySystem = {
 	// @ts-expect-error -- blah
-	update(entity: PlayerEntity) {
+	update(entity: Player) {
 		entity.moveX();
 	},
 };

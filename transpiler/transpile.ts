@@ -194,6 +194,7 @@ if (true as boolean) {
 	const update = entityClass.addMethod({
 		name: 'update',
 		parameters: [{ name: 'input', type: 'Input' }],
+		returnType: 'void',
 	});
 
 	const addToMethod = (
@@ -205,11 +206,19 @@ if (true as boolean) {
 		if (options.outputType === 'inline') {
 			update.addStatements([body]);
 		} else {
-			// update.addStatements(`${options.alias}();`);
+			const parameters = [];
+			if (body.includes('input.'))
+				parameters.push({ name: 'input', type: 'Input' });
+			if (!options.omitFromOutput)
+				update.addStatements(
+					`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`,
+				);
 			entityClass.addMethod({
 				name: options.alias,
 				statements: [body],
-				parameters: [{ name: 'input', type: 'Input' }],
+				// TODO(bret): make this more robust
+				parameters,
+				returnType: 'void',
 			});
 		}
 	};
