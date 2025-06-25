@@ -164,6 +164,7 @@ if (true) {
     const update = entityClass.addMethod({
         name: 'update',
         parameters: [{ name: 'input', type: 'Input' }],
+        returnType: 'void',
     });
     const addToMethod = (method, options, block) => {
         const body = block.getChildAtIndex(1).getText();
@@ -171,11 +172,17 @@ if (true) {
             update.addStatements([body]);
         }
         else {
-            // update.addStatements(`${options.alias}();`);
+            const parameters = [];
+            if (body.includes('input.'))
+                parameters.push({ name: 'input', type: 'Input' });
+            if (!options.omitFromOutput)
+                update.addStatements(`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`);
             entityClass.addMethod({
                 name: options.alias,
                 statements: [body],
-                parameters: [{ name: 'input', type: 'Input' }],
+                // TODO(bret): make this more robust
+                parameters,
+                returnType: 'void',
             });
         }
     };
