@@ -1,15 +1,18 @@
-import { Entity, Input, Keys } from 'canvas-lord';
-import * as Components from 'canvas-lord/util/components';
-import { IEntitySystem } from 'canvas-lord/util/types';
+import type { Entity, Input } from 'canvas-lord';
+import type { IEntitySystem } from 'canvas-lord/util/types';
 
-interface PlayerEntity {
+import { Keys } from 'canvas-lord';
+import * as Components from 'canvas-lord/util/components';
+
+interface PlayerEntity extends Entity {
+	speed: number;
 	moveX: () => void;
 }
 
 export const moveXSystem: IEntitySystem = {
 	update(entity: Entity) {
 		console.log(entity, 'moveX');
-		console.log(`"${entity.speed}"`);
+		console.log(`"${(entity as PlayerEntity).speed}"`);
 		console.log('testing', 'one');
 	},
 };
@@ -28,7 +31,7 @@ export const testComponent = Components.createComponent({
 });
 export const moveLeftSystem: IEntitySystem = {
 	update(entity: Entity, input: Input) {
-		const component = entity.component?.(testComponent)!;
+		const component = entity.component(testComponent)!;
 		if (input.keyCheck(Keys.ArrowLeft)) {
 			entity.x -= component.speed;
 		}
@@ -36,7 +39,7 @@ export const moveLeftSystem: IEntitySystem = {
 };
 export const moveRightSystem: IEntitySystem = {
 	update(entity: Entity, input: Input) {
-		const component = entity.component?.(testComponent)!;
+		const component = entity.component(testComponent)!;
 		if (input.keyCheck(Keys.ArrowRight)) {
 			entity.x += component.speed;
 		}
