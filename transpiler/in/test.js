@@ -20,7 +20,7 @@ export const testComponent = Components.createComponent({
 });
 export const moveLeftSystem = {
     update(entity, input) {
-        const component = entity.component?.(testComponent);
+        const component = entity.component(testComponent);
         if (input.keyCheck(Keys.ArrowLeft)) {
             entity.x -= component.speed;
         }
@@ -28,7 +28,7 @@ export const moveLeftSystem = {
 };
 export const moveRightSystem = {
     update(entity, input) {
-        const component = entity.component?.(testComponent);
+        const component = entity.component(testComponent);
         if (input.keyCheck(Keys.ArrowRight)) {
             entity.x += component.speed;
         }
