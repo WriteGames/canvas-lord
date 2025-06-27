@@ -1,8 +1,9 @@
-import type { Entity, Input } from 'canvas-lord';
+import type { Camera, Entity, Input } from 'canvas-lord';
 import type { IEntitySystem } from 'canvas-lord/util/types';
 
 import { Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
+import type { Ctx } from 'canvas-lord/util/canvas';
 
 interface Player extends Entity {
 	speed: number;
@@ -36,6 +37,9 @@ export const moveLeftSystem: IEntitySystem = {
 			entity.x -= component.speed;
 		}
 	},
+	render(entity: Entity, ctx: Ctx, camera: Camera) {
+		entity.render(ctx, camera);
+	},
 };
 export const moveRightSystem: IEntitySystem = {
 	update(entity: Entity, input: Input) {
@@ -43,6 +47,9 @@ export const moveRightSystem: IEntitySystem = {
 		if (input.keyCheck(Keys.ArrowRight)) {
 			entity.x += component.speed;
 		}
+	},
+	render() {
+		console.log('render me!!!');
 	},
 };
 export const deleteSelfSystem: IEntitySystem = {
