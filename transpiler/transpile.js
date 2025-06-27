@@ -6,6 +6,7 @@ import { globby } from 'globby';
 import { Project, SyntaxKind } from 'ts-morph';
 import { createClass, printFile, readTSFile } from './shared.js';
 const testOutputPath = './out3/boo.ts';
+console.time('whole thang');
 if (true) {
     // console.log(component, componentName);
     const inDir = `./in`;
@@ -24,14 +25,14 @@ if (true) {
     if (!file)
         throw new Error('file not found');
     console.timeEnd('getSource');
-    console.time('fff');
-    const fff = file.getExportedDeclarations();
-    console.timeEnd('fff');
+    console.time('exported Declaration');
+    const exportedDecls = file.getExportedDeclarations();
+    console.timeEnd('exported Declaration');
     console.time('find systems');
     const foundComponents = new Map();
     const foundSystems = new Map();
     // const exports = ;
-    for (const [name, declarations] of fff) {
+    for (const [name, declarations] of exportedDecls) {
         for (const decl of declarations) {
             const type = typeChecker.getTypeAtLocation(decl);
             switch (type.getSymbol()?.getName()) {
@@ -65,8 +66,8 @@ if (true) {
             omitFromOutput: true,
         },
         { name: 'horizontalMovementSystem', outputType: 'inline' },
-        { name: 'moveRightSystem', outputType: 'inline' },
         { name: 'moveLeftSystem', outputType: 'inline' },
+        { name: 'moveRightSystem', outputType: 'inline' },
         {
             name: 'deleteSelfSystem',
             outputType: 'function',
@@ -77,11 +78,11 @@ if (true) {
     // create the class
     const entityClass = sourceFile.addClass({
         name: classData.name,
+        isExported: true,
+        extends: 'Entity',
     });
-    entityClass.setIsExported(true);
-    entityClass.setExtends('Entity');
     // add components
-    const componentsToUse = components
+    const entityProperties = components
         .flatMap((name) => {
         const comp = foundComponents.get(name);
         if (!comp)
@@ -143,13 +144,11 @@ if (true) {
         });
     })
         .filter((node) => node !== null);
-    console.log(componentsToUse);
-    componentsToUse.forEach(([name, value]) => {
+    entityProperties.forEach(([name, value]) => {
         entityClass.addProperty({
             name,
             initializer: JSON.stringify(value),
         });
-        console.log(name, value);
     });
     const systemsToUse = systems
         .map((data) => {
@@ -160,23 +159,34 @@ if (true) {
     })
         .filter((s) => s !== null);
     console.table(systemsToUse);
-    const types = ['update', 'render'];
-    const update = entityClass.addMethod({
-        name: 'update',
-        parameters: [{ name: 'input', type: 'Input' }],
-        returnType: 'void',
-    });
+    // TODO(bret): Use `types` to generate the methods
+    const methodsToUse = [
+        {
+            name: 'update',
+            parameters: [{ name: 'input', type: 'Input' }],
+            returnType: 'void',
+        },
+        {
+            name: 'render',
+            parameters: [
+                { name: 'ctx', type: 'Ctx' },
+                { name: 'camera', type: 'Camera' },
+            ],
+            returnType: 'void',
+        },
+    ];
+    const nameToMethodMap = new Map(methodsToUse.map((m) => [m.name, entityClass.addMethod(m)]));
     const addToMethod = (method, options, block) => {
         const body = block.getChildAtIndex(1).getText();
         if (options.outputType === 'inline') {
-            update.addStatements([body]);
+            method.addStatements([body]);
         }
         else {
             const parameters = [];
             if (body.includes('input.'))
                 parameters.push({ name: 'input', type: 'Input' });
             if (!options.omitFromOutput)
-                update.addStatements(`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`);
+                method.addStatements(`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`);
             entityClass.addMethod({
                 name: options.alias,
                 statements: [body],
@@ -190,35 +200,24 @@ if (true) {
         const methods = system[1].getDescendantsOfKind(SyntaxKind.MethodDeclaration);
         methods.forEach((m) => {
             const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
+            if (!methodName)
+                throw new Error('missing method name');
             const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
-            switch (methodName) {
-                case 'update':
-                    addToMethod(update, system[0], blocks[0]);
-                    break;
-                case 'render':
-                    break;
-                default:
-                    throw new Error('invalid method');
-            }
+            const method = nameToMethodMap.get(methodName);
+            if (!method)
+                throw new Error('invalid method');
+            addToMethod(method, system[0], blocks[0]);
         });
     });
-    // systemsToUse.forEach(([data]) => {
-    // 	// const { name } = data;
-    // 	if (data.outputType === 'function') {
-    // 		// data.alias
-    // 		entityClass.addMethod({
-    // 			name: data.alias,
-    // 		});
-    // 	}
-    // });
     // TODO(bret): clean up update()
     entityClass.getMethods().forEach((m) => {
+        // `entity` -> `this`
         m.getDescendantsOfKind(SyntaxKind.Identifier).forEach((id) => {
             if (id.getText() === 'entity') {
                 id.replaceWithText('this');
-                console.log('found an enitty');
             }
         });
+        // Remove references to `this.component`
         m.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).forEach((p) => {
             const str = p
                 .getChildren()
@@ -226,23 +225,33 @@ if (true) {
                 .join('');
             if (str === 'this.component') {
                 const varState = p.getFirstAncestorByKind(SyntaxKind.VariableStatement);
-                console.log('a component');
                 varState?.remove();
             }
         });
-        // for all thods
+        // `component` -> `this`
         m.getDescendantsOfKind(SyntaxKind.Identifier).forEach((id) => {
             if (id.getText() === 'component') {
                 id.replaceWithText('this');
-                console.log('found a component');
             }
         });
     });
-    // TODO: imports
-    sourceFile.addImportDeclaration({
-        moduleSpecifier: 'canvas-lord',
-        namedImports: ['Entity', 'Input', 'Keys'],
-    });
+    // old way of doing imports, keep using `fixMissingImports` until it doesn't work
+    if (false) {
+        const imports = file.getImportDeclarations().map((i) => {
+            const moduleSpecifier = i.getModuleSpecifier().getLiteralText();
+            console.log(moduleSpecifier);
+            const namedImports = i.getNamedImports().map((ni) => {
+                return ni.getText();
+            });
+            // TODO(bret): handle `* as Default` case
+            return {
+                moduleSpecifier,
+                namedImports,
+            };
+        });
+        sourceFile.addImportDeclarations(imports);
+    }
+    sourceFile.fixMissingImports();
     console.time('save');
     await sourceFile.save();
     console.timeEnd('save');
@@ -306,8 +315,7 @@ if (true) {
         console.log(`Formatted: ${filePath}`);
     }));
 }
-// TODO(bret): Run ESLint
-// TODO(bret): Run prettier
+console.timeEnd('whole thang');
 /*                                                                  */
 /*                                                                  */
 /*                            SCENE                                 */
