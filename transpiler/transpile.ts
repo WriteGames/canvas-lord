@@ -8,6 +8,76 @@ import tsm, { Project, SyntaxKind } from 'ts-morph';
 import type { System } from './shared.js';
 import { createClass, printFile, readTSFile } from './shared.js';
 
+const getValue = (initializer: tsm.Expression): unknown => {
+	const kind = initializer.getKind();
+	switch (kind) {
+		case SyntaxKind.NumericLiteral:
+			return initializer
+				.asKind(SyntaxKind.NumericLiteral)
+				?.getLiteralValue();
+
+		case SyntaxKind.StringLiteral:
+			return initializer
+				.asKind(SyntaxKind.StringLiteral)
+				?.getLiteralValue();
+
+		case SyntaxKind.TrueKeyword:
+			return true;
+
+		case SyntaxKind.FalseKeyword:
+			return false;
+
+		case SyntaxKind.NullKeyword:
+			return null;
+
+		case SyntaxKind.ObjectLiteralExpression: {
+			const expr = initializer.asKind(SyntaxKind.ObjectLiteralExpression);
+			if (!expr) throw new Error('???');
+			return traverseObject(expr);
+		}
+
+		case SyntaxKind.ArrayLiteralExpression: {
+			const arr = initializer.asKind(SyntaxKind.ArrayLiteralExpression);
+			if (!arr) throw new Error('???');
+			return traverseArray(arr);
+		}
+
+		// TODO(bret): revisit this - do we want to resolve these values or what?
+		case SyntaxKind.Identifier: {
+			const id = initializer.asKind(SyntaxKind.Identifier);
+			if (id) {
+				const def = id.getDefinitions();
+				const v = def[0].getNode().getNextSiblings().at(-1);
+				if (!v) throw new Error('???');
+				return getValue(v as tsm.Expression);
+			}
+			return initializer.getText();
+		}
+
+		default:
+			return initializer.getText();
+	}
+};
+
+const traverseArray = (arr: tsm.ArrayLiteralExpression): unknown[] => {
+	return arr.getElements().map((elem) => getValue(elem));
+};
+
+const traverseObject = (obj: tsm.ObjectLiteralExpression): object => {
+	const result: Record<string, unknown> = {};
+	obj.getProperties().forEach((_prop) => {
+		const prop = _prop.asKind(SyntaxKind.PropertyAssignment);
+		if (!prop) return;
+
+		const name = prop.getName();
+		const initializer = prop.getInitializer();
+		if (!initializer) return;
+
+		result[name] = getValue(initializer);
+	});
+	return result;
+};
+
 const testOutputPath = './out3/boo.ts';
 
 console.time('whole thang');
@@ -114,7 +184,7 @@ if (true as boolean) {
 			// 	return undefined;
 			// });
 			return obj
-				.getDescendantsOfKind(SyntaxKind.SyntaxList)
+				.getChildrenOfKind(SyntaxKind.SyntaxList)
 				.flatMap((node) => node.getChildren())
 				.filter((n) => n.getKind() === SyntaxKind.PropertyAssignment)
 				.map((node) => {
@@ -124,48 +194,7 @@ if (true as boolean) {
 					if (!name) throw new Error('could not read name');
 
 					const v = children[2] as tsm.LiteralExpression;
-					const numericValue = v
-						.asKind(SyntaxKind.NumericLiteral)
-						?.getLiteralValue();
-
-					let stringValue = v
-						.asKind(SyntaxKind.StringLiteral)
-						?.getLiteralValue();
-					if (stringValue) {
-						stringValue = `"${stringValue}"`;
-					}
-
-					// TODO(bret): figure out how to extract this
-					const objectValue = v.asKind(
-						SyntaxKind.ObjectLiteralExpression,
-					);
-					if (objectValue) {
-						throw new Error('objects are not yet supported');
-					}
-
-					// TODO(bret): figure out how to extract this
-					const arrayValue = v.asKind(
-						SyntaxKind.ArrayLiteralExpression,
-					);
-					if (arrayValue) {
-						throw new Error('arrays are not yet supported');
-					}
-
-					const nullValue = v.asKind(SyntaxKind.NullKeyword);
-					if (nullValue) return [name, null] as const;
-
-					const undefinedValue = v
-						.asKind(SyntaxKind.Identifier)
-						?.getSymbol()
-						?.getName();
-
-					return [
-						name,
-						numericValue ??
-							stringValue ??
-							objectValue ??
-							undefinedValue,
-					] as const;
+					return [name, getValue(v)] as const;
 				});
 		})
 		.filter((node) => node !== null);
