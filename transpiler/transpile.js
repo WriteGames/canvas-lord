@@ -265,6 +265,12 @@ if (true) {
             }
         });
     });
+    // remove empty methods
+    methodsToUse.forEach((m) => {
+        const method = nameToMethodMap.get(m.name);
+        if (method?.getBody()?.getChildAtIndex(1).getChildCount() === 0)
+            method.remove();
+    });
     // old way of doing imports, keep using `fixMissingImports` until it doesn't work
     if (false) {
         const imports = file.getImportDeclarations().map((i) => {

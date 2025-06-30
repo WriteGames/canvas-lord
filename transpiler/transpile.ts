@@ -4,7 +4,8 @@ import path from 'node:path';
 import * as prettier from 'prettier';
 import { globby } from 'globby';
 
-import tsm, { Project, SyntaxKind } from 'ts-morph';
+import type tsm from 'ts-morph';
+import { Project, SyntaxKind } from 'ts-morph';
 import type { System } from './shared.js';
 import { createClass, printFile, readTSFile } from './shared.js';
 
@@ -311,6 +312,13 @@ if (true as boolean) {
 		});
 	});
 
+	// remove empty methods
+	methodsToUse.forEach((m) => {
+		const method = nameToMethodMap.get(m.name);
+		if (method?.getBody()?.getChildAtIndex(1).getChildCount() === 0)
+			method.remove();
+	});
+
 	// old way of doing imports, keep using `fixMissingImports` until it doesn't work
 	if (false as boolean) {
 		const imports = file.getImportDeclarations().map((i) => {
@@ -337,7 +345,7 @@ if (true as boolean) {
 	//
 	// process.exit(0);
 
-	if (false) {
+	if (false as boolean) {
 		console.time('readTSFile');
 		const fileData = readTSFile(filePath);
 		console.timeEnd('readTSFile');

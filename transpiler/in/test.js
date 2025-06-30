@@ -25,9 +25,9 @@ export const moveLeftSystem = {
             entity.x -= component.speed;
         }
     },
-    render(entity, ctx, camera) {
-        entity.render(ctx, camera);
-    },
+    // render(entity: Entity, ctx: Ctx, camera: Camera) {
+    // 	entity.render(ctx, camera);
+    // },
 };
 export const moveRightSystem = {
     update(entity, input) {
@@ -36,9 +36,9 @@ export const moveRightSystem = {
             entity.x += component.speed;
         }
     },
-    render() {
-        console.log('render me!!!');
-    },
+    // render() {
+    // 	console.log('render me!!!');
+    // },
 };
 export const deleteSelfSystem = {
     update(entity, input) {
