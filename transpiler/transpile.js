@@ -101,6 +101,138 @@ const cleanUpClass = (_class) => {
     });
 };
 const testOutputPath = './out3/boo.ts';
+const getComponentProperties = (foundComponents, components) => {
+    return components
+        .flatMap((name) => {
+        const comp = foundComponents.get(name);
+        if (!comp)
+            return null;
+        const [obj] = comp.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression);
+        return obj
+            .getChildrenOfKind(SyntaxKind.SyntaxList)
+            .flatMap((node) => node.getChildren())
+            .filter((n) => n.getKind() === SyntaxKind.PropertyAssignment)
+            .map((node) => {
+            const children = node.getChildren();
+            const name = children[0].getSymbol()?.getName();
+            if (!name)
+                throw new Error('could not read name');
+            const v = children[2];
+            return [name, getValue(v)];
+        });
+    })
+        .filter((node) => node !== null)
+        .map(([name, value]) => ({
+        name,
+        initializer: JSON.stringify(value),
+    }));
+};
+const addComponents = (target, foundComponents, components) => {
+    const firstMethodIndex = target.getMethods()[0]?.getChildIndex();
+    getComponentProperties(foundComponents, components).forEach((prop) => {
+        if (firstMethodIndex) {
+            target.insertProperty(firstMethodIndex, prop);
+        }
+        else {
+            target.addProperty(prop);
+        }
+    });
+};
+const removeComponents = (target, foundComponents, components) => {
+    getComponentProperties(foundComponents, components).forEach(({ name }) => {
+        target.getProperty(name)?.remove();
+    });
+};
+const addToMethod = (target, method, options, block) => {
+    const body = block.getChildAtIndex(1).getText();
+    if (options.outputType === 'inline') {
+        method.addStatements([body]);
+    }
+    else {
+        const parameters = [];
+        // TODO(bret): do a better job of finding out if parameters are needed
+        if (body.includes('input.'))
+            parameters.push({ name: 'input', type: 'Input' });
+        if (!options.omitFromOutput)
+            method.addStatements(`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`);
+        target.addMethod({
+            name: options.alias,
+            statements: [body],
+            // TODO(bret): make this more robust
+            parameters,
+            returnType: 'void',
+        });
+    }
+};
+const strip = (str) => {
+    return str.replaceAll(/\s+/g, ' ');
+};
+const removeFromMethod = (target, method, options, block) => {
+    if (options.outputType === 'inline') {
+        let body = block.getChildAtIndex(1).getText();
+        // TODO(bret): get this part working
+        let toRemove;
+        const getNextStmt = () => method.getStatements().find((s) => {
+            return strip(body).startsWith(strip(s.getText()));
+        });
+        while ((toRemove = getNextStmt())) {
+            body = body.replace(toRemove.getText(), '');
+            body = body.replace(/^[\r\n]+/g, '').trim();
+            toRemove.remove();
+        }
+        // method.addStatements([body]);
+    }
+    else {
+        const stmt = method.getStatement((s) => {
+            return s.getText().includes(`this.${options.alias}(`);
+        });
+        stmt?.remove();
+        target.getMethod(options.alias)?.remove();
+    }
+};
+const addSystems = (target, foundSystems, systems) => {
+    const systemsToUse = systems
+        .map((data) => {
+        const system = foundSystems.get(data.name);
+        return system ? [data, system] : null;
+    })
+        .filter((s) => s !== null);
+    systemsToUse.forEach((system) => {
+        const methods = system[1].getDescendantsOfKind(SyntaxKind.MethodDeclaration);
+        methods.forEach((m) => {
+            const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
+            if (!methodName)
+                throw new Error('missing method name');
+            const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
+            const method = target.getMethod(methodName);
+            if (!method)
+                throw new Error('invalid method');
+            addToMethod(target, method, system[0], blocks[0]);
+        });
+    });
+};
+const removeSystems = (target, foundSystems, systems) => {
+    const systemsToUse = systems
+        .map((data) => {
+        const system = foundSystems.get(data.name);
+        return system ? [data, system] : null;
+    })
+        .filter((s) => s !== null);
+    systemsToUse.forEach((system) => {
+        const methods = system[1].getDescendantsOfKind(SyntaxKind.MethodDeclaration);
+        methods.forEach((m) => {
+            const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
+            if (!methodName)
+                throw new Error('missing method name');
+            const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
+            const method = target.getMethod(methodName);
+            if (!method)
+                throw new Error('invalid method');
+            removeFromMethod(target, method, system[0], blocks[0]);
+        });
+    });
+};
+const filesToFormat = [];
 if (true) {
     // console.log(component, componentName);
     const inDir = `./in`;
@@ -164,173 +296,50 @@ if (true) {
             returnType: 'void',
         },
     ];
+    console.log('start pre');
     console.time('pre');
+    console.time('read json');
     const jsonFilePath = path.join(inDir, 'tut.json');
     const json = fs.readFileSync(jsonFilePath, 'utf-8');
     const classData = JSON.parse(json);
     const { name, components, systems, extendsClass = 'Entity', steps, } = classData;
+    console.timeEnd('read json');
     // create the class
+    console.time('generate base class');
     const baseEntityClass = sourceFile.addClass({
-        name: `Base_${name}`,
+        name,
         isExported: true,
         extends: extendsClass,
     });
-    const getComponentProperties = (components) => {
-        return components
-            .flatMap((name) => {
-            const comp = foundComponents.get(name);
-            if (!comp)
-                return null;
-            const [obj] = comp.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression);
-            return obj
-                .getChildrenOfKind(SyntaxKind.SyntaxList)
-                .flatMap((node) => node.getChildren())
-                .filter((n) => n.getKind() === SyntaxKind.PropertyAssignment)
-                .map((node) => {
-                const children = node.getChildren();
-                const name = children[0].getSymbol()?.getName();
-                if (!name)
-                    throw new Error('could not read name');
-                const v = children[2];
-                return [name, getValue(v)];
-            });
-        })
-            .filter((node) => node !== null);
-    };
-    const addComponents = (target, components) => {
-        const firstMethodIndex = target.getMethods()[0]?.getChildIndex();
-        getComponentProperties(components).forEach(([name, value]) => {
-            if (firstMethodIndex) {
-                target.insertProperty(firstMethodIndex, {
-                    name,
-                    initializer: JSON.stringify(value),
-                });
-            }
-            else {
-                target.addProperty({
-                    name,
-                    initializer: JSON.stringify(value),
-                });
-            }
-        });
-    };
-    const addToMethod = (target, method, options, block) => {
-        const body = block.getChildAtIndex(1).getText();
-        if (options.outputType === 'inline') {
-            method.addStatements([body]);
-        }
-        else {
-            const parameters = [];
-            // TODO(bret): do a better job of finding out if parameters are needed
-            if (body.includes('input.'))
-                parameters.push({ name: 'input', type: 'Input' });
-            if (!options.omitFromOutput)
-                method.addStatements(`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`);
-            target.addMethod({
-                name: options.alias,
-                statements: [body],
-                // TODO(bret): make this more robust
-                parameters,
-                returnType: 'void',
-            });
-        }
-    };
-    const removeFromMethod = (target, method, options, block) => {
-        const body = block.getChildAtIndex(1).getText();
-        console.log({ body });
-        if (options.outputType === 'inline') {
-            // TODO(bret): get this part working
-            const toRemove = method.getStatements().find((s) => {
-                console.log('=====');
-                console.log(s.getText());
-                console.log('---');
-                console.log(body);
-                console.log('=====');
-                return body.startsWith(s.getText());
-            });
-            // if (!toRemove) throw new Error();
-            toRemove?.remove();
-            // method.addStatements([body]);
-        }
-        else {
-            const stmt = method.getStatement((s) => {
-                return s.getText().includes(`this.${options.alias}(`);
-            });
-            stmt?.remove();
-            target.getMethod(options.alias)?.remove();
-        }
-    };
-    const addSystems = (target, systems) => {
-        const systemsToUse = systems
-            .map((data) => {
-            const system = foundSystems.get(data.name);
-            return system ? [data, system] : null;
-        })
-            .filter((s) => s !== null);
-        systemsToUse.forEach((system) => {
-            const methods = system[1].getDescendantsOfKind(SyntaxKind.MethodDeclaration);
-            methods.forEach((m) => {
-                const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
-                if (!methodName)
-                    throw new Error('missing method name');
-                const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
-                const method = target.getMethod(methodName);
-                if (!method)
-                    throw new Error('invalid method');
-                addToMethod(target, method, system[0], blocks[0]);
-            });
-        });
-    };
-    const removeComponents = (target, components) => {
-        getComponentProperties(components).forEach(([name]) => {
-            target.getProperty(name)?.remove();
-        });
-    };
-    const removeSystems = (target, systems) => {
-        const systemsToUse = systems
-            .map((data) => {
-            const system = foundSystems.get(data.name);
-            return system ? [data, system] : null;
-        })
-            .filter((s) => s !== null);
-        systemsToUse.forEach((system) => {
-            const methods = system[1].getDescendantsOfKind(SyntaxKind.MethodDeclaration);
-            methods.forEach((m) => {
-                const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
-                if (!methodName)
-                    throw new Error('missing method name');
-                const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
-                const method = target.getMethod(methodName);
-                if (!method)
-                    throw new Error('invalid method');
-                removeFromMethod(target, method, system[0], blocks[0]);
-            });
-        });
-    };
-    addComponents(baseEntityClass, components);
+    addComponents(baseEntityClass, foundComponents, components);
     methodsToUse.forEach((m) => baseEntityClass.addMethod(m));
-    addSystems(baseEntityClass, systems);
+    addSystems(baseEntityClass, foundSystems, systems);
+    console.timeEnd('generate base class');
     steps.unshift({});
-    steps.forEach((step, i) => {
-        const entityClass = sourceFile.addClass({
-            ...baseEntityClass.getStructure(),
-            name: [name, i].join(''),
+    const sourceFiles = steps.map((step, i) => {
+        const sourceFile = project.createSourceFile(testOutputPath.replace('.ts', `-step-${i}.ts`), '', {
+            overwrite: true,
         });
+        const timeStr = `generate step ${i}`;
+        console.time(timeStr);
+        const entityClass = sourceFile.addClass(baseEntityClass.getStructure());
         if (step.add) {
             if (step.add.components)
-                addComponents(entityClass, step.add.components);
+                addComponents(entityClass, foundComponents, step.add.components);
             if (step.add.systems)
-                addSystems(entityClass, step.add.systems);
+                addSystems(entityClass, foundSystems, step.add.systems);
         }
         if (step.remove) {
             if (step.remove.components)
-                removeComponents(entityClass, step.remove.components);
+                removeComponents(entityClass, foundComponents, step.remove.components);
             if (step.remove.systems)
-                removeSystems(entityClass, step.remove.systems);
+                removeSystems(entityClass, foundSystems, step.remove.systems);
         }
         cleanUpClass(entityClass);
+        console.timeEnd(timeStr);
+        sourceFile.fixMissingImports();
+        return sourceFile;
     });
-    baseEntityClass.remove();
     // TODO(bret): Make sure `not_used` gets removed
     // cleanUpClass(baseEntityClass);
     // old way of doing imports, keep using `fixMissingImports` until it doesn't work
@@ -349,11 +358,14 @@ if (true) {
         });
         sourceFile.addImportDeclarations(imports);
     }
-    sourceFile.fixMissingImports();
+    // sourceFile.fixMissingImports();
     console.timeEnd('pre');
     console.time('save');
-    await sourceFile.save();
+    // await sourceFile.save();
+    await Promise.all(sourceFiles.map((s) => s.save()));
     console.timeEnd('save');
+    // baseEntityClass.remove();
+    filesToFormat.push(...sourceFiles.map((s) => s.getFilePath()));
     console.time('remove source file');
     project.removeSourceFile(sourceFile);
     console.timeEnd('remove source file');
@@ -380,7 +392,7 @@ if (true) {
 }
 if (true) {
     const eslint = new ESLint({ fix: true });
-    const results = await eslint.lintFiles([testOutputPath]);
+    const results = await eslint.lintFiles([testOutputPath, ...filesToFormat]);
     await ESLint.outputFixes(results);
     // console.log(results);
     const formatter = await eslint.loadFormatter('stylish');
