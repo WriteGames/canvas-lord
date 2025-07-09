@@ -198,11 +198,20 @@ if (true) {
             .filter((node) => node !== null);
     };
     const addComponents = (target, components) => {
+        const firstMethodIndex = target.getMethods()[0]?.getChildIndex();
         getComponentProperties(components).forEach(([name, value]) => {
-            target.addProperty({
-                name,
-                initializer: JSON.stringify(value),
-            });
+            if (firstMethodIndex) {
+                target.insertProperty(firstMethodIndex, {
+                    name,
+                    initializer: JSON.stringify(value),
+                });
+            }
+            else {
+                target.addProperty({
+                    name,
+                    initializer: JSON.stringify(value),
+                });
+            }
         });
     };
     const addToMethod = (target, method, options, block) => {
@@ -258,7 +267,6 @@ if (true) {
             return system ? [data, system] : null;
         })
             .filter((s) => s !== null);
-        console.table(systemsToUse);
         systemsToUse.forEach((system) => {
             const methods = system[1].getDescendantsOfKind(SyntaxKind.MethodDeclaration);
             methods.forEach((m) => {
@@ -404,7 +412,7 @@ if (true) {
             ...config,
             filepath: filePath,
         });
-        console.log(formatted);
+        // console.log(formatted);
         await fs.promises.writeFile(filePath, formatted, 'utf-8');
         console.log(`Formatted: ${filePath}`);
     }));
