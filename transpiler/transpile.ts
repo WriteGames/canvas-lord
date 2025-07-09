@@ -81,6 +81,46 @@ const traverseObject = (obj: tsm.ObjectLiteralExpression): object => {
 	return result;
 };
 
+const cleanUpClass = (_class: tsm.ClassDeclaration): void => {
+	_class.getMethods().forEach((m) => {
+		// Remove empty method
+		if (m.getBody()?.getChildAtIndex(1).getChildCount() === 0) {
+			m.remove();
+			return;
+		}
+
+		// `entity` -> `this`
+		m.getDescendantsOfKind(SyntaxKind.Identifier).forEach((id) => {
+			if (id.getText() === 'entity') {
+				id.replaceWithText('this');
+			}
+		});
+
+		// Remove references to `this.component`
+		m.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).forEach(
+			(p) => {
+				const str = p
+					.getChildren()
+					.map((c) => c.getText())
+					.join('');
+				if (str === 'this.component') {
+					const varState = p.getFirstAncestorByKind(
+						SyntaxKind.VariableStatement,
+					);
+					varState?.remove();
+				}
+			},
+		);
+
+		// `component` -> `this`
+		m.getDescendantsOfKind(SyntaxKind.Identifier).forEach((id) => {
+			if (id.getText() === 'component') {
+				id.replaceWithText('this');
+			}
+		});
+	});
+};
+
 const testOutputPath = './out3/boo.ts';
 
 if (true as boolean) {
@@ -135,75 +175,6 @@ if (true as boolean) {
 	});
 	console.timeEnd('createSourceFile');
 
-	console.time('pre');
-
-	const jsonFilePath = path.join(inDir, 'tut.json');
-	const json = fs.readFileSync(jsonFilePath, 'utf-8');
-	const classData = JSON.parse(json) as ClassOptions;
-
-	const { name, components, systems, extendsClass = 'Entity' } = classData;
-
-	// create the class
-	const entityClass = sourceFile.addClass({
-		name,
-		isExported: true,
-		extends: extendsClass,
-	});
-
-	// add components
-	const entityProperties = components
-		.flatMap((name) => {
-			const comp = foundComponents.get(name);
-			if (!comp) return null;
-
-			const [obj] = comp.getDescendantsOfKind(
-				SyntaxKind.ObjectLiteralExpression,
-			);
-
-			// const obj = comp.forEachDescendant((node) => {
-			// 	switch (node.getKind()) {
-			// 		case SyntaxKind.ObjectLiteralExpression:
-			// 			return node;
-			// 		default:
-			// 			console.log(node.getKind());
-			// 			break;
-			// 	}
-			// 	return undefined;
-			// });
-			return obj
-				.getChildrenOfKind(SyntaxKind.SyntaxList)
-				.flatMap((node) => node.getChildren())
-				.filter((n) => n.getKind() === SyntaxKind.PropertyAssignment)
-				.map((node) => {
-					const children = node.getChildren();
-
-					const name = children[0].getSymbol()?.getName();
-					if (!name) throw new Error('could not read name');
-
-					const v = children[2] as tsm.LiteralExpression;
-					return [name, getValue(v)] as const;
-				});
-		})
-		.filter((node) => node !== null);
-
-	entityProperties.forEach(([name, value]) => {
-		entityClass.addProperty({
-			name,
-			initializer: JSON.stringify(value),
-		});
-	});
-
-	const systemsToUse = systems
-		.map((data) => {
-			const system = foundSystems.get(data.name);
-			if (!system) return null;
-
-			return [data, system] as const;
-		})
-		.filter((s) => s !== null);
-
-	console.table(systemsToUse);
-
 	// TODO(bret): Use `types` to generate the methods
 	const methodsToUse = [
 		{
@@ -221,11 +192,71 @@ if (true as boolean) {
 		} as tsm.MethodDeclarationStructure,
 	] as const;
 
-	const nameToMethodMap = new Map(
-		methodsToUse.map((m) => [m.name, entityClass.addMethod(m)] as const),
-	);
+	console.time('pre');
+	const jsonFilePath = path.join(inDir, 'tut.json');
+	const json = fs.readFileSync(jsonFilePath, 'utf-8');
+	const classData = JSON.parse(json) as ClassOptions;
+
+	const {
+		name,
+		components,
+		systems,
+		extendsClass = 'Entity',
+		steps,
+	} = classData;
+
+	// create the class
+	const baseEntityClass = sourceFile.addClass({
+		name: `Base_${name}`,
+		isExported: true,
+		extends: extendsClass,
+	});
+
+	const getComponentProperties = (
+		components: string[],
+	): Array<readonly [string, unknown]> => {
+		return components
+			.flatMap((name) => {
+				const comp = foundComponents.get(name);
+				if (!comp) return null;
+
+				const [obj] = comp.getDescendantsOfKind(
+					SyntaxKind.ObjectLiteralExpression,
+				);
+
+				return obj
+					.getChildrenOfKind(SyntaxKind.SyntaxList)
+					.flatMap((node) => node.getChildren())
+					.filter(
+						(n) => n.getKind() === SyntaxKind.PropertyAssignment,
+					)
+					.map((node) => {
+						const children = node.getChildren();
+
+						const name = children[0].getSymbol()?.getName();
+						if (!name) throw new Error('could not read name');
+
+						const v = children[2] as tsm.LiteralExpression;
+						return [name, getValue(v)] as const;
+					});
+			})
+			.filter((node) => node !== null);
+	};
+
+	const addComponents = (
+		target: tsm.ClassDeclaration,
+		components: string[],
+	): void => {
+		getComponentProperties(components).forEach(([name, value]) => {
+			target.addProperty({
+				name,
+				initializer: JSON.stringify(value),
+			});
+		});
+	};
 
 	const addToMethod = (
+		target: tsm.ClassDeclaration,
 		method: tsm.MethodDeclaration,
 		options: System,
 		block: tsm.Block,
@@ -242,7 +273,7 @@ if (true as boolean) {
 				method.addStatements(
 					`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`,
 				);
-			entityClass.addMethod({
+			target.addMethod({
 				name: options.alias,
 				statements: [body],
 				// TODO(bret): make this more robust
@@ -252,59 +283,129 @@ if (true as boolean) {
 		}
 	};
 
-	systemsToUse.forEach((system) => {
-		const methods = system[1].getDescendantsOfKind(
-			SyntaxKind.MethodDeclaration,
-		);
-		methods.forEach((m) => {
-			const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
-			if (!methodName) throw new Error('missing method name');
-			const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
-			const method = nameToMethodMap.get(methodName);
-			if (!method) throw new Error('invalid method');
-			addToMethod(method, system[0], blocks[0]);
+	const removeFromMethod = (
+		target: tsm.ClassDeclaration,
+		method: tsm.MethodDeclaration,
+		options: System,
+		block: tsm.Block,
+	): void => {
+		const body = block.getChildAtIndex(1).getText();
+		console.log({ body });
+		if (options.outputType === 'inline') {
+			// TODO(bret): get this part working
+			const toRemove = method.getStatements().find((s) => {
+				console.log('=====');
+				console.log(s.getText());
+				console.log('---');
+				console.log(body);
+				console.log('=====');
+				return body.startsWith(s.getText());
+			});
+			// if (!toRemove) throw new Error();
+			toRemove?.remove();
+			// method.addStatements([body]);
+		} else {
+			const stmt = method.getStatement((s) => {
+				return s.getText().includes(`this.${options.alias}(`);
+			});
+			stmt?.remove();
+			target.getMethod(options.alias)?.remove();
+		}
+	};
+
+	const addSystems = (
+		target: tsm.ClassDeclaration,
+		systems: System[],
+	): void => {
+		const systemsToUse = systems
+			.map((data) => {
+				const system = foundSystems.get(data.name);
+				return system ? ([data, system] as const) : null;
+			})
+			.filter((s) => s !== null);
+
+		console.table(systemsToUse);
+
+		systemsToUse.forEach((system) => {
+			const methods = system[1].getDescendantsOfKind(
+				SyntaxKind.MethodDeclaration,
+			);
+			methods.forEach((m) => {
+				const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
+				if (!methodName) throw new Error('missing method name');
+				const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
+				const method = target.getMethod(methodName);
+				if (!method) throw new Error('invalid method');
+				addToMethod(target, method, system[0], blocks[0]);
+			});
 		});
-	});
+	};
 
-	// TODO(bret): clean up update()
-	entityClass.getMethods().forEach((m) => {
-		// `entity` -> `this`
-		m.getDescendantsOfKind(SyntaxKind.Identifier).forEach((id) => {
-			if (id.getText() === 'entity') {
-				id.replaceWithText('this');
-			}
+	const removeComponents = (
+		target: tsm.ClassDeclaration,
+		components: string[],
+	): void => {
+		getComponentProperties(components).forEach(([name]) => {
+			target.getProperty(name)?.remove();
+		});
+	};
+
+	const removeSystems = (
+		target: tsm.ClassDeclaration,
+		systems: System[],
+	): void => {
+		const systemsToUse = systems
+			.map((data) => {
+				const system = foundSystems.get(data.name);
+				return system ? ([data, system] as const) : null;
+			})
+			.filter((s) => s !== null);
+
+		systemsToUse.forEach((system) => {
+			const methods = system[1].getDescendantsOfKind(
+				SyntaxKind.MethodDeclaration,
+			);
+			methods.forEach((m) => {
+				const methodName = m.getChildAtIndex(0).getSymbol()?.getName();
+				if (!methodName) throw new Error('missing method name');
+				const blocks = m.getDescendantsOfKind(SyntaxKind.Block);
+				const method = target.getMethod(methodName);
+				if (!method) throw new Error('invalid method');
+				removeFromMethod(target, method, system[0], blocks[0]);
+			});
+		});
+	};
+
+	addComponents(baseEntityClass, components);
+	methodsToUse.forEach((m) => baseEntityClass.addMethod(m));
+
+	addSystems(baseEntityClass, systems);
+
+	steps.unshift({});
+	steps.forEach((step, i) => {
+		const entityClass = sourceFile.addClass({
+			...baseEntityClass.getStructure(),
+			name: [name, i].join(''),
 		});
 
-		// Remove references to `this.component`
-		m.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).forEach(
-			(p) => {
-				const str = p
-					.getChildren()
-					.map((c) => c.getText())
-					.join('');
-				if (str === 'this.component') {
-					const varState = p.getFirstAncestorByKind(
-						SyntaxKind.VariableStatement,
-					);
-					varState?.remove();
-				}
-			},
-		);
+		if (step.add) {
+			if (step.add.components)
+				addComponents(entityClass, step.add.components);
+			if (step.add.systems) addSystems(entityClass, step.add.systems);
+		}
+		if (step.remove) {
+			if (step.remove.components)
+				removeComponents(entityClass, step.remove.components);
+			if (step.remove.systems)
+				removeSystems(entityClass, step.remove.systems);
+		}
 
-		// `component` -> `this`
-		m.getDescendantsOfKind(SyntaxKind.Identifier).forEach((id) => {
-			if (id.getText() === 'component') {
-				id.replaceWithText('this');
-			}
-		});
+		cleanUpClass(entityClass);
 	});
+	baseEntityClass.remove();
 
-	// remove empty methods
-	methodsToUse.forEach((m) => {
-		const method = nameToMethodMap.get(m.name);
-		if (method?.getBody()?.getChildAtIndex(1).getChildCount() === 0)
-			method.remove();
-	});
+	// TODO(bret): Make sure `not_used` gets removed
+	// cleanUpClass(baseEntityClass);
 
 	// old way of doing imports, keep using `fixMissingImports` until it doesn't work
 	if (false as boolean) {
@@ -328,6 +429,10 @@ if (true as boolean) {
 	console.time('save');
 	await sourceFile.save();
 	console.timeEnd('save');
+
+	console.time('remove source file');
+	project.removeSourceFile(sourceFile);
+	console.timeEnd('remove source file');
 
 	// console.log(foundSystems[0][1]);
 	//

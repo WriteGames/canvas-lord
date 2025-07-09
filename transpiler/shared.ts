@@ -658,11 +658,20 @@ export type System = {
 	  }
 );
 
-export interface ClassOptions {
-	name: string;
+export interface ComponentsAndSystems {
 	components: string[];
 	systems: System[];
+}
+
+interface TutorialStep {
+	add?: Partial<ComponentsAndSystems>;
+	remove?: Partial<ComponentsAndSystems>;
+}
+
+export interface ClassOptions extends ComponentsAndSystems {
+	name: string;
 	extendsClass?: string;
+	steps: TutorialStep[];
 }
 
 export const createClass = (
