@@ -32,6 +32,9 @@ export const testComponent = Components.createComponent({
 	speed: 5,
 	not_used: null,
 });
+export const testComponent2 = Components.createComponent({
+	foo: 'bar',
+});
 export const moveLeftSystem: IEntitySystem = {
 	update(entity: Entity, input: Input) {
 		const component = entity.component(testComponent)!;
