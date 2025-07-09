@@ -1,17 +1,19 @@
 import { Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
 export const moveXSystem = {
-    update(entity) {
-        console.log(entity, 'moveX');
-        console.log(`"${entity.speed}"`);
-        console.log('testing', 'one');
+    update(entity, input) {
+        const component = entity.component(testComponent);
+        const left = +input.keyCheck(Keys.ArrowLeft);
+        const right = +input.keyCheck(Keys.ArrowRight);
+        const dir = right - left;
+        entity.x += dir * component.speed;
     },
 };
 export const horizontalMovementComponent = Components.createComponent({});
 export const horizontalMovementSystem = {
     // @ts-expect-error -- blah
-    update(entity) {
-        entity.moveX();
+    update(entity, input) {
+        entity.moveX(input);
     },
 };
 export const testComponent = Components.createComponent({

@@ -6,8 +6,10 @@ import { globby } from 'globby';
 
 import type tsm from 'ts-morph';
 import { Project, SyntaxKind } from 'ts-morph';
-import type { System } from './shared.js';
+import type { ClassOptions, System } from './shared.js';
 import { createClass, printFile, readTSFile } from './shared.js';
+
+console.time('whole thang');
 
 const getValue = (initializer: tsm.Expression): unknown => {
 	const kind = initializer.getKind();
@@ -81,8 +83,6 @@ const traverseObject = (obj: tsm.ObjectLiteralExpression): object => {
 
 const testOutputPath = './out3/boo.ts';
 
-console.time('whole thang');
-
 if (true as boolean) {
 	// console.log(component, componentName);
 	const inDir = `./in`;
@@ -107,7 +107,7 @@ if (true as boolean) {
 	const exportedDecls = file.getExportedDeclarations();
 	console.timeEnd('exported Declaration');
 
-	console.time('find systems');
+	console.time('find components & systems');
 	const foundComponents = new Map<string, tsm.ExportedDeclarations>();
 	const foundSystems = new Map<string, tsm.ExportedDeclarations>();
 	// const exports = ;
@@ -126,7 +126,7 @@ if (true as boolean) {
 			}
 		}
 	}
-	console.timeEnd('find systems');
+	console.timeEnd('find components & systems');
 	console.log(foundComponents.size, foundSystems.size);
 
 	console.time('createSourceFile');
@@ -135,33 +135,19 @@ if (true as boolean) {
 	});
 	console.timeEnd('createSourceFile');
 
-	const components = [
-		// 'horizontalMovementComponent',
-		'testComponent',
-	];
-	const systems: System[] = [
-		{
-			name: 'moveXSystem',
-			outputType: 'function',
-			alias: 'moveX',
-			omitFromOutput: true,
-		},
-		{ name: 'horizontalMovementSystem', outputType: 'inline' },
-		{ name: 'moveLeftSystem', outputType: 'inline' },
-		{ name: 'moveRightSystem', outputType: 'inline' },
-		{
-			name: 'deleteSelfSystem',
-			outputType: 'function',
-			alias: 'deleteSelf',
-		},
-	];
-	const classData = { name: 'Player', components, systems };
+	console.time('pre');
+
+	const jsonFilePath = path.join(inDir, 'tut.json');
+	const json = fs.readFileSync(jsonFilePath, 'utf-8');
+	const classData = JSON.parse(json) as ClassOptions;
+
+	const { name, components, systems, extendsClass = 'Entity' } = classData;
 
 	// create the class
 	const entityClass = sourceFile.addClass({
-		name: classData.name,
+		name,
 		isExported: true,
-		extends: 'Entity',
+		extends: extendsClass,
 	});
 
 	// add components
@@ -249,6 +235,7 @@ if (true as boolean) {
 			method.addStatements([body]);
 		} else {
 			const parameters = [];
+			// TODO(bret): do a better job of finding out if parameters are needed
 			if (body.includes('input.'))
 				parameters.push({ name: 'input', type: 'Input' });
 			if (!options.omitFromOutput)
@@ -336,6 +323,7 @@ if (true as boolean) {
 		sourceFile.addImportDeclarations(imports);
 	}
 	sourceFile.fixMissingImports();
+	console.timeEnd('pre');
 
 	console.time('save');
 	await sourceFile.save();
@@ -413,6 +401,8 @@ if (true as boolean) {
 			console.log(`Formatted: ${filePath}`);
 		}),
 	);
+
+	// TODO(bret): re-insert newlines from TS -> JS!!
 }
 
 console.timeEnd('whole thang');

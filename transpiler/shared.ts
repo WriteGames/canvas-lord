@@ -662,6 +662,7 @@ export interface ClassOptions {
 	name: string;
 	components: string[];
 	systems: System[];
+	extendsClass?: string;
 }
 
 export const createClass = (
