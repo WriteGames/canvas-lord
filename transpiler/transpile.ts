@@ -247,11 +247,19 @@ if (true as boolean) {
 		target: tsm.ClassDeclaration,
 		components: string[],
 	): void => {
+		const firstMethodIndex = target.getMethods()[0]?.getChildIndex();
 		getComponentProperties(components).forEach(([name, value]) => {
-			target.addProperty({
-				name,
-				initializer: JSON.stringify(value),
-			});
+			if (firstMethodIndex) {
+				target.insertProperty(firstMethodIndex, {
+					name,
+					initializer: JSON.stringify(value),
+				});
+			} else {
+				target.addProperty({
+					name,
+					initializer: JSON.stringify(value),
+				});
+			}
 		});
 	};
 
@@ -323,8 +331,6 @@ if (true as boolean) {
 				return system ? ([data, system] as const) : null;
 			})
 			.filter((s) => s !== null);
-
-		console.table(systemsToUse);
 
 		systemsToUse.forEach((system) => {
 			const methods = system[1].getDescendantsOfKind(
@@ -500,7 +506,7 @@ if (true as boolean) {
 				...config,
 				filepath: filePath,
 			});
-			console.log(formatted);
+			// console.log(formatted);
 
 			await fs.promises.writeFile(filePath, formatted, 'utf-8');
 			console.log(`Formatted: ${filePath}`);
