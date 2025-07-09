@@ -1,28 +1,30 @@
-import type { Camera, Entity, Input } from 'canvas-lord';
-import type { IEntitySystem } from 'canvas-lord/util/types';
+import type { Entity, Input } from 'canvas-lord';
+import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
 
 import { Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
-import type { Ctx } from 'canvas-lord/util/canvas';
 
 interface Player extends Entity {
 	speed: number;
-	moveX: () => void;
+	// TODO(bret): we could get aliases based off of these tbh
+	moveX: GetSystemUpdate<typeof moveXSystem>;
 }
 
 export const moveXSystem: IEntitySystem = {
-	update(entity: Entity) {
-		console.log(entity, 'moveX');
-		console.log(`"${(entity as Player).speed}"`);
-		console.log('testing', 'one');
+	update(entity: Entity, input: Input) {
+		const component = entity.component(testComponent)!;
+		const left = +input.keyCheck(Keys.ArrowLeft);
+		const right = +input.keyCheck(Keys.ArrowRight);
+		const dir = right - left;
+		entity.x += dir * component.speed;
 	},
 };
 
 export const horizontalMovementComponent = Components.createComponent({});
 export const horizontalMovementSystem: IEntitySystem = {
 	// @ts-expect-error -- blah
-	update(entity: Player) {
-		entity.moveX();
+	update(entity: Player, input: Input) {
+		entity.moveX(input);
 	},
 };
 
