@@ -1,8 +1,9 @@
 import type { Entity, Input } from 'canvas-lord';
 import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
 
-import { Keys } from 'canvas-lord';
+import { Draw, Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
+import { Ctx } from 'canvas-lord/util/canvas.ts';
 
 interface Player extends Entity {
 	speed: number;
@@ -62,5 +63,25 @@ export const deleteSelfSystem: IEntitySystem = {
 		if (input.keyCheck(Keys.Space)) {
 			entity.scene.removeEntity(entity);
 		}
+	},
+};
+
+export const gmPlayerComponent = Components.createComponent({
+	color: 'red',
+});
+export const gmPlayerSystem: IEntitySystem = {
+	update(entity: Entity) {
+		entity.x += 1;
+	},
+	render(entity: Entity, ctx: Ctx) {
+		const component = entity.component(gmPlayerComponent)!;
+		Draw.rect(
+			ctx,
+			{
+				color: component.color,
+				type: 'fill',
+			},
+			entity.x, entity.y, 32, 32,
+		);
 	},
 };

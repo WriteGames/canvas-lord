@@ -1,0 +1,75 @@
+import { Canvas } from '@/components/canvas';
+import { CodeSnippet } from '@/components/code-snippet';
+
+import 'highlight.js/styles/vs2015.css';
+
+# Canvas Lord Basics
+
+## ...what is Canvas Lord?
+
+Canvas Lord is an HTML5 "game tutorial engine" built for use on <a href="http://writegames.com">WriteGames.com</a>. It leverages the HTML5 `<canvas>` element and JavaScript to create interactive experiences that can tap into the HTML on the page, such as input sliders that adjust a value in the game.
+
+The source code for the engine is available at [github.com/WriteGames/canvas-lord](https://github.com/WriteGames/canvas-lord)
+
+**_Warning: While the engine has many features, it is still a work-in-progress! Things <s>will likely</s> may break or change._**
+
+## 0. Pre-requisites
+
+[in-progress] - you will need to be able to spin up a lil' web server (`XAMPP`, `npm serve`, `python -m http.server`, etc)
+
+## 1. Get The Engine
+
+Download `canvas-lord-v0.6.1-with-template.zip` from the Assets section of the [latest release](https://github.com/WriteGames/canvas-lord/releases/latest). Create a new folder with the name of your project (we'll use `/my-game` in this tutorial) and unzip the contents of the ZIP file within `/my-game`.
+
+If you navigate to your localhost, you should see a canvas with a dark gray background:
+
+![A canvas element with a dark gray background and a white border](/template.png)
+
+### The Files:
+
+`index.html` is the webpage for your game. It pulls styles from `css/styles.css` to position the canvas, and imports `js/game.js` which contains the code for your game.
+
+Opening up `js/game.js` will give us the following:
+
+export const step1Snippet = `\
+import { Game } from './canvas-lord.js';
+
+const game = new Game('my-game');
+game.start();
+`;
+
+<CodeSnippet>{step1Snippet}</CodeSnippet>
+
+## 2. Create a Scene & Entity
+
+export const step2Snippet = `\
+import { Game, Scene, Entity } from 'canvas-lord';
+import { Sprite } from 'canvas-lord/graphic';
+
+const game = new Game('my-game');
+
+const scene = new Scene();
+game.pushScene(scene);
+
+const entity = new Entity(20, 20);
+entity.addGraphic(Sprite.createRect(32, 32, 'red'));
+scene.addEntity(entity);
+
+game.start();
+`;
+
+<CodeSnippet>{step2Snippet}</CodeSnippet>
+
+Output:
+
+<Canvas
+	id="my-game"
+	src="basics/003-create-scene-entity.js"
+	width={320}
+	height={180}
+	pixel
+/>
+
+## 3. Explore The Tutorials
+
+Weeeee :)

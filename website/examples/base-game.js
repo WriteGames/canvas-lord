@@ -1,4 +1,4 @@
-import { Game, Scene, Tileset } from 'canvas-lord';
+import { Game, Scene, Entity, Tileset } from 'canvas-lord';
 import { Grid, GridOutline } from 'canvas-lord/util/grid';
 import { AssetManager } from 'canvas-lord/core/asset-manager';
 import {
@@ -19,6 +19,11 @@ const initTileset = (grid) => {
 		grid.height,
 		16,
 		16,
+		{
+			startX: 1,
+			startY: 1,
+			separation: 1,
+		},
 	);
 
 	const setCloud1 = (x, y) => tileset.setTile(x, y, 4, 3);
@@ -68,6 +73,7 @@ class PlayerScene extends Scene {
 		super(engine);
 
 		this.player = this.addEntity(new Player(40, 144));
+		this.player.depth = -1;
 
 		this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
 
@@ -78,8 +84,8 @@ class PlayerScene extends Scene {
 		this.gridOutline = new GridOutline();
 		this.gridOutline.computeOutline(this.grid);
 
-		this.addRenderable(this.tileset);
-		this.addRenderable(this.gridOutline);
+		this.addRenderable(new Entity(0, 0, this.tileset));
+		this.addRenderable(new Entity(0, 0, this.gridOutline));
 	}
 
 	updateCamera() {
@@ -112,7 +118,7 @@ export const initGamesBase =
 		assetManager.addImage('radiohead_spritesheet.png');
 		assetManager.addImage('tileset.png');
 
-		assetManager.onLoad(() => {
+		assetManager.onLoad.add(() => {
 			console.log('== AssetManager::onLoad()');
 
 			const splitScreen = false;
@@ -142,6 +148,8 @@ export const initGamesBase =
 			game.render();
 
 			inspector.onUpdate();
+
+			game.start();
 		});
 
 		const game = new Game(id);
