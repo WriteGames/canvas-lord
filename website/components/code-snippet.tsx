@@ -16,7 +16,7 @@ interface CodeSnippet {
 }
 
 export const CodeSnippet = ({ children }: CodeSnippet) => {
-	const code = children.slice(1, -1);
+	const code = children; //.slice(0, -1);
 
 	const ref = useRef<HTMLElement>(null);
 

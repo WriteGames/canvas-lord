@@ -37,10 +37,10 @@ export default function RootLayout({
 				<aside>
 					<nav>
 						<ul>
-							<Child selected>Test</Child>
-							<Child>Test 2</Child>
-							<Child>Test 3</Child>
-							<Child>Test 4</Child>
+							<Child selected>Getting Started</Child>
+							<Child>Graphics</Child>
+							<Child>Input</Child>
+							{/* <Child>Test 4</Child> */}
 						</ul>
 					</nav>
 				</aside>

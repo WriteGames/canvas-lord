@@ -1,13 +1,13 @@
-import { Keys } from 'canvas-lord';
+import { Entity, Keys } from 'canvas-lord';
 
 import { initGamesBase, assetManager } from './base-game';
+import { BoxCollider } from 'canvas-lord/collider';
 
-class Player {
+class Player extends Entity {
 	constructor(x, y) {
-		this.x = x;
-		this.y = y;
+		super(x, y);
 
-		this.scene = null;
+		// this.scene = null;
 
 		this.facing = 1;
 
@@ -16,8 +16,9 @@ class Player {
 		this.yspeed = 0;
 		this.yRemainder = 0;
 
-		this.width = 12;
-		this.height = 16;
+		this.collider = new BoxCollider(12, 16);
+		// this.width = 12;
+		// this.height = 16;
 
 		this.aspeed = 0.05; // acceleration
 		this.fspeed = 0.05; // friction

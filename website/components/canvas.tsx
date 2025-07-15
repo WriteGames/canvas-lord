@@ -22,7 +22,6 @@ export const Canvas = ({
 
 	useEffect(() => {
 		if (ref.current) return;
-		ref.current = true;
 
 		const importGame = async () => {
 			const module = await import(`@/examples/${src}`);
@@ -31,6 +30,7 @@ export const Canvas = ({
 		};
 
 		if (src) {
+			ref.current = true;
 			void importGame();
 		}
 	}, []);

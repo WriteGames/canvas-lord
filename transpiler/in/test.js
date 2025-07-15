@@ -1,4 +1,4 @@
-import { Keys } from 'canvas-lord';
+import { Draw, Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
 export const moveXSystem = {
     update(entity, input) {
@@ -50,6 +50,21 @@ export const deleteSelfSystem = {
         if (input.keyCheck(Keys.Space)) {
             entity.scene.removeEntity(entity);
         }
+    },
+};
+export const gmPlayerComponent = Components.createComponent({
+    color: 'red',
+});
+export const gmPlayerSystem = {
+    update(entity) {
+        entity.x += 1;
+    },
+    render(entity, ctx) {
+        const component = entity.component(gmPlayerComponent);
+        Draw.rect(ctx, {
+            color: component.color,
+            type: 'fill',
+        }, entity.x, entity.y, 32, 32);
     },
 };
 //# sourceMappingURL=test.js.map
