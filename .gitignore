@@ -5,3 +5,7 @@ npm-debug.log*
 tsconfig.tsbuildinfo
 tsconfig*.tsbuildinfo
 *.map
+
+# Dev environment files
+.htaccess
+nodemon.json
