@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
 export class PointCollider extends Collider {

@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 export const YesNoLogParser = (value) => {
     return value ? 'yes' : 'no';
 };

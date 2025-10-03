@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 import { Sfx } from './asset-manager.js';
 import { Input } from './input.js';
 import { Debug } from '../util/debug.js';

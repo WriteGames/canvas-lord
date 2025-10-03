@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- we want a static class here
 export class CL {
     static #engine;

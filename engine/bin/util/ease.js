@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 const linear = (t) => t;
 const quad = (t) => t * t;
 const cube = (t) => t * t * t;

@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 import { addPos, hashPos, indexToPos, posEqual, posToIndex, scalePos, subPos, Vec2, } from '../math/index.js';
 import { isWithinBounds, norm, rotateNormBy90Deg, } from '../math/misc.js';
 import { generateCanvasAndCtx } from './canvas.js';

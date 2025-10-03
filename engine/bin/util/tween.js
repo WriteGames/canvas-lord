@@ -1,4 +1,4 @@
-/* Canvas Lord v0.6.0 */
+/* Canvas Lord v0.6.1 */
 import { Delegate } from "./delegate.js";
 import { EaseType, PropertyTweener, SubtweenTweener, TransType, } from "./tweener.js";
 export { EaseType, TransType } from "./tweener.js";
