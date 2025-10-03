@@ -9,7 +9,7 @@ export type ComponentProps<T extends IEntityComponentType> =
 	T extends IEntityComponentType<infer P>
 		? {
 				-readonly [K in keyof P]: P[K];
-		  }
+			}
 		: never;
 
 export const copyObject = <T extends RawComponent>(
@@ -22,9 +22,10 @@ export const copyObject = <T extends RawComponent>(
 			data = rawData.clone() as T;
 			break;
 		default:
-			data = rawData;
+			data = structuredClone(rawData);
 			break;
 	}
+	// TODO(bret): Revisit this, it's kind of weird doing two structured clones
 	const newObj = structuredClone(obj);
 	newObj.data = data;
 	return newObj;

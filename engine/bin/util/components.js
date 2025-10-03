@@ -8,9 +8,10 @@ export const copyObject = (obj) => {
             data = rawData.clone();
             break;
         default:
-            data = rawData;
+            data = structuredClone(rawData);
             break;
     }
+    // TODO(bret): Revisit this, it's kind of weird doing two structured clones
     const newObj = structuredClone(obj);
     newObj.data = data;
     return newObj;
