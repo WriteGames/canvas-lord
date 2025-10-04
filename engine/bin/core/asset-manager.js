@@ -123,19 +123,28 @@ export class Sfx {
     static resetAudioCtx() {
         Sfx.#audioCtx = new AudioContext();
     }
-    static play(audio) {
+    static #play(audio, volume, loop = false) {
         const source = Sfx.audioCtx.createBufferSource();
         source.buffer = audio.buffer;
-        source.connect(Sfx.audioCtx.destination);
+        source.loop = loop;
+        const connections = [source];
+        if (volume !== undefined) {
+            const gainNode = Sfx.audioCtx.createGain();
+            gainNode.gain.setValueAtTime(volume, Sfx.audioCtx.currentTime);
+            connections.push(gainNode);
+        }
+        connections.push(Sfx.audioCtx.destination);
+        for (let i = 0; i < connections.length - 1; ++i) {
+            connections[i].connect(connections[i + 1]);
+        }
         source.start();
+        return source;
     }
-    static loop(audio) {
-        // TODO(bret): Make sure we're not looping twice!
-        const source = Sfx.audioCtx.createBufferSource();
-        source.buffer = audio.buffer;
-        source.connect(Sfx.audioCtx.destination);
-        source.loop = true;
-        source.start();
+    static play(audio, volume) {
+        this.#play(audio, volume);
+    }
+    static loop(audio, volume) {
+        const source = this.#play(audio, volume, true);
         this.music.set(audio, source);
     }
     // TODO(bret): Gonna need this to work for all audio, not just for music

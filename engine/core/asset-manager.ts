@@ -190,20 +190,38 @@ export class Sfx {
 		Sfx.#audioCtx = new AudioContext();
 	}
 
-	static play(audio: AudioAsset): void {
+	static #play(
+		audio: AudioAsset,
+		volume?: number,
+		loop = false,
+	): AudioBufferSourceNode {
 		const source = Sfx.audioCtx.createBufferSource();
 		source.buffer = audio.buffer;
-		source.connect(Sfx.audioCtx.destination);
+		source.loop = loop;
+
+		const connections: AudioNode[] = [source];
+
+		if (volume !== undefined) {
+			const gainNode = Sfx.audioCtx.createGain();
+			gainNode.gain.setValueAtTime(volume, Sfx.audioCtx.currentTime);
+			connections.push(gainNode);
+		}
+
+		connections.push(Sfx.audioCtx.destination);
+		for (let i = 0; i < connections.length - 1; ++i) {
+			connections[i].connect(connections[i + 1]);
+		}
+
 		source.start();
+		return source;
 	}
 
-	static loop(audio: AudioAsset): void {
-		// TODO(bret): Make sure we're not looping twice!
-		const source = Sfx.audioCtx.createBufferSource();
-		source.buffer = audio.buffer;
-		source.connect(Sfx.audioCtx.destination);
-		source.loop = true;
-		source.start();
+	static play(audio: AudioAsset, volume?: number): void {
+		this.#play(audio, volume);
+	}
+
+	static loop(audio: AudioAsset, volume?: number): void {
+		const source = this.#play(audio, volume, true);
 		this.music.set(audio, source);
 	}
 
