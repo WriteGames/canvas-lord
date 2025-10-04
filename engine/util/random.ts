@@ -25,6 +25,10 @@ export class Random {
 		return this.#next() * n;
 	}
 
+	chance(n: number, max: number): boolean {
+		return this.#next() < n / max;
+	}
+
 	int(n: number): number {
 		return Math.floor(this.#next() * n);
 	}

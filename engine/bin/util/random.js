@@ -16,6 +16,9 @@ export class Random {
     float(n) {
         return this.#next() * n;
     }
+    chance(n, max) {
+        return this.#next() < n / max;
+    }
     int(n) {
         return Math.floor(this.#next() * n);
     }
