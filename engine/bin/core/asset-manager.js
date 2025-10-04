@@ -123,10 +123,14 @@ export class Sfx {
     static resetAudioCtx() {
         Sfx.#audioCtx = new AudioContext();
     }
-    static #play(audio, volume, loop = false) {
+    static #play(audio, volume, pitchVariance, loop = false) {
         const source = Sfx.audioCtx.createBufferSource();
         source.buffer = audio.buffer;
         source.loop = loop;
+        if (pitchVariance) {
+            source.playbackRate.value =
+                1.0 - pitchVariance + Math.random() * 2 * pitchVariance;
+        }
         const connections = [source];
         if (volume !== undefined) {
             const gainNode = Sfx.audioCtx.createGain();
@@ -140,11 +144,11 @@ export class Sfx {
         source.start();
         return source;
     }
-    static play(audio, volume) {
-        this.#play(audio, volume);
+    static play(audio, volume, pitchVariance) {
+        this.#play(audio, volume, pitchVariance);
     }
-    static loop(audio, volume) {
-        const source = this.#play(audio, volume, true);
+    static loop(audio, volume, pitchVariance) {
+        const source = this.#play(audio, volume, pitchVariance, true);
         this.music.set(audio, source);
     }
     // TODO(bret): Gonna need this to work for all audio, not just for music

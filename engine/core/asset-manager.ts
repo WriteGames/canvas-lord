@@ -193,11 +193,17 @@ export class Sfx {
 	static #play(
 		audio: AudioAsset,
 		volume?: number,
+		pitchVariance?: number,
 		loop = false,
 	): AudioBufferSourceNode {
 		const source = Sfx.audioCtx.createBufferSource();
 		source.buffer = audio.buffer;
 		source.loop = loop;
+
+		if (pitchVariance) {
+			source.playbackRate.value =
+				1.0 - pitchVariance + Math.random() * 2 * pitchVariance;
+		}
 
 		const connections: AudioNode[] = [source];
 
@@ -216,12 +222,20 @@ export class Sfx {
 		return source;
 	}
 
-	static play(audio: AudioAsset, volume?: number): void {
-		this.#play(audio, volume);
+	static play(
+		audio: AudioAsset,
+		volume?: number,
+		pitchVariance?: number,
+	): void {
+		this.#play(audio, volume, pitchVariance);
 	}
 
-	static loop(audio: AudioAsset, volume?: number): void {
-		const source = this.#play(audio, volume, true);
+	static loop(
+		audio: AudioAsset,
+		volume?: number,
+		pitchVariance?: number,
+	): void {
+		const source = this.#play(audio, volume, pitchVariance, true);
 		this.music.set(audio, source);
 	}
 
