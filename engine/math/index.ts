@@ -181,6 +181,14 @@ export class Vec2 extends Array<number> {
 		return dotProduct2D(a, b);
 	};
 
+	rotate(angle: number): Vec2 {
+		return Vec2.rotate(this, angle);
+	}
+
+	static rotate = (v: Vec2, angle: number): Vec2 => {
+		return rotate2D(v, angle);
+	};
+
 	equal(v: Vec2): boolean {
 		return Vec2.equal(this, v);
 	}
@@ -274,6 +282,12 @@ export const indexToPos = (index: number, stride: number): Vec2 =>
 	new Vec2(index % stride, Math.floor(index / stride));
 export const posToIndex = ([x, y]: Vec2, stride: number): number =>
 	y * stride + x;
+
+export const rotate2D = (v: Vec2, angle: number): Vec2 => {
+	const cos = Math.cos(angle);
+	const sin = Math.sin(angle);
+	return new Vec2(v.x * cos - v.y * sin, v.x * sin + v.y * cos);
+};
 
 export const crossProduct2D: FuncReduceVector = (a, b) =>
 	a[0] * b[1] - a[1] * b[0];
