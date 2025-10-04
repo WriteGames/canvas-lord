@@ -425,19 +425,27 @@ export class Entity<TScene extends Scene = Scene>
 		return collide;
 	}
 
-	collideEntity<T extends Entity>(x: number, y: number): T;
-	collideEntity<T extends Entity>(x: number, y: number, tag?: ColliderTag): T;
+	collideEntity<T extends Entity>(x: number, y: number): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		tag?: ColliderTag,
+	): T | null;
 	collideEntity<T extends Entity>(
 		x: number,
 		y: number,
 		tags: ColliderTag[],
-	): T;
-	collideEntity<T extends Entity>(x: number, y: number, entity: Entity): T;
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		entity: Entity,
+	): T | null;
 	collideEntity<T extends Entity>(
 		x: number,
 		y: number,
 		entities: Entity[],
-	): T;
+	): T | null;
 	collideEntity<T extends Entity>(
 		x: number,
 		y: number,
