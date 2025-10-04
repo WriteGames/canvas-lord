@@ -153,6 +153,8 @@ export class Scene {
         const oldEntities = this.entities.removeQueue.splice(0);
         oldEntities.forEach((e) => {
             const index = this.entities.inScene.indexOf(e);
+            if (index === -1)
+                return;
             this.entities.inScene.splice(index, 1);
             e.onRemoved.invoke();
         });
@@ -165,6 +167,8 @@ export class Scene {
         const oldRenderables = this.renderables.removeQueue.splice(0);
         oldRenderables.forEach((r) => {
             const index = this.renderables.inScene.indexOf(r);
+            if (index === -1)
+                return;
             this.renderables.inScene.splice(index, 1);
         });
     }
