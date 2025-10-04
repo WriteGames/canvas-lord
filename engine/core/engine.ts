@@ -211,6 +211,9 @@ export class Game implements Engine {
 			...settings?.gameLoopSettings,
 		};
 
+		// NOTE(bret): I added this after seeing the above. Not sure why we're not assigning directly to it
+		this.gameLoopSettings = engineSettings.gameLoopSettings;
+
 		// render a rectangle ASAP
 		this.backgroundColor = engineSettings.backgroundColor;
 		ctx.save();
@@ -229,10 +232,13 @@ export class Game implements Engine {
 
 		this.focus = false;
 
-		this.listeners = gameEvents.reduce((acc, val) => {
-			acc[val] = new Set<EventCallback>();
-			return acc;
-		}, {} as typeof this.listeners);
+		this.listeners = gameEvents.reduce(
+			(acc, val) => {
+				acc[val] = new Set<EventCallback>();
+				return acc;
+			},
+			{} as typeof this.listeners,
+		);
 
 		this.fps = Math.round(engineSettings.fps);
 		if (this.fps <= 0) throw new Error('Invalid FPS');

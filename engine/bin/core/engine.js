@@ -77,6 +77,8 @@ export class Game {
             ...defaultSettings.gameLoopSettings,
             ...settings?.gameLoopSettings,
         };
+        // NOTE(bret): I added this after seeing the above. Not sure why we're not assigning directly to it
+        this.gameLoopSettings = engineSettings.gameLoopSettings;
         // render a rectangle ASAP
         this.backgroundColor = engineSettings.backgroundColor;
         ctx.save();
