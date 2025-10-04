@@ -108,7 +108,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		return new Sprite(asset);
 	}
 
-	static createRect(width: number, height: number, color: string): Sprite {
+	static createRect(width: number, height: number, color: CSSColor): Sprite {
 		const fileName = ['createRect', width, height, color].join('-');
 		return Sprite.createImage(width, height, fileName, (ctx: Ctx) => {
 			ctx.fillStyle = color;
@@ -116,7 +116,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		});
 	}
 
-	static createCircle(size: number, color: string): Sprite {
+	static createCircle(size: number, color: CSSColor): Sprite {
 		const fileName = ['createCircle', size, color].join('-');
 		const halfSize = size * 0.5;
 		return Sprite.createImage(size, size, fileName, (ctx: Ctx) => {
