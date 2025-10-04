@@ -28,10 +28,9 @@ export class CircleCollider extends Collider {
         this.radius = r;
     }
     render(ctx, x, y) {
-        Draw.circle(ctx, {
-            type: 'stroke',
-            color: 'red',
-        }, x + this.centerX - this.r, y + this.centerY - this.r, this.r);
+        if (this.collidable)
+            this.options.color = this.color;
+        Draw.circle(ctx, this.options, x + this.centerX - this.r, y + this.centerY - this.r, this.r);
     }
 }
 //# sourceMappingURL=circle-collider.js.map

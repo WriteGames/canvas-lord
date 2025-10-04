@@ -4,6 +4,7 @@ import { collide } from './collide.js';
 import type { Entity } from '../core/entity.js';
 import type { Ctx } from '../util/canvas.js';
 import { type DrawOptions } from '../util/draw.js';
+import { CSSColor } from '../util/types.js';
 
 export type ColliderType =
 	| 'point'
@@ -40,6 +41,7 @@ export abstract class Collider implements ICollider {
 	originX = 0;
 	originY = 0;
 	parent!: ColliderParent; // NOTE(bret): This gets set via Entity
+	color: CSSColor = 'red';
 
 	static #optionsCollidable: DrawOptions = {
 		type: 'stroke',

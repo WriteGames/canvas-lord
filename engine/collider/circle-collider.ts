@@ -39,12 +39,11 @@ export class CircleCollider extends Collider implements ICircleCollider {
 	}
 
 	render(ctx: Ctx, x: number, y: number): void {
+		if (this.collidable) this.options.color = this.color;
+
 		Draw.circle(
 			ctx,
-			{
-				type: 'stroke',
-				color: 'red',
-			},
+			this.options,
 			x + this.centerX - this.r,
 			y + this.centerY - this.r,
 			this.r,

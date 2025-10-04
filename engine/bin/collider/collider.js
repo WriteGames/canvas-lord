@@ -10,6 +10,7 @@ export class Collider {
     originX = 0;
     originY = 0;
     parent; // NOTE(bret): This gets set via Entity
+    color = 'red';
     static #optionsCollidable = {
         type: 'stroke',
         color: 'red',
