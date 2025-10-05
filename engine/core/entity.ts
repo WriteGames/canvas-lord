@@ -139,9 +139,14 @@ export class Entity<TScene extends Scene = Scene>
 	// TODO(bret): Set up setters for these as well
 	// TODO(bret): Would be good to set up for non-rect shapes :)
 	get width(): number {
-		if (this.collider && 'w' in this.collider)
-			// TODO(bret): fix "as number"
-			return this.collider.w as number;
+		if (this.collider) {
+			if ('w' in this.collider)
+				// TODO(bret): fix "as number"
+				return this.collider.w as number;
+			if ('radius' in this.collider)
+				// TODO(bret): fix "as number"
+				return (this.collider.radius as number) * 2;
+		}
 		return 0;
 	}
 
@@ -150,9 +155,14 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	get height(): number {
-		if (this.collider && 'h' in this.collider)
-			// TODO(bret): fix "as number"
-			return this.collider.h as number;
+		if (this.collider) {
+			if ('h' in this.collider)
+				// TODO(bret): fix "as number"
+				return this.collider.h as number;
+			if ('radius' in this.collider)
+				// TODO(bret): fix "as number"
+				return (this.collider.radius as number) * 2;
+		}
 		return 0;
 	}
 

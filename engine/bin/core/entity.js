@@ -44,18 +44,28 @@ export class Entity {
     // TODO(bret): Set up setters for these as well
     // TODO(bret): Would be good to set up for non-rect shapes :)
     get width() {
-        if (this.collider && 'w' in this.collider)
-            // TODO(bret): fix "as number"
-            return this.collider.w;
+        if (this.collider) {
+            if ('w' in this.collider)
+                // TODO(bret): fix "as number"
+                return this.collider.w;
+            if ('radius' in this.collider)
+                // TODO(bret): fix "as number"
+                return this.collider.radius * 2;
+        }
         return 0;
     }
     get w() {
         return this.width;
     }
     get height() {
-        if (this.collider && 'h' in this.collider)
-            // TODO(bret): fix "as number"
-            return this.collider.h;
+        if (this.collider) {
+            if ('h' in this.collider)
+                // TODO(bret): fix "as number"
+                return this.collider.h;
+            if ('radius' in this.collider)
+                // TODO(bret): fix "as number"
+                return this.collider.radius * 2;
+        }
         return 0;
     }
     get h() {
