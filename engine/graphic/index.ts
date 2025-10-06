@@ -8,6 +8,7 @@ import { NineSlice } from './nine-slice.js';
 import { Sprite } from './sprite.js';
 import { Text } from './text.js';
 import { Tileset } from './tileset.js';
+import { TiledSprite } from './tiled-sprite.js';
 
 export type GraphicClass =
 	| typeof AnimatedSprite
@@ -17,7 +18,8 @@ export type GraphicClass =
 	| typeof NineSlice
 	| typeof Sprite
 	| typeof Text
-	| typeof Tileset;
+	| typeof Tileset
+	| typeof TiledSprite;
 
 export {
 	AnimatedSprite,
@@ -28,4 +30,5 @@ export {
 	Sprite,
 	Text,
 	Tileset,
+	TiledSprite,
 };

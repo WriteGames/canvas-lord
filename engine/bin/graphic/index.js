@@ -7,5 +7,6 @@ import { NineSlice } from './nine-slice.js';
 import { Sprite } from './sprite.js';
 import { Text } from './text.js';
 import { Tileset } from './tileset.js';
-export { AnimatedSprite, Emitter, Graphic, GraphicList, NineSlice, Sprite, Text, Tileset, };
+import { TiledSprite } from './tiled-sprite.js';
+export { AnimatedSprite, Emitter, Graphic, GraphicList, NineSlice, Sprite, Text, Tileset, TiledSprite, };
 //# sourceMappingURL=index.js.map
