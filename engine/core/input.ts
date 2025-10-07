@@ -198,16 +198,21 @@ export class Input {
 	}
 
 	// Events
+	// NOTE(bret): canvas.offsetLeft/Top is relative to the element's
+	// offsetParent, whereas rect.left/top is relative to the viewport.
+	// This also means we do not need to account for scrollX/Y
 	onMouseMove(e: MouseEvent): void {
 		if (document.activeElement !== this.engine.focusElement) return;
 
 		const { canvas } = this.engine;
+		
+		const rect = canvas.getBoundingClientRect();
 
-		const realX = e.clientX + Math.round(window.scrollX);
-		const realY = e.clientY + Math.round(window.scrollY);
+		const realX = e.clientX;
+		const realY = e.clientY;
 
-		this.mouse.realX = realX - canvas.offsetLeft - canvas._offsetX;
-		this.mouse.realY = realY - canvas.offsetTop - canvas._offsetY;
+		this.mouse.realX = realX - rect.left - canvas._offsetX;
+		this.mouse.realY = realY - rect.top - canvas._offsetY;
 
 		this.mouse.x = Math.floor(this.mouse.realX / canvas._scaleX);
 		this.mouse.y = Math.floor(this.mouse.realY / canvas._scaleY);
