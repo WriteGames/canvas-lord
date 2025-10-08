@@ -47,6 +47,7 @@ export class Game {
     debug;
     onInit;
     onUpdate;
+    onRender;
     onSceneBegin;
     onSceneEnd;
     // TODO(bret): other delgates from Otter2d
@@ -57,6 +58,7 @@ export class Game {
         }
         this.onInit = new Delegate();
         this.onUpdate = new Delegate();
+        this.onRender = new Delegate();
         this.onSceneBegin = new Delegate();
         this.onSceneEnd = new Delegate();
         canvas._engine = this;
@@ -248,7 +250,6 @@ export class Game {
                 while (deltaTime >= timeStep) {
                     this.update();
                     this.input.update();
-                    this.onUpdate.invoke();
                     deltaTime -= timeStep;
                     ++this.frameIndex;
                 }
@@ -400,12 +401,14 @@ export class Game {
         if (!debug?.enabled) {
             this.updateScenes(this.currentScenes);
         }
+        this.onUpdate.invoke();
         this.sendEvent('update');
     }
     sendEvent(event) {
         // TODO: drawOverlay should take in ctx or game
         this.listeners[event].forEach((c) => c());
     }
+    // TODO(bret): remove `scenes` parameter
     renderScenes(ctx, scenes) {
         if (!scenes)
             return;
@@ -432,6 +435,7 @@ export class Game {
             ctx.fillRect(0, 0, this.width, this.height);
             const { debug } = this;
             this.renderScenes(ctx, []);
+            this.onRender.invoke(ctx);
             if (debug?.enabled)
                 debug.render(ctx);
         });

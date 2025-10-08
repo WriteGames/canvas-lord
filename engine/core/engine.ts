@@ -169,6 +169,7 @@ export class Game implements Engine {
 
 	onInit: Delegate<(game: Game) => void>;
 	onUpdate: Delegate;
+	onRender: Delegate<(ctx: Ctx) => void>;
 	onSceneBegin: Delegate<(scene: Scene) => void>;
 	onSceneEnd: Delegate<(scene: Scene) => void>;
 	// TODO(bret): other delgates from Otter2d
@@ -183,6 +184,7 @@ export class Game implements Engine {
 
 		this.onInit = new Delegate();
 		this.onUpdate = new Delegate();
+		this.onRender = new Delegate();
 		this.onSceneBegin = new Delegate();
 		this.onSceneEnd = new Delegate();
 
@@ -457,7 +459,6 @@ export class Game implements Engine {
 				while (deltaTime >= timeStep) {
 					this.update();
 					this.input.update();
-					this.onUpdate.invoke();
 					deltaTime -= timeStep;
 					++this.frameIndex;
 				}
@@ -642,6 +643,7 @@ export class Game implements Engine {
 			this.updateScenes(this.currentScenes);
 		}
 
+		this.onUpdate.invoke();
 		this.sendEvent('update');
 	}
 
@@ -650,6 +652,7 @@ export class Game implements Engine {
 		this.listeners[event].forEach((c) => c());
 	}
 
+	// TODO(bret): remove `scenes` parameter
 	renderScenes(ctx: Ctx, scenes?: Scene[]): void {
 		if (!scenes) return;
 
@@ -680,6 +683,7 @@ export class Game implements Engine {
 
 			const { debug } = this;
 			this.renderScenes(ctx, []);
+			this.onRender.invoke(ctx);
 			if (debug?.enabled) debug.render(ctx);
 		});
 	}
