@@ -132,7 +132,7 @@ export const Keys = {
 	Quote: 'Quote',
 } as const;
 
-const _keysArr = Object.values(Keys);
+const _keysArr = Object.freeze(Object.values(Keys));
 
 export type Key = (typeof Keys)[keyof typeof Keys];
 

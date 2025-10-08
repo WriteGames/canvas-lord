@@ -108,7 +108,7 @@ export const Keys = {
     BracketRight: 'BracketRight',
     Quote: 'Quote',
 };
-const _keysArr = Object.values(Keys);
+const _keysArr = Object.freeze(Object.values(Keys));
 export class Input {
     constructor(engine) {
         this.engine = engine;
