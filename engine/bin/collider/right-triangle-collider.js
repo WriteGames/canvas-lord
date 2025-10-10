@@ -4,8 +4,8 @@ import { Vec2 } from '../math/index.js';
 import { Draw } from '../util/draw.js';
 export class RightTriangleCollider extends Collider {
     type = 'right-triangle';
-    width;
-    height;
+    #width;
+    #height;
     #orientation;
     #points;
     #lastLeft;
@@ -15,6 +15,30 @@ export class RightTriangleCollider extends Collider {
     get points() {
         this.#computePoints();
         return this.#points;
+    }
+    get w() {
+        return this.width;
+    }
+    set w(value) {
+        this.width = value;
+    }
+    get h() {
+        return this.height;
+    }
+    set h(value) {
+        this.height = value;
+    }
+    get width() {
+        return this.#width;
+    }
+    set width(value) {
+        this.#width = value;
+    }
+    get height() {
+        return this.#height;
+    }
+    set height(value) {
+        this.#height = value;
     }
     #computePoints(compute = false) {
         if (this.left === this.#lastLeft &&
@@ -63,18 +87,6 @@ export class RightTriangleCollider extends Collider {
             return;
         this.#orientation = value;
         this.#computePoints(true);
-    }
-    get w() {
-        return this.width;
-    }
-    set w(value) {
-        this.width = value;
-    }
-    get h() {
-        return this.height;
-    }
-    set h(value) {
-        this.height = value;
     }
     constructor(w, h, orientation, x = 0, y = 0) {
         super(x, y);

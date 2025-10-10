@@ -24,8 +24,8 @@ export class RightTriangleCollider
 	implements IRightTriangleCollider
 {
 	type = 'right-triangle' as const;
-	width: number;
-	height: number;
+	#width!: number;
+	#height!: number;
 
 	#orientation: Orientation;
 	#points!: Points;
@@ -38,6 +38,34 @@ export class RightTriangleCollider
 	get points(): Points {
 		this.#computePoints();
 		return this.#points;
+	}
+
+	get w(): number {
+		return this.width;
+	}
+	set w(value) {
+		this.width = value;
+	}
+
+	get h(): number {
+		return this.height;
+	}
+	set h(value) {
+		this.height = value;
+	}
+
+	get width(): number {
+		return this.#width;
+	}
+	set width(value) {
+		this.#width = value;
+	}
+
+	get height(): number {
+		return this.#height;
+	}
+	set height(value) {
+		this.#height = value;
 	}
 
 	#computePoints(compute = false): void {
@@ -95,20 +123,6 @@ export class RightTriangleCollider
 		if (this.#orientation === value) return;
 		this.#orientation = value;
 		this.#computePoints(true);
-	}
-
-	get w(): number {
-		return this.width;
-	}
-	set w(value) {
-		this.width = value;
-	}
-
-	get h(): number {
-		return this.height;
-	}
-	set h(value) {
-		this.height = value;
 	}
 
 	constructor(w: number, h: number, orientation: Orientation, x = 0, y = 0) {
