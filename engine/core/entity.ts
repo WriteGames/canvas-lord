@@ -417,8 +417,9 @@ export class Entity<TScene extends Scene = Scene>
 			if (e === this) continue;
 			if (!e.collider?.collidable) continue;
 			if (tags.length > 0) {
-				if (!e.collider.tag) continue;
-				if (!tags.includes(e.collider.tag)) continue;
+				if (e.collider.tags.length === 0) continue;
+				if (!tags.some((tag) => e.collider?.tags.includes(tag)))
+					continue;
 			}
 
 			const collision = Collide.collide(this.collider, e.collider);

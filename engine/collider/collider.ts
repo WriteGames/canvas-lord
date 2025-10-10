@@ -4,7 +4,7 @@ import { collide } from './collide.js';
 import type { Entity } from '../core/entity.js';
 import type { Ctx } from '../util/canvas.js';
 import { type DrawOptions } from '../util/draw.js';
-import { CSSColor } from '../util/types.js';
+import type { CSSColor } from '../util/types.js';
 
 export type ColliderType =
 	| 'point'
@@ -34,7 +34,7 @@ interface ICollider {
 
 export abstract class Collider implements ICollider {
 	type: ColliderType = 'point' as const;
-	tag?: ColliderTag;
+	tags: ColliderTag[] = [];
 	collidable = true;
 	x: number;
 	y: number;
@@ -42,6 +42,14 @@ export abstract class Collider implements ICollider {
 	originY = 0;
 	parent!: ColliderParent; // NOTE(bret): This gets set via Entity
 	color: CSSColor = 'red';
+
+	get tag(): ColliderTag | undefined {
+		return this.tags[0];
+	}
+
+	set tag(value: ColliderTag | undefined) {
+		this.tags = value !== undefined ? [value] : [];
+	}
 
 	static #optionsCollidable: DrawOptions = {
 		type: 'stroke',

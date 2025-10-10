@@ -3,7 +3,7 @@ import { collide } from './collide.js';
 // TODO(bret): getters for left/right/top/bottom :)
 export class Collider {
     type = 'point';
-    tag;
+    tags = [];
     collidable = true;
     x;
     y;
@@ -11,6 +11,12 @@ export class Collider {
     originY = 0;
     parent; // NOTE(bret): This gets set via Entity
     color = 'red';
+    get tag() {
+        return this.tags[0];
+    }
+    set tag(value) {
+        this.tags = value !== undefined ? [value] : [];
+    }
     static #optionsCollidable = {
         type: 'stroke',
         color: 'red',

@@ -407,11 +407,11 @@ export class Debug implements Debug {
 		);
 
 		if (entity.collider) {
-			const tag = entity.collider.tag;
+			const tags = entity.collider.tags.join(', ');
 			drawText(
 				drawX + padding,
 				drawY + padding + 270,
-				`Tag: ${tag ? `"${tag}"` : '[none]'}`,
+				`Tag: ${tags ? `"${tags}"` : '[none]'}`,
 			);
 
 			drawText(

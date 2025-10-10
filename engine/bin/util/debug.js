@@ -275,8 +275,8 @@ export class Debug {
         }
         drawText(drawX + padding, drawY + padding + 250, `Collider: ${entity.collider?.type ?? 'none'}`);
         if (entity.collider) {
-            const tag = entity.collider.tag;
-            drawText(drawX + padding, drawY + padding + 270, `Tag: ${tag ? `"${tag}"` : '[none]'}`);
+            const tags = entity.collider.tags.join(', ');
+            drawText(drawX + padding, drawY + padding + 270, `Tag: ${tags ? `"${tags}"` : '[none]'}`);
             drawText(drawX + padding, drawY + padding + 290, JSON.stringify({
                 x: entity.collider.x,
                 y: entity.collider.y,

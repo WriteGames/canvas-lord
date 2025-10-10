@@ -272,9 +272,9 @@ export class Entity {
             if (!e.collider?.collidable)
                 continue;
             if (tags.length > 0) {
-                if (!e.collider.tag)
+                if (e.collider.tags.length === 0)
                     continue;
-                if (!tags.includes(e.collider.tag))
+                if (!tags.some((tag) => e.collider?.tags.includes(tag)))
                     continue;
             }
             const collision = Collide.collide(this.collider, e.collider);
