@@ -10,7 +10,6 @@ interface ICircleCollider {
 	radius: number;
 }
 
-// TODO(bret): getter for width/height :O
 export class CircleCollider extends Collider implements ICircleCollider {
 	type = 'circle' as const;
 	radius: number;
@@ -20,6 +19,47 @@ export class CircleCollider extends Collider implements ICircleCollider {
 	}
 	set r(value) {
 		this.radius = value;
+	}
+
+	get w(): number {
+		return this.width;
+	}
+	set w(_value) {
+		throw new Error('cannot set width of circle');
+	}
+
+	get h(): number {
+		return this.height;
+	}
+	set h(_value) {
+		throw new Error('cannot set height of circle');
+	}
+
+	get width(): number {
+		return this.radius * 2;
+	}
+	set width(_value) {
+		throw new Error('cannot set width of circle');
+	}
+
+	get height(): number {
+		return this.radius * 2;
+	}
+	set height(_value) {
+		throw new Error('cannot set height of circle');
+	}
+
+	get left(): number {
+		return this.parent.x + this.x - this.originX - (this.radius - 0.5);
+	}
+	get right(): number {
+		return this.parent.x + this.x - this.originX + (this.radius - 0.5);
+	}
+	get top(): number {
+		return this.parent.y + this.y - this.originY - (this.radius - 0.5);
+	}
+	get bottom(): number {
+		return this.parent.y + this.y - this.originY + (this.radius - 0.5);
 	}
 
 	get center(): Vec2 {
@@ -36,6 +76,15 @@ export class CircleCollider extends Collider implements ICircleCollider {
 		super(x, y);
 		if (r < 0) throw new Error('Invalid radius');
 		this.radius = r;
+	}
+
+	centerOrigin(): void {
+		this.originX = this.w / 2;
+		this.originY = this.h / 2;
+	}
+
+	centerOO(): void {
+		this.centerOrigin();
 	}
 
 	render(ctx: Ctx, x: number, y: number): void {
