@@ -34,7 +34,7 @@ interface ICollider {
 
 export abstract class Collider implements ICollider {
 	type: ColliderType = 'point' as const;
-	tags: ColliderTag[] = [];
+	#tags: ColliderTag[] = [];
 	collidable = true;
 	x: number;
 	y: number;
@@ -48,7 +48,11 @@ export abstract class Collider implements ICollider {
 	}
 
 	set tag(value: ColliderTag | undefined) {
-		this.tags = value !== undefined ? [value] : [];
+		this.#tags = value !== undefined ? [value] : [];
+	}
+
+	get tags(): ColliderTag[] {
+		return this.#tags;
 	}
 
 	static #optionsCollidable: DrawOptions = {
@@ -70,6 +74,25 @@ export abstract class Collider implements ICollider {
 	constructor(x = 0, y = 0) {
 		this.x = x;
 		this.y = y;
+	}
+
+	addTag(tag: string): void {
+		if (this.tags.includes(tag)) return;
+		this.tags.push(tag);
+	}
+
+	addTags(...tags: string[]): void {
+		tags.forEach((tag) => this.addTag(tag));
+	}
+
+	removeTag(tag: string): void {
+		const index = this.tags.indexOf(tag);
+		if (index < 0) return;
+		this.tags.splice(index, 1);
+	}
+
+	removeTags(...tags: string[]): void {
+		tags.forEach((tag) => this.removeTag(tag));
 	}
 
 	assignParent(parent: ColliderParent): void {

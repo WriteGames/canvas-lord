@@ -3,7 +3,7 @@ import { collide } from './collide.js';
 // TODO(bret): getters for left/right/top/bottom :)
 export class Collider {
     type = 'point';
-    tags = [];
+    #tags = [];
     collidable = true;
     x;
     y;
@@ -15,7 +15,10 @@ export class Collider {
         return this.tags[0];
     }
     set tag(value) {
-        this.tags = value !== undefined ? [value] : [];
+        this.#tags = value !== undefined ? [value] : [];
+    }
+    get tags() {
+        return this.#tags;
     }
     static #optionsCollidable = {
         type: 'stroke',
@@ -33,6 +36,23 @@ export class Collider {
     constructor(x = 0, y = 0) {
         this.x = x;
         this.y = y;
+    }
+    addTag(tag) {
+        if (this.tags.includes(tag))
+            return;
+        this.tags.push(tag);
+    }
+    addTags(...tags) {
+        tags.forEach((tag) => this.addTag(tag));
+    }
+    removeTag(tag) {
+        const index = this.tags.indexOf(tag);
+        if (index < 0)
+            return;
+        this.tags.splice(index, 1);
+    }
+    removeTags(...tags) {
+        tags.forEach((tag) => this.removeTag(tag));
     }
     assignParent(parent) {
         this.parent = parent;
