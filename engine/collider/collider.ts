@@ -40,8 +40,14 @@ export abstract class Collider implements ICollider {
 	y: number;
 	originX = 0;
 	originY = 0;
-	parent!: ColliderParent; // NOTE(bret): This gets set via Entity
+	#parent?: ColliderParent;
 	color: CSSColor = 'red';
+
+	get parent(): ColliderParent {
+		if (!this.#parent)
+			throw new Error("No entity has been set as this collider's parent");
+		return this.#parent;
+	}
 
 	get tag(): ColliderTag | undefined {
 		return this.tags[0];
@@ -137,7 +143,7 @@ export abstract class Collider implements ICollider {
 	}
 
 	assignParent(parent: ColliderParent): void {
-		this.parent = parent;
+		this.#parent = parent;
 	}
 
 	collide(other: Collider): void {

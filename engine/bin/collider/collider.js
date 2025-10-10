@@ -9,8 +9,13 @@ export class Collider {
     y;
     originX = 0;
     originY = 0;
-    parent; // NOTE(bret): This gets set via Entity
+    #parent;
     color = 'red';
+    get parent() {
+        if (!this.#parent)
+            throw new Error("No entity has been set as this collider's parent");
+        return this.#parent;
+    }
     get tag() {
         return this.tags[0];
     }
@@ -91,7 +96,7 @@ export class Collider {
         tags.forEach((tag) => this.removeTag(tag));
     }
     assignParent(parent) {
-        this.parent = parent;
+        this.#parent = parent;
     }
     collide(other) {
         collide(this, other);
