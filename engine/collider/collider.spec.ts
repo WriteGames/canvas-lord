@@ -1,10 +1,22 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { BoxCollider, type Collider } from './index';
-
-let collider: Collider;
-beforeEach(() => {
-	collider = new BoxCollider(24, 24);
-});
+import {
+	BoxCollider,
+	CircleCollider,
+	GridCollider,
+	isBoxCollider,
+	isCircleCollider,
+	isGridCollider,
+	isLineCollider,
+	isPointCollider,
+	isPolygonCollider,
+	isRightTriangleCollider,
+	LineCollider,
+	PointCollider,
+	PolygonCollider,
+	RightTriangleCollider,
+	type Collider,
+} from './index';
+import { Grid } from '../canvas-lord';
 
 const TAG_1 = 'tag-1' as const;
 const TAG_2 = 'tag-2' as const;
@@ -12,6 +24,11 @@ const TAG_3 = 'tag-3' as const;
 const tags = [TAG_1, TAG_2, TAG_3] as const;
 
 describe('tags', () => {
+	let collider: Collider;
+	beforeEach(() => {
+		collider = new BoxCollider(24, 24);
+	});
+
 	test('should start with no tags', () => {
 		expect(collider.tag).toBe(undefined);
 		expect(collider.tags).toHaveLength(0);
@@ -132,6 +149,45 @@ describe('tags', () => {
 					collider.removeTags(tag, tag);
 					expect(collider.tags).toHaveLength(2);
 					expect(collider.tags).not.toContain(tag);
+				});
+			});
+		});
+	});
+});
+
+const grid = new Grid(32, 32, 32, 32);
+
+const colliderTypes = [
+	new BoxCollider(0, 0),
+	new CircleCollider(0),
+	new GridCollider(grid),
+	new LineCollider(0, 0, 1, 1),
+	new PointCollider(0, 0),
+	new PolygonCollider([
+		[0, 0],
+		[1, 1],
+		[2, 0],
+	]),
+	new RightTriangleCollider(32, 32, 'NE'),
+] as const;
+
+const colliderChecks = [
+	isBoxCollider,
+	isCircleCollider,
+	isGridCollider,
+	isLineCollider,
+	isPointCollider,
+	isPolygonCollider,
+	isRightTriangleCollider,
+];
+
+describe('type narrowing', () => {
+	colliderTypes.forEach((collider, i) => {
+		describe(collider.type, () => {
+			colliderChecks.forEach((check, j) => {
+				const expected = i === j;
+				test(`${check.name}() should return ${expected}`, () => {
+					expect(check(collider)).toEqual(expected);
 				});
 			});
 		});

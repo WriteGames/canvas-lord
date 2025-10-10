@@ -12,8 +12,8 @@ interface IBoxCollider {
 
 export class BoxCollider extends Collider implements IBoxCollider {
 	type = 'box' as const;
-	width: number;
-	height: number;
+	#width: number;
+	#height: number;
 
 	get w(): number {
 		return this.width;
@@ -27,6 +27,20 @@ export class BoxCollider extends Collider implements IBoxCollider {
 	}
 	set h(value) {
 		this.height = value;
+	}
+
+	get width(): number {
+		return this.#width;
+	}
+	set width(value) {
+		this.#width = value;
+	}
+
+	get height(): number {
+		return this.#height;
+	}
+	set height(value) {
+		this.#height = value;
 	}
 
 	get left(): number {
@@ -46,8 +60,8 @@ export class BoxCollider extends Collider implements IBoxCollider {
 		super(x, y);
 		if (w < 0) throw new Error('Invalid width');
 		if (h < 0) throw new Error('Invalid height');
-		this.width = w;
-		this.height = h;
+		this.#width = w;
+		this.#height = h;
 	}
 
 	centerOrigin(): void {

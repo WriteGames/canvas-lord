@@ -76,6 +76,47 @@ export abstract class Collider implements ICollider {
 		this.y = y;
 	}
 
+	get w(): number {
+		throw new Error('not implemented in Collider');
+	}
+	set w(_value: number) {
+		throw new Error('not implemented in Collider');
+	}
+
+	get h(): number {
+		throw new Error('not implemented in Collider');
+	}
+	set h(_value: number) {
+		throw new Error('not implemented in Collider');
+	}
+
+	get width(): number {
+		throw new Error('not implemented in Collider');
+	}
+	set width(_value: number) {
+		throw new Error('not implemented in Collider');
+	}
+
+	get height(): number {
+		throw new Error('not implemented in Collider');
+	}
+	set height(_value: number) {
+		throw new Error('not implemented in Collider');
+	}
+
+	get left(): number {
+		throw new Error('not implemented in Collider');
+	}
+	get right(): number {
+		throw new Error('not implemented in Collider');
+	}
+	get top(): number {
+		throw new Error('not implemented in Collider');
+	}
+	get bottom(): number {
+		throw new Error('not implemented in Collider');
+	}
+
 	addTag(tag: string): void {
 		if (this.tags.includes(tag)) return;
 		this.tags.push(tag);

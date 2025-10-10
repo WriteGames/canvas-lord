@@ -3,8 +3,8 @@ import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
 export class BoxCollider extends Collider {
     type = 'box';
-    width;
-    height;
+    #width;
+    #height;
     get w() {
         return this.width;
     }
@@ -16,6 +16,18 @@ export class BoxCollider extends Collider {
     }
     set h(value) {
         this.height = value;
+    }
+    get width() {
+        return this.#width;
+    }
+    set width(value) {
+        this.#width = value;
+    }
+    get height() {
+        return this.#height;
+    }
+    set height(value) {
+        this.#height = value;
     }
     get left() {
         return this.parent.x + this.x - this.originX;
@@ -35,8 +47,8 @@ export class BoxCollider extends Collider {
             throw new Error('Invalid width');
         if (h < 0)
             throw new Error('Invalid height');
-        this.width = w;
-        this.height = h;
+        this.#width = w;
+        this.#height = h;
     }
     centerOrigin() {
         this.originX = this.w / 2;

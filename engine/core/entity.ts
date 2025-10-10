@@ -1,22 +1,22 @@
 /* Canvas Lord v0.6.1 */
 
-import type { Input } from './input.js';
-import type { Scene } from './scene.js';
-import type { Collider } from '../collider/collider.js';
 import * as Collide from '../collider/collide.js';
+import type { Collider } from '../collider/collider.js';
 import { PointCollider, type ColliderTag } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import * as Components from '../util/components.js';
 import { type ComponentProps } from '../util/components.js';
+import { Delegate } from '../util/delegate.js';
+import type { Tween } from '../util/tween.js';
 import type {
-	IRenderable,
 	IEntityComponentType,
+	IRenderable,
 	RawComponent,
 } from '../util/types.js';
-import type { Tween } from '../util/tween.js';
-import { Delegate } from '../util/delegate.js';
+import type { Input } from './input.js';
+import type { Scene } from './scene.js';
 
 // TODO(bret): Fix this type lol
 type Graphic = IRenderable;
@@ -137,17 +137,8 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	// TODO(bret): Set up setters for these as well
-	// TODO(bret): Would be good to set up for non-rect shapes :)
 	get width(): number {
-		if (this.collider) {
-			if ('w' in this.collider)
-				// TODO(bret): fix "as number"
-				return this.collider.w as number;
-			if ('radius' in this.collider)
-				// TODO(bret): fix "as number"
-				return (this.collider.radius as number) * 2;
-		}
-		return 0;
+		return this.collider?.w ?? 0;
 	}
 
 	get w(): number {
@@ -155,15 +146,7 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	get height(): number {
-		if (this.collider) {
-			if ('h' in this.collider)
-				// TODO(bret): fix "as number"
-				return this.collider.h as number;
-			if ('radius' in this.collider)
-				// TODO(bret): fix "as number"
-				return (this.collider.radius as number) * 2;
-		}
-		return 0;
+		return this.collider?.h ?? 0;
 	}
 
 	get h(): number {
@@ -502,13 +485,11 @@ export class Entity<TScene extends Scene = Scene>
 			{
 				type: 'point',
 				x: mouseX,
-				// TODO(bret): fix meeeee
-				// @ts-expect-error -- left and top don't exist??
 				left: mouseX,
 				y: mouseY,
 				top: mouseY,
 				collidable: true,
-			},
+			} as Collider,
 			this.collider,
 		);
 		this.x = _x;

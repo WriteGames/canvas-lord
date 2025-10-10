@@ -37,6 +37,42 @@ export class Collider {
         this.x = x;
         this.y = y;
     }
+    get w() {
+        throw new Error('not implemented in Collider');
+    }
+    set w(_value) {
+        throw new Error('not implemented in Collider');
+    }
+    get h() {
+        throw new Error('not implemented in Collider');
+    }
+    set h(_value) {
+        throw new Error('not implemented in Collider');
+    }
+    get width() {
+        throw new Error('not implemented in Collider');
+    }
+    set width(_value) {
+        throw new Error('not implemented in Collider');
+    }
+    get height() {
+        throw new Error('not implemented in Collider');
+    }
+    set height(_value) {
+        throw new Error('not implemented in Collider');
+    }
+    get left() {
+        throw new Error('not implemented in Collider');
+    }
+    get right() {
+        throw new Error('not implemented in Collider');
+    }
+    get top() {
+        throw new Error('not implemented in Collider');
+    }
+    get bottom() {
+        throw new Error('not implemented in Collider');
+    }
     addTag(tag) {
         if (this.tags.includes(tag))
             return;

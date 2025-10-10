@@ -42,31 +42,14 @@ export class Entity {
         this.component(Components.pos2D).set(val);
     }
     // TODO(bret): Set up setters for these as well
-    // TODO(bret): Would be good to set up for non-rect shapes :)
     get width() {
-        if (this.collider) {
-            if ('w' in this.collider)
-                // TODO(bret): fix "as number"
-                return this.collider.w;
-            if ('radius' in this.collider)
-                // TODO(bret): fix "as number"
-                return this.collider.radius * 2;
-        }
-        return 0;
+        return this.collider?.w ?? 0;
     }
     get w() {
         return this.width;
     }
     get height() {
-        if (this.collider) {
-            if ('h' in this.collider)
-                // TODO(bret): fix "as number"
-                return this.collider.h;
-            if ('radius' in this.collider)
-                // TODO(bret): fix "as number"
-                return this.collider.radius * 2;
-        }
-        return 0;
+        return this.collider?.h ?? 0;
     }
     get h() {
         return this.height;
@@ -313,8 +296,6 @@ export class Entity {
         {
             type: 'point',
             x: mouseX,
-            // TODO(bret): fix meeeee
-            // @ts-expect-error -- left and top don't exist??
             left: mouseX,
             y: mouseY,
             top: mouseY,
