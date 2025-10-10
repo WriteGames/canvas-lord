@@ -5,6 +5,11 @@ import { beforeEach, describe, expect, test } from 'vitest';
 const engine = {
 	focus: true,
 	focusElement: document.activeElement,
+	canvas: {
+		style: {
+			cursor: undefined as string | undefined,
+		},
+	},
 } as Engine;
 
 let input: Input;
@@ -15,18 +20,18 @@ beforeEach(() => {
 const emulateKeyDown = (input: Input, key: Key): void => {
 	input.onKeyDown({
 		preventDefault: () => {
-			/**/
+			// leave empty
 		},
-		key,
+		code: key,
 	} as KeyboardEvent);
 };
 
 const emulateKeyUp = (input: Input, key: Key): void => {
 	input.onKeyUp({
 		preventDefault: () => {
-			/**/
+			// leave empty
 		},
-		key,
+		code: key,
 	} as KeyboardEvent);
 };
 
