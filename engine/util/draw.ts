@@ -140,6 +140,7 @@ export const Draw = {
 			y: number,
 			w: number,
 			h: number,
+			radii?: number | DOMPointInit | Array<number | DOMPointInit>,
 		) => {
 			initTempCanvas(ctx);
 
@@ -151,11 +152,17 @@ export const Draw = {
 				case 'fill':
 				case undefined:
 					ctx.fillStyle = color;
-					ctx.fillRect(...args);
+					if (radii) {
+						ctx.roundRect(...args, radii);
+						ctx.fill();
+					} else ctx.fillRect(...args);
 					break;
 				case 'stroke':
 					ctx.strokeStyle = color;
-					ctx.strokeRect(...args);
+					if (radii) {
+						ctx.roundRect(...args, radii);
+						ctx.stroke();
+					} else ctx.strokeRect(...args);
 					break;
 			}
 		},

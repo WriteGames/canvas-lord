@@ -78,7 +78,7 @@ export const Draw = {
         ctx.lineTo(x2, y2);
         ctx.stroke();
     }),
-    rect: moveCanvas((ctx, options, x, y, w, h) => {
+    rect: moveCanvas((ctx, options, x, y, w, h, radii) => {
         initTempCanvas(ctx);
         const color = options.color ?? 'magenta';
         ctx.translate(0.5, 0.5);
@@ -87,11 +87,21 @@ export const Draw = {
             case 'fill':
             case undefined:
                 ctx.fillStyle = color;
-                ctx.fillRect(...args);
+                if (radii) {
+                    ctx.roundRect(...args, radii);
+                    ctx.fill();
+                }
+                else
+                    ctx.fillRect(...args);
                 break;
             case 'stroke':
                 ctx.strokeStyle = color;
-                ctx.strokeRect(...args);
+                if (radii) {
+                    ctx.roundRect(...args, radii);
+                    ctx.stroke();
+                }
+                else
+                    ctx.strokeRect(...args);
                 break;
         }
     }),
