@@ -95,6 +95,7 @@ export class Entity<TScene extends Scene = Scene>
 	components: ComponentMap = new Map();
 	depth = 0;
 	#collider: Collider | undefined = undefined;
+	#colliders: Collider[] = [];
 	visible = true;
 	colliderVisible = false;
 	#graphic: Graphic | undefined = undefined;
@@ -165,12 +166,16 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	get collider(): Collider | undefined {
-		return this.#collider;
+		return this.#colliders[0];
 	}
 	set collider(value) {
-		this.#collider?.assignParent(null);
-		this.#collider = value;
-		this.#collider?.assignParent(this);
+		this.#colliders[0]?.assignParent(null);
+		this.#colliders = value ? [value] : [];
+		this.#colliders[0]?.assignParent(this);
+	}
+
+	get colliders(): Collider[] {
+		return this.#colliders;
 	}
 
 	get scene(): TScene {
@@ -260,6 +265,25 @@ export class Entity<TScene extends Scene = Scene>
 	removeGraphics<T extends Graphic[]>(graphics: T): T {
 		graphics.forEach((g) => this.removeGraphic(g));
 		return graphics;
+	}
+
+	addCollider(collider: Collider): void {
+		if (this.colliders.includes(collider)) return;
+		this.colliders.push(collider);
+	}
+
+	addColliders(...colliders: Collider[]): void {
+		colliders.forEach((collider) => this.addCollider(collider));
+	}
+
+	removeCollider(collider: Collider): void {
+		const index = this.colliders.indexOf(collider);
+		if (index < 0) return;
+		this.colliders.splice(index, 1);
+	}
+
+	removeColliders(...colliders: Collider[]): void {
+		colliders.forEach((collider) => this.removeCollider(collider));
 	}
 
 	getScene<T extends TScene>(): T {

@@ -11,6 +11,7 @@ export class Entity {
     components = new Map();
     depth = 0;
     #collider = undefined;
+    #colliders = [];
     visible = true;
     colliderVisible = false;
     #graphic = undefined;
@@ -74,12 +75,15 @@ export class Entity {
             this.#graphic.parent = this;
     }
     get collider() {
-        return this.#collider;
+        return this.#colliders[0];
     }
     set collider(value) {
-        this.#collider?.assignParent(null);
-        this.#collider = value;
-        this.#collider?.assignParent(this);
+        this.#colliders[0]?.assignParent(null);
+        this.#colliders = value ? [value] : [];
+        this.#colliders[0]?.assignParent(this);
+    }
+    get colliders() {
+        return this.#colliders;
     }
     get scene() {
         return this.#scene;
@@ -150,6 +154,23 @@ export class Entity {
     removeGraphics(graphics) {
         graphics.forEach((g) => this.removeGraphic(g));
         return graphics;
+    }
+    addCollider(collider) {
+        if (this.colliders.includes(collider))
+            return;
+        this.colliders.push(collider);
+    }
+    addColliders(...colliders) {
+        colliders.forEach((collider) => this.addCollider(collider));
+    }
+    removeCollider(collider) {
+        const index = this.colliders.indexOf(collider);
+        if (index < 0)
+            return;
+        this.colliders.splice(index, 1);
+    }
+    removeColliders(...colliders) {
+        colliders.forEach((collider) => this.removeCollider(collider));
     }
     getScene() {
         return this.#scene;
