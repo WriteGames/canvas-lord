@@ -5,18 +5,6 @@ export class BoxCollider extends Collider {
     type = 'box';
     #width;
     #height;
-    get w() {
-        return this.width;
-    }
-    set w(value) {
-        this.width = value;
-    }
-    get h() {
-        return this.height;
-    }
-    set h(value) {
-        this.height = value;
-    }
     get width() {
         return this.#width;
     }

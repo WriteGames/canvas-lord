@@ -21,20 +21,6 @@ export class CircleCollider extends Collider implements ICircleCollider {
 		this.radius = value;
 	}
 
-	get w(): number {
-		return this.width;
-	}
-	set w(_value) {
-		throw new Error('cannot set width of circle');
-	}
-
-	get h(): number {
-		return this.height;
-	}
-	set h(_value) {
-		throw new Error('cannot set height of circle');
-	}
-
 	get width(): number {
 		return this.radius * 2;
 	}

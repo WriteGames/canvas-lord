@@ -15,20 +15,6 @@ export class BoxCollider extends Collider implements IBoxCollider {
 	#width: number;
 	#height: number;
 
-	get w(): number {
-		return this.width;
-	}
-	set w(value) {
-		this.width = value;
-	}
-
-	get h(): number {
-		return this.height;
-	}
-	set h(value) {
-		this.height = value;
-	}
-
 	get width(): number {
 		return this.#width;
 	}

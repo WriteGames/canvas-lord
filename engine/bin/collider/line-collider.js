@@ -54,14 +54,8 @@ export class LineCollider extends Collider {
     get width() {
         return Math.abs(this.x1 - this.x2) + 1;
     }
-    get w() {
-        return this.width;
-    }
     get height() {
         return Math.abs(this.y1 - this.y2) + 1;
-    }
-    get h() {
-        return this.height;
     }
     constructor(x1, y1, x2, y2, x = 0, y = 0) {
         super(x, y);

@@ -43,16 +43,16 @@ export class Collider {
         this.y = y;
     }
     get w() {
-        throw new Error('not implemented in Collider');
+        return this.width;
     }
-    set w(_value) {
-        throw new Error('not implemented in Collider');
+    set w(value) {
+        this.width = value;
     }
     get h() {
-        throw new Error('not implemented in Collider');
+        return this.height;
     }
-    set h(_value) {
-        throw new Error('not implemented in Collider');
+    set h(value) {
+        this.height = value;
     }
     get width() {
         throw new Error('not implemented in Collider');

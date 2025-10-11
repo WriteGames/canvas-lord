@@ -83,17 +83,17 @@ export abstract class Collider implements ICollider {
 	}
 
 	get w(): number {
-		throw new Error('not implemented in Collider');
+		return this.width;
 	}
-	set w(_value: number) {
-		throw new Error('not implemented in Collider');
+	set w(value: number) {
+		this.width = value;
 	}
 
 	get h(): number {
-		throw new Error('not implemented in Collider');
+		return this.height;
 	}
-	set h(_value: number) {
-		throw new Error('not implemented in Collider');
+	set h(value: number) {
+		this.height = value;
 	}
 
 	get width(): number {
