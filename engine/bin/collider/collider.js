@@ -1,6 +1,6 @@
 /* Canvas Lord v0.6.1 */
 import { collide } from './collide.js';
-// TODO(bret): getters for left/right/top/bottom :)
+import { Entity } from '../core/entity.js';
 export class Collider {
     type = 'point';
     #tags = [];
@@ -86,6 +86,12 @@ export class Collider {
     addTags(...tags) {
         tags.forEach((tag) => this.addTag(tag));
     }
+    hasTag(tag) {
+        return this.tags.includes(tag);
+    }
+    hasTags(...tags) {
+        return tags.every((tag) => this.tags.includes(tag));
+    }
     removeTag(tag) {
         const index = this.tags.indexOf(tag);
         if (index < 0)
@@ -98,8 +104,76 @@ export class Collider {
     assignParent(parent) {
         this.#parent = parent;
     }
-    collide(other) {
-        collide(this, other);
+    collideEntity(x, y, entity) {
+        if (!this.#parent)
+            return false;
+        if (!this.collidable)
+            return false;
+        if (entity === this.#parent)
+            return false;
+        const _x = this.#parent.x;
+        const _y = this.#parent.y;
+        this.#parent.x = x;
+        this.#parent.y = y;
+        const result = entity.colliders.some((other) => {
+            return collide(this, other);
+        });
+        this.#parent.x = _x;
+        this.#parent.y = _y;
+        return result;
+    }
+    collide(x, y, match, earlyOut) {
+        if (!this.#parent)
+            return [];
+        let entities = this.#parent.scene.entities.inScene;
+        let tags = [];
+        switch (true) {
+            case match === undefined:
+                break;
+            case match instanceof Entity: {
+                entities = [match];
+                break;
+            }
+            case typeof match === 'string': {
+                tags = [match];
+                break;
+            }
+            case Array.isArray(match): {
+                if (match.every((item) => item instanceof Entity)) {
+                    entities = match;
+                }
+                else {
+                    tags = match;
+                }
+                break;
+            }
+            default:
+                console.log(match);
+                throw new Error('unknown error!!');
+        }
+        const n = entities.length;
+        const collide = [];
+        for (let i = 0; i < n; ++i) {
+            const e = entities[i];
+            if (tags.length > 0) {
+                if (!e.colliders.some((c) => tags.some((t) => c.hasTag(t))))
+                    continue;
+            }
+            const collision = this.collideEntity(x, y, e);
+            const result = collision ? e : null;
+            if (result === null)
+                continue;
+            collide.push(result);
+            if (earlyOut)
+                break;
+        }
+        return collide;
+    }
+    /**
+     * @deprecated Use collide() instead
+     */
+    _collide(other) {
+        return collide(this, other);
     }
     render(_ctx, _x, _y) {
         throw new Error('render() unimplemented');

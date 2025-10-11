@@ -1,11 +1,10 @@
 /* Canvas Lord v0.6.1 */
 import * as Collide from '../collider/collide.js';
-import { PointCollider } from '../collider/index.js';
 import { Vec2 } from '../math/index.js';
 import * as Components from '../util/components.js';
 import { Delegate } from '../util/delegate.js';
 // TODO(bret): hook this up
-const _mouseCollider = new PointCollider();
+// const _mouseCollider = new PointCollider();
 export class Entity {
     #scene; // NOTE: set by scene
     components = new Map();
@@ -159,6 +158,7 @@ export class Entity {
         if (this.colliders.includes(collider))
             return;
         this.colliders.push(collider);
+        collider.assignParent(this);
     }
     addColliders(...colliders) {
         colliders.forEach((collider) => this.addCollider(collider));
@@ -168,6 +168,7 @@ export class Entity {
         if (index < 0)
             return;
         this.colliders.splice(index, 1);
+        collider.assignParent(null);
     }
     removeColliders(...colliders) {
         colliders.forEach((collider) => this.removeCollider(collider));
@@ -240,9 +241,9 @@ export class Entity {
         //
     }
     renderCollider(ctx, camera = Vec2.zero) {
-        if (!this.collider)
-            return;
-        this.collider.render(ctx, -camera.x, -camera.y);
+        this.colliders.forEach((collider) => {
+            collider.render(ctx, -camera.x, -camera.y);
+        });
     }
     removedInternal() {
         this.removed();
@@ -254,61 +255,27 @@ export class Entity {
     #collide(x, y, match, earlyOut) {
         if (!this.collider)
             return [];
-        const _x = this.x;
-        const _y = this.y;
-        this.x = x;
-        this.y = y;
-        let entities = this.#scene.entities.inScene;
-        let tags = [];
-        switch (true) {
-            case match === undefined:
-                break;
-            case match instanceof Entity: {
-                entities = [match];
-                break;
+        const n = this.colliders.length;
+        if (earlyOut) {
+            for (let i = 0; i < n; ++i) {
+                const collider = this.colliders[i];
+                const collisions = collider.collide(x, y, match, earlyOut);
+                if (collisions.length > 0)
+                    return collisions;
             }
-            case typeof match === 'string': {
-                tags = [match];
-                break;
-            }
-            case Array.isArray(match): {
-                if (match.every((item) => item instanceof Entity)) {
-                    entities = match;
-                }
-                else {
-                    tags = match;
-                }
-                break;
-            }
-            default:
-                console.log(match);
-                throw new Error('unknown error!!');
+            return [];
         }
-        const n = entities.length;
-        const collide = [];
+        const entities = [];
         for (let i = 0; i < n; ++i) {
-            const e = entities[i];
-            if (e === this)
-                continue;
-            if (!e.collider?.collidable)
-                continue;
-            if (tags.length > 0) {
-                if (e.collider.tags.length === 0)
+            const collider = this.colliders[i];
+            const collisions = collider.collide(x, y, match, earlyOut);
+            for (let j = 0; j < collisions.length; ++j) {
+                if (entities.includes(collisions[j]))
                     continue;
-                if (!tags.some((tag) => e.collider?.tags.includes(tag)))
-                    continue;
+                entities.push(collisions[j]);
             }
-            const collision = Collide.collide(this.collider, e.collider);
-            const result = collision ? e : null;
-            if (result === null)
-                continue;
-            collide.push(result);
-            if (earlyOut)
-                break;
         }
-        this.x = _x;
-        this.y = _y;
-        return collide;
+        return entities;
     }
     collideEntity(x, y, match) {
         return this.#collide(x, y, match, true)[0] ?? null;

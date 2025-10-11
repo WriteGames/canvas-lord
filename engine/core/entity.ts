@@ -2,7 +2,7 @@
 
 import * as Collide from '../collider/collide.js';
 import type { Collider } from '../collider/collider.js';
-import { PointCollider, type ColliderTag } from '../collider/index.js';
+import type { ColliderTag } from '../collider/index.js';
 import type { Graphic } from '../graphic/graphic.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
@@ -19,7 +19,7 @@ import type {
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
 
-type ColliderType = ColliderTag | ColliderTag[] | Entity | Entity[];
+type CollisionMatch = ColliderTag | ColliderTag[] | Entity | Entity[];
 
 type ComponentMap = Map<IEntityComponentType, RawComponent>;
 
@@ -86,7 +86,7 @@ export interface IEntity<TScene extends Scene = Scene> {
 }
 
 // TODO(bret): hook this up
-const _mouseCollider = new PointCollider();
+// const _mouseCollider = new PointCollider();
 
 export class Entity<TScene extends Scene = Scene>
 	implements IEntity<TScene>, IRenderable
@@ -270,6 +270,7 @@ export class Entity<TScene extends Scene = Scene>
 	addCollider(collider: Collider): void {
 		if (this.colliders.includes(collider)) return;
 		this.colliders.push(collider);
+		collider.assignParent(this);
 	}
 
 	addColliders(...colliders: Collider[]): void {
@@ -280,6 +281,7 @@ export class Entity<TScene extends Scene = Scene>
 		const index = this.colliders.indexOf(collider);
 		if (index < 0) return;
 		this.colliders.splice(index, 1);
+		collider.assignParent(null);
 	}
 
 	removeColliders(...colliders: Collider[]): void {
@@ -368,9 +370,9 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	renderCollider(ctx: Ctx, camera: Camera = Vec2.zero): void {
-		if (!this.collider) return;
-
-		this.collider.render(ctx, -camera.x, -camera.y);
+		this.colliders.forEach((collider) => {
+			collider.render(ctx, -camera.x, -camera.y);
+		});
 	}
 
 	removedInternal(): void {
@@ -385,71 +387,31 @@ export class Entity<TScene extends Scene = Scene>
 	#collide<T extends Entity>(
 		x: number,
 		y: number,
-		match: ColliderType | undefined,
+		match: CollisionMatch | undefined,
 		earlyOut: boolean,
 	): T[] {
 		if (!this.collider) return [];
 
-		const _x = this.x;
-		const _y = this.y;
-		this.x = x;
-		this.y = y;
-
-		let entities: Entity[] = this.#scene.entities.inScene;
-		let tags: ColliderTag[] = [];
-
-		switch (true) {
-			case match === undefined:
-				break;
-
-			case match instanceof Entity: {
-				entities = [match];
-				break;
+		const n = this.colliders.length;
+		if (earlyOut) {
+			for (let i = 0; i < n; ++i) {
+				const collider = this.colliders[i];
+				const collisions = collider.collide<T>(x, y, match, earlyOut);
+				if (collisions.length > 0) return collisions;
 			}
-
-			case typeof match === 'string': {
-				tags = [match];
-				break;
-			}
-
-			case Array.isArray(match): {
-				if (match.every((item) => item instanceof Entity)) {
-					entities = match;
-				} else {
-					tags = match;
-				}
-				break;
-			}
-
-			default:
-				console.log(match);
-				throw new Error('unknown error!!');
+			return [];
 		}
 
-		const n = entities.length;
-		const collide: T[] = [];
+		const entities: T[] = [];
 		for (let i = 0; i < n; ++i) {
-			const e = entities[i];
-			if (e === this) continue;
-			if (!e.collider?.collidable) continue;
-			if (tags.length > 0) {
-				if (e.collider.tags.length === 0) continue;
-				if (!tags.some((tag) => e.collider?.tags.includes(tag)))
-					continue;
+			const collider = this.colliders[i];
+			const collisions = collider.collide<T>(x, y, match, earlyOut);
+			for (let j = 0; j < collisions.length; ++j) {
+				if (entities.includes(collisions[j])) continue;
+				entities.push(collisions[j]);
 			}
-
-			const collision = Collide.collide(this.collider, e.collider);
-			const result = collision ? e : null;
-			if (result === null) continue;
-
-			collide.push(result as T);
-			if (earlyOut) break;
 		}
-
-		this.x = _x;
-		this.y = _y;
-
-		return collide;
+		return entities;
 	}
 
 	collideEntity<T extends Entity>(x: number, y: number): T | null;
@@ -478,7 +440,7 @@ export class Entity<TScene extends Scene = Scene>
 		y: number,
 		match?: unknown,
 	): T | null {
-		return this.#collide<T>(x, y, match as ColliderType, true)[0] ?? null;
+		return this.#collide<T>(x, y, match as CollisionMatch, true)[0] ?? null;
 	}
 
 	collideEntities(x: number, y: number): Entity[];
@@ -487,7 +449,7 @@ export class Entity<TScene extends Scene = Scene>
 	collideEntities(x: number, y: number, entity: Entity): Entity[];
 	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
 	collideEntities(x: number, y: number, match?: unknown): Entity[] {
-		return this.#collide(x, y, match as ColliderType, false);
+		return this.#collide(x, y, match as CollisionMatch, false);
 	}
 
 	collide(x: number, y: number): boolean;
@@ -496,7 +458,7 @@ export class Entity<TScene extends Scene = Scene>
 	collide(x: number, y: number, entity: Entity): boolean;
 	collide(x: number, y: number, entities: Entity[]): boolean;
 	collide(x: number, y: number, match?: unknown): boolean {
-		return this.#collide(x, y, match as ColliderType, true).length > 0;
+		return this.#collide(x, y, match as CollisionMatch, true).length > 0;
 	}
 
 	collideMouse(x: number, y: number, cameraRelative = true): boolean {

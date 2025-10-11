@@ -1,7 +1,7 @@
 /* Canvas Lord v0.6.1 */
 
 import { collide } from './collide.js';
-import type { Entity } from '../core/entity.js';
+import { Entity } from '../core/entity.js';
 import type { Ctx } from '../util/canvas.js';
 import { type DrawOptions } from '../util/draw.js';
 import type { CSSColor } from '../util/types.js';
@@ -18,6 +18,8 @@ export type ColliderTag = string;
 
 type ColliderParent = Entity;
 
+type CollisionMatch = ColliderTag | ColliderTag[] | Entity | Entity[];
+
 interface ICollider {
 	type: ColliderType;
 	tag?: ColliderTag;
@@ -29,8 +31,6 @@ interface ICollider {
 
 	render(ctx: Ctx, x: number, y: number): void;
 }
-
-// TODO(bret): getters for left/right/top/bottom :)
 
 export abstract class Collider implements ICollider {
 	type: ColliderType = 'point' as const;
@@ -132,6 +132,14 @@ export abstract class Collider implements ICollider {
 		tags.forEach((tag) => this.addTag(tag));
 	}
 
+	hasTag(tag: string): boolean {
+		return this.tags.includes(tag);
+	}
+
+	hasTags(...tags: string[]): boolean {
+		return tags.every((tag) => this.tags.includes(tag));
+	}
+
 	removeTag(tag: string): void {
 		const index = this.tags.indexOf(tag);
 		if (index < 0) return;
@@ -146,8 +154,93 @@ export abstract class Collider implements ICollider {
 		this.#parent = parent;
 	}
 
-	collide(other: Collider): void {
-		collide(this, other);
+	collideEntity(x: number, y: number, entity: Entity): boolean {
+		if (!this.#parent) return false;
+		if (!this.collidable) return false;
+		if (entity === this.#parent) return false;
+
+		const _x = this.#parent.x;
+		const _y = this.#parent.y;
+
+		this.#parent.x = x;
+		this.#parent.y = y;
+
+		const result = entity.colliders.some((other) => {
+			return collide(this, other);
+		});
+
+		this.#parent.x = _x;
+		this.#parent.y = _y;
+
+		return result;
+	}
+
+	collide<T extends Entity>(
+		x: number,
+		y: number,
+		match: CollisionMatch | undefined,
+		earlyOut: boolean,
+	): T[] {
+		if (!this.#parent) return [];
+
+		let entities: Entity[] = this.#parent.scene.entities.inScene;
+		let tags: ColliderTag[] = [];
+
+		switch (true) {
+			case match === undefined:
+				break;
+
+			case match instanceof Entity: {
+				entities = [match];
+				break;
+			}
+
+			case typeof match === 'string': {
+				tags = [match];
+				break;
+			}
+
+			case Array.isArray(match): {
+				if (match.every((item) => item instanceof Entity)) {
+					entities = match;
+				} else {
+					tags = match;
+				}
+				break;
+			}
+
+			default:
+				console.log(match);
+				throw new Error('unknown error!!');
+		}
+
+		const n = entities.length;
+		const collide: T[] = [];
+		for (let i = 0; i < n; ++i) {
+			const e = entities[i];
+
+			if (tags.length > 0) {
+				if (!e.colliders.some((c) => tags.some((t) => c.hasTag(t))))
+					continue;
+			}
+
+			const collision = this.collideEntity(x, y, e);
+
+			const result = collision ? e : null;
+			if (result === null) continue;
+
+			collide.push(result as T);
+			if (earlyOut) break;
+		}
+
+		return collide;
+	}
+
+	/**
+	 * @deprecated Use collide() instead
+	 */
+	_collide(other: Collider): boolean {
+		return collide(this, other);
 	}
 
 	render(_ctx: Ctx, _x: number, _y: number): void {
