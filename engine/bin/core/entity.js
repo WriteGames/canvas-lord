@@ -187,7 +187,7 @@ export class Entity {
     postUpdateInternal(input) {
         this.postUpdate(input);
         this.onPostUpdate.invoke(input);
-        this.graphic?.update?.(input);
+        this.graphic?.update(input);
     }
     postUpdate(_input) {
         //

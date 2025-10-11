@@ -3,6 +3,7 @@
 import * as Collide from '../collider/collide.js';
 import type { Collider } from '../collider/collider.js';
 import { PointCollider, type ColliderTag } from '../collider/index.js';
+import type { Graphic } from '../graphic/graphic.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
@@ -17,9 +18,6 @@ import type {
 } from '../util/types.js';
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
-
-// TODO(bret): Fix this type lol
-type Graphic = IRenderable;
 
 type ColliderType = ColliderTag | ColliderTag[] | Entity | Entity[];
 
@@ -319,7 +317,7 @@ export class Entity<TScene extends Scene = Scene>
 		this.postUpdate(input);
 		this.onPostUpdate.invoke(input);
 
-		this.graphic?.update?.(input);
+		this.graphic?.update(input);
 	}
 
 	postUpdate(_input: Input): void {
