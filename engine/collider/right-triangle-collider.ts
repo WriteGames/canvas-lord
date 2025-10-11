@@ -1,10 +1,10 @@
 /* Canvas Lord v0.6.1 */
 
+import type { Entity } from '../core/entity.js';
 import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import type { Entity } from '../canvas-lord.js';
 
 type Orientation = 'NW' | 'NE' | 'SW' | 'SE';
 
