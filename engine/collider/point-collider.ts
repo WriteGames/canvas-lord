@@ -11,6 +11,13 @@ interface IPointCollider {
 export class PointCollider extends Collider implements IPointCollider {
 	type = 'point' as const;
 
+	get width(): number {
+		return 1 as number;
+	}
+	get height(): number {
+		return 1 as number;
+	}
+
 	get left(): number {
 		return this.parent.x + this.x - this.originX;
 	}
@@ -26,6 +33,15 @@ export class PointCollider extends Collider implements IPointCollider {
 
 	constructor(x = 0, y = 0) {
 		super(x, y);
+	}
+
+	centerOrigin(): void {
+		this.originX = 0;
+		this.originY = 0;
+	}
+
+	centerOO(): void {
+		this.centerOrigin();
 	}
 
 	render(ctx: Ctx, x = 0, y = 0): void {

@@ -3,6 +3,12 @@ import { Collider } from './collider.js';
 import { Draw } from '../util/draw.js';
 export class PointCollider extends Collider {
     type = 'point';
+    get width() {
+        return 1;
+    }
+    get height() {
+        return 1;
+    }
     get left() {
         return this.parent.x + this.x - this.originX;
     }
@@ -17,6 +23,13 @@ export class PointCollider extends Collider {
     }
     constructor(x = 0, y = 0) {
         super(x, y);
+    }
+    centerOrigin() {
+        this.originX = 0;
+        this.originY = 0;
+    }
+    centerOO() {
+        this.centerOrigin();
     }
     render(ctx, x = 0, y = 0) {
         if (this.collidable)
