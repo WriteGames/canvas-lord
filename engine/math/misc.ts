@@ -83,6 +83,12 @@ const getAngle: FuncReduceVector = (a, b) =>
 const getAngleBetween: FuncReduceNumber = (a, b) =>
 	((b - a + RAD_540) % RAD_360) - RAD_180;
 
+export const lerpAngle = (a: number, b: number, t: number): number => {
+	const d = (b - a) % 360;
+	const range = ((2 * d) % 360) - d;
+	return range * t + a;
+};
+
 // export const isPointOnLine = <V extends Vector>(
 export const isPointOnLine = (point: Vec2, a: Vec2, b: Vec2): boolean =>
 	Math.abs(

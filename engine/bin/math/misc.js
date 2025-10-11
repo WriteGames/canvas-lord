@@ -42,6 +42,11 @@ export const RAD_720 = 720 * DEG_TO_RAD;
 // const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
 const getAngle = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween = (a, b) => ((b - a + RAD_540) % RAD_360) - RAD_180;
+export const lerpAngle = (a, b, t) => {
+    const d = (b - a) % 360;
+    const range = ((2 * d) % 360) - d;
+    return range * t + a;
+};
 // export const isPointOnLine = <V extends Vector>(
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions

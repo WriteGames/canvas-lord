@@ -3,6 +3,7 @@
 import { CL } from '../canvas-lord.ts';
 
 import { Vec2 } from '../math/index.ts';
+import { lerpAngle } from '../math/misc.ts';
 import { Ease, easeInOut, easeOut, easeOutIn, type EaseFunc } from './ease.ts';
 import type { Tween } from './tween.ts';
 
@@ -43,13 +44,6 @@ type LerpFunc<T, U extends HasProp<T>> = (
 	b: PropType<T, U>,
 	t: number,
 ) => PropType<T, U>;
-
-// TODO(bret): Find a better place for this to live
-const lerpAngle = (a: number, b: number, t: number): number => {
-	const d = (b - a) % 360;
-	const range = ((2 * d) % 360) - d;
-	return range * t + a;
-};
 
 interface Operations<T, U extends HasProp<T>> {
 	add: AddFunc<T, U>;

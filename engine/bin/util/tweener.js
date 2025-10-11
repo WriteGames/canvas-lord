@@ -1,6 +1,7 @@
 /* Canvas Lord v0.6.1 */
 import { CL } from "../canvas-lord.js";
 import { Vec2 } from "../math/index.js";
+import { lerpAngle } from "../math/misc.js";
 import { Ease, easeInOut, easeOut, easeOutIn } from "./ease.js";
 export var EaseType;
 (function (EaseType) {
@@ -24,12 +25,6 @@ export var TransType;
     TransType[TransType["Back"] = 10] = "Back";
     TransType[TransType["Spring"] = 11] = "Spring";
 })(TransType || (TransType = {}));
-// TODO(bret): Find a better place for this to live
-const lerpAngle = (a, b, t) => {
-    const d = (b - a) % 360;
-    const range = ((2 * d) % 360) - d;
-    return range * t + a;
-};
 const _defaultAdd = (a, b) => a + b;
 const _defaultLerp = Math.lerp;
 const getOperations = (value) => {
