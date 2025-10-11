@@ -20,7 +20,7 @@ export class Grid {
         this.columns = Math.ceil(width / tileW);
         this.rows = Math.ceil(height / tileH);
         const size = this.columns * this.rows;
-        this.color = 'rgba(255, 0, 0, 0.6)';
+        this.color = 'red';
         this.renderMode = 2;
         this.data = Array.from({ length: size }, () => 0);
     }
@@ -140,6 +140,7 @@ export class Grid {
         }
     }
     render(ctx, camera) {
+        ctx.globalAlpha = 0.6;
         switch (this.renderMode) {
             case Grid.RenderMode.OUTLINE:
                 this.renderOutline(ctx, camera);
@@ -148,14 +149,14 @@ export class Grid {
                 this.renderEachCell(ctx, camera);
                 break;
             case Grid.RenderMode.BOXES: {
-                const temp = this.color;
-                this.color = 'rgba(255, 0, 0, 0.3)';
+                ctx.globalAlpha = 0.3;
                 this.renderEachCell(ctx, camera, true);
-                this.color = temp;
+                ctx.globalAlpha = 0.6;
                 this.renderEachCell(ctx, camera, false);
                 break;
             }
         }
+        ctx.globalAlpha = 1;
     }
 }
 function getGridData(_grid, _columns, _rows) {
