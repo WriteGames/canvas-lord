@@ -103,12 +103,10 @@ export class Entity<TScene extends Scene = Scene>
 	#graphic: Graphic | undefined = undefined;
 	#graphics: Graphic[] = [];
 
-	// TODO(bret): below
 	onAdded = new Delegate();
 	onPreUpdate = new Delegate<(input: Input) => void>();
 	onUpdate = new Delegate<(input: Input) => void>();
 	onPostUpdate = new Delegate<(input: Input) => void>();
-	// TODO(bret): below
 	onRemoved = new Delegate();
 	onRender = new Delegate<(ctx: Ctx, camera: Camera) => void>();
 
@@ -299,8 +297,8 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	preUpdateInternal(input: Input): void {
-		this.onPreUpdate.invoke(input);
 		this.preUpdate(input);
+		this.onPreUpdate.invoke(input);
 	}
 
 	preUpdate(_input: Input): void {
@@ -308,9 +306,9 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	updateInternal(input: Input): void {
-		this.onUpdate.invoke(input);
 		this.updateTweens();
 		this.update(input);
+		this.onUpdate.invoke(input);
 	}
 
 	update(_input: Input): void {
@@ -347,6 +345,15 @@ export class Entity<TScene extends Scene = Scene>
 		if (!this.collider) return;
 
 		this.collider.render(ctx, -camera.x, -camera.y);
+	}
+
+	removedInternal(): void {
+		this.removed();
+		this.onRemoved.invoke();
+	}
+
+	removed(): void {
+		//
 	}
 
 	#collide<T extends Entity>(

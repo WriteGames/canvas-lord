@@ -205,7 +205,6 @@ export class Scene implements Scene {
 			if (this.entities.inScene.includes(e)) continue;
 			this.entities.inScene.push(e);
 			e.addedInternal();
-			e.onAdded.invoke();
 		}
 	}
 
@@ -241,7 +240,7 @@ export class Scene implements Scene {
 			const index = this.entities.inScene.indexOf(e);
 			if (index === -1) return;
 			this.entities.inScene.splice(index, 1);
-			e.onRemoved.invoke();
+			e.removedInternal();
 		});
 	}
 

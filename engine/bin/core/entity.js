@@ -15,12 +15,10 @@ export class Entity {
     colliderVisible = false;
     #graphic = undefined;
     #graphics = [];
-    // TODO(bret): below
     onAdded = new Delegate();
     onPreUpdate = new Delegate();
     onUpdate = new Delegate();
     onPostUpdate = new Delegate();
-    // TODO(bret): below
     onRemoved = new Delegate();
     onRender = new Delegate();
     get x() {
@@ -172,16 +170,16 @@ export class Entity {
         //
     }
     preUpdateInternal(input) {
-        this.onPreUpdate.invoke(input);
         this.preUpdate(input);
+        this.onPreUpdate.invoke(input);
     }
     preUpdate(_input) {
         //
     }
     updateInternal(input) {
-        this.onUpdate.invoke(input);
         this.updateTweens();
         this.update(input);
+        this.onUpdate.invoke(input);
     }
     update(_input) {
         //
@@ -212,6 +210,13 @@ export class Entity {
         if (!this.collider)
             return;
         this.collider.render(ctx, -camera.x, -camera.y);
+    }
+    removedInternal() {
+        this.removed();
+        this.onRemoved.invoke();
+    }
+    removed() {
+        //
     }
     #collide(x, y, match, earlyOut) {
         if (!this.collider)

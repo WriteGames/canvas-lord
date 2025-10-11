@@ -123,7 +123,6 @@ export class Scene {
                 continue;
             this.entities.inScene.push(e);
             e.addedInternal();
-            e.onAdded.invoke();
         }
     }
     addRenderable(renderable) {
@@ -156,7 +155,7 @@ export class Scene {
             if (index === -1)
                 return;
             this.entities.inScene.splice(index, 1);
-            e.onRemoved.invoke();
+            e.removedInternal();
         });
     }
     removeRenderable(renderable) {
