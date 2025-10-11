@@ -39,18 +39,31 @@ export class Entity {
     set pos(val) {
         this.component(Components.pos2D).set(val);
     }
-    // TODO(bret): Set up setters for these as well
     get width() {
         return this.collider?.w ?? 0;
+    }
+    set width(value) {
+        if (this.collider)
+            this.collider.width = value;
     }
     get w() {
         return this.width;
     }
+    set w(value) {
+        this.width = value;
+    }
     get height() {
         return this.collider?.h ?? 0;
     }
+    set height(value) {
+        if (this.collider)
+            this.collider.height = value;
+    }
     get h() {
         return this.height;
+    }
+    set h(value) {
+        this.height = value;
     }
     get graphic() {
         return this.#graphic;

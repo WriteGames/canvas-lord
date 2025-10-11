@@ -48,7 +48,6 @@ export interface IEntity<TScene extends Scene = Scene> {
 	setPos(x: number, y: number): void;
 	setPos(pos: Vec2): void;
 
-	// TODO(bret): What about allowing component to take in an array and return an array? IE allow for destructuring instead of multiple calls?
 	addComponent: <T extends IEntityComponentType>(
 		component: T,
 	) => ReturnType<IEntity['component']>;
@@ -111,7 +110,6 @@ export class Entity<TScene extends Scene = Scene>
 	get x(): number {
 		return this.component(Components.pos2D)![0];
 	}
-
 	set x(val) {
 		this.component(Components.pos2D)![0] = val;
 	}
@@ -119,7 +117,6 @@ export class Entity<TScene extends Scene = Scene>
 	get y(): number {
 		return this.component(Components.pos2D)![1];
 	}
-
 	set y(val) {
 		this.component(Components.pos2D)![1] = val;
 	}
@@ -127,26 +124,36 @@ export class Entity<TScene extends Scene = Scene>
 	get pos(): Vec2 {
 		return this.component(Components.pos2D)!.clone();
 	}
-
 	set pos(val: Vec2) {
 		this.component(Components.pos2D)!.set(val);
 	}
 
-	// TODO(bret): Set up setters for these as well
 	get width(): number {
 		return this.collider?.w ?? 0;
+	}
+	set width(value) {
+		if (this.collider) this.collider.width = value;
 	}
 
 	get w(): number {
 		return this.width;
 	}
+	set w(value) {
+		this.width = value;
+	}
 
 	get height(): number {
 		return this.collider?.h ?? 0;
 	}
+	set height(value) {
+		if (this.collider) this.collider.height = value;
+	}
 
 	get h(): number {
 		return this.height;
+	}
+	set h(value) {
+		this.height = value;
 	}
 
 	get graphic(): Graphic | undefined {
