@@ -79,8 +79,8 @@ export class CircleCollider extends Collider implements ICircleCollider {
 	}
 
 	centerOrigin(): void {
-		this.originX = this.w / 2;
-		this.originY = this.h / 2;
+		this.originX = 0;
+		this.originY = 0;
 	}
 
 	centerOO(): void {

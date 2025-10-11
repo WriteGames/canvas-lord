@@ -76,14 +76,14 @@ describe('center origin', () => {
 
 	test('centerOrigin() should center the origin', () => {
 		circleCollider.centerOrigin();
-		circleCollider.originX = 0;
-		circleCollider.originY = 0;
+		expect(circleCollider.originX).toEqual(0);
+		expect(circleCollider.originY).toEqual(0);
 	});
 
 	test('centerOO() should center the origin', () => {
 		circleCollider.centerOO();
-		circleCollider.originX = 0;
-		circleCollider.originY = 0;
+		expect(circleCollider.originX).toEqual(0);
+		expect(circleCollider.originY).toEqual(0);
 	});
 });
 
