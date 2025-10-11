@@ -50,10 +50,7 @@ export const lerpAngle = (a, b, t) => {
 // export const isPointOnLine = <V extends Vector>(
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
 // TODO(bret): Would be fun to make this work with any dimensions
-export const isWithinBounds = (point, [x1, y1], [x2, y2]) => {
-    const [x, y] = point;
-    return x >= x1 && y >= y1 && x < x2 && y < y2;
-};
+export const isWithinBounds = (p, start, end) => p.every((x, i) => x >= start[i] && x < end[i]);
 // <V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&
     b.every((p, i) => ([...pos][i] ?? Infinity) < p);
