@@ -16,7 +16,7 @@ import {
 	RightTriangleCollider,
 	type Collider,
 } from './index';
-import { Grid } from '../canvas-lord';
+import { Grid } from '../util/grid';
 
 const TAG_1 = 'tag-1' as const;
 const TAG_2 = 'tag-2' as const;
