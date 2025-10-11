@@ -77,8 +77,7 @@ export class Entity {
         return this.#collider;
     }
     set collider(value) {
-        // TODO(bret): Might be good to do this, not sure yet
-        // this.#collider?.assignParent(null);
+        this.#collider?.assignParent(null);
         this.#collider = value;
         this.#collider?.assignParent(this);
     }

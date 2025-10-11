@@ -40,7 +40,7 @@ export abstract class Collider implements ICollider {
 	y: number;
 	originX = 0;
 	originY = 0;
-	#parent?: ColliderParent;
+	#parent?: ColliderParent | null;
 	color: CSSColor = 'red';
 
 	get parent(): ColliderParent {
@@ -142,7 +142,7 @@ export abstract class Collider implements ICollider {
 		tags.forEach((tag) => this.removeTag(tag));
 	}
 
-	assignParent(parent: ColliderParent): void {
+	assignParent(parent: ColliderParent | null): void {
 		this.#parent = parent;
 	}
 

@@ -159,7 +159,6 @@ export class Entity<TScene extends Scene = Scene>
 	get graphic(): Graphic | undefined {
 		return this.#graphic;
 	}
-
 	set graphic(graphic) {
 		this.#graphic = graphic;
 		if (this.#graphic) this.#graphic.parent = this;
@@ -168,10 +167,8 @@ export class Entity<TScene extends Scene = Scene>
 	get collider(): Collider | undefined {
 		return this.#collider;
 	}
-
 	set collider(value) {
-		// TODO(bret): Might be good to do this, not sure yet
-		// this.#collider?.assignParent(null);
+		this.#collider?.assignParent(null);
 		this.#collider = value;
 		this.#collider?.assignParent(this);
 	}
