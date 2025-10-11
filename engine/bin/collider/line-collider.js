@@ -39,6 +39,30 @@ export class LineCollider extends Collider {
     get yEnd() {
         return this.y2 + this.parent.y - this.originY;
     }
+    get left() {
+        return Math.min(this.x1, this.x2) + this.parent.x - this.originX;
+    }
+    get right() {
+        return Math.max(this.x1, this.x2) + this.parent.x - this.originX;
+    }
+    get top() {
+        return Math.min(this.y1, this.y2) + this.parent.y - this.originY;
+    }
+    get bottom() {
+        return Math.max(this.y1, this.y2) + this.parent.y - this.originY;
+    }
+    get width() {
+        return Math.abs(this.x1 - this.x2) + 1;
+    }
+    get w() {
+        return this.width;
+    }
+    get height() {
+        return Math.abs(this.y1 - this.y2) + 1;
+    }
+    get h() {
+        return this.height;
+    }
     constructor(x1, y1, x2, y2, x = 0, y = 0) {
         super(x, y);
         this.x1 = x1;

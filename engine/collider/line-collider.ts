@@ -64,6 +64,33 @@ export class LineCollider extends Collider implements ILineCollider {
 		return this.y2 + this.parent.y - this.originY;
 	}
 
+	get left(): number {
+		return Math.min(this.x1, this.x2) + this.parent.x - this.originX;
+	}
+	get right(): number {
+		return Math.max(this.x1, this.x2) + this.parent.x - this.originX;
+	}
+	get top(): number {
+		return Math.min(this.y1, this.y2) + this.parent.y - this.originY;
+	}
+	get bottom(): number {
+		return Math.max(this.y1, this.y2) + this.parent.y - this.originY;
+	}
+
+	get width(): number {
+		return Math.abs(this.x1 - this.x2) + 1;
+	}
+	get w(): number {
+		return this.width;
+	}
+
+	get height(): number {
+		return Math.abs(this.y1 - this.y2) + 1;
+	}
+	get h(): number {
+		return this.height;
+	}
+
 	constructor(x1: number, y1: number, x2: number, y2: number, x = 0, y = 0) {
 		super(x, y);
 		this.x1 = x1;
