@@ -47,6 +47,8 @@ export class LineCollider extends Collider {
         this.y2 = y2;
     }
     render(ctx, x = 0, y = 0) {
+        if (this.collidable)
+            this.options.color = this.color;
         const x1 = x + this.xStart;
         const y1 = y + this.yStart;
         const x2 = x + this.xEnd;

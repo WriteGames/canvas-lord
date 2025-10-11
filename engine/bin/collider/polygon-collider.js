@@ -55,6 +55,8 @@ export class PolygonCollider extends Collider {
         this.#points = points;
     }
     render(ctx, x = 0, y = 0) {
+        if (this.collidable)
+            this.options.color = this.color;
         const drawX = x + this.parent.x;
         const drawY = y + this.parent.y;
         Draw.polygon(ctx, this.options, drawX, drawY, this.#points);

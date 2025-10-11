@@ -50,7 +50,10 @@ export class GridCollider extends Collider implements IGridCollider {
 	}
 
 	render(ctx: Ctx, x: number, y: number): void {
+		if (this.collidable) this.options.color = this.color;
+
 		// TODO(bret): Isn't this backwards?
+		// why did I name this camera???
 		const cameraX = -x;
 		const cameraY = -y;
 		this.grid.render(

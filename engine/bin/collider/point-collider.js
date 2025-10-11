@@ -19,6 +19,8 @@ export class PointCollider extends Collider {
         super(x, y);
     }
     render(ctx, x = 0, y = 0) {
+        if (this.collidable)
+            this.options.color = this.color;
         Draw.circle(ctx, this.options, x + this.left, y + this.top, 1);
     }
 }

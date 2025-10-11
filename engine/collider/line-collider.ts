@@ -73,6 +73,8 @@ export class LineCollider extends Collider implements ILineCollider {
 	}
 
 	render(ctx: Ctx, x = 0, y = 0): void {
+		if (this.collidable) this.options.color = this.color;
+
 		const x1 = x + this.xStart;
 		const y1 = y + this.yStart;
 		const x2 = x + this.xEnd;

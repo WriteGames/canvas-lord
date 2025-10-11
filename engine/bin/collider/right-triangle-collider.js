@@ -147,6 +147,8 @@ export class RightTriangleCollider extends Collider {
         return this.#points[2][1];
     }
     render(ctx, x = 0, y = 0) {
+        if (this.collidable)
+            this.options.color = this.color;
         Draw.polygon(ctx, this.options, x, y, 
         // TODO(bret): the types don't match
         // @ts-expect-error -- idk

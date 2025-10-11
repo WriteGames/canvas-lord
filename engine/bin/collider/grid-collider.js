@@ -35,7 +35,10 @@ export class GridCollider extends Collider {
         return this.parent.y + this.y - this.originY + this.h - 1;
     }
     render(ctx, x, y) {
+        if (this.collidable)
+            this.options.color = this.color;
         // TODO(bret): Isn't this backwards?
+        // why did I name this camera???
         const cameraX = -x;
         const cameraY = -y;
         this.grid.render(ctx, new Vec2(cameraX - this.left, cameraY - this.top));

@@ -82,6 +82,8 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 	}
 
 	render(ctx: Ctx, x = 0, y = 0): void {
+		if (this.collidable) this.options.color = this.color;
+
 		const drawX = x + this.parent.x;
 		const drawY = y + this.parent.y;
 		Draw.polygon(ctx, this.options, drawX, drawY, this.#points);

@@ -190,6 +190,8 @@ export class RightTriangleCollider
 	}
 
 	render(ctx: Ctx, x = 0, y = 0): void {
+		if (this.collidable) this.options.color = this.color;
+
 		Draw.polygon(
 			ctx,
 			this.options,
