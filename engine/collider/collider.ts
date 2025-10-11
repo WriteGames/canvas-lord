@@ -18,7 +18,12 @@ export type ColliderTag = string;
 
 type ColliderParent = Entity;
 
-type CollisionMatch = ColliderTag | ColliderTag[] | Entity | Entity[];
+export type CollisionMatch =
+	| ColliderTag
+	| ColliderTag[]
+	| Entity
+	| Entity[]
+	| undefined;
 
 interface ICollider {
 	type: ColliderType;
@@ -154,7 +159,7 @@ export abstract class Collider implements ICollider {
 		this.#parent = parent;
 	}
 
-	collideEntity(x: number, y: number, entity: Entity): boolean {
+	#collideEntity(x: number, y: number, entity: Entity): boolean {
 		if (!this.#parent) return false;
 		if (!this.collidable) return false;
 		if (entity === this.#parent) return false;
@@ -175,11 +180,11 @@ export abstract class Collider implements ICollider {
 		return result;
 	}
 
-	collide<T extends Entity>(
+	#collide<T extends Entity>(
 		x: number,
 		y: number,
-		match: CollisionMatch | undefined,
-		earlyOut: boolean,
+		match: CollisionMatch,
+		earlyOut?: boolean,
 	): T[] {
 		if (!this.#parent) return [];
 
@@ -224,7 +229,7 @@ export abstract class Collider implements ICollider {
 					continue;
 			}
 
-			const collision = this.collideEntity(x, y, e);
+			const collision = this.#collideEntity(x, y, e);
 
 			const result = collision ? e : null;
 			if (result === null) continue;
@@ -234,6 +239,53 @@ export abstract class Collider implements ICollider {
 		}
 
 		return collide;
+	}
+
+	collideEntity<T extends Entity>(x: number, y: number): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		tag?: ColliderTag,
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		tags: ColliderTag[],
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		entity: Entity,
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		entities: Entity[],
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		match?: unknown,
+	): T | null {
+		return this.#collide<T>(x, y, match as CollisionMatch, true)[0] ?? null;
+	}
+
+	collideEntities(x: number, y: number): Entity[];
+	collideEntities(x: number, y: number, tag?: ColliderTag): Entity[];
+	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
+	collideEntities(x: number, y: number, entity: Entity): Entity[];
+	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
+	collideEntities(x: number, y: number, match?: unknown): Entity[] {
+		return this.#collide(x, y, match as CollisionMatch, false);
+	}
+
+	collide(x: number, y: number): boolean;
+	collide(x: number, y: number, tag?: ColliderTag): boolean;
+	collide(x: number, y: number, tags: ColliderTag[]): boolean;
+	collide(x: number, y: number, entity: Entity): boolean;
+	collide(x: number, y: number, entities: Entity[]): boolean;
+	collide(x: number, y: number, match?: unknown): boolean {
+		return this.#collide(x, y, match as CollisionMatch, true).length > 0;
 	}
 
 	/**

@@ -252,39 +252,22 @@ export class Entity {
     removed() {
         //
     }
-    #collide(x, y, match, earlyOut) {
-        if (!this.collider)
-            return [];
-        const n = this.colliders.length;
-        if (earlyOut) {
-            for (let i = 0; i < n; ++i) {
-                const collider = this.colliders[i];
-                const collisions = collider.collide(x, y, match, earlyOut);
-                if (collisions.length > 0)
-                    return collisions;
-            }
-            return [];
-        }
-        const entities = [];
-        for (let i = 0; i < n; ++i) {
-            const collider = this.colliders[i];
-            const collisions = collider.collide(x, y, match, earlyOut);
-            for (let j = 0; j < collisions.length; ++j) {
-                if (entities.includes(collisions[j]))
-                    continue;
-                entities.push(collisions[j]);
-            }
-        }
-        return entities;
-    }
     collideEntity(x, y, match) {
-        return this.#collide(x, y, match, true)[0] ?? null;
+        if (!this.collider)
+            return null;
+        return this.collider.collideEntity(x, y, 
+        // TODO(bret): is there a cleaner way to do this?
+        match);
     }
     collideEntities(x, y, match) {
-        return this.#collide(x, y, match, false);
+        if (!this.collider)
+            return [];
+        return this.collider.collideEntities(x, y, match);
     }
     collide(x, y, match) {
-        return this.#collide(x, y, match, true).length > 0;
+        if (!this.collider)
+            return false;
+        return this.collider.collide(x, y, match);
     }
     collideMouse(x, y, cameraRelative = true) {
         if (!this.collider)

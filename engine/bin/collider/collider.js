@@ -104,7 +104,7 @@ export class Collider {
     assignParent(parent) {
         this.#parent = parent;
     }
-    collideEntity(x, y, entity) {
+    #collideEntity(x, y, entity) {
         if (!this.#parent)
             return false;
         if (!this.collidable)
@@ -122,7 +122,7 @@ export class Collider {
         this.#parent.y = _y;
         return result;
     }
-    collide(x, y, match, earlyOut) {
+    #collide(x, y, match, earlyOut) {
         if (!this.#parent)
             return [];
         let entities = this.#parent.scene.entities.inScene;
@@ -159,7 +159,7 @@ export class Collider {
                 if (!e.colliders.some((c) => tags.some((t) => c.hasTag(t))))
                     continue;
             }
-            const collision = this.collideEntity(x, y, e);
+            const collision = this.#collideEntity(x, y, e);
             const result = collision ? e : null;
             if (result === null)
                 continue;
@@ -168,6 +168,15 @@ export class Collider {
                 break;
         }
         return collide;
+    }
+    collideEntity(x, y, match) {
+        return this.#collide(x, y, match, true)[0] ?? null;
+    }
+    collideEntities(x, y, match) {
+        return this.#collide(x, y, match, false);
+    }
+    collide(x, y, match) {
+        return this.#collide(x, y, match, true).length > 0;
     }
     /**
      * @deprecated Use collide() instead
