@@ -97,10 +97,13 @@ export const isPointOnLine = (point: Vec2, a: Vec2, b: Vec2): boolean =>
 
 // TODO(bret): Would be fun to make this work with any dimensions
 export const isWithinBounds = (
-	[x, y]: Vec2,
+	point: Vec2,
 	[x1, y1]: Vec2,
 	[x2, y2]: Vec2,
-): boolean => x >= x1 && y >= y1 && x < x2 && y < y2;
+): boolean => {
+	const [x, y] = point;
+	return x >= x1 && y >= y1 && x < x2 && y < y2;
+};
 
 // <V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 export const filterWithinBounds =

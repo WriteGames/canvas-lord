@@ -8,6 +8,7 @@ import {
 	Vec2,
 } from './index.js';
 import { describe, expect, test } from 'vitest';
+import { isWithinBounds } from './misc.js';
 
 // move to setupTests.ts using expect.extend
 const expectVec2Equal = (received: Vec2, expected: Vec2 | number[]): void => {
@@ -372,5 +373,32 @@ describe('Scalar operations', () => {
 			const isEqual = equal(10, 7);
 			expect(isEqual).toEqual(false);
 		});
+	});
+});
+
+const xPos = [-101, -100, 0, 77, 78];
+const yPos = [-81, -80, 0, 36, 37];
+
+describe('isWithinBounds()', () => {
+	const p1 = new Vec2(-100, -80);
+	const p2 = new Vec2(78, 37);
+
+	yPos.forEach((y, yi) => {
+		xPos.forEach((x, xi) => {
+			const expected = Math.abs(yi - 2) <= 1 && Math.abs(xi - 2) <= 1;
+			test(`(${x}, ${y}) should ${expected ? 'be' : 'not be'} in bounds`, () => {
+				expect(isWithinBounds(new Vec2(x, y), p1, p2)).toEqual(
+					expected,
+				);
+			});
+		});
+	});
+
+	test('is in bounds', () => {
+		expect(isWithinBounds(Vec2.zero, p1, p2)).toBeTruthy();
+	});
+
+	test('is in bounds', () => {
+		expect(isWithinBounds(Vec2.zero, p1, p2)).toBeTruthy();
 	});
 });
