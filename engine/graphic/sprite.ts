@@ -116,6 +116,20 @@ export class Sprite extends Graphic implements ISpriteLike {
 		});
 	}
 
+	static createRoundedRect(
+		width: number,
+		height: number,
+		radii: number | DOMPointInit | Array<number | DOMPointInit>,
+		color: CSSColor,
+	): Sprite {
+		const fileName = ['createRect', width, height, radii, color].join('-');
+		return Sprite.createImage(width, height, fileName, (ctx: Ctx) => {
+			ctx.fillStyle = color;
+			ctx.roundRect(0, 0, ctx.canvas.width, ctx.canvas.height, radii);
+			ctx.fill();
+		});
+	}
+
 	static createCircle(size: number, color: CSSColor): Sprite {
 		const fileName = ['createCircle', size, color].join('-');
 		const halfSize = size * 0.5;

@@ -75,6 +75,14 @@ export class Sprite extends Graphic {
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         });
     }
+    static createRoundedRect(width, height, radii, color) {
+        const fileName = ['createRect', width, height, radii, color].join('-');
+        return Sprite.createImage(width, height, fileName, (ctx) => {
+            ctx.fillStyle = color;
+            ctx.roundRect(0, 0, ctx.canvas.width, ctx.canvas.height, radii);
+            ctx.fill();
+        });
+    }
     static createCircle(size, color) {
         const fileName = ['createCircle', size, color].join('-');
         const halfSize = size * 0.5;
