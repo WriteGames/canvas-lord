@@ -1,5 +1,5 @@
 /* Canvas Lord v0.6.1 */
-import { collideCircleCircle, collideCircleRightTriangle, collideCirclePolygon, collideLineCircle, collideLineLine, collideLineBox, collideLineRightTriangle, collideLinePolygon, collidePointCircle, collidePointGrid, collidePointLine, collidePointPoint, collidePointBox, collidePointRightTriangle, collidePointPolygon, collideBoxCircle, collideBoxGrid, collideBoxBox, collideBoxRightTriangle, collideBoxPolygon, collideRightTriangleRightTriangle, collideRightTrianglePolygon, collidePolygonPolygon, } from './collision.js';
+import { collideCircleCircle, collideCircleGrid, collideCircleRightTriangle, collideCirclePolygon, collideLineCircle, collideLineLine, collideLineBox, collideLineRightTriangle, collideLinePolygon, collidePointCircle, collidePointGrid, collidePointLine, collidePointPoint, collidePointBox, collidePointRightTriangle, collidePointPolygon, collideBoxCircle, collideBoxGrid, collideBoxBox, collideBoxRightTriangle, collideBoxPolygon, collideRightTriangleRightTriangle, collideRightTrianglePolygon, collidePolygonPolygon, } from './collision.js';
 const dePoint = (p) => [p.left, p.top];
 const deLine = (l) => [l.xStart, l.yStart, l.xEnd, l.yEnd];
 const deBox = (b) => [b.left, b.top, b.right, b.bottom];
@@ -42,7 +42,7 @@ const collisionMap = {
         circle: (a, b) => collideCircleCircle(...deCircle(a), ...deCircle(b)),
         'right-triangle': (c, rt) => collideCircleRightTriangle(...deCircle(c), ...deRT(rt)),
         polygon: (c, p) => collideCirclePolygon(...deCircle(c), ...dePolygon(p)),
-        grid: (_c, _g) => undefined,
+        grid: (c, g) => collideCircleGrid(...deCircle(c), ...deGrid(g)),
     },
     'right-triangle': {
         point: (rt, pt) => collidePointRightTriangle(...dePoint(pt), ...deRT(rt)),
@@ -67,8 +67,7 @@ const collisionMap = {
         line: (_g, _l) => undefined,
         //collideLineGrid(l, g),
         box: (g, b) => collideBoxGrid(...deBox(b), ...deGrid(g)),
-        circle: (_g, _c) => undefined,
-        //collideCircleGrid(c, g),
+        circle: (g, c) => collideCircleGrid(...deCircle(c), ...deGrid(g)),
         'right-triangle': (_g, _rt) => undefined,
         // collideRightTriangleGrid(rt, g),
         polygon: (_g, _p) => undefined,

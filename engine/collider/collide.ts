@@ -2,6 +2,7 @@
 
 import {
 	collideCircleCircle,
+	collideCircleGrid,
 	collideCircleRightTriangle,
 	collideCirclePolygon,
 	collideLineCircle,
@@ -106,7 +107,8 @@ const collisionMap = {
 			collideCircleRightTriangle(...deCircle(c), ...deRT(rt)),
 		polygon: (c: CircleCollider, p: PolygonCollider) =>
 			collideCirclePolygon(...deCircle(c), ...dePolygon(p)),
-		grid: (_c: CircleCollider, _g: GridCollider) => undefined,
+		grid: (c: CircleCollider, g: GridCollider) =>
+			collideCircleGrid(...deCircle(c), ...deGrid(g)),
 	},
 	'right-triangle': {
 		point: (rt: RightTriangleCollider, pt: PointCollider) =>
@@ -147,8 +149,8 @@ const collisionMap = {
 		//collideLineGrid(l, g),
 		box: (g: GridCollider, b: BoxCollider) =>
 			collideBoxGrid(...deBox(b), ...deGrid(g)),
-		circle: (_g: GridCollider, _c: CircleCollider) => undefined,
-		//collideCircleGrid(c, g),
+		circle: (g: GridCollider, c: CircleCollider) =>
+			collideCircleGrid(...deCircle(c), ...deGrid(g)),
 		'right-triangle': (_g: GridCollider, _rt: RightTriangleCollider) =>
 			undefined,
 		// collideRightTriangleGrid(rt, g),

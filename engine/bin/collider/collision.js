@@ -145,6 +145,7 @@ export const collideBoxBox = (aLeft, aTop, aRight, aBottom, bLeft, bTop, bRight,
 };
 export const collideBoxCircle = (left, top, right, bottom, cX, cY, radius) => {
     const x = Math.clamp(cX, left, right);
+    // TODO(bret): should this have -1 or not?
     const y = Math.clamp(cY, top, bottom - 1);
     const distanceSq = (cX - x) ** 2 + (cY - y) ** 2;
     return distanceSq < radius ** 2;
@@ -216,6 +217,40 @@ export const collideCirclePolygon = (cX, cY, radius, p) => {
     for (let i = 0, j = n - 1; i < n; j = i++) {
         if (collideLineCircle(vertices[j][0], vertices[j][1], vertices[i][0], vertices[i][1], cX, cY, radius))
             return true;
+    }
+    return false;
+};
+export const collideCircleGrid = (cX, cY, radius, g) => {
+    const left = cX - (radius - 0.5);
+    const top = cY - (radius - 0.5);
+    const right = cX + (radius - 0.5);
+    const bottom = cY + (radius - 0.5);
+    if (!collideBoxBox(left, top, right, bottom, g.left, g.top, g.right, g.bottom)) {
+        return false;
+    }
+    const { grid } = g;
+    const x = left - g.left;
+    const y = top - g.top;
+    // NOTE(bret): these already have -1 applied
+    const circleW = right - left;
+    const circleH = bottom - top;
+    // TODO(bret): uncertain if a clamp here is correct
+    const minX = Math.clamp(Math.floor(x / grid.tileW), 0, grid.columns - 1);
+    const minY = Math.clamp(Math.floor(y / grid.tileH), 0, grid.rows - 1);
+    const maxX = Math.clamp(Math.floor((x + circleW) / grid.tileW), 0, grid.columns - 1);
+    const maxY = Math.clamp(Math.floor((y + circleH) / grid.tileH), 0, grid.rows - 1);
+    for (let yy = minY; yy <= maxY; ++yy) {
+        for (let xx = minX; xx <= maxX; ++xx) {
+            if (grid.getTile(xx, yy) === 1) {
+                // TODO(bret): this feels like it should exist elsewhere
+                const left = xx * grid.tileW + g.parent.x + g.x;
+                const top = yy * grid.tileH + g.parent.y + g.y;
+                const right = left + grid.tileW - 1;
+                const bottom = top + grid.tileH - 1;
+                if (collideBoxCircle(left, top, right, bottom, cX, cY, radius))
+                    return true;
+            }
+        }
     }
     return false;
 };
