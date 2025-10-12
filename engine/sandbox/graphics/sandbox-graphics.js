@@ -310,8 +310,10 @@ class TilesetScene extends Scene {
 		this.grid = Grid.fromBitmap(assetManager, 'grid.bmp', 16, 16);
 		const tileset = this.initTileset(this.grid, assetManager);
 		tileset.update = () => {};
-		tileset.x = -32;
-		tileset.y = -32;
+		tileset.x = -16;
+		tileset.y = -16;
+		tileset.originX = -32;
+		tileset.originY = -32;
 		this.addGraphic(tileset);
 	}
 

@@ -4,7 +4,8 @@ import { Graphic, type GraphicParent } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
-import type { Ctx } from '../util/canvas.js';
+import { generateCanvasAndCtx, type Canvas, type Ctx } from '../util/canvas.js';
+import { Draw } from '../util/draw.js';
 
 export interface Tileset {
 	width: number;
@@ -40,6 +41,15 @@ export class Tileset extends Graphic {
 
 	#data: DataEntry[];
 
+	canvas: Canvas;
+	ctx: Ctx;
+
+	#invalidated = true;
+
+	get imageSrc(): Canvas {
+		return this.canvas;
+	}
+
 	constructor(
 		asset: ImageAsset,
 		width: number,
@@ -57,6 +67,13 @@ export class Tileset extends Graphic {
 		this.columns = Math.ceil(width / tileW);
 		this.rows = Math.ceil(height / tileH);
 
+		const { canvas, ctx } = generateCanvasAndCtx(width, height);
+		if (!canvas || !ctx)
+			throw new Error('failed to create canvas/ctx for Tilset');
+
+		this.canvas = canvas;
+		this.ctx = ctx;
+
 		this.asset = asset;
 
 		this.#data = Array.from(
@@ -72,6 +89,7 @@ export class Tileset extends Graphic {
 	setTile(x: number, y: number, tileX: number, tileY: number): void {
 		if (x < 0 || y < 0 || x >= this.columns || y >= this.rows) return;
 		this.#data[y * this.columns + x] = new Vec2(tileX, tileY);
+		this.#invalidated = true;
 	}
 
 	getTile(x: number, y: number): DataEntry {
@@ -79,9 +97,7 @@ export class Tileset extends Graphic {
 		return this.#data[y * this.columns + x];
 	}
 
-	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
-		if (!this.visible) return;
-
+	updateImage(): void {
 		const scale = 1;
 
 		const { asset, separation, startX, startY, tileW, tileH } = this;
@@ -91,13 +107,8 @@ export class Tileset extends Graphic {
 		// const srcCols = Math.floor(image.width / tileW);
 		// const srcRows = Math.floor(image.height / tileH);
 
-		const [cameraX, cameraY] = camera;
-
 		const offsetX = (this.relative ? this.parent?.x : 0) ?? 0;
 		const offsetY = (this.relative ? this.parent?.y : 0) ?? 0;
-
-		const drawX = this.x - cameraX + offsetX;
-		const drawY = this.y - cameraY + offsetY;
 
 		for (let y = 0; y < this.rows; ++y) {
 			for (let x = 0; x < this.columns; ++x) {
@@ -106,9 +117,9 @@ export class Tileset extends Graphic {
 					const [tileX, tileY] = val;
 					const srcX = startX + (separation + tileW) * tileX;
 					const srcY = startY + (separation + tileH) * tileY;
-					const dstX = x * tileW + drawX;
-					const dstY = y * tileH + drawY;
-					ctx.drawImage(
+					const dstX = x * tileW + offsetX;
+					const dstY = y * tileH + offsetY;
+					this.ctx.drawImage(
 						asset.image,
 						srcX,
 						srcY,
@@ -122,5 +133,23 @@ export class Tileset extends Graphic {
 				}
 			}
 		}
+
+		this.#invalidated = false;
+	}
+
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
+		if (this.#invalidated) this.updateImage();
+
+		if (!this.visible) return;
+
+		let x = this.x - camera.x * this.scrollX;
+		let y = this.y - camera.y * this.scrollY;
+		if (this.relative) {
+			x += this.parent?.x ?? 0;
+			y += this.parent?.y ?? 0;
+		}
+
+		// ctx.drawImage(this.canvas, x, y);
+		Draw.image(ctx, this, x, y);
 	}
 }
