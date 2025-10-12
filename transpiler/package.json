@@ -22,7 +22,7 @@
 	"devDependencies": {
 		"@types/node": "20.11.3",
 		"@writegames.com/style-guide": "workspace:*",
-		"typescript": "5.8.2",
+		"typescript": "5.9.3",
 		"vitest": "^1.2.0"
 	}
 }
