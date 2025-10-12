@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { LineCollider } from './index';
-import type { Entity } from '../canvas-lord';
+import type { Entity } from '../core/entity';
 
 const X1 = 10;
 const Y1 = 45;

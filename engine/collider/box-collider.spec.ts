@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { BoxCollider } from './index';
-import type { Entity } from '../canvas-lord';
+import type { Entity } from '../core/entity';
 
 const X_POS = 40;
 const Y_POS = 55;
