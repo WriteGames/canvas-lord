@@ -55,7 +55,6 @@ export class Grid {
         }
         return grid;
     }
-    // TODO: should width/height be their own properties?
     static fromBinary(data, tileW, tileH) {
         const [width, height, ...gridData] = data;
         const grid = new Grid(width * tileW, height * tileH, tileW, tileH);

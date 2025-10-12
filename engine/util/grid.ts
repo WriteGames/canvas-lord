@@ -109,9 +109,8 @@ export class Grid {
 		return grid;
 	}
 
-	// TODO: should width/height be their own properties?
 	static fromBinary(
-		data: [number, number, ...number[]],
+		data: [width: number, height: number, ...number[]],
 		tileW: number,
 		tileH: number,
 	): Grid {
