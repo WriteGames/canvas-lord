@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { CircleCollider } from './index';
-import type { Entity } from '../canvas-lord';
+import type { Entity } from '../core/entity';
 
 const X_POS = 40;
 const Y_POS = 55;
 const RADIUS = 67;
-const RADIUS_MINUS_0_5 = RADIUS - 0.5;
 const SIZE_W = RADIUS * 2;
 const SIZE_H = RADIUS * 2;
 
@@ -76,21 +75,22 @@ describe('center origin', () => {
 
 	test('centerOrigin() should center the origin', () => {
 		circleCollider.centerOrigin();
-		expect(circleCollider.originX).toEqual(0);
-		expect(circleCollider.originY).toEqual(0);
+		expect(circleCollider.originX).toEqual(RADIUS / 2);
+		expect(circleCollider.originY).toEqual(RADIUS / 2);
 	});
 
 	test('centerOO() should center the origin', () => {
 		circleCollider.centerOO();
-		expect(circleCollider.originX).toEqual(0);
-		expect(circleCollider.originY).toEqual(0);
+		expect(circleCollider.originX).toEqual(RADIUS / 2);
+		expect(circleCollider.originY).toEqual(RADIUS / 2);
 	});
 });
 
 describe('getters/setters', () => {
-	const LEFT = X_POS - RADIUS_MINUS_0_5;
-	const TOP = Y_POS - RADIUS_MINUS_0_5;
+	const LEFT = X_POS;
+	const TOP = Y_POS;
 	const RIGHT = LEFT + SIZE_W - 1;
+	console.log({ RIGHT });
 	const BOTTOM = TOP + SIZE_H - 1;
 
 	beforeEach(() => {
@@ -122,8 +122,8 @@ describe('bounds', () => {
 		const ORIGIN_X = 7;
 		const ORIGIN_Y = -19;
 
-		const LEFT = X_POS - ORIGIN_X - RADIUS_MINUS_0_5;
-		const TOP = Y_POS - ORIGIN_Y - RADIUS_MINUS_0_5;
+		const LEFT = X_POS - ORIGIN_X;
+		const TOP = Y_POS - ORIGIN_Y;
 		const RIGHT = LEFT + SIZE_W - 1;
 		const BOTTOM = TOP + SIZE_H - 1;
 
@@ -138,8 +138,8 @@ describe('bounds', () => {
 	});
 
 	describe('bounds should be relative to entity', () => {
-		const LEFT = X_POS + entityWithPosition.x - RADIUS_MINUS_0_5;
-		const TOP = Y_POS + entityWithPosition.y - RADIUS_MINUS_0_5;
+		const LEFT = X_POS + entityWithPosition.x;
+		const TOP = Y_POS + entityWithPosition.y;
 		const RIGHT = LEFT + SIZE_W - 1;
 		const BOTTOM = TOP + SIZE_H - 1;
 

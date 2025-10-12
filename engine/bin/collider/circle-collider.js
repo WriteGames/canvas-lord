@@ -24,25 +24,25 @@ export class CircleCollider extends Collider {
         throw new Error('cannot set height of circle');
     }
     get left() {
-        return this.parent.x + this.x - this.originX - (this.radius - 0.5);
+        return this.parent.x + this.x - this.originX;
     }
     get right() {
-        return this.parent.x + this.x - this.originX + (this.radius - 0.5);
+        return this.parent.x + this.x - this.originX + this.w - 1;
     }
     get top() {
-        return this.parent.y + this.y - this.originY - (this.radius - 0.5);
+        return this.parent.y + this.y - this.originY;
     }
     get bottom() {
-        return this.parent.y + this.y - this.originY + (this.radius - 0.5);
+        return this.parent.y + this.y - this.originY + this.h - 1;
     }
     get center() {
         return new Vec2(this.centerX, this.centerY);
     }
     get centerX() {
-        return this.x + this.parent.x - this.originX;
+        return this.x + this.parent.x - this.originX + this.radius / 2;
     }
     get centerY() {
-        return this.y + this.parent.y - this.originY;
+        return this.y + this.parent.y - this.originY + this.radius / 2;
     }
     constructor(r, x = 0, y = 0) {
         super(x, y);
@@ -51,8 +51,8 @@ export class CircleCollider extends Collider {
         this.radius = r;
     }
     centerOrigin() {
-        this.originX = 0;
-        this.originY = 0;
+        this.originX = this.radius / 2;
+        this.originY = this.radius / 2;
     }
     centerOO() {
         this.centerOrigin();

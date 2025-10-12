@@ -36,26 +36,26 @@ export class CircleCollider extends Collider implements ICircleCollider {
 	}
 
 	get left(): number {
-		return this.parent.x + this.x - this.originX - (this.radius - 0.5);
+		return this.parent.x + this.x - this.originX;
 	}
 	get right(): number {
-		return this.parent.x + this.x - this.originX + (this.radius - 0.5);
+		return this.parent.x + this.x - this.originX + this.w - 1;
 	}
 	get top(): number {
-		return this.parent.y + this.y - this.originY - (this.radius - 0.5);
+		return this.parent.y + this.y - this.originY;
 	}
 	get bottom(): number {
-		return this.parent.y + this.y - this.originY + (this.radius - 0.5);
+		return this.parent.y + this.y - this.originY + this.h - 1;
 	}
 
 	get center(): Vec2 {
 		return new Vec2(this.centerX, this.centerY);
 	}
 	get centerX(): number {
-		return this.x + this.parent.x - this.originX;
+		return this.x + this.parent.x - this.originX + this.radius / 2;
 	}
 	get centerY(): number {
-		return this.y + this.parent.y - this.originY;
+		return this.y + this.parent.y - this.originY + this.radius / 2;
 	}
 
 	constructor(r: number, x = 0, y = 0) {
@@ -65,8 +65,8 @@ export class CircleCollider extends Collider implements ICircleCollider {
 	}
 
 	centerOrigin(): void {
-		this.originX = 0;
-		this.originY = 0;
+		this.originX = this.radius / 2;
+		this.originY = this.radius / 2;
 	}
 
 	centerOO(): void {
