@@ -16,7 +16,7 @@ export interface Tileset {
 
 	relative: boolean;
 	visible: boolean;
-	sprite: ImageAsset;
+	asset: ImageAsset;
 	parent: GraphicParent | undefined;
 
 	data: Array<Vec2 | null>;
@@ -38,7 +38,7 @@ export class Tileset {
 	visible = true;
 
 	constructor(
-		sprite: ImageAsset,
+		asset: ImageAsset,
 		width: number,
 		height: number,
 		tileW: number,
@@ -52,7 +52,7 @@ export class Tileset {
 		this.columns = Math.ceil(width / tileW);
 		this.rows = Math.ceil(height / tileH);
 
-		this.sprite = sprite;
+		this.asset = asset;
 
 		this.data = Array.from(
 			{ length: this.columns * this.rows },
@@ -79,16 +79,9 @@ export class Tileset {
 
 		const scale = 1;
 
-		const {
-			sprite: image,
-			separation,
-			startX,
-			startY,
-			tileW,
-			tileH,
-		} = this;
+		const { asset, separation, startX, startY, tileW, tileH } = this;
 
-		if (!image.image) throw new Error('Tileset is missing an image');
+		if (!asset.image) throw new Error('Tileset is missing an image');
 
 		// const srcCols = Math.floor(image.width / tileW);
 		// const srcRows = Math.floor(image.height / tileH);
@@ -108,7 +101,7 @@ export class Tileset {
 					const dstX = x * tileW - cameraX + offsetX;
 					const dstY = y * tileH - cameraY + offsetY;
 					ctx.drawImage(
-						image.image,
+						asset.image,
 						srcX,
 						srcY,
 						tileW,

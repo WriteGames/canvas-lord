@@ -193,7 +193,7 @@ export class Debug implements Debug {
 		highlightRect?: { x: number; y: number; w: number; h: number },
 	): void {
 		if (graphic instanceof Tileset || graphic instanceof Sprite) {
-			const asset = 'sprite' in graphic ? graphic.sprite : graphic.asset;
+			const { asset } = graphic;
 			this.graphic.sprite ??= new Sprite(asset);
 			const tempSprite = this.graphic.sprite;
 			tempSprite.asset = asset;
@@ -356,11 +356,8 @@ export class Debug implements Debug {
 		if (!graphic) return;
 
 		let assetStr = null;
-		// TODO(bret): Fix this shenanigans
 		if ('asset' in graphic)
-			assetStr = (graphic.asset as { fileName: string }).fileName;
-		if ('sprite' in graphic)
-			assetStr = (graphic.sprite as { fileName: string }).fileName;
+			assetStr = (graphic.asset as ImageAsset).fileName;
 		if (assetStr) assetStr = `("${assetStr}")`;
 		const graphicStr = [graphic.constructor.name, assetStr].join(' ');
 		drawText(drawX + padding, drawY + padding + 30, graphicStr);

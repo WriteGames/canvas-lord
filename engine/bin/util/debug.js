@@ -122,7 +122,7 @@ export class Debug {
     }
     renderGraphicWithRect(ctx, graphic, x, y, highlightRect) {
         if (graphic instanceof Tileset || graphic instanceof Sprite) {
-            const asset = 'sprite' in graphic ? graphic.sprite : graphic.asset;
+            const { asset } = graphic;
             this.graphic.sprite ??= new Sprite(asset);
             const tempSprite = this.graphic.sprite;
             tempSprite.asset = asset;
@@ -230,11 +230,8 @@ export class Debug {
         if (!graphic)
             return;
         let assetStr = null;
-        // TODO(bret): Fix this shenanigans
         if ('asset' in graphic)
             assetStr = graphic.asset.fileName;
-        if ('sprite' in graphic)
-            assetStr = graphic.sprite.fileName;
         if (assetStr)
             assetStr = `("${assetStr}")`;
         const graphicStr = [graphic.constructor.name, assetStr].join(' ');

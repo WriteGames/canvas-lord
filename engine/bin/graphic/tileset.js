@@ -4,14 +4,14 @@ import { Vec2 } from '../math/index.js';
 export class Tileset {
     relative = true;
     visible = true;
-    constructor(sprite, width, height, tileW, tileH, options = {}) {
+    constructor(asset, width, height, tileW, tileH, options = {}) {
         this.width = width;
         this.height = height;
         this.tileW = tileW;
         this.tileH = tileH;
         this.columns = Math.ceil(width / tileW);
         this.rows = Math.ceil(height / tileH);
-        this.sprite = sprite;
+        this.asset = asset;
         this.data = Array.from({ length: this.columns * this.rows }, () => null);
         this.startX = options.startX ?? 0;
         this.startY = options.startY ?? 0;
@@ -31,8 +31,8 @@ export class Tileset {
         if (!this.visible)
             return;
         const scale = 1;
-        const { sprite: image, separation, startX, startY, tileW, tileH, } = this;
-        if (!image.image)
+        const { asset, separation, startX, startY, tileW, tileH } = this;
+        if (!asset.image)
             throw new Error('Tileset is missing an image');
         // const srcCols = Math.floor(image.width / tileW);
         // const srcRows = Math.floor(image.height / tileH);
@@ -48,7 +48,7 @@ export class Tileset {
                     const srcY = startY + (separation + tileH) * tileY;
                     const dstX = x * tileW - cameraX + offsetX;
                     const dstY = y * tileH - cameraY + offsetY;
-                    ctx.drawImage(image.image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
+                    ctx.drawImage(asset.image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
                 }
             }
         }
