@@ -2,12 +2,28 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "tsc: watch - engine/tsconfig.build.json",
-			"type": "typescript",
-			"tsconfig": "engine/tsconfig.build.json",
-			"option": "watch",
+			"label": "[canvas-lord] tsc: build",
+			"type": "shell",
+			"command": "pnpm -F canvas-lord build",
+			"problemMatcher": ["$tsc"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "[canvas-lord] tsc: watch",
+			"type": "shell",
+			"command": "pnpm -F canvas-lord watch",
 			"problemMatcher": ["$tsc-watch"],
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"presentation": {
 				"reveal": "always",
 				"panel": "new"
@@ -28,7 +44,7 @@
 				"panel": "new"
 			},
 			"runOptions": {
-				"runOn": "folderOpen"
+				// "runOn": "folderOpen"
 			}
 		}
 	]
