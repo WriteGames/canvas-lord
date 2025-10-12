@@ -1,3 +1,6 @@
+export const isVec2 = (vec) => {
+    return vec instanceof Vec2;
+};
 const X = 0;
 const Y = 1;
 export class Vec2 extends Array {
@@ -48,6 +51,11 @@ export class Vec2 extends Array {
     normalize() {
         Vec2.normalize(this);
     }
+    toNormalized() {
+        const v = this.clone();
+        v.normalize();
+        return v;
+    }
     map(
     // TODO: index: 0 | 1 ?
     callbackfn, thisArg) {
@@ -65,14 +73,14 @@ export class Vec2 extends Array {
     clone() {
         return new Vec2(...this);
     }
-    // TODO: add 'self' methods
-    // addSelf(v: Vec2): this {
-    // 	this.#values = this.map((val, i) => val + (v[i] ?? 0));
-    // 	return this;
-    // }
     static add = (a, b) => addPos(a, b);
     add(v) {
         return Vec2.add(this, v);
+    }
+    addSelf(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
     }
     static plus = (a, b) => Vec2.add(a, b);
     plus(v) {
@@ -82,6 +90,11 @@ export class Vec2 extends Array {
     sub(v) {
         return Vec2.sub(this, v);
     }
+    subSelf(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
+    }
     static minus = (a, b) => Vec2.sub(a, b);
     minus(v) {
         return this.sub(v);
@@ -90,9 +103,20 @@ export class Vec2 extends Array {
     scale(s) {
         return Vec2.scale(this, s);
     }
+    scaleSelf(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    }
     static invScale = (v, s) => scalePos(v, 1 / s);
     invScale(s) {
         return Vec2.scale(this, 1 / s);
+    }
+    invScaleSelf(s) {
+        const iS = 1 / s;
+        this.x *= iS;
+        this.y *= iS;
+        return this;
     }
     static cross = (a, b) => crossProduct2D(a, b);
     cross(v) {
@@ -122,16 +146,21 @@ export const subPos = (a, b) => {
     return a.map((v, i) => v - (b[i] ?? 0));
 };
 export const addScalar = (p, s) => {
-    return new Vec2(...p.map((v) => v + s));
+    const sums = p.map((v) => v + s);
+    if (isVec2(p))
+        return new Vec2(...sums);
+    return sums;
 };
 export const scalePos = (p, s) => {
-    return new Vec2(...p.map((v) => v * s));
+    const scaled = p.map((v) => v * s);
+    if (isVec2(p))
+        return new Vec2(...scaled);
+    return scaled;
 };
 export const posEqual = (a, b) => {
     const aa = [...a];
     const bb = [...b];
-    return (aa.length === bb.length &&
-        aa.every((v, i) => equal(v, bb[i])));
+    return aa.length === bb.length && aa.every((v, i) => equal(v, bb[i]));
 };
 export const equal = (a, b) => {
     return Math.abs(a - b) < Number.EPSILON;

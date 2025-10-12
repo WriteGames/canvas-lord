@@ -1,5 +1,9 @@
 import type { Vector } from './common';
 
+export const isVec2 = (vec: Vector | Vec2): vec is Vec2 => {
+	return vec instanceof Vec2;
+};
+
 const X = 0;
 const Y = 1;
 
@@ -64,6 +68,11 @@ export class Vec2 extends Array<number> {
 	normalize(): void {
 		Vec2.normalize(this);
 	}
+	toNormalized(): Vec2 {
+		const v = this.clone();
+		v.normalize();
+		return v;
+	}
 
 	map<U>(
 		// TODO: index: 0 | 1 ?
@@ -92,15 +101,14 @@ export class Vec2 extends Array<number> {
 		return new Vec2(...this);
 	}
 
-	// TODO: add 'self' methods
-	// addSelf(v: Vec2): this {
-	// 	this.#values = this.map((val, i) => val + (v[i] ?? 0));
-	// 	return this;
-	// }
-
 	static add = (a: Vec2, b: Vec2): Vec2 => addPos(a, b);
 	add(v: Vec2): Vec2 {
 		return Vec2.add(this, v);
+	}
+	addSelf(v: Vec2): this {
+		this.x += v.x;
+		this.y += v.y;
+		return this;
 	}
 
 	static plus = (a: Vec2, b: Vec2): Vec2 => Vec2.add(a, b);
@@ -112,6 +120,11 @@ export class Vec2 extends Array<number> {
 	sub(v: Vec2): Vec2 {
 		return Vec2.sub(this, v);
 	}
+	subSelf(v: Vec2): this {
+		this.x -= v.x;
+		this.y -= v.y;
+		return this;
+	}
 
 	static minus = (a: Vec2, b: Vec2): Vec2 => Vec2.sub(a, b);
 	minus(v: Vec2): Vec2 {
@@ -122,10 +135,21 @@ export class Vec2 extends Array<number> {
 	scale(s: number): Vec2 {
 		return Vec2.scale(this, s);
 	}
+	scaleSelf(s: number): this {
+		this.x *= s;
+		this.y *= s;
+		return this;
+	}
 
 	static invScale = (v: Vec2, s: number): Vec2 => scalePos(v, 1 / s);
 	invScale(s: number): Vec2 {
 		return Vec2.scale(this, 1 / s);
+	}
+	invScaleSelf(s: number): this {
+		const iS = 1 / s;
+		this.x *= iS;
+		this.y *= iS;
+		return this;
 	}
 
 	static cross = (a: Vec2, b: Vec2): number => crossProduct2D(a, b);
@@ -164,7 +188,7 @@ type FuncMapVector = <T extends Vector | Vec2, A extends T, B extends T>(
 	b: B,
 ) => A;
 // type FuncMapVectorByScalar = <P extends Vector>(
-type FuncMapVectorByScalar = (p: Vec2 | Vector, s: number) => Vec2;
+type FuncMapVectorByScalar = <T extends Vec2 | Vector>(p: T, s: number) => T;
 
 // type FuncReduceVector = <A extends Vector, B extends Vector>(
 type FuncReduceVector = (a: Vec2, b: Vec2) => number;
@@ -182,20 +206,21 @@ export const subPos: FuncMapVector = (a, b) => {
 };
 
 export const addScalar: FuncMapVectorByScalar = (p, s) => {
-	return new Vec2(...p.map((v) => v + s));
+	const sums = p.map((v) => v + s);
+	if (isVec2(p)) return new Vec2(...sums) as typeof p;
+	return sums as typeof p;
 };
 
 export const scalePos: FuncMapVectorByScalar = (p, s) => {
-	return new Vec2(...p.map((v) => v * s));
+	const scaled = p.map((v) => v * s);
+	if (isVec2(p)) return new Vec2(...scaled) as typeof p;
+	return scaled as typeof p;
 };
 
 export const posEqual = (a: Vector | Vec2, b: Vector | Vec2): boolean => {
 	const aa = [...a];
 	const bb = [...b];
-	return (
-		aa.length === bb.length &&
-		aa.every((v, i) => equal(v, bb[i] as unknown as number))
-	);
+	return aa.length === bb.length && aa.every((v, i) => equal(v, bb[i]));
 };
 
 export const equal: FuncCompare<number> = (a, b) => {
