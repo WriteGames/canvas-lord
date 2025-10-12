@@ -1,5 +1,4 @@
 /* Canvas Lord v0.6.1 */
-// TODO(bret): Rounded rectangle https://stackoverflow.com/questions/1255512/how-to-draw-a-rounded-rectangle-on-html-canvas
 export const drawable = {
     angle: 0,
     scaleX: 1,
@@ -48,14 +47,15 @@ export const moveCanvas = (callback) => {
     };
 };
 export const Draw = {
-    circle: moveCanvas((ctx, options, x, y, radius) => {
+    circle: moveCanvas((ctx, options, x, y, radius, center = false) => {
         initTempCanvas(ctx);
         const color = options.color ?? 'magenta';
         ctx.translate(0.5, 0.5);
         ctx.beginPath();
-        // TODO: make this be able to be centered :O
-        // It could be good to pass an option that dictates whether or not to center it :)
-        ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
+        if (center)
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+        else
+            ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
         switch (options.type) {
             case 'fill':
             case undefined:
@@ -150,7 +150,7 @@ export const Draw = {
                 ? 'multiply'
                 : 'source-in';
             tempCtx.fillStyle = options.color;
-            // TODO(bret): Add ability to resize the rect :O
+            // TODO(bret): Add ability to pass a mask :O
             tempCtx.fillRect(0, 0, _width, _height);
             if (blend) {
                 tempCtx.globalCompositeOperation = 'destination-in';
