@@ -120,12 +120,17 @@ export class Entity<TScene extends Scene = Scene>
 		this.component(Components.pos2D)![1] = val;
 	}
 
-	// TODO(bret): Are we sure we want to clone this?
+	get #pos(): Vec2 {
+		const c = this.component(Components.pos2D);
+		if (!c) throw new Error('"pos2D" component missing from Entity');
+		return c;
+	}
+
 	get pos(): Vec2 {
-		return this.component(Components.pos2D)!.clone();
+		return this.#pos;
 	}
 	set pos(val: Vec2) {
-		this.component(Components.pos2D)!.set(val);
+		this.#pos.set(val);
 	}
 
 	get width(): number {

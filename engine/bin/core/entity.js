@@ -33,12 +33,17 @@ export class Entity {
     set y(val) {
         this.component(Components.pos2D)[1] = val;
     }
-    // TODO(bret): Are we sure we want to clone this?
+    get #pos() {
+        const c = this.component(Components.pos2D);
+        if (!c)
+            throw new Error('"pos2D" component missing from Entity');
+        return c;
+    }
     get pos() {
-        return this.component(Components.pos2D).clone();
+        return this.#pos;
     }
     set pos(val) {
-        this.component(Components.pos2D).set(val);
+        this.#pos.set(val);
     }
     get width() {
         return this.collider?.w ?? 0;
