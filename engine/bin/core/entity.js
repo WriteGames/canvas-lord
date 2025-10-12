@@ -33,6 +33,7 @@ export class Entity {
     set y(val) {
         this.component(Components.pos2D)[1] = val;
     }
+    // TODO(bret): Are we sure we want to clone this?
     get pos() {
         return this.component(Components.pos2D).clone();
     }

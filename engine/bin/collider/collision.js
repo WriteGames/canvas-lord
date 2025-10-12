@@ -108,10 +108,10 @@ export const collideLineCircle = (x1, y1, x2, y2, cX, cY, radius) => {
     const pointA = new Vec2(x1, y1);
     const pointB = new Vec2(x2, y2);
     const circlePos = new Vec2(cX, cY);
-    const line = pointB.sub(pointA);
-    const lineLength = pointB.sub(pointA).magnitude;
-    const norm = line.invScale(lineLength);
-    const segmentToCircle = circlePos.sub(pointA);
+    const line = Vec2.sub(pointB, pointA);
+    const lineLength = line.magnitude;
+    const norm = Vec2.invScale(line, lineLength);
+    const segmentToCircle = Vec2.sub(circlePos, pointA);
     const closestPoint = dotProduct2D(segmentToCircle, line) / lineLength;
     let closest;
     if (closestPoint < 0)
@@ -119,8 +119,8 @@ export const collideLineCircle = (x1, y1, x2, y2, cX, cY, radius) => {
     else if (closestPoint > lineLength)
         closest = pointB;
     else
-        closest = pointA.add(norm.scale(closestPoint));
-    return circlePos.sub(closest).magnitude <= radius;
+        closest = pointA.add(Vec2.scale(norm, closestPoint));
+    return Vec2.sub(circlePos, closest).magnitude <= radius;
 };
 export const collideLineRightTriangle = (x1, y1, x2, y2, rt) => {
     return (collideLineLine(x1, y1, x2, y2, rt.x1, rt.y1, rt.x2, rt.y2) ||

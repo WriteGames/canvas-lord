@@ -109,7 +109,7 @@ export class Debug {
                     dragStart.set(input.mouse.pos);
                 }
                 if (input.mouseCheck(1) || input.mouseReleased(1)) {
-                    cameraDelta.set(dragStart.sub(input.mouse.pos));
+                    cameraDelta.set(Vec2.sub(dragStart, input.mouse.pos));
                 }
                 if (input.mouseReleased(1)) {
                     sceneData.camera.x += cameraDelta.x;
@@ -117,7 +117,7 @@ export class Debug {
                     cameraDelta.setXY(0, 0);
                 }
             }
-            scene.camera.set(originalCamera.add(camera).add(cameraDelta));
+            scene.camera.set(Vec2.add(originalCamera, camera).add(cameraDelta));
         });
     }
     renderGraphicWithRect(ctx, graphic, x, y, highlightRect) {

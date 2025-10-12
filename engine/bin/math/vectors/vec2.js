@@ -44,17 +44,13 @@ export class Vec2 extends Array {
         this.y = y;
     }
     static normalize = (v) => {
-        const mag = v.magnitude;
-        v.x /= mag;
-        v.y /= mag;
+        return v.clone().invScale(v.magnitude);
     };
     normalize() {
-        Vec2.normalize(this);
-    }
-    toNormalized() {
-        const v = this.clone();
-        v.normalize();
-        return v;
+        const mag = this.magnitude;
+        this.x /= mag;
+        this.y /= mag;
+        return this;
     }
     map(
     // TODO: index: 0 | 1 ?
@@ -75,9 +71,6 @@ export class Vec2 extends Array {
     }
     static add = (a, b) => addPos(a, b);
     add(v) {
-        return Vec2.add(this, v);
-    }
-    addSelf(v) {
         this.x += v.x;
         this.y += v.y;
         return this;
@@ -88,9 +81,6 @@ export class Vec2 extends Array {
     }
     static sub = (a, b) => subPos(a, b);
     sub(v) {
-        return Vec2.sub(this, v);
-    }
-    subSelf(v) {
         this.x -= v.x;
         this.y -= v.y;
         return this;
@@ -101,18 +91,12 @@ export class Vec2 extends Array {
     }
     static scale = (v, s) => scalePos(v, s);
     scale(s) {
-        return Vec2.scale(this, s);
-    }
-    scaleSelf(s) {
         this.x *= s;
         this.y *= s;
         return this;
     }
     static invScale = (v, s) => scalePos(v, 1 / s);
     invScale(s) {
-        return Vec2.scale(this, 1 / s);
-    }
-    invScaleSelf(s) {
         const iS = 1 / s;
         this.x *= iS;
         this.y *= iS;
@@ -135,7 +119,7 @@ export class Vec2 extends Array {
         return Vec2.equal(this, v);
     }
     static lerp = (a, b, t) => {
-        return b.sub(a).scale(t).add(a);
+        return Vec2.sub(b, a).scale(t).add(a);
     };
 }
 export const hashPos = (pos) => pos.join(',');

@@ -62,7 +62,7 @@ describe('(Vec) Vector operations', () => {
 				test('V2 + V2 should result in a V2 sum', () => {
 					const a = new Vec2(4, 5);
 					const b = new Vec2(0, 1);
-					expectVec2Equal(a.add(b), [4, 6]);
+					expectVec2Equal(addPos(a, b), [4, 6]);
 					expectVec2Equal(Vec2.add(a, b), [4, 6]);
 				});
 
@@ -100,7 +100,7 @@ describe('(Vec) Vector operations', () => {
 			test('should add other vector to itself', () => {
 				const a = new Vec2(4, 5);
 				const b = new Vec2(0, 1);
-				expectVec2Equal(a.addSelf(b), [4, 6]);
+				expectVec2Equal(a.add(b), [4, 6]);
 				expectVec2Equal(a, [4, 6]);
 			});
 		});
@@ -110,7 +110,7 @@ describe('(Vec) Vector operations', () => {
 				test('V2 - V2 should result in a V2 difference', () => {
 					const a = new Vec2(4, 5);
 					const b = new Vec2(0, 1);
-					expectVec2Equal(a.sub(b), [4, 4]);
+					expectVec2Equal(subPos(a, b), [4, 4]);
 					expectVec2Equal(Vec2.sub(a, b), [4, 4]);
 				});
 
@@ -148,7 +148,7 @@ describe('(Vec) Vector operations', () => {
 			test('should subtract other vector from itself', () => {
 				const a = new Vec2(4, 5);
 				const b = new Vec2(0, 1);
-				expectVec2Equal(a.subSelf(b), [4, 4]);
+				expectVec2Equal(a.sub(b), [4, 4]);
 				expectVec2Equal(a, [4, 4]);
 			});
 		});
@@ -226,7 +226,7 @@ describe('(Vec) Vector operations', () => {
 		describe('scaleSelf(v)', () => {
 			test('should scale itself by scalar', () => {
 				const v = new Vec2(1, 2);
-				expect(v.scaleSelf(5)).toEqual([5, 10]);
+				expect(v.scale(5)).toEqual([5, 10]);
 				expect(v).toEqual([5, 10]);
 			});
 		});

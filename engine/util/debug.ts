@@ -172,7 +172,7 @@ export class Debug implements Debug {
 					dragStart.set(input.mouse.pos);
 				}
 				if (input.mouseCheck(1) || input.mouseReleased(1)) {
-					cameraDelta.set(dragStart.sub(input.mouse.pos));
+					cameraDelta.set(Vec2.sub(dragStart, input.mouse.pos));
 				}
 				if (input.mouseReleased(1)) {
 					sceneData.camera.x += cameraDelta.x;
@@ -181,7 +181,7 @@ export class Debug implements Debug {
 				}
 			}
 
-			scene.camera.set(originalCamera.add(camera).add(cameraDelta));
+			scene.camera.set(Vec2.add(originalCamera, camera).add(cameraDelta));
 		});
 	}
 

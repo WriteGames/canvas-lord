@@ -109,7 +109,7 @@ export class Scene implements Scene {
 
 	#mouse = new Vec2(-1, -1);
 	get mouse(): Vec2 {
-		const pos = this.engine.input.mouse.pos.add(this.camera);
+		const pos = Vec2.add(this.engine.input.mouse.pos, this.camera);
 		this.#mouse.set(pos);
 		return this.#mouse;
 	}

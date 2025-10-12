@@ -60,18 +60,14 @@ export class Vec2 extends Array<number> {
 		this.y = y;
 	}
 
-	static normalize = (v: Vec2): void => {
-		const mag = v.magnitude;
-		v.x /= mag;
-		v.y /= mag;
+	static normalize = (v: Vec2): Vec2 => {
+		return v.clone().invScale(v.magnitude);
 	};
-	normalize(): void {
-		Vec2.normalize(this);
-	}
-	toNormalized(): Vec2 {
-		const v = this.clone();
-		v.normalize();
-		return v;
+	normalize(): this {
+		const mag = this.magnitude;
+		this.x /= mag;
+		this.y /= mag;
+		return this;
 	}
 
 	map<U>(
@@ -102,50 +98,38 @@ export class Vec2 extends Array<number> {
 	}
 
 	static add = (a: Vec2, b: Vec2): Vec2 => addPos(a, b);
-	add(v: Vec2): Vec2 {
-		return Vec2.add(this, v);
-	}
-	addSelf(v: Vec2): this {
+	add(v: Vec2): this {
 		this.x += v.x;
 		this.y += v.y;
 		return this;
 	}
 
 	static plus = (a: Vec2, b: Vec2): Vec2 => Vec2.add(a, b);
-	plus(v: Vec2): Vec2 {
+	plus(v: Vec2): this {
 		return this.add(v);
 	}
 
 	static sub = (a: Vec2, b: Vec2): Vec2 => subPos(a, b);
-	sub(v: Vec2): Vec2 {
-		return Vec2.sub(this, v);
-	}
-	subSelf(v: Vec2): this {
+	sub(v: Vec2): this {
 		this.x -= v.x;
 		this.y -= v.y;
 		return this;
 	}
 
 	static minus = (a: Vec2, b: Vec2): Vec2 => Vec2.sub(a, b);
-	minus(v: Vec2): Vec2 {
+	minus(v: Vec2): this {
 		return this.sub(v);
 	}
 
 	static scale = (v: Vec2, s: number): Vec2 => scalePos(v, s);
-	scale(s: number): Vec2 {
-		return Vec2.scale(this, s);
-	}
-	scaleSelf(s: number): this {
+	scale(s: number): this {
 		this.x *= s;
 		this.y *= s;
 		return this;
 	}
 
 	static invScale = (v: Vec2, s: number): Vec2 => scalePos(v, 1 / s);
-	invScale(s: number): Vec2 {
-		return Vec2.scale(this, 1 / s);
-	}
-	invScaleSelf(s: number): this {
+	invScale(s: number): this {
 		const iS = 1 / s;
 		this.x *= iS;
 		this.y *= iS;
@@ -173,7 +157,7 @@ export class Vec2 extends Array<number> {
 	}
 
 	static lerp = (a: Vec2, b: Vec2, t: number): Vec2 => {
-		return b.sub(a).scale(t).add(a);
+		return Vec2.sub(b, a).scale(t).add(a);
 	};
 }
 

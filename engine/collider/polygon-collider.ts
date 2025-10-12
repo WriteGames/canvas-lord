@@ -70,7 +70,7 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 
 	get axes(): Vec2[] {
 		const axes = this.edges.map(([_x, _y]) => new Vec2(-_y, _x));
-		axes.forEach((axis) => Vec2.normalize(axis));
+		axes.forEach((axis) => axis.normalize());
 		return axes;
 	}
 
