@@ -26,9 +26,8 @@ export class Grid {
     }
     static fromBitmap(assetManager, src, tileW, tileH) {
         const sprite = assetManager.sprites.get(src);
-        if (!sprite?.image) {
-            throw new Error('image is not valid');
-        }
+        if (!sprite?.image)
+            throw new Error(`"${src}" is not a valid image`);
         if (!pixelCtx)
             throw Error('pixelCtx failed to create');
         const width = sprite.width * tileW;

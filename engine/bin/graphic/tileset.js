@@ -1,10 +1,12 @@
 /* Canvas Lord v0.6.1 */
+import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
-// TODO(bret): extend Graphic!!
-export class Tileset {
+export class Tileset extends Graphic {
     relative = true;
     visible = true;
+    #data;
     constructor(asset, width, height, tileW, tileH, options = {}) {
+        super();
         this.width = width;
         this.height = height;
         this.tileW = tileW;
@@ -12,7 +14,7 @@ export class Tileset {
         this.columns = Math.ceil(width / tileW);
         this.rows = Math.ceil(height / tileH);
         this.asset = asset;
-        this.data = Array.from({ length: this.columns * this.rows }, () => null);
+        this.#data = Array.from({ length: this.columns * this.rows }, () => null);
         this.startX = options.startX ?? 0;
         this.startY = options.startY ?? 0;
         this.separation = options.separation ?? 0;
@@ -20,12 +22,12 @@ export class Tileset {
     setTile(x, y, tileX, tileY) {
         if (x < 0 || y < 0 || x >= this.columns || y >= this.rows)
             return;
-        this.data[y * this.columns + x] = new Vec2(tileX, tileY);
+        this.#data[y * this.columns + x] = new Vec2(tileX, tileY);
     }
     getTile(x, y) {
         if (x < 0 || y < 0 || x >= this.columns || y >= this.rows)
             return null;
-        return this.data[y * this.columns + x];
+        return this.#data[y * this.columns + x];
     }
     render(ctx, camera = Vec2.zero) {
         if (!this.visible)
@@ -39,15 +41,17 @@ export class Tileset {
         const [cameraX, cameraY] = camera;
         const offsetX = (this.relative ? this.parent?.x : 0) ?? 0;
         const offsetY = (this.relative ? this.parent?.y : 0) ?? 0;
+        const drawX = this.x - cameraX + offsetX;
+        const drawY = this.y - cameraY + offsetY;
         for (let y = 0; y < this.rows; ++y) {
             for (let x = 0; x < this.columns; ++x) {
-                const val = this.data[y * this.columns + x];
+                const val = this.#data[y * this.columns + x];
                 if (val) {
                     const [tileX, tileY] = val;
                     const srcX = startX + (separation + tileW) * tileX;
                     const srcY = startY + (separation + tileH) * tileY;
-                    const dstX = x * tileW - cameraX + offsetX;
-                    const dstY = y * tileH - cameraY + offsetY;
+                    const dstX = x * tileW + drawX;
+                    const dstY = y * tileH + drawY;
                     ctx.drawImage(asset.image, srcX, srcY, tileW, tileH, dstX, dstY, tileW * scale, tileH * scale);
                 }
             }

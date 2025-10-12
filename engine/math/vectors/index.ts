@@ -1,2 +1,2 @@
-export * from './common';
-export * from './vec2';
+export * from './common.js';
+export * from './vec2.js';

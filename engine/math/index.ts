@@ -3,6 +3,7 @@
 import type { Vec2 } from './vectors';
 
 export * from './vectors';
+export * from './misc.js';
 
 export const EPSILON = 0.000001;
 
