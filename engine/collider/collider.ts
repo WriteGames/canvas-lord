@@ -35,6 +35,24 @@ interface ICollider {
 	y: number;
 
 	render(ctx: Ctx, x: number, y: number): void;
+
+	collideEntity(x: number, y: number): Entity | null;
+	collideEntity(x: number, y: number, tag?: ColliderTag): Entity | null;
+	collideEntity(x: number, y: number, tags: ColliderTag[]): Entity | null;
+	collideEntity(x: number, y: number, entity: Entity): Entity | null;
+	collideEntity(x: number, y: number, entities: Entity[]): Entity | null;
+
+	collideEntities(x: number, y: number): Entity[];
+	collideEntities(x: number, y: number, tag?: ColliderTag): Entity[];
+	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
+	collideEntities(x: number, y: number, entity: Entity): Entity[];
+	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
+
+	collide(x: number, y: number): boolean;
+	collide(x: number, y: number, tag?: ColliderTag): boolean;
+	collide(x: number, y: number, tags: ColliderTag[]): boolean;
+	collide(x: number, y: number, entity: Entity): boolean;
+	collide(x: number, y: number, entities: Entity[]): boolean;
 }
 
 export abstract class Collider implements ICollider {
@@ -265,9 +283,14 @@ export abstract class Collider implements ICollider {
 	collideEntity<T extends Entity>(
 		x: number,
 		y: number,
-		match?: unknown,
+		match?: CollisionMatch,
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		match?: CollisionMatch,
 	): T | null {
-		return this.#collide<T>(x, y, match as CollisionMatch, true)[0] ?? null;
+		return this.#collide<T>(x, y, match, true)[0] ?? null;
 	}
 
 	collideEntities(x: number, y: number): Entity[];
@@ -275,8 +298,9 @@ export abstract class Collider implements ICollider {
 	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
 	collideEntities(x: number, y: number, entity: Entity): Entity[];
 	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
-	collideEntities(x: number, y: number, match?: unknown): Entity[] {
-		return this.#collide(x, y, match as CollisionMatch, false);
+	collideEntities(x: number, y: number, match?: CollisionMatch): Entity[];
+	collideEntities(x: number, y: number, match?: CollisionMatch): Entity[] {
+		return this.#collide(x, y, match, false);
 	}
 
 	collide(x: number, y: number): boolean;
@@ -284,15 +308,9 @@ export abstract class Collider implements ICollider {
 	collide(x: number, y: number, tags: ColliderTag[]): boolean;
 	collide(x: number, y: number, entity: Entity): boolean;
 	collide(x: number, y: number, entities: Entity[]): boolean;
-	collide(x: number, y: number, match?: unknown): boolean {
-		return this.#collide(x, y, match as CollisionMatch, true).length > 0;
-	}
-
-	/**
-	 * @deprecated Use collide() instead
-	 */
-	_collide(other: Collider): boolean {
-		return collide(this, other);
+	collide(x: number, y: number, match?: CollisionMatch): boolean;
+	collide(x: number, y: number, match?: CollisionMatch): boolean {
+		return this.#collide(x, y, match, true).length > 0;
 	}
 
 	render(_ctx: Ctx, _x: number, _y: number): void {

@@ -1,7 +1,7 @@
 /* Canvas Lord v0.6.1 */
 
 import * as Collide from '../collider/collide.js';
-import type { Collider } from '../collider/collider.js';
+import type { Collider, CollisionMatch } from '../collider/collider.js';
 import type { ColliderTag } from '../collider/index.js';
 import type { Graphic } from '../graphic/graphic.js';
 import { Vec2 } from '../math/index.js';
@@ -412,15 +412,15 @@ export class Entity<TScene extends Scene = Scene>
 	collideEntity<T extends Entity>(
 		x: number,
 		y: number,
-		match?: unknown,
+		match?: CollisionMatch,
+	): T | null;
+	collideEntity<T extends Entity>(
+		x: number,
+		y: number,
+		match?: CollisionMatch,
 	): T | null {
 		if (!this.collider) return null;
-		return this.collider.collideEntity<T>(
-			x,
-			y,
-			// TYPE(bret): is there a cleaner way to do this?
-			match as Parameters<typeof this.collider.collideEntity<T>>[2],
-		);
+		return this.collider.collideEntity<T>(x, y, match);
 	}
 
 	collideEntities(x: number, y: number): Entity[];
@@ -428,13 +428,10 @@ export class Entity<TScene extends Scene = Scene>
 	collideEntities(x: number, y: number, tags: ColliderTag[]): Entity[];
 	collideEntities(x: number, y: number, entity: Entity): Entity[];
 	collideEntities(x: number, y: number, entities: Entity[]): Entity[];
-	collideEntities(x: number, y: number, match?: unknown): Entity[] {
+	collideEntities(x: number, y: number, match?: CollisionMatch): Entity[];
+	collideEntities(x: number, y: number, match?: CollisionMatch): Entity[] {
 		if (!this.collider) return [];
-		return this.collider.collideEntities(
-			x,
-			y,
-			match as Parameters<typeof this.collider.collideEntities>[2],
-		);
+		return this.collider.collideEntities(x, y, match);
 	}
 
 	collide(x: number, y: number): boolean;
@@ -442,13 +439,10 @@ export class Entity<TScene extends Scene = Scene>
 	collide(x: number, y: number, tags: ColliderTag[]): boolean;
 	collide(x: number, y: number, entity: Entity): boolean;
 	collide(x: number, y: number, entities: Entity[]): boolean;
-	collide(x: number, y: number, match?: unknown): boolean {
+	collide(x: number, y: number, match?: CollisionMatch): boolean;
+	collide(x: number, y: number, match?: CollisionMatch): boolean {
 		if (!this.collider) return false;
-		return this.collider.collide(
-			x,
-			y,
-			match as Parameters<typeof this.collider.collide>[2],
-		);
+		return this.collider.collide(x, y, match);
 	}
 
 	collideMouse(x: number, y: number, cameraRelative = true): boolean {

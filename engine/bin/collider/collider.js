@@ -178,12 +178,6 @@ export class Collider {
     collide(x, y, match) {
         return this.#collide(x, y, match, true).length > 0;
     }
-    /**
-     * @deprecated Use collide() instead
-     */
-    _collide(other) {
-        return collide(this, other);
-    }
     render(_ctx, _x, _y) {
         throw new Error('render() unimplemented');
     }

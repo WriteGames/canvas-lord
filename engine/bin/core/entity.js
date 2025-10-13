@@ -261,9 +261,7 @@ export class Entity {
     collideEntity(x, y, match) {
         if (!this.collider)
             return null;
-        return this.collider.collideEntity(x, y, 
-        // TYPE(bret): is there a cleaner way to do this?
-        match);
+        return this.collider.collideEntity(x, y, match);
     }
     collideEntities(x, y, match) {
         if (!this.collider)
