@@ -19,7 +19,6 @@ const assetHasImage = (
 	image: HTMLImageElement;
 } => asset.image !== null;
 
-// TODO(bret): How to tile?
 export class Sprite extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
 
@@ -84,7 +83,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		callback(ctx);
 
 		const asset = {
-			// TODO(bret): Could hash these & put them in assetManager :O
+			// DECIDE(bret): Could hash these & put them in assetManager :O
 			fileName,
 			image: null,
 			loaded: false,
@@ -101,7 +100,7 @@ export class Sprite extends Graphic implements ISpriteLike {
 		};
 		img.src = canvas.toDataURL();
 
-		// TODO(bret): This might be dangerous!! It unfortunately is needed for new Sprite() to work :/
+		// VALIDATE(bret): This might be dangerous!! It unfortunately is needed for new Sprite() to work :/
 		asset.loaded = true;
 		asset.image = img;
 

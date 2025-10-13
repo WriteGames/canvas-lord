@@ -1,5 +1,5 @@
 /* Canvas Lord v0.6.1 */
-// TODO(bret): This file is a bunch of random stuff, will need to clean up
+// CLEANUP(bret): This file is a bunch of random stuff, will need to clean up
 import { addPos, EPSILON, hashPos, subPos, Vec2,
 // type Vector,
  } from './index.js';
@@ -49,7 +49,6 @@ export const lerpAngle = (a, b, t) => {
 };
 // export const isPointOnLine = <V extends Vector>(
 export const isPointOnLine = (point, a, b) => Math.abs(posDistance(a, point) + posDistance(point, b) - posDistance(a, b)) < EPSILON;
-// TODO(bret): Would be fun to make this work with any dimensions
 export const isWithinBounds = (p, start, end) => p.every((x, i) => x >= start[i] && x < end[i]);
 // <V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 export const filterWithinBounds = (a, b) => (pos) => a.every((p, i) => ([...pos][i] ?? -Infinity) >= p) &&

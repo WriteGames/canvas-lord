@@ -12,7 +12,7 @@ export const EVENT_TYPE = {
 	JUMP: 'jump',
 };
 
-// TODO(bret): Think about Entity vs Actor terminology
+// DECIDE(bret): Think about Entity vs Actor terminology
 // Scene <-> Actor
 // World <-> Entity
 
@@ -196,7 +196,7 @@ export class Player extends Entity {
 		const x = Math.round(_x);
 		const y = Math.round(_y);
 
-		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
+		// DECIDE(bret): Should this exist as part of the Scene, or part of the grid?
 		if (
 			scene.bounds !== null &&
 			(x < scene.bounds[0] || x + w > scene.bounds[0] + scene.bounds[2])
@@ -325,9 +325,9 @@ export const horizontalMovementSystem = {
 
 export const verticalMovementComponent = Components.createComponent({});
 
-// TODO: do we want to assign components, or make "archetypes" that are relations between components & systems? A lot of these components are going to be the same
-// TODO: separate the yspeed & entity.moveY() into a separate component/system, and then have a component that adds a system to do the actual movement
-// TODO: alternatively, each scene/world could have its own understanding of how to register that component to systems (probably the best, albeit, the most typing)
+// DECIDE: do we want to assign components, or make "archetypes" that are relations between components & systems? A lot of these components are going to be the same
+// DECIDE: separate the yspeed & entity.moveY() into a separate component/system, and then have a component that adds a system to do the actual movement
+// DECIDE: alternatively, each scene/world could have its own understanding of how to register that component to systems (probably the best, albeit, the most typing)
 
 export const verticalMovementSystem = {
 	update(entity, input) {
@@ -344,7 +344,7 @@ export const verticalMovementComponent2 = Components.createComponent({
 	jumpDuration: 30, // 60 FPS
 });
 
-// TODO: maybe add a TypeScript feature that allows us to emulate pointers?
+// DECIDE: maybe add a TypeScript feature that allows us to emulate pointers?
 // doing something like
 //		let { *jumpDuration } = vComp;
 // would transpile all future calls like
@@ -514,7 +514,7 @@ export class PlayerWithComponents extends Entity {
 		const x = Math.round(_x);
 		const y = Math.round(_y);
 
-		// TODO(bret): Should this exist as part of the Scene, or part of the grid?
+		// DECIDE(bret): Should this exist as part of the Scene, or part of the grid?
 		if (
 			scene.bounds !== null &&
 			(x < scene.bounds[0] || x + w > scene.bounds[0] + scene.bounds[2])

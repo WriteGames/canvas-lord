@@ -67,7 +67,6 @@ describe('constructor', () => {
 	});
 });
 
-// TODO(bret): Should circles _not_ be centered by default?
 describe('center origin', () => {
 	beforeEach(() => {
 		circleCollider = new CircleCollider(RADIUS);

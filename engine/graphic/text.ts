@@ -34,7 +34,7 @@ textOptionPresetMap.set(undefined, {
 	font: 'monospace',
 	size: 16,
 	align: 'left',
-	// TODO(bret): check if this is the default we want :/
+	// DECIDE(bret): check if this is the default we want :/
 	baseline: 'top',
 });
 
@@ -189,7 +189,6 @@ export class Text extends Graphic implements IText {
 
 		if (!textCtx) throw new Error();
 
-		// TODO(bret): count
 		const { font, size, align, baseline, count } = this;
 
 		textCtx.save();

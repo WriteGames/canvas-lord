@@ -58,7 +58,7 @@ export class Tweener {
     get started() {
         return this.#elapsed >= 0;
     }
-    // TODO(bret): Do smth different for this
+    // DECIDE(bret): Do smth different for this
     get finished() {
         return this.#elapsed >= this.#duration;
     }
@@ -200,7 +200,7 @@ export class PropertyTweener extends Tweener {
 }
 export class SubtweenTweener extends Tweener {
     #tween;
-    // TODO(bret): Do smth different for this
+    // DECIDE(bret): Do smth different for this
     get finished() {
         return this.#tween.finished;
     }

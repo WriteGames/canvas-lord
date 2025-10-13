@@ -11,7 +11,10 @@ export class Scene {
         return this.#engine;
     }
     constructor(engine) {
-        // TODO(bret): this is depreciated, engine now gets set in initInternal()
+        // TODO(bret): this is depreciated
+        /**
+         * @deprecated engine now gets set in initInternal()
+         */
         if (engine)
             this.#engine = engine;
         this.componentSystemMap = new Map();
@@ -29,7 +32,7 @@ export class Scene {
         this.messages = new Messages();
         this.screenPos = new Vec2(0, 0);
         this.camera = new Camera(0, 0);
-        // TODO(bret): Make these false by default
+        // DECIDE(bret): Make these false by default
         this.escapeToBlur = true;
         this.allowRefresh = true;
         this.bounds = null;
@@ -49,7 +52,7 @@ export class Scene {
         this.#mouse.set(pos);
         return this.#mouse;
     }
-    // TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
+    // TODO(bret): Gonna want to make sure we don't recreate the canvas/ctx on each call
     setCanvasSize(width, height) {
         if (!this.canvas) {
             const { canvas, ctx } = generateCanvasAndCtx(width, height);
@@ -188,7 +191,7 @@ export class Scene {
         //
     }
     updateInternal(input) {
-        // TODO: move the following two to game probably
+        // DECIDE: move the following two to game probably
         if (this.allowRefresh && input.keyPressed('F5'))
             location.reload();
         if (this.escapeToBlur && input.keyPressed('Escape'))
@@ -228,7 +231,7 @@ export class Scene {
         const ctx = (this.ctx ?? gameCtx);
         const { canvas } = ctx;
         this.onRender.invoke(ctx);
-        // TODO: this should maybe be in pre-render?
+        // DECIDE: this should maybe be in pre-render?
         this.renderables.inScene.sort((a, b) => (b.depth ?? 0) - (a.depth ?? 0));
         const { camera } = this;
         let { backgroundColor } = this;

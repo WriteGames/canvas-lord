@@ -9,7 +9,7 @@ export type ComponentProps<T extends IEntityComponentType> =
 	T extends IEntityComponentType<infer P>
 		? {
 				-readonly [K in keyof P]: P[K];
-			}
+		  }
 		: never;
 
 export const copyObject = <T extends RawComponent>(
@@ -31,8 +31,8 @@ export const copyObject = <T extends RawComponent>(
 	return newObj;
 };
 
-// TODO: rename to registerComponent? And then do something with that?
-// TODO: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
+// DECIDE: rename to registerComponent? And then do something with that?
+// DECIDE: how should prerequisites be handled? ie rect needs pos2D maybe, and then adding that component needs to either add an initial pos2D or warn/error that there isn't one there
 export const createComponent = <T extends RawComponent>(
 	initialState: T,
 ): IEntityComponentType<T> =>

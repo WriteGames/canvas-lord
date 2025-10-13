@@ -1,6 +1,6 @@
 /* Canvas Lord v0.6.1 */
 import { Vec2 } from '../math/index.js';
-// TODO(bret): Could be nice to do a custom binding, so:
+// DECIDE(bret): Could be nice to do a custom binding, so:
 // AltLeft/AltRight also activate Alt
 // Digit1/Numpad1 also activate some "Generic1"
 export const Keys = {
@@ -293,6 +293,7 @@ export class Input {
         });
     }
     // TODO(bret): Make it so it conditionally unregisters keys
+    // NOTE(bret): I do not remember what the above means
     unregisterHTMLButton(element, ...keys) {
         const _element = this._findHTMLElement(element);
         const _keys = keys.flat();
@@ -312,7 +313,7 @@ export class Input {
         this.keys = _keysArr.reduce((acc, v) => {
             acc[v] = 0;
             return acc;
-            // TODO(bret): revisit this
+            // TYPE(bret): revisit this
             // eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter -- tee hee will fix later
         }, {});
     }

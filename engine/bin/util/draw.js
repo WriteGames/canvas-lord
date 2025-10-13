@@ -161,10 +161,10 @@ export const Draw = {
         ctx.drawImage(tempCanvas, drawX, drawY);
     }),
     // TODO(bret): This breaks if the width is too small :(
-    // TODO(bret): Condense some of this down
+    // CLEANUP(bret): Condense some of this down
     text: moveCanvas((ctx, text, drawX, drawY, str) => {
         initTempCanvas(ctx);
-        const { color, type, font = 'sans-serif', size = 10, align = 'left', baseline = 'top', // TODO(bret): check if this is the default we want :/
+        const { color, type, font = 'sans-serif', size = 10, align = 'left', baseline = 'top', // DECIDE(bret): check if this is the default we want :/
         count, } = text;
         const _size = typeof size === 'number' ? `${size}px` : size;
         ctx.font = `${_size} ${font}`;

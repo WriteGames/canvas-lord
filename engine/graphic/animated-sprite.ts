@@ -99,7 +99,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.animations.set(name, animation);
 	}
 
-	// TODO(bret): Revisit this, we might want a `restart = false` override
+	// DECIDE(bret): Revisit this, we might want a `restart = false` override
 	play(name?: string, reset = false, frame = 0): void {
 		if (!reset && name === this.currentAnimation?.name) return;
 

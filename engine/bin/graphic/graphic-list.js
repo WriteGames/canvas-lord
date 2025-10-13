@@ -10,7 +10,7 @@ export class GraphicList extends Graphic {
         this.add(graphics);
     }
     centerOrigin() {
-        // TODO(bret): what should this actually do?
+        // DECIDE(bret): what should this actually do?
         this.graphics.forEach((graphic) => graphic.centerOrigin());
     }
     add(...graphics) {

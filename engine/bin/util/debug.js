@@ -349,7 +349,7 @@ export class Debug {
         });
         debugData.selectedEntities.forEach((e, i) => {
             // render again why not
-            // TODO(bret): Would be best to clear out behind entity and then select it
+            // DECIDE(bret): Would be best to clear out behind entity and then select it
             e.render(ctx, scene.camera);
             this.renderEntityDebug(this.ctx, e, (entityRenderH + 6) * i);
         });
@@ -357,8 +357,8 @@ export class Debug {
     render(ctx) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (!this.enabled) {
-            // TODO(bret): Draw inactive?
-            // TODO(bret): Can the panel update while the game is running?
+            // DECIDE(bret): Draw inactive?
+            // DECIDE(bret): Can the panel update while the game is running?
             // so many questions!
             return;
         }

@@ -103,7 +103,7 @@ export abstract class Tweener implements ITweener {
 		return this.#elapsed >= 0;
 	}
 
-	// TODO(bret): Do smth different for this
+	// DECIDE(bret): Do smth different for this
 	get finished(): boolean {
 		return this.#elapsed >= this.#duration;
 	}
@@ -274,7 +274,7 @@ export class PropertyTweener<T> extends Tweener {
 export class SubtweenTweener extends Tweener {
 	#tween: Tween;
 
-	// TODO(bret): Do smth different for this
+	// DECIDE(bret): Do smth different for this
 	get finished(): boolean {
 		return this.#tween.finished;
 	}

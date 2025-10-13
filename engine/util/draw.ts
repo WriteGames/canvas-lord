@@ -269,7 +269,7 @@ export const Draw = {
 	),
 
 	// TODO(bret): This breaks if the width is too small :(
-	// TODO(bret): Condense some of this down
+	// CLEANUP(bret): Condense some of this down
 	text: moveCanvas(
 		(ctx, text: TextOptions, drawX: number, drawY: number, str: string) => {
 			initTempCanvas(ctx);
@@ -280,7 +280,7 @@ export const Draw = {
 				font = 'sans-serif',
 				size = 10,
 				align = 'left',
-				baseline = 'top', // TODO(bret): check if this is the default we want :/
+				baseline = 'top', // DECIDE(bret): check if this is the default we want :/
 				count,
 			} = text;
 

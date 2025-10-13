@@ -17,9 +17,9 @@ import { generateCanvasAndCtx } from '../util/canvas.js';
 import type { Graphic } from '../graphic/graphic.js';
 import { Delegate } from '../util/delegate.js';
 
-// TODO: it could be good to have a `frame: number` for which frame we're on
+// DECIDE: it could be good to have a `frame: number` for which frame we're on
 // it would increment, well, every frame :)
-// TODO: should there be one in Game as well?
+// DECIDE: should there be one in Game as well?
 export interface Scene {
 	backgroundColor?: CSSColor;
 	entities: {
@@ -66,7 +66,10 @@ export class Scene implements Scene {
 	}
 
 	constructor(engine?: Engine) {
-		// TODO(bret): this is depreciated, engine now gets set in initInternal()
+		// TODO(bret): this is depreciated
+		/**
+		 * @deprecated engine now gets set in initInternal()
+		 */
 		if (engine) this.#engine = engine;
 
 		this.componentSystemMap = new Map();
@@ -90,7 +93,7 @@ export class Scene implements Scene {
 		this.screenPos = new Vec2(0, 0);
 		this.camera = new Camera(0, 0);
 
-		// TODO(bret): Make these false by default
+		// DECIDE(bret): Make these false by default
 		this.escapeToBlur = true;
 		this.allowRefresh = true;
 
@@ -114,7 +117,7 @@ export class Scene implements Scene {
 		return this.#mouse;
 	}
 
-	// TODO(bret): Gonna nwat to make sure we don't recreate the canvas/ctx on each call
+	// TODO(bret): Gonna want to make sure we don't recreate the canvas/ctx on each call
 	setCanvasSize(width: number, height: number): void {
 		if (!this.canvas as unknown) {
 			const { canvas, ctx } = generateCanvasAndCtx(width, height);
@@ -281,7 +284,7 @@ export class Scene implements Scene {
 	}
 
 	updateInternal(input: Input): void {
-		// TODO: move the following two to game probably
+		// DECIDE: move the following two to game probably
 		if (this.allowRefresh && input.keyPressed('F5')) location.reload();
 
 		if (this.escapeToBlur && input.keyPressed('Escape'))
@@ -335,7 +338,7 @@ export class Scene implements Scene {
 
 		this.onRender.invoke(ctx);
 
-		// TODO: this should maybe be in pre-render?
+		// DECIDE: this should maybe be in pre-render?
 		this.renderables.inScene.sort(
 			(a, b) => (b.depth ?? 0) - (a.depth ?? 0),
 		);

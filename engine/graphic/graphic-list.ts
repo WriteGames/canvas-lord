@@ -18,7 +18,7 @@ export class GraphicList extends Graphic {
 	}
 
 	centerOrigin(): void {
-		// TODO(bret): what should this actually do?
+		// DECIDE(bret): what should this actually do?
 		this.graphics.forEach((graphic) => graphic.centerOrigin());
 	}
 

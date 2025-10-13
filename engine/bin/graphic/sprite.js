@@ -3,7 +3,6 @@ import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import { Draw } from '../util/draw.js';
 const assetHasImage = (asset) => asset.image !== null;
-// TODO(bret): How to tile?
 export class Sprite extends Graphic {
     asset;
     sourceX = 0;
@@ -48,7 +47,7 @@ export class Sprite extends Graphic {
             throw new Error('[Sprite.createRect()] getContext() failed');
         callback(ctx);
         const asset = {
-            // TODO(bret): Could hash these & put them in assetManager :O
+            // DECIDE(bret): Could hash these & put them in assetManager :O
             fileName,
             image: null,
             loaded: false,
@@ -63,7 +62,7 @@ export class Sprite extends Graphic {
             }
         };
         img.src = canvas.toDataURL();
-        // TODO(bret): This might be dangerous!! It unfortunately is needed for new Sprite() to work :/
+        // VALIDATE(bret): This might be dangerous!! It unfortunately is needed for new Sprite() to work :/
         asset.loaded = true;
         asset.image = img;
         return new Sprite(asset);

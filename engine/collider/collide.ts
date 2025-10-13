@@ -162,7 +162,7 @@ const collisionMap = {
 } as const;
 
 export const collide = (shapeA: Collider, shapeB: Collider): boolean => {
-	// TODO(bret): well, remove the error supression :)
+	// TYPE(bret): well, remove the error supression :)
 	// @ts-expect-error -- no idea how to fix this lol
 	return collisionMap[shapeA.type][shapeB.type](shapeA, shapeB);
 };

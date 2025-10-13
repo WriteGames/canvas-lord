@@ -80,7 +80,7 @@ export class Inspector {
 		const scene = this.engine.currentScenes?.[0];
 		if (!scene) return;
 
-		// TODO(bret): Adjust TS settings so this is undefined!
+		// TYPE(bret): Adjust TS settings so this is undefined!
 		const player = scene.entities.inScene[0] as Entity | undefined;
 		if (!player) return;
 

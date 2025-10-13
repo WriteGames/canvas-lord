@@ -1,6 +1,6 @@
 /* Canvas Lord v0.6.1 */
 
-// TODO(bret): This file is a bunch of random stuff, will need to clean up
+// CLEANUP(bret): This file is a bunch of random stuff, will need to clean up
 import {
 	addPos,
 	EPSILON,
@@ -95,7 +95,6 @@ export const isPointOnLine = (point: Vec2, a: Vec2, b: Vec2): boolean =>
 		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
 	) < EPSILON;
 
-// TODO(bret): Would be fun to make this work with any dimensions
 export const isWithinBounds = <T extends Vec2>(
 	p: T,
 	start: T,

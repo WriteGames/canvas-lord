@@ -53,7 +53,7 @@ export class Vec2 extends Array {
         return this;
     }
     map(
-    // TODO: index: 0 | 1 ?
+    // DECIDE: index: 0 | 1 ?
     callbackfn, thisArg) {
         return super.map(callbackfn, thisArg);
     }

@@ -40,7 +40,8 @@ export interface IEntitySystem {
 export interface IRenderable {
 	depth?: number;
 	parent?: IRenderable | undefined;
-	// TODO(bret): Figure out if we want this to be like this...
+	// DECIDE
+	// TYPE(bret): Figure out if we want this to be like this...
 	update?: (input: Input) => void;
 	render: (ctx: Ctx, camera: Camera) => void;
 }

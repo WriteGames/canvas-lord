@@ -71,7 +71,7 @@ export class Vec2 extends Array<number> {
 	}
 
 	map<U>(
-		// TODO: index: 0 | 1 ?
+		// DECIDE: index: 0 | 1 ?
 		callbackfn: (value: number, index: number, array: number[]) => U,
 		thisArg?: unknown,
 	): [U, U] {
@@ -161,7 +161,7 @@ export class Vec2 extends Array<number> {
 	};
 }
 
-// TODO(bret): Find a home for these
+// TYPE(bret): Find a home for these
 // type V2 = [number, number];
 // type V3 = [number, number, number];
 // type V4 = [number, number, number, number];

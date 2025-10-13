@@ -215,7 +215,7 @@ export class Entity<TScene extends Scene = Scene>
 	addComponent<C extends IEntityComponentType>(
 		component: C,
 	): ReturnType<typeof this.component<C>> {
-		// TODO: we'll want to make sure we use a deepCopy
+		// FIXME: we'll want to make sure we use a deepCopy
 		this.components.set(component, Components.copyObject(component).data);
 		return this.component(component);
 	}
@@ -233,7 +233,7 @@ export class Entity<TScene extends Scene = Scene>
 	): ReturnType<typeof this.component<C>> {
 		if (!this.components.has(component)) return undefined;
 
-		// TODO(bret): We might want to be smarter about this and not create a new object each time
+		// DECIDE(bret): We might want to be smarter about this and not create a new object each time
 		this.components.set(component, Components.copyObject(component).data);
 		return this.component(component);
 	}
@@ -359,7 +359,7 @@ export class Entity<TScene extends Scene = Scene>
 	}
 
 	renderInternal(ctx: Ctx, camera: Camera): void {
-		// TODO(bret): .visible should probably be on the Graphic, not the Entity itself
+		// DECIDE(bret): .visible should probably be on the Graphic, not the Entity itself
 		if (!this.visible) return;
 
 		this.#graphic?.render(ctx, camera);
@@ -418,7 +418,7 @@ export class Entity<TScene extends Scene = Scene>
 		return this.collider.collideEntity<T>(
 			x,
 			y,
-			// TODO(bret): is there a cleaner way to do this?
+			// TYPE(bret): is there a cleaner way to do this?
 			match as Parameters<typeof this.collider.collideEntity<T>>[2],
 		);
 	}

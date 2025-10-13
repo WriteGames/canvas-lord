@@ -4,7 +4,7 @@ import { Vec2 } from '../math/index.js';
 import { generateCanvasAndCtx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 const { canvas: tempCanvas } = generateCanvasAndCtx();
-// TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
+// DECIDE(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic {
     asset;
     width;
@@ -18,7 +18,7 @@ export class NineSlice extends Graphic {
             throw new Error("asset.image hasn't loaded yet");
         return this.asset.image;
     }
-    // TODO(bret): See if we can remove this - they get set in recalculate()
+    // TYPE(bret): See if we can remove this - they get set in recalculate()
     patternT;
     patternL;
     patternR;
@@ -83,7 +83,6 @@ export class NineSlice extends Graphic {
         this.patternC = patternC;
     }
     // TODO: hook up moveCanvas
-    // TODO(bret): Set up relative & parent x/y
     render(ctx, camera = Vec2.zero) {
         if (!this.visible)
             return;

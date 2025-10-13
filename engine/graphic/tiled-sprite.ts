@@ -20,7 +20,7 @@ export const REPEAT_STYLE = {
 
 export type RepeatStyle = (typeof REPEAT_STYLE)[keyof typeof REPEAT_STYLE];
 
-// TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
+// DECIDE(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class TiledSprite extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
 
@@ -83,7 +83,6 @@ export class TiledSprite extends Graphic implements ISpriteLike {
 	}
 
 	// TODO: hook up moveCanvas
-	// TODO(bret): Set up relative & parent x/y
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		if (!this.visible) return;
 

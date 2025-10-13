@@ -197,7 +197,7 @@ export class RightTriangleCollider
 			this.options,
 			x,
 			y,
-			// TODO(bret): the types don't match
+			// TYPE(bret): the types don't match
 			// @ts-expect-error -- idk
 			this.#points,
 		);

@@ -22,7 +22,7 @@ const defineUnwritableProperty: <T>(
 		writable: false,
 	});
 
-// TODO(bret): Rethink this
+// DECIDE(bret): Rethink this
 interface CachedEventListener {
 	element: Element | Window;
 	arguments: Parameters<Element['addEventListener']>;
@@ -119,10 +119,10 @@ export type Engine = IEngine;
 
 interface InitialSettings {
 	fps: number;
-	backgroundColor?: string; // TODO(bret): Fix type
+	backgroundColor?: string; // TYPE(bret): Fix type
 	gameLoopSettings?: GameLoopSettings;
 	assetManager?: AssetManager;
-	// TODO(bret): Should we make this non-optional? Or at least do so for Write Games?
+	// DECIDE(bret): Should we make this non-optional? Or at least do so for Write Games?
 	devMode?: boolean;
 }
 
@@ -135,7 +135,7 @@ const defaultSettings: Settings = {
 		updateMode: 'focus',
 		renderMode: 'onUpdate',
 	},
-	devMode: false, // TODO(bret): Set this to false someday probably
+	devMode: false,
 };
 
 export class Game implements Engine {
@@ -172,7 +172,7 @@ export class Game implements Engine {
 	onRender: Delegate<(ctx: Ctx) => void>;
 	onSceneBegin: Delegate<(scene: Scene) => void>;
 	onSceneEnd: Delegate<(scene: Scene) => void>;
-	// TODO(bret): other delgates from Otter2d
+	// TODO(bret): other delegates from Otter2d
 
 	constructor(id: string, settings?: InitialSettings) {
 		const canvas = document.querySelector<HTMLCanvasElement>(
@@ -234,13 +234,10 @@ export class Game implements Engine {
 
 		this.focus = false;
 
-		this.listeners = gameEvents.reduce(
-			(acc, val) => {
-				acc[val] = new Set<EventCallback>();
-				return acc;
-			},
-			{} as typeof this.listeners,
-		);
+		this.listeners = gameEvents.reduce((acc, val) => {
+			acc[val] = new Set<EventCallback>();
+			return acc;
+		}, {} as typeof this.listeners);
 
 		this.fps = Math.round(engineSettings.fps);
 		if (this.fps <= 0) throw new Error('Invalid FPS');
@@ -254,12 +251,12 @@ export class Game implements Engine {
 
 		this.assetManager = engineSettings.assetManager;
 
-		// TODO(bret): Move this to init?
+		// DECIDE(bret): Move this to init?
 		if (engineSettings.devMode) this.debug = new Debug(this);
 
 		this.sceneStack = [];
 
-		// TODO(bret): Might also want to listen for styling changes to the canvas element
+		// DECIDE(bret): Might also want to listen for styling changes to the canvas element
 		const computeCanvasSize = (canvas: HTMLCanvasElement): void => {
 			const canvasComputedStyle = getComputedStyle(canvas);
 
@@ -284,7 +281,7 @@ export class Game implements Engine {
 			defineUnwritableProperty(canvas, '_actualWidth', width);
 			defineUnwritableProperty(canvas, '_actualHeight', height);
 
-			// TODO(bret): Fix this for different boxSizings
+			// VALIDATE(bret): Fix this for different boxSizings
 			const offsetX = borderLeft + paddingLeft;
 			const offsetY = borderTop + paddingTop;
 
@@ -319,7 +316,7 @@ export class Game implements Engine {
 
 		window.addEventListener('blur', () => this.onFocus(false));
 
-		// TODO: should we allow folks to customize this to be directly on the canvas?
+		// DECIDE: should we allow folks to customize this to be directly on the canvas?
 		this.focusElement = this.wrapper;
 		this.focusElement.addEventListener('focusin', () => this.onFocus(true));
 		this.focusElement.addEventListener('focusout', () =>
@@ -481,7 +478,7 @@ export class Game implements Engine {
 
 		this.updateGameLoopSettings(this.gameLoopSettings);
 
-		// TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
+		// DECIDE(bret): We should probably change this to some sort of loading state (maybe in CSS?)
 		CL.useEngine(this, () => {
 			this.updateScenes();
 			this.update();
@@ -514,7 +511,7 @@ export class Game implements Engine {
 		this.addEventListener(window, 'mouseup', onMouseUp);
 
 		// TODO(bret): Find out if we need useCapture here & above
-		// TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
+		// VALIDATE(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
 		[
 			['mousedown', this.canvas] as const,
 			['mouseup', this.canvas] as const,
@@ -546,7 +543,7 @@ export class Game implements Engine {
 		this.eventListeners = [];
 	}
 
-	// TODO(bret): Also perhaps do this on page/browser focus lost?
+	// DECIDE(bret): Also perhaps do this on page/browser focus lost?
 	onFocus(focus: boolean): void {
 		if (this.focus === focus) return;
 		if (this.focus) {
@@ -593,7 +590,7 @@ export class Game implements Engine {
 
 	popScenes(): Scene[] | undefined {
 		this._forEachScene(this.currentScenes, (scene) => {
-			// TODO(bret): Should we delete scene.engine?
+			// DECIDE(bret): Should we delete scene.engine?
 			scene.endInternal();
 		});
 

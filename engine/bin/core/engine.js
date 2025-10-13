@@ -18,7 +18,7 @@ const defaultSettings = {
         updateMode: 'focus',
         renderMode: 'onUpdate',
     },
-    devMode: false, // TODO(bret): Set this to false someday probably
+    devMode: false,
 };
 export class Game {
     gameLoopSettings = {
@@ -50,7 +50,7 @@ export class Game {
     onRender;
     onSceneBegin;
     onSceneEnd;
-    // TODO(bret): other delgates from Otter2d
+    // TODO(bret): other delegates from Otter2d
     constructor(id, settings) {
         const canvas = document.querySelector(`canvas#${id}`);
         if (canvas === null) {
@@ -106,11 +106,11 @@ export class Game {
         this.frameIndex = 0;
         this.frameRate = this.fps;
         this.assetManager = engineSettings.assetManager;
-        // TODO(bret): Move this to init?
+        // DECIDE(bret): Move this to init?
         if (engineSettings.devMode)
             this.debug = new Debug(this);
         this.sceneStack = [];
-        // TODO(bret): Might also want to listen for styling changes to the canvas element
+        // DECIDE(bret): Might also want to listen for styling changes to the canvas element
         const computeCanvasSize = (canvas) => {
             const canvasComputedStyle = getComputedStyle(canvas);
             let width = parseInt(canvasComputedStyle.width, 10);
@@ -126,7 +126,7 @@ export class Game {
             }
             defineUnwritableProperty(canvas, '_actualWidth', width);
             defineUnwritableProperty(canvas, '_actualHeight', height);
-            // TODO(bret): Fix this for different boxSizings
+            // VALIDATE(bret): Fix this for different boxSizings
             const offsetX = borderLeft + paddingLeft;
             const offsetY = borderTop + paddingTop;
             defineUnwritableProperty(canvas, '_offsetX', offsetX);
@@ -144,7 +144,7 @@ export class Game {
             computeCanvasSize(this.canvas);
         });
         window.addEventListener('blur', () => this.onFocus(false));
-        // TODO: should we allow folks to customize this to be directly on the canvas?
+        // DECIDE: should we allow folks to customize this to be directly on the canvas?
         this.focusElement = this.wrapper;
         this.focusElement.addEventListener('focusin', () => this.onFocus(true));
         this.focusElement.addEventListener('focusout', () => this.onFocus(false));
@@ -267,7 +267,7 @@ export class Game {
             }
         };
         this.updateGameLoopSettings(this.gameLoopSettings);
-        // TODO(bret): We should probably change this to some sort of loading state (maybe in CSS?)
+        // DECIDE(bret): We should probably change this to some sort of loading state (maybe in CSS?)
         CL.useEngine(this, () => {
             this.updateScenes();
             this.update();
@@ -291,7 +291,7 @@ export class Game {
         this.addEventListener(this.canvas, 'mousedown', onMouseDown);
         this.addEventListener(window, 'mouseup', onMouseUp);
         // TODO(bret): Find out if we need useCapture here & above
-        // TODO(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
+        // VALIDATE(bret): Check other HTML5 game engines to see if they attach mouse events to the canvas or the window
         [
             ['mousedown', this.canvas],
             ['mouseup', this.canvas],
@@ -319,7 +319,7 @@ export class Game {
         });
         this.eventListeners = [];
     }
-    // TODO(bret): Also perhaps do this on page/browser focus lost?
+    // DECIDE(bret): Also perhaps do this on page/browser focus lost?
     onFocus(focus) {
         if (this.focus === focus)
             return;
@@ -358,7 +358,7 @@ export class Game {
     }
     popScenes() {
         this._forEachScene(this.currentScenes, (scene) => {
-            // TODO(bret): Should we delete scene.engine?
+            // DECIDE(bret): Should we delete scene.engine?
             scene.endInternal();
         });
         const scenes = this.sceneStack.pop();

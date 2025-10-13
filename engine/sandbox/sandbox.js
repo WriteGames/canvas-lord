@@ -2,7 +2,7 @@ import { AssetManager, Game } from '../bin/canvas-lord.js';
 
 const sandboxContainer = document.getElementById('sandbox') ?? document.body;
 
-// TODO(bret): Might want to define this on the window so it can be overridden
+// DECIDE(bret): Might want to define this on the window so it can be overridden
 const defaultAttr = {
 	width: 640,
 	height: 320,

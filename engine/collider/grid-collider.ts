@@ -8,7 +8,7 @@ import { Grid } from '../util/grid.js';
 interface IGridCollider {
 	type: 'grid';
 
-	// TODO(bret): This is a temp hack to get things moving quickly
+	// HACK(bret): This is a temp hack to get things moving quickly
 	grid: Grid;
 }
 

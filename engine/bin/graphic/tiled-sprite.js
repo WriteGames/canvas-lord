@@ -10,7 +10,7 @@ export const REPEAT_STYLE = {
     X: 'repeat-x',
     Y: 'repeat-y',
 };
-// TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
+// DECIDE(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class TiledSprite extends Graphic {
     asset;
     color;
@@ -59,7 +59,6 @@ export class TiledSprite extends Graphic {
         this.pattern = pattern;
     }
     // TODO: hook up moveCanvas
-    // TODO(bret): Set up relative & parent x/y
     render(ctx, camera = Vec2.zero) {
         if (!this.visible)
             return;

@@ -6,7 +6,7 @@ const getSideOfLine = (x, y, lineA, lineB) => {
         (lineB.x - lineA.x) * (y - lineA.y);
     return Math.sign(d);
 };
-// TODO: clean these up (would break some non-TS files unfortunately)
+// CLEANUP: clean these up (would break some non-TS files unfortunately)
 const _lineSegmentIntersection = ([a, b], [c, d]) => {
     const r = subPos(b, a);
     const s = subPos(d, c);
@@ -80,7 +80,7 @@ export const collidePointPolygon = (x, y, p) => {
     }
     return inside;
 };
-// TODO(bret): make sure this is still working
+// VALIDATE(bret): make sure this is still working
 export const collidePointGrid = (x, y, g) => {
     if (!collidePointBox(x, y, g.left, g.top, g.right, g.bottom))
         return false;
@@ -130,7 +130,7 @@ export const collideLineRightTriangle = (x1, y1, x2, y2, rt) => {
         collidePointRightTriangle(x2, y2, rt));
 };
 export const collideLinePolygon = (x1, y1, x2, y2, p) => {
-    // TODO: test if using barycentric coords would be faster!
+    // VALIDATE: test if using barycentric coords would be faster!
     const { vertices } = p;
     const n = vertices.length;
     for (let i = 0, j = n - 1; i < n; j = i++) {
@@ -145,13 +145,13 @@ export const collideBoxBox = (aLeft, aTop, aRight, aBottom, bLeft, bTop, bRight,
 };
 export const collideBoxCircle = (left, top, right, bottom, cX, cY, radius) => {
     const x = Math.clamp(cX, left, right);
-    // TODO(bret): should this have -1 or not?
+    // DECIDE(bret): should this have -1 or not?
     const y = Math.clamp(cY, top, bottom - 1);
     const distanceSq = (cX - x) ** 2 + (cY - y) ** 2;
     return distanceSq < radius ** 2;
 };
 export const collideBoxRightTriangle = (left, top, right, bottom, rt) => {
-    // TODO(bret): write a better version of this
+    // OPTIMIZE(bret): write a better version of this
     // NOTE(bret): Found this online https://seblee.me/2009/05/super-fast-trianglerectangle-intersection-test/
     const centerX = (right - left) / 2 + left;
     const centerY = (bottom - top) / 2 + top;
@@ -183,7 +183,7 @@ export const collideBoxGrid = (left, top, right, bottom, g) => {
     // NOTE(bret): these already have -1 applied
     const boxW = right - left;
     const boxH = bottom - top;
-    // TODO(bret): uncertain if a clamp here is correct
+    // VALIDATE(bret): uncertain if a clamp here is correct
     const minX = Math.clamp(Math.floor(x / g.grid.tileW), 0, g.grid.columns - 1);
     const minY = Math.clamp(Math.floor(y / g.grid.tileH), 0, g.grid.rows - 1);
     const maxX = Math.clamp(Math.floor((x + boxW) / g.grid.tileW), 0, g.grid.columns - 1);
@@ -202,7 +202,7 @@ export const collideCircleCircle = (aX, aY, aRadius, bX, bY, bRadius) => {
     return distanceSq <= (aRadius + bRadius) ** 2;
 };
 export const collideCircleRightTriangle = (cX, cY, radius, rt) => {
-    // TODO(bret): Revisit
+    // OPTIMIZE(bret): Revisit
     // need to also check if the points are in the circle
     return (collidePointRightTriangle(cX, cY, rt) ||
         collideLineCircle(rt.x1, rt.y1, rt.x2, rt.y2, cX, cY, radius) ||
@@ -234,7 +234,7 @@ export const collideCircleGrid = (cX, cY, radius, g) => {
     // NOTE(bret): these already have -1 applied
     const circleW = right - left;
     const circleH = bottom - top;
-    // TODO(bret): uncertain if a clamp here is correct
+    // VALIDATE(bret): uncertain if a clamp here is correct
     const minX = Math.clamp(Math.floor(x / grid.tileW), 0, grid.columns - 1);
     const minY = Math.clamp(Math.floor(y / grid.tileH), 0, grid.rows - 1);
     const maxX = Math.clamp(Math.floor((x + circleW) / grid.tileW), 0, grid.columns - 1);
@@ -242,7 +242,7 @@ export const collideCircleGrid = (cX, cY, radius, g) => {
     for (let yy = minY; yy <= maxY; ++yy) {
         for (let xx = minX; xx <= maxX; ++xx) {
             if (grid.getTile(xx, yy) === 1) {
-                // TODO(bret): this feels like it should exist elsewhere
+                // DECIDE(bret): this feels like it should exist elsewhere
                 const left = xx * grid.tileW + g.parent.x + g.x;
                 const top = yy * grid.tileH + g.parent.y + g.y;
                 const right = left + grid.tileW - 1;

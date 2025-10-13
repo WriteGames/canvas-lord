@@ -444,7 +444,7 @@ class PlayerScene extends Scene {
 		this.backgroundColor = '#87E1A3';
 
 		// register components
-		// TODO: (maybe make this its own function? either Scene.init() or more specifically Scene.initComponents() - have a Scene._init() behind the scenes)
+		// DECIDE: (maybe make this its own function? either Scene.init() or more specifically Scene.initComponents() - have a Scene._init() behind the scenes)
 		{
 			// input-related
 			// velocity clean-up

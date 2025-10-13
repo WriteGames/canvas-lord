@@ -116,7 +116,7 @@ export class Entity {
         }
     }
     addComponent(component) {
-        // TODO: we'll want to make sure we use a deepCopy
+        // FIXME: we'll want to make sure we use a deepCopy
         this.components.set(component, Components.copyObject(component).data);
         return this.component(component);
     }
@@ -129,7 +129,7 @@ export class Entity {
     resetComponent(component) {
         if (!this.components.has(component))
             return undefined;
-        // TODO(bret): We might want to be smarter about this and not create a new object each time
+        // DECIDE(bret): We might want to be smarter about this and not create a new object each time
         this.components.set(component, Components.copyObject(component).data);
         return this.component(component);
     }
@@ -233,7 +233,7 @@ export class Entity {
         //
     }
     renderInternal(ctx, camera) {
-        // TODO(bret): .visible should probably be on the Graphic, not the Entity itself
+        // DECIDE(bret): .visible should probably be on the Graphic, not the Entity itself
         if (!this.visible)
             return;
         this.#graphic?.render(ctx, camera);
@@ -262,7 +262,7 @@ export class Entity {
         if (!this.collider)
             return null;
         return this.collider.collideEntity(x, y, 
-        // TODO(bret): is there a cleaner way to do this?
+        // TYPE(bret): is there a cleaner way to do this?
         match);
     }
     collideEntities(x, y, match) {

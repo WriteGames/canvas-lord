@@ -11,7 +11,7 @@ import { Draw } from '../util/draw.js';
 
 const { canvas: tempCanvas } = generateCanvasAndCtx();
 
-// TODO(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
+// DECIDE(bret): Could have this extend from Sprite maybe, or a new parent class... hmm...
 export class NineSlice extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
 	width: number;
@@ -27,7 +27,7 @@ export class NineSlice extends Graphic implements ISpriteLike {
 		return this.asset.image;
 	}
 
-	// TODO(bret): See if we can remove this - they get set in recalculate()
+	// TYPE(bret): See if we can remove this - they get set in recalculate()
 	patternT!: CanvasPattern;
 	patternL!: CanvasPattern;
 	patternR!: CanvasPattern;
@@ -91,7 +91,6 @@ export class NineSlice extends Graphic implements ISpriteLike {
 	}
 
 	// TODO: hook up moveCanvas
-	// TODO(bret): Set up relative & parent x/y
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		if (!this.visible) return;
 

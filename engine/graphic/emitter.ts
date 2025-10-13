@@ -74,7 +74,7 @@ export class Emitter extends Graphic {
 
 	// TODO(bret): remove the seed
 	random = new Random(2378495);
-	// TODO(bret): Ensure we want both of these to be able to be OffscreenCanvases
+	// VALIDATE(bret): Ensure we want both of these to be able to be OffscreenCanvases
 	imageSrc: Canvas | HTMLImageElement | null = null;
 	blendCanvas: Canvas;
 
@@ -88,7 +88,7 @@ export class Emitter extends Graphic {
 
 		let _asset = asset;
 
-		// TODO(bret): Figure out how we want to handle this
+		// DECIDE(bret): Figure out how we want to handle this
 		if (_asset instanceof Sprite) {
 			_asset = _asset.asset;
 		}
@@ -147,7 +147,7 @@ export class Emitter extends Graphic {
 		return type;
 	}
 
-	// TODO(bret): Make this better, might need to wait for WebGL/WebGPU
+	// OPTIMIZE(bret): Make this better, might need to wait for WebGL/WebGPU
 
 	setColor(
 		name: string,
@@ -287,7 +287,7 @@ export class Emitter extends Graphic {
 		blendCanvas.width = image.width;
 		blendCanvas.height = image.height;
 		const { width, height } = blendCanvas;
-		// TODO(bret): We might want to cache this
+		// DECIDE(bret): We might want to cache this
 		const blendCtx = blendCanvas.getContext('2d') as Ctx | null;
 		if (!blendCtx) throw new Error();
 
@@ -302,7 +302,7 @@ export class Emitter extends Graphic {
 				// TODO(bret): Draw.image now supports blending colors, might wanna switch this over!
 				if (particle.type.color) {
 					const { samples } = particle.type.color;
-					// TODO(bret): we'll never hit 1.0 :(
+					// VALIDATE(bret): we'll never hit 1.0 :(
 					const colorT = type.colorEase?.(particle.t) ?? particle.t;
 					const i = Math.round(colorT * (samples.length - 1));
 
