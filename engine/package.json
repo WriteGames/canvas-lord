@@ -18,6 +18,7 @@
 		"build": "tsc --p tsconfig.build.json",
 		"postbuild": "echo \"postbuild\"",
 		"test": "vitest --pool=forks",
+		"lint": "eslint .",
 		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\"",
 		"update-third-party-imports": "node scripts/update-third-party-imports.js",
 		"bump-version": "node scripts/bump-version.js && pnpm build"
@@ -29,6 +30,7 @@
 		"@types/gl-matrix": "^3.2.0",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^2.11.2",
+		"eslint": "8.56.0",
 		"jsdom": "^23.2.0",
 		"tsc-watch": "^7.2.0",
 		"typescript": "5.9.3",

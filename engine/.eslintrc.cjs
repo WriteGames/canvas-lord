@@ -15,10 +15,12 @@ module.exports = {
 	extends: baseESLintConfig.extends.concat(
 		['@vercel/style-guide/eslint/typescript'].map(require.resolve),
 	),
+	parser: '@typescript-eslint/parser',
 	parserOptions: {
 		...baseESLintConfig.parserOptions,
 		project,
 	},
+	ignorePatterns: ['**/*.js'],
 	rules: {
 		...baseESLintConfig.rules,
 		'@typescript-eslint/array-type': [
@@ -51,4 +53,12 @@ module.exports = {
 		'@typescript-eslint/no-shadow': 0,
 		'@typescript-eslint/non-nullable-type-assertion-style': 0,
 	},
+	overrides: [
+		{
+			files: ['core/CL.ts'],
+			rules: {
+				'unicorn/filename-case': 'off',
+			},
+		},
+	],
 };

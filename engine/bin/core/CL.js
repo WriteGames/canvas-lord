@@ -72,5 +72,4 @@ export class CL {
         return CL.engine.halfHeight;
     }
 }
-/* eslint-enable unicorn/filename-case -- don't worry about it */
 //# sourceMappingURL=CL.js.map

@@ -1,8 +1,5 @@
 /* Canvas Lord v0.6.1 */
 
-/* eslint-disable unicorn/filename-case -- don't worry about it */
-/* Canvas Lord v0.5.3 */
-
 import type { Engine } from './engine.js';
 import type { Input } from './input.js';
 import type { Scene } from './scene.js';
@@ -102,4 +99,3 @@ export class CL {
 		return CL.engine.halfHeight;
 	}
 }
-/* eslint-enable unicorn/filename-case -- don't worry about it */
