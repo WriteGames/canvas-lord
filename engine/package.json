@@ -28,8 +28,7 @@
 	"author": "Write Games",
 	"license": "ISC",
 	"devDependencies": {
-		"@types/gl-matrix": "^3.2.0",
-		"@writegames.com/game-math": "^0.1.0",
+		"@writegames.com/game-math": "^0.1.1",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^2.11.2",
 		"eslint": "8.56.0",

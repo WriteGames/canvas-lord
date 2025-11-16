@@ -9,7 +9,7 @@ import {
 	type V4,
 	Vec2,
 	// type Vector,
-} from '@writegames.com/game-math';
+} from './index.js';
 import type { Tileset } from '../graphic/index.js';
 
 // type Writeable<T> = {
