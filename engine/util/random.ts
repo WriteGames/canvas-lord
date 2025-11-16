@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 const xorShift32 = (random: Random): number => {
 	let x = random.seed;
 	x ^= x << 13;

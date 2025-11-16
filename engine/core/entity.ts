@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import * as Collide from '../collider/collide.js';
 import type { Collider, CollisionMatch } from '../collider/collider.js';
 import type { ColliderTag } from '../collider/index.js';

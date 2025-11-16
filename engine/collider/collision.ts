@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import {
 	Vec2,
 	EPSILON,

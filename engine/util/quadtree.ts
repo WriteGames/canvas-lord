@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import {
 	type V3_T as V3,
 	addPos,

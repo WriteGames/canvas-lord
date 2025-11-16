@@ -1,12 +1,8 @@
-/* Canvas Lord v0.6.1 */
-
 export type GetDelegateCallback<T> = T extends Delegate<infer C> ? C : never;
-export type GetDelegateParameters<T> = T extends Delegate<infer C>
-	? Parameters<C>
-	: never;
-export type GetDelegateReturnType<T> = T extends Delegate<infer C>
-	? ReturnType<C>
-	: never;
+export type GetDelegateParameters<T> =
+	T extends Delegate<infer C> ? Parameters<C> : never;
+export type GetDelegateReturnType<T> =
+	T extends Delegate<infer C> ? ReturnType<C> : never;
 
 export class Delegate<
 	T extends (...args: P) => void = () => void,

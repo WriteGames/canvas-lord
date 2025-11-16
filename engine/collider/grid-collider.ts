@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import { Collider } from './collider.js';
 import { Vec2 } from '../math/index.js';
 import type { Ctx } from '../util/canvas.js';

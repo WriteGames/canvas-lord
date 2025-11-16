@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 const linear = (t: number): number => t;
 const quad = (t: number): number => t * t;
 const cube = (t: number): number => t * t * t;

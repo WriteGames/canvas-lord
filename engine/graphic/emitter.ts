@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import { Graphic } from './graphic.js';
 import { Sprite } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';
@@ -214,14 +212,14 @@ export class Emitter extends Graphic {
 
 		const moveAngle = type.moveAngle
 			? (random.range(type.moveAngle.min, type.moveAngle.max) * Math.PI) /
-			  180.0
+				180.0
 			: 0;
 		const angle = type.angle
 			? random.range(type.angle.min, type.angle.max)
 			: 0;
 		const rotation = type.rotation
 			? random.range(type.rotation.min, type.rotation.max) *
-			  this.random.sign()
+				this.random.sign()
 			: 0;
 		const duration = type.duration
 			? random.range(type.duration.min, type.duration.max)

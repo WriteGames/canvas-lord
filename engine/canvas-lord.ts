@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 export * from './core/asset-manager.js';
 export * from './core/CL.js';
 export * from './core/engine.js';

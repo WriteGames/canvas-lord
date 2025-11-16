@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 export type MessagesPayload = object;
 export interface MessagesSubscriber {
 	receive?: (message: string, payload: MessagesPayload) => void;

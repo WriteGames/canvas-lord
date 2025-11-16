@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import { collide } from './collide.js';
 import { Entity } from '../core/entity.js';
 import type { Ctx } from '../util/canvas.js';

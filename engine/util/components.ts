@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import type { IEntityComponentType, RawComponent } from './types.js';
 import { Vec2 } from '../math/index.js';
 import type { Canvas } from './canvas.js';
@@ -9,7 +7,7 @@ export type ComponentProps<T extends IEntityComponentType> =
 	T extends IEntityComponentType<infer P>
 		? {
 				-readonly [K in keyof P]: P[K];
-		  }
+			}
 		: never;
 
 export const copyObject = <T extends RawComponent>(

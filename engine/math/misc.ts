@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 // CLEANUP(bret): This file is a bunch of random stuff, will need to clean up
 import {
 	addPos,

@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import type { Engine } from './engine.js';
 import { Vec2 } from '../math/index.js';
 
@@ -401,11 +399,14 @@ export class Input {
 	}
 
 	clear(): void {
-		this.keys = _keysArr.reduce<typeof this.keys>((acc, v) => {
-			acc[v] = 0;
-			return acc;
-			// TYPE(bret): revisit this
-			// eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter -- tee hee will fix later
-		}, {} as typeof this.keys);
+		this.keys = _keysArr.reduce<typeof this.keys>(
+			(acc, v) => {
+				acc[v] = 0;
+				return acc;
+				// TYPE(bret): revisit this
+				// eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter -- tee hee will fix later
+			},
+			{} as typeof this.keys,
+		);
 	}
 }

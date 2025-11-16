@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import { Graphic } from './graphic.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';

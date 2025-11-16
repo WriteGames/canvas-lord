@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 type EventEnum = Record<string, string>;
 type EventPayload<T extends EventEnum> = Partial<Record<T[keyof T], unknown>>;
 

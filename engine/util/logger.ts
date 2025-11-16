@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import type { Ctx } from './canvas.js';
 
 // IDEA(bret): What if we can define types of logs and toggle them on/off?

@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import type { AssetManager } from '../core/asset-manager.js';
 import {
 	addPos,

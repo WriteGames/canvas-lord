@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import { Graphic } from './graphic.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';

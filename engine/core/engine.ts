@@ -1,5 +1,3 @@
-/* Canvas Lord v0.6.1 */
-
 import { type AssetManager, Sfx } from './asset-manager.js';
 import { Input, type Key } from './input.js';
 import type { Scene } from './scene.js';
@@ -234,10 +232,13 @@ export class Game implements Engine {
 
 		this.focus = false;
 
-		this.listeners = gameEvents.reduce((acc, val) => {
-			acc[val] = new Set<EventCallback>();
-			return acc;
-		}, {} as typeof this.listeners);
+		this.listeners = gameEvents.reduce(
+			(acc, val) => {
+				acc[val] = new Set<EventCallback>();
+				return acc;
+			},
+			{} as typeof this.listeners,
+		);
 
 		this.fps = Math.round(engineSettings.fps);
 		if (this.fps <= 0) throw new Error('Invalid FPS');
