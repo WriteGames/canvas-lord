@@ -16,7 +16,7 @@
 	},
 	"scripts": {
 		"build": "tsc --p tsconfig.build.json && pnpm build:math",
-		"build:math": "tsc --outDir bin/math --p node_modules/@writegames.com/game-math/tsconfig.build.json",
+		"build:math": "tsc --outDir bin/math --declaration false --p node_modules/@writegames.com/game-math/tsconfig.build.json",
 		"postbuild": "echo \"postbuild\"",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",
@@ -28,7 +28,7 @@
 	"author": "Write Games",
 	"license": "ISC",
 	"devDependencies": {
-		"@writegames.com/game-math": "^0.1.1",
+		"@writegames.com/game-math": "0.1.2",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^2.11.2",
 		"eslint": "8.56.0",

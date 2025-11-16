@@ -1,6 +1,6 @@
 /* Canvas Lord v0.6.1 */
 // CLEANUP(bret): This file is a bunch of random stuff, will need to clean up
-import { addPos, EPSILON, hashPos, subPos, Vec2,
+import { addPos, EPSILON, hashPos, subPos, Vec2, clamp, lerp,
 // type Vector,
  } from './index.js';
 const reduceSum = (acc, v) => acc + v;
@@ -215,4 +215,11 @@ export const rotateNormBy45Deg = (curDir, turns) => {
 };
 // NOTE: The generic allows it to use V2's orthogonal or diagonal norm types, depending on the `curDir`
 export const rotateNormBy90Deg = (curDir, turns) => rotateNormBy45Deg(curDir, 2 * turns);
+// Math prototype fun :~)
+if (typeof Math.clamp === 'undefined') {
+    Math.clamp = clamp;
+}
+if (typeof Math.lerp === 'undefined') {
+    Math.lerp = lerp;
+}
 //# sourceMappingURL=misc.js.map

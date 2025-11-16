@@ -1,3 +1,4 @@
+import { addPos, posEqual, scalePos, subPos, } from './common';
 export const isVec2 = (vec) => {
     return vec instanceof Vec2;
 };
@@ -47,10 +48,7 @@ export class Vec2 extends Array {
         return v.clone().invScale(v.magnitude);
     };
     normalize() {
-        const mag = this.magnitude;
-        this.x /= mag;
-        this.y /= mag;
-        return this;
+        return this.invScale(this.magnitude);
     }
     map(
     // DECIDE: index: 0 | 1 ?
@@ -71,8 +69,8 @@ export class Vec2 extends Array {
     }
     static add = (a, b) => addPos(a, b);
     add(v) {
-        this.x += v.x;
-        this.y += v.y;
+        this.x += v[X];
+        this.y += v[Y];
         return this;
     }
     static plus = (a, b) => Vec2.add(a, b);
@@ -81,8 +79,8 @@ export class Vec2 extends Array {
     }
     static sub = (a, b) => subPos(a, b);
     sub(v) {
-        this.x -= v.x;
-        this.y -= v.y;
+        this.x -= v[X];
+        this.y -= v[Y];
         return this;
     }
     static minus = (a, b) => Vec2.sub(a, b);
@@ -97,7 +95,7 @@ export class Vec2 extends Array {
     }
     static invScale = (v, s) => scalePos(v, 1 / s);
     invScale(s) {
-        const iS = 1 / s;
+        const iS = s !== 0 ? 1 / s : 0;
         this.x *= iS;
         this.y *= iS;
         return this;
@@ -122,33 +120,6 @@ export class Vec2 extends Array {
         return Vec2.sub(b, a).scale(t).add(a);
     };
 }
-export const hashPos = (pos) => pos.join(',');
-export const addPos = (a, b) => {
-    return a.map((v, i) => v + (b[i] ?? 0));
-};
-export const subPos = (a, b) => {
-    return a.map((v, i) => v - (b[i] ?? 0));
-};
-export const addScalar = (p, s) => {
-    const sums = p.map((v) => v + s);
-    if (isVec2(p))
-        return new Vec2(...sums);
-    return sums;
-};
-export const scalePos = (p, s) => {
-    const scaled = p.map((v) => v * s);
-    if (isVec2(p))
-        return new Vec2(...scaled);
-    return scaled;
-};
-export const posEqual = (a, b) => {
-    const aa = [...a];
-    const bb = [...b];
-    return aa.length === bb.length && aa.every((v, i) => equal(v, bb[i]));
-};
-export const equal = (a, b) => {
-    return Math.abs(a - b) < Number.EPSILON;
-};
 export const indexToPos = (index, stride) => new Vec2(index % stride, Math.floor(index / stride));
 export const posToIndex = ([x, y], stride) => y * stride + x;
 export const rotate2D = (v, angle) => {
@@ -158,5 +129,5 @@ export const rotate2D = (v, angle) => {
 };
 export const crossProduct2D = (a, b) => a[0] * b[1] - a[1] * b[0];
 export const dotProduct2D = (a, b) => a[0] * b[0] + a[1] * b[1];
-export const magnitude2D = (v) => Math.sqrt(v.x ** 2 + v.y ** 2);
+export const magnitude2D = (v) => Math.sqrt(v[X] ** 2 + v[Y] ** 2);
 //# sourceMappingURL=vec2.js.map

@@ -1,6 +1,12 @@
 /* Canvas Lord v0.6.1 */
 
-import { type V3, addPos, scalePos, posEqual, Vec2 } from '../math/index.js';
+import {
+	type V3_T as V3,
+	addPos,
+	scalePos,
+	posEqual,
+	Vec2,
+} from '../math/index.js';
 
 // TODO: capacity, aka when it splits
 

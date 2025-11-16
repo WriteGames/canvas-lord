@@ -6,8 +6,10 @@ import {
 	EPSILON,
 	hashPos,
 	subPos,
-	type V4,
+	type V4_T as V4,
 	Vec2,
+	clamp,
+	lerp,
 	// type Vector,
 } from './index.js';
 import type { Tileset } from '../graphic/index.js';
@@ -341,3 +343,19 @@ export const rotateNormBy90Deg = <V extends V2CardinalNorm>(
 	curDir: V,
 	turns: number,
 ): V => rotateNormBy45Deg(curDir, 2 * turns) as V;
+
+declare global {
+	interface Math {
+		clamp: (val: number, min: number, max: number) => number;
+		lerp: (a: number, b: number, t: number) => number;
+	}
+}
+
+// Math prototype fun :~)
+if (typeof Math.clamp === 'undefined') {
+	Math.clamp = clamp;
+}
+
+if (typeof Math.lerp === 'undefined') {
+	Math.lerp = lerp;
+}
