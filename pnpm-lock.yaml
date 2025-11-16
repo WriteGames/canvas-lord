@@ -23,6 +23,9 @@ importers:
       '@types/gl-matrix':
         specifier: ^3.2.0
         version: 3.2.0
+      '@writegames.com/game-math':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@writegames.com/style-guide':
         specifier: workspace:*
         version: link:../shared-config
@@ -46,10 +49,11 @@ importers:
         version: 1.6.1(@types/node@20.11.3)(jsdom@23.2.0(canvas@2.11.2))
 
   shared-config:
-    devDependencies:
+    dependencies:
       '@vercel/style-guide':
         specifier: 5.1.0
         version: 5.1.0(@next/eslint-plugin-next@14.0.4)(eslint@8.56.0)(prettier@3.6.2)(typescript@5.9.3)
+    devDependencies:
       eslint:
         specifier: 8.56.0
         version: 8.56.0
@@ -838,6 +842,10 @@ packages:
 
   '@vitest/utils@1.6.1':
     resolution: {integrity: sha512-jOrrUvXM4Av9ZWiG1EajNto0u96kWAhJ1LmPmJhXXQx/32MecEKd10pOLYgS2BQx1TgkGhloPU1ArDW2vvaY6g==}
+
+  '@writegames.com/game-math@0.1.0':
+    resolution: {integrity: sha512-pklgYH6CKU4AdI3rvEwm5X6FbpcToQ2uZgBZYqV102OGvndjHLl01Q5LDzCe8bWPwXy0nViB+lfJile0O+5vgg==}
+    engines: {node: ^22, pnpm: ^9}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -3867,6 +3875,8 @@ snapshots:
       estree-walker: 3.0.3
       loupe: 2.3.7
       pretty-format: 29.7.0
+
+  '@writegames.com/game-math@0.1.0': {}
 
   abbrev@1.1.1: {}
 

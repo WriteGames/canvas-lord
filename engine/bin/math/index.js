@@ -1,6 +1,4 @@
-/* Canvas Lord v0.6.1 */
 export * from './vectors/index.js';
-export * from './misc.js';
 export const EPSILON = 0.000001;
 // Math prototype fun :~)
 if (typeof Math.clamp === 'undefined') {
