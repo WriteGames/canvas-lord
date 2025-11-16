@@ -1,8 +1,7 @@
 {
 	"name": "@writegames.com/style-guide",
-	"private": true,
-	"version": "1.0.0",
-	"license": "ISC",
+	"version": "0.1.1",
+	"license": "MIT",
 	"exports": {
 		"./typescript": "./typescript/tsconfig.json"
 	},
@@ -16,8 +15,10 @@
 		"url": "git+https://github.com/WriteGames/canvas-lord.git"
 	},
 	"author": "Write Games",
+	"dependencies": {
+		"@vercel/style-guide": "5.1.0"
+	},
 	"devDependencies": {
-		"@vercel/style-guide": "5.1.0",
 		"eslint": "8.56.0",
 		"prettier": "^3.6.2",
 		"typescript": "5.9.3"
