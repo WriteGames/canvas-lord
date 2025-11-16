@@ -30,7 +30,7 @@
 	"devDependencies": {
 		"@writegames.com/game-math": "0.1.2",
 		"@writegames.com/style-guide": "workspace:*",
-		"canvas": "^2.11.2",
+		"canvas": "^3.2.0",
 		"eslint": "8.56.0",
 		"jsdom": "^23.2.0",
 		"tsc-watch": "^7.2.0",
