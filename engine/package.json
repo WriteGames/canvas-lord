@@ -23,9 +23,7 @@
 		"postbuild": "echo \"postbuild\"",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",
-		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\"",
-		"update-third-party-imports": "node scripts/update-third-party-imports.js",
-		"bump-version": "node scripts/bump-version.js && pnpm build"
+		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\""
 	},
 	"author": "Write Games",
 	"devDependencies": {
