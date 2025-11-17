@@ -1,7 +1,7 @@
 {
 	"name": "canvas-lord",
 	"version": "0.7.0",
-	"description": "An HTML5 game engine",
+	"description": "A browser embeddable, interactive game tutorial engine",
 	"main": "canvas-lord.js",
 	"type": "module",
 	"exports": {
@@ -13,6 +13,10 @@
 		"node": "^22",
 		"pnpm": "^9"
 	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/WriteGames/canvas-lord.git"
+	},
 	"scripts": {
 		"build": "tsc --p tsconfig.build.json && pnpm build:math",
 		"build:math": "tsc --outDir bin/math --declaration false --p node_modules/@writegames.com/game-math/tsconfig.build.json",
@@ -23,9 +27,7 @@
 		"update-third-party-imports": "node scripts/update-third-party-imports.js",
 		"bump-version": "node scripts/bump-version.js && pnpm build"
 	},
-	"keywords": [],
 	"author": "Write Games",
-	"license": "ISC",
 	"devDependencies": {
 		"@writegames.com/game-math": "0.2.0",
 		"@writegames.com/style-guide": "workspace:*",
@@ -35,5 +37,8 @@
 		"tsc-watch": "^7.2.0",
 		"typescript": "5.9.3",
 		"vitest": "^1.2.0"
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }
