@@ -6,6 +6,10 @@ tsconfig.tsbuildinfo
 tsconfig*.tsbuildinfo
 *.map
 
+# yalc files
+**/.yalc
+yalc.lock
+
 # Dev environment files
 .htaccess
 nodemon.json
