@@ -1,6 +1,5 @@
 import {
 	Vec2,
-	EPSILON,
 	addPos,
 	scalePos,
 	subPos,
@@ -64,7 +63,9 @@ export const collidePointPoint = (
 	bX: number,
 	bY: number,
 ): boolean => {
-	return Math.abs(aX - bX) < EPSILON && Math.abs(aY - bY) < EPSILON;
+	return (
+		Math.abs(aX - bX) < Number.EPSILON && Math.abs(aY - bY) < Number.EPSILON
+	);
 };
 
 export const collidePointLine = (

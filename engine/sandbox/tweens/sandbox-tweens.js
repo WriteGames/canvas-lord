@@ -3,8 +3,7 @@ import { init } from '../sandbox.js';
 import { EaseType, TransType, Tween } from '../../bin/util/tween.js';
 import { Sprite } from '../../bin/graphic/sprite.js';
 import { Text } from '../../bin/graphic/text.js';
-import { Vec2 } from '../../bin/math/index.js';
-import { RAD_TO_DEG } from '../../bin/math/misc.js';
+import { Vec2, RAD_TO_DEG } from '../../bin/math/index.js';
 
 class TweenEntity extends Entity {
 	constructor(x, y) {

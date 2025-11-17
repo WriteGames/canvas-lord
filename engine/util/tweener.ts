@@ -1,7 +1,6 @@
 import { CL } from '../canvas-lord.ts';
 
-import { Vec2 } from '../math/index.ts';
-import { lerpAngle } from '../math/misc.ts';
+import { Vec2, lerpAngle } from '../math/index.ts';
 import { Ease, easeInOut, easeOut, easeOutIn, type EaseFunc } from './ease.ts';
 import type { Tween } from './tween.ts';
 

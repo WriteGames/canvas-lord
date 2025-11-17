@@ -1,6 +1,5 @@
 {
 	"name": "canvas-lord",
-	"private": true,
 	"version": "0.7.0",
 	"description": "An HTML5 game engine",
 	"main": "canvas-lord.js",
@@ -28,7 +27,7 @@
 	"author": "Write Games",
 	"license": "ISC",
 	"devDependencies": {
-		"@writegames.com/game-math": "0.1.3",
+		"@writegames.com/game-math": "0.2.0",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^3.2.0",
 		"eslint": "8.56.0",

@@ -12,7 +12,7 @@ import {
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-} from 'canvas-lord/math/misc';
+} from 'canvas-lord/math';
 import { Tileset } from 'canvas-lord/graphic';
 import { Grid, GridOutline } from 'canvas-lord/util/grid';
 

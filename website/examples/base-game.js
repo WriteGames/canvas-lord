@@ -9,7 +9,7 @@ import {
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-} from 'canvas-lord/math/misc';
+} from 'canvas-lord/math';
 import { Inspector } from 'canvas-lord/inspector';
 
 const initTileset = (grid) => {

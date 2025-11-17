@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { Vec2 } from './index.js';
-import { isWithinBounds } from './misc.js';
+import { Vec2, isWithinBounds } from './index.js';
 
 describe('isWithinBounds()', () => {
 	describe('2d', () => {

@@ -8,7 +8,7 @@ import {
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-} from './bin/math/misc.js';
+} from './bin/math/index.js';
 import { Grid, GridOutline } from './bin/util/grid.js';
 import { ButtonsOverlay } from './bin/util/buttons-overlay.js';
 

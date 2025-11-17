@@ -1,25 +1,22 @@
 // CLEANUP(bret): This file is a bunch of random stuff, will need to clean up
+import type { Tileset } from '../graphic/index.js';
+import type { FuncReduceNumber, FuncReduceVector } from './index.js';
 import {
 	addPos,
-	EPSILON,
-	hashPos,
-	subPos,
-	type V4_T as V4,
-	Vec2,
 	clamp,
+	hashPos,
 	lerp,
-	DEG_TO_RAD,
-	// type Vector,
+	RAD_180,
+	RAD_360,
+	RAD_540,
+	reduceSum,
+	subPos,
+	Vec2,
 } from './index.js';
-import type { Tileset } from '../graphic/index.js';
 
 // type Writeable<T> = {
 // 	-readonly [P in keyof T]: T[P];
 // };
-
-// type FuncReduceVector = <A extends Vector, B extends Vector>(
-type FuncReduceVector = (a: Vec2, b: Vec2) => number;
-type FuncReduceNumber = (acc: number, v: number) => number;
 
 type VectorToObjectVectorHybrid<A extends readonly PropertyKey[]> = Pick<
 	{
@@ -27,14 +24,6 @@ type VectorToObjectVectorHybrid<A extends readonly PropertyKey[]> = Pick<
 	},
 	Exclude<keyof A, keyof unknown[]> | A[number]
 >;
-
-const reduceSum: FuncReduceNumber = (acc, v) => acc + v;
-const _reduceProduct: FuncReduceNumber = (acc, v) => acc * v;
-
-const distance = (dimensions: Vec2): number =>
-	Math.abs(Math.sqrt(dimensions.map((d) => d * d).reduce(reduceSum, 0)));
-const distanceSq = (dimensions: Vec2): number =>
-	Math.abs(dimensions.map((d) => d * d).reduce(reduceSum, 0));
 
 const isDefined = <T>(v: T | undefined): v is T => Boolean(v);
 
@@ -55,9 +44,6 @@ export const mapFindOffset = (origin: Vec2): ((pos: Vec2) => Vec2) => {
 export const flatMapByOffsets = (offsets: Vec2[]): ((pos: Vec2) => Vec2[]) => {
 	return (pos: Vec2): Vec2[] => offsets.map((offset) => addPos(offset, pos));
 };
-export const posDistance: FuncReduceVector = (a, b) => distance(subPos(b, a));
-export const posDistanceSq: FuncReduceVector = (a, b) =>
-	distanceSq(subPos(b, a));
 
 // const pathToSegments = (path) =>
 // 	path.map((vertex, i, vertices) => [
@@ -65,37 +51,11 @@ export const posDistanceSq: FuncReduceVector = (a, b) =>
 // 		vertices[(i + 1) % vertices.length],
 // 	]);
 
-export const RAD_45 = 45 * DEG_TO_RAD;
-export const RAD_90 = 90 * DEG_TO_RAD;
-export const RAD_180 = 180 * DEG_TO_RAD;
-export const RAD_270 = 270 * DEG_TO_RAD;
-export const RAD_360 = 360 * DEG_TO_RAD;
-export const RAD_540 = 540 * DEG_TO_RAD;
-export const RAD_720 = 720 * DEG_TO_RAD;
-
 // const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
 const getAngle: FuncReduceVector = (a, b) =>
 	Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween: FuncReduceNumber = (a, b) =>
 	((b - a + RAD_540) % RAD_360) - RAD_180;
-
-export const lerpAngle = (a: number, b: number, t: number): number => {
-	const d = (b - a) % 360;
-	const range = ((2 * d) % 360) - d;
-	return range * t + a;
-};
-
-// export const isPointOnLine = <V extends Vector>(
-export const isPointOnLine = (point: Vec2, a: Vec2, b: Vec2): boolean =>
-	Math.abs(
-		posDistance(a, point) + posDistance(point, b) - posDistance(a, b),
-	) < EPSILON;
-
-export const isWithinBounds = <T extends Vec2>(
-	p: T,
-	start: T,
-	end: T,
-): boolean => p.every((x, i) => x >= start[i] && x < end[i]);
 
 // <V extends Vector>(a: Vec2, b: Vec2): ((pos: Vec2) => boolean) =>
 export const filterWithinBounds =
@@ -116,7 +76,7 @@ export const isPointInsidePath = (point: Vec2, path: Path): boolean => {
 			),
 		)
 		.reduce(reduceSum, 0);
-	return Math.abs(wind) > EPSILON;
+	return Math.abs(wind) > Number.EPSILON;
 };
 
 const createBitEnum = <T extends readonly string[]>(
@@ -132,19 +92,7 @@ const createBitEnum = <T extends readonly string[]>(
 	return bitEnumObj;
 };
 
-export const dirNN = 0;
-export const [dirRN, dirNU, dirLN, dirND] = Object.freeze(
-	Array.from({ length: 4 }).map((_, i) => 1 << i),
-) as V4;
-// prettier-ignore
-export const [
-	dirLU, dirRU,
-	dirLD, dirRD,
-] = [
-	dirLN | dirNU, dirRN | dirNU,
-	dirLN | dirND, dirRN | dirND,
-];
-
+// CLEANUP(bret): I'm not sure we need these anymore, we could probably move this logic to Vec2
 let nnn;
 {
 	// prettier-ignore
@@ -154,16 +102,16 @@ let nnn;
 		normLD, normND, normRD,
 	] = [
 		new Vec2(-1, -1),
-		new Vec2(0, -1),
+		Vec2.up,
 		new Vec2(1, -1),
 
-		new Vec2(-1, 0),
-		new Vec2(0, 0),
-		new Vec2(1, 0),
+		Vec2.left,
+		Vec2.zero,
+		Vec2.right,
 
 		new Vec2(-1, 1),
-		new Vec2(0, 1),
-		new Vec2(1, 1),
+		Vec2.down,
+		Vec2.one,
 	];
 
 	// prettier-ignore

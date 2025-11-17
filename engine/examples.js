@@ -8,7 +8,7 @@ import {
 	subPos,
 } from './bin/canvas-lord.js';
 
-import { dirND, isPointOnLine, isPointInsidePath } from './bin/math/misc.js';
+import { dirND, isPointOnLine, isPointInsidePath } from './bin/math/index.js';
 import { findAllPolygonsInGrid } from './bin/util/grid.js';
 import {
 	checkLineSegmentIntersection,

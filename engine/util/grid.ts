@@ -16,7 +16,7 @@ import {
 	type Path,
 	type V2CardinalNorm,
 	type V2OrthogonalNorm,
-} from '../math/misc.js';
+} from '../math/index.js';
 import type { Camera } from './camera.js';
 import { generateCanvasAndCtx, type Ctx } from './canvas.js';
 import type { CSSColor } from './types.js';
