@@ -8,6 +8,7 @@ import {
 	Vec2,
 	clamp,
 	lerp,
+	DEG_TO_RAD,
 	// type Vector,
 } from './index.js';
 import type { Tileset } from '../graphic/index.js';
@@ -63,11 +64,6 @@ export const posDistanceSq: FuncReduceVector = (a, b) =>
 // 		vertex,
 // 		vertices[(i + 1) % vertices.length],
 // 	]);
-
-export const RAD_TO_DEG = 180.0 / Math.PI;
-export const radToDeg = (rad: number): number => rad * RAD_TO_DEG;
-export const DEG_TO_RAD = Math.PI / 180.0;
-export const degToRad = (deg: number): number => deg * DEG_TO_RAD;
 
 export const RAD_45 = 45 * DEG_TO_RAD;
 export const RAD_90 = 90 * DEG_TO_RAD;

@@ -21,8 +21,8 @@ importers:
   engine:
     devDependencies:
       '@writegames.com/game-math':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.1.3
+        version: 0.1.3
       '@writegames.com/style-guide':
         specifier: workspace:*
         version: link:../shared-config
@@ -836,8 +836,8 @@ packages:
   '@vitest/utils@1.6.1':
     resolution: {integrity: sha512-jOrrUvXM4Av9ZWiG1EajNto0u96kWAhJ1LmPmJhXXQx/32MecEKd10pOLYgS2BQx1TgkGhloPU1ArDW2vvaY6g==}
 
-  '@writegames.com/game-math@0.1.2':
-    resolution: {integrity: sha512-99ACBVzEUHyJcmo+2h4KlRNvg5k51uT9rMZj8Sbq1LxwI6hyfS9tcbgg4dPROyHNAjW37Tl/GR9QSL4LgwcMZw==}
+  '@writegames.com/game-math@0.1.3':
+    resolution: {integrity: sha512-ixyqGWKmC+mThnoiUiJc+NlhsUbJmsCyVJP9E2bpbmDnrM3ScXk0zvHmeRFO2l2tDQmDkpyqXwmgQTQM5m4waw==}
     engines: {node: ^22, pnpm: ^9}
 
   abbrev@1.1.1:
@@ -3952,7 +3952,7 @@ snapshots:
       loupe: 2.3.7
       pretty-format: 29.7.0
 
-  '@writegames.com/game-math@0.1.2': {}
+  '@writegames.com/game-math@0.1.3': {}
 
   abbrev@1.1.1:
     optional: true
