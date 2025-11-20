@@ -27,7 +27,7 @@
 	},
 	"author": "Write Games",
 	"devDependencies": {
-		"@writegames.com/game-math": "0.4.2",
+		"@writegames.com/game-math": "0.4.4",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^3.2.0",
 		"eslint": "8.56.0",
