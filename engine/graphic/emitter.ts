@@ -1,11 +1,10 @@
 import { Graphic } from './graphic.js';
 import { Sprite } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';
-import { Vec2 } from '../math/index.js';
+import { Random, Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import { generateCanvasAndCtx, type Canvas, type Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import { Random } from '../util/random.js';
 
 interface MinMax<T> {
 	min: T;

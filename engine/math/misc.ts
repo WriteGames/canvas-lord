@@ -9,6 +9,7 @@ import {
 	RAD_180,
 	RAD_360,
 	RAD_540,
+	Random,
 	reduceSum,
 	subPos,
 	Vec2,
@@ -300,4 +301,31 @@ if (typeof Math.clamp === 'undefined') {
 
 if (typeof Math.lerp === 'undefined') {
 	Math.lerp = lerp;
+}
+
+declare global {
+	interface Array<T> {
+		shuffle: (random?: Random) => this;
+		toShuffled: (random?: Random) => T[];
+	}
+}
+
+// Array prototype fun :~)
+if (typeof Array.prototype.shuffle === 'undefined') {
+	Array.prototype.shuffle = function shuffle<T>(
+		this: T[],
+		random?: Random,
+	): T[] {
+		return random?.shuffle(this) ?? Random.shuffle(this);
+	};
+}
+
+if (typeof Array.prototype.toShuffled === 'undefined') {
+	Array.prototype.toShuffled = function toShuffle<T>(
+		this: T[],
+		random?: Random,
+	): T[] {
+		const newArr = [...this];
+		return newArr.shuffle(random);
+	};
 }
