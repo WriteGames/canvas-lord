@@ -6,13 +6,22 @@ tsconfig.tsbuildinfo
 tsconfig*.tsbuildinfo
 *.map
 
+# config files
+.node-version
+.editorconfig
+.eslintrc.cjs
+.prettierignore
+.prettierrc.json
+tsconfig*json
+.vscode/**
+*.config.ts
+
+# sandbox
+sandbox/**
+
 # yalc files
 **/.yalc
 yalc.lock
-
-# Dev environment files
-.htaccess
-nodemon.json
 
 # npm pack
 *.tgz
