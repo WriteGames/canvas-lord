@@ -18,9 +18,9 @@
 		"url": "git+https://github.com/WriteGames/canvas-lord.git"
 	},
 	"scripts": {
-		"build": "tsc --p tsconfig.build.json && pnpm build:math",
+		"build": "tsc --p tsconfig.build.json",
 		"build:math": "tsc --outDir bin/math --declaration false --p node_modules/@writegames.com/game-math/tsconfig.build.json",
-		"postbuild": "echo \"postbuild\"",
+		"postbuild": "pnpm build:math",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",
 		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\""
