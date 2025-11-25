@@ -1,6 +1,6 @@
 {
 	"name": "@writegames.com/style-guide",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"license": "MIT",
 	"exports": {
 		"./typescript": "./typescript/tsconfig.json"
@@ -20,5 +20,8 @@
 		"eslint": "8.56.0",
 		"prettier": "^3.6.2",
 		"typescript": "5.9.3"
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }
