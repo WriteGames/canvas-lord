@@ -1,5 +1,7 @@
 {
-	"extends": "@vercel/style-guide/typescript",
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"display": "WriteGames.com",
+	"docs": "https://github.com/WriteGames/canvas-lord/tree/main/shared-config",
 	"compilerOptions": {
 		"incremental": true,
 		"lib": ["ESNext", "dom"],
@@ -11,6 +13,7 @@
 		"moduleResolution": "Node",
 		"allowImportingTsExtensions": true,
 		"rewriteRelativeImportExtensions": true,
+		"skipLibCheck": true,
 
 		"noImplicitAny": true,
 		"strictNullChecks": true,
