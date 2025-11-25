@@ -1,6 +1,6 @@
 {
 	"name": "canvas-lord",
-	"version": "0.7.2",
+	"version": "0.7.3",
 	"description": "A browser embeddable, interactive game tutorial engine",
 	"main": "canvas-lord.js",
 	"type": "module",
@@ -27,7 +27,6 @@
 	},
 	"author": "Write Games",
 	"devDependencies": {
-		"@writegames.com/game-math": "0.4.4",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^3.2.0",
 		"eslint": "8.56.0",
@@ -38,5 +37,8 @@
 	},
 	"publishConfig": {
 		"access": "public"
+	},
+	"dependencies": {
+		"@writegames.com/game-math": "^0.4.4"
 	}
 }

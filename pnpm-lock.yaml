@@ -19,10 +19,11 @@ importers:
         version: 5.9.3
 
   engine:
-    devDependencies:
+    dependencies:
       '@writegames.com/game-math':
-        specifier: 0.4.4
+        specifier: ^0.4.4
         version: 0.4.4
+    devDependencies:
       '@writegames.com/style-guide':
         specifier: workspace:*
         version: link:../shared-config
