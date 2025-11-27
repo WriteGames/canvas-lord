@@ -3,6 +3,7 @@ import {
 	addPos,
 	hashPos,
 	indexToPos,
+	isWithinBounds,
 	posEqual,
 	posToIndex,
 	scalePos,
@@ -10,17 +11,16 @@ import {
 	Vec2,
 } from '../math/index.js';
 import {
-	isWithinBounds,
 	norm,
 	rotateNormBy90Deg,
 	type Path,
 	type V2CardinalNorm,
 	type V2OrthogonalNorm,
-} from '../math/index.js';
+} from '../math/misc.js';
 import type { Camera } from './camera.js';
 import { generateCanvasAndCtx, type Ctx } from './canvas.js';
-import type { CSSColor } from './types.js';
 import { Draw, drawable } from './draw.js';
+import type { CSSColor } from './types.js';
 
 const { ctx: pixelCtx } = generateCanvasAndCtx(1, 1, {
 	willReadFrequently: true,
