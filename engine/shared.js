@@ -2,13 +2,12 @@ import { Tileset } from './bin/canvas-lord.js';
 
 import {
 	cardinalNorms,
-	filterWithinBounds,
 	globalSetTile,
 	mapByOffset,
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-} from './bin/math/index.js';
+} from './bin/math/misc.js';
 import { Grid, GridOutline } from './bin/util/grid.js';
 import { ButtonsOverlay } from './bin/util/buttons-overlay.js';
 
