@@ -20,7 +20,7 @@
 	"scripts": {
 		"build": "tsc --p tsconfig.build.json",
 		"build:math": "tsc --outDir bin/math --declaration false --p node_modules/@writegames.com/game-math/tsconfig.build.json",
-		"build:single-file": "vite build",
+		"build:single-file": "node scripts/build.ts",
 		"postbuild": "pnpm build:math",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",

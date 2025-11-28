@@ -7,7 +7,7 @@ const { version } = pkg as { version: string };
 await build({
 	build: {
 		lib: {
-			entry: 'bin/main.js',
+			entry: 'main.ts',
 			formats: ['es'],
 			fileName: () => `canvas-lord-${version}.js`,
 		},
@@ -17,13 +17,14 @@ await build({
 		},
 		outDir: 'dist',
 		emptyOutDir: true,
+		sourcemap: true,
 	},
 });
 
 await build({
 	build: {
 		lib: {
-			entry: 'bin/main.js',
+			entry: 'main.ts',
 			formats: ['es'],
 			fileName: () => `canvas-lord-${version}.min.js`,
 		},
@@ -33,5 +34,6 @@ await build({
 		},
 		outDir: 'dist',
 		emptyOutDir: false,
+		sourcemap: true,
 	},
 });
