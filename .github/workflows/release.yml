@@ -24,8 +24,10 @@ jobs:
                   cache: 'pnpm'
             - name: Install dependencies
               run: pnpm install
-            - name: Build Canvas Lord
+            - name: Build Canvas Lord (tsc)
               run: pnpm -F canvas-lord build
+            - name: Build Canvas Lord (Vite)
+              run: pnpm -F canvas-lord build:single-file
             - name: Delete .js.map files
               run: find ./engine/bin \( -name "*.js.map" -o -name "*.tsbuildinfo" \) -type f -delete
             - name: Zip - Template
@@ -43,6 +45,6 @@ jobs:
                   filename: 'canvas-lord-${{ github.ref_name }}.zip'
             - uses: ncipollo/release-action@v1
               with:
-                  artifacts: './engine/bin/*.zip,./template/*.zip'
+                  artifacts: './engine/bin/*.zip,./template/*.zip,./dist/*'
                   draft: true
                   token: ${{ secrets.GITHUB_TOKEN }}
