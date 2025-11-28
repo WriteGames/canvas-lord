@@ -20,7 +20,7 @@ jobs:
             - name: Setup Node
               uses: actions/setup-node@v3
               with:
-                  node-version: 20
+                  node-version: 22
                   cache: 'pnpm'
             - name: Install dependencies
               run: pnpm install
@@ -45,6 +45,6 @@ jobs:
                   filename: 'canvas-lord-${{ github.ref_name }}.zip'
             - uses: ncipollo/release-action@v1
               with:
-                  artifacts: './engine/bin/*.zip,./template/*.zip,./dist/*'
+                  artifacts: './engine/bin/*.zip,./template/*.zip,./engine/dist/*.js'
                   draft: true
                   token: ${{ secrets.GITHUB_TOKEN }}
