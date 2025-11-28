@@ -19,6 +19,9 @@ tsconfig*json
 # sandbox
 sandbox/**
 
+# scripts
+scripts/**
+
 # yalc files
 **/.yalc
 yalc.lock
