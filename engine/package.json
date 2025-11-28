@@ -20,6 +20,7 @@
 	"scripts": {
 		"build": "tsc --p tsconfig.build.json",
 		"build:math": "tsc --outDir bin/math --declaration false --p node_modules/@writegames.com/game-math/tsconfig.build.json",
+		"build:single-file": "vite build",
 		"postbuild": "pnpm build:math",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",
@@ -27,12 +28,14 @@
 	},
 	"author": "Write Games",
 	"devDependencies": {
+		"@rollup/plugin-terser": "^0.4.4",
 		"@writegames.com/style-guide": "workspace:*",
 		"canvas": "^3.2.0",
 		"eslint": "8.56.0",
 		"jsdom": "^23.2.0",
 		"tsc-watch": "^7.2.0",
 		"typescript": "5.9.3",
+		"vite": "^7.2.4",
 		"vitest": "^1.2.0"
 	},
 	"publishConfig": {
