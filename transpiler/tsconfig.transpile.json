@@ -1,0 +1,9 @@
+{
+	"extends": "@writegames.com/style-guide/typescript",
+	"include": ["in/**/*"],
+	"compilerOptions": {
+		"alwaysStrict": false,
+		"strict": false,
+		"sourceMap": false
+	}
+}

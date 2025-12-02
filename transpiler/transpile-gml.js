@@ -382,3 +382,4 @@ if (false) {
     await fs.promises.writeFile(projectRootPath, JSON.stringify(projectRootData, null, 2), 'utf-8');
     console.timeEnd('gamemaker');
 }
+//# sourceMappingURL=transpile-gml.js.map

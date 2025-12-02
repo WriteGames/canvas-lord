@@ -600,3 +600,4 @@ export const vitestOnly = {
     getComponentProperties,
 };
 /* eslint-enable @typescript-eslint/explicit-function-return-type -- blah */
+//# sourceMappingURL=shared.js.map

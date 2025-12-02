@@ -1,14 +1,16 @@
 import type { Entity, Input } from 'canvas-lord';
-import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
+import type { IEntitySystem } from 'canvas-lord/util/types';
+// import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
 
 import { Draw, Keys } from 'canvas-lord';
+import type { Ctx } from 'canvas-lord/util/canvas.ts';
 import * as Components from 'canvas-lord/util/components';
-import { Ctx } from 'canvas-lord/util/canvas.ts';
 
 interface Player extends Entity {
 	speed: number;
 	// TODO(bret): we could get aliases based off of these tbh
-	moveX: GetSystemUpdate<typeof moveXSystem>;
+	// moveX: GetSystemUpdate<typeof moveXSystem>;
+	moveX: (input: Input) => void;
 }
 
 export const moveXSystem: IEntitySystem = {
@@ -81,7 +83,10 @@ export const gmPlayerSystem: IEntitySystem = {
 				color: component.color,
 				type: 'fill',
 			},
-			entity.x, entity.y, 32, 32,
+			entity.x,
+			entity.y,
+			32,
+			32,
 		);
 	},
 };

@@ -21,6 +21,7 @@ const jsonFilePath = path.join(inDir, selectedFile);
 // destDir
 await runTranspile({
     jsonFilePath,
-    // outDir: path.join(projectRoot, './out3'),
-    outDir: path.join('C:\\xampp\\apps\\write-games-blog\\js\\tutorials'),
+    outDir: path.join(projectRoot, './out3'),
+    // outDir: path.join('C:\\xampp\\apps\\write-games-blog\\js\\tutorials'),
 });
+//# sourceMappingURL=entry.js.map

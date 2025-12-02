@@ -410,7 +410,7 @@ export const runTranspile = async ({
 		if (transpileProject) {
 			console.time('project');
 			const project = new Project({
-				tsConfigFilePath: './tsconfig.json',
+				tsConfigFilePath: './tsconfig.transpile.json',
 			});
 			const typeChecker = project.getTypeChecker();
 			console.timeEnd('project');
@@ -708,16 +708,6 @@ export const runTranspile = async ({
 
 			const commentStr = `// <<newline>>`;
 
-			const tsConfigFilePath = path.join(projectRoot, 'tsconfig.json');
-			const project = new tsm.Project({
-				tsConfigFilePath,
-				compilerOptions: {
-					alwaysStrict: false,
-					strict: false,
-					sourceMap: false,
-				},
-			});
-
 			await Promise.all(
 				filePaths.map(async (filePath) => {
 					const content = await fs.promises.readFile(
@@ -734,6 +724,14 @@ export const runTranspile = async ({
 				}),
 			);
 
+			const tsConfigFilePath = path.join(
+				projectRoot,
+				'tsconfig.transpile.json',
+			);
+			const project = new tsm.Project({
+				tsConfigFilePath,
+			});
+
 			project.addSourceFilesAtPaths(filePaths);
 
 			await project.emit();
@@ -743,6 +741,10 @@ export const runTranspile = async ({
 			console.log('prettier files:', prettierFiles);
 
 			await prettier.resolveConfig(prettierConfigPath);
+
+			const rel = path
+				.relative(path.join(outDir, out), inDir)
+				.replaceAll('\\', '/');
 
 			await Promise.all(
 				prettierFiles.map(async (filePath) => {
@@ -761,15 +763,16 @@ export const runTranspile = async ({
 					let newContent = content.replaceAll(commentStr, '');
 					if (filePath.endsWith('.js')) {
 						newContent = newContent
+							.replaceAll(`${rel}/platformer`, '.')
 							.replaceAll(
 								/from ["'](?<group>[\w\-./]+)["'];/g,
 								(_, p1: string) => {
-									const name =
-										p1 === 'canvas-lord' ? `/js/${p1}` : p1;
+									const name = p1.includes('canvas-lord')
+										? `/js/${p1}`
+										: p1;
 									return `from '${name}.js';`;
 								},
-							)
-							.replaceAll('../../in/platformer', '.');
+							);
 					}
 
 					const formatted = await prettier.format(newContent, {

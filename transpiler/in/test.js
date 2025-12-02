@@ -1,3 +1,4 @@
+// import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
 import { Draw, Keys } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
 export const moveXSystem = {
