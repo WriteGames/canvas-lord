@@ -24,7 +24,8 @@
 		"postbuild": "pnpm build:math",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",
-		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\""
+		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\"",
+		"prepack": "pnpm build && pnpm build:single-file"
 	},
 	"author": "Write Games",
 	"devDependencies": {
@@ -32,6 +33,7 @@
 		"@writegames.com/style-guide": "workspace:*",
 		"eslint": "8.56.0",
 		"jsdom": "^27.2.0",
+		"terser": "^5.44.1",
 		"tsc-watch": "^7.2.0",
 		"typescript": "5.9.3",
 		"vite": "^7.2.4",
