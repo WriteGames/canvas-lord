@@ -104,9 +104,6 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
         const classData = JSON.parse(json);
         const { out, source, fileName, name, components, systems, extendsClass = 'Entity', steps, } = classData;
         console.timeEnd('read json');
-        // console.log(component, componentName);
-        const filePath = path.join(inDir, source);
-        // const filePath = path.join(inDir, 'test.ts');
         const cleanUpClass = (_class) => {
             [..._class.getConstructors(), ..._class.getMethods()].forEach((m) => {
                 // Remove empty method
@@ -298,37 +295,40 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
             });
             const typeChecker = project.getTypeChecker();
             console.timeEnd('project');
-            console.time('addSource');
-            project.addSourceFileAtPath(filePath);
-            console.timeEnd('addSource');
-            console.time('getSource');
-            const file = project.getSourceFile(filePath);
-            if (!file)
-                throw new Error('file not found');
-            console.timeEnd('getSource');
-            console.time('exported Declaration');
-            const exportedDecls = file.getExportedDeclarations();
-            console.timeEnd('exported Declaration');
-            console.time('find components & systems');
             const foundComponents = new Map();
             const foundSystems = new Map();
-            // const exports = ;
-            for (const [name, declarations] of exportedDecls) {
-                for (const decl of declarations) {
-                    const type = typeChecker.getTypeAtLocation(decl);
-                    switch (type.getSymbol()?.getName()) {
-                        case 'IEntityComponentType':
-                            foundComponents.set(name, decl);
-                            break;
-                        case 'IEntitySystem':
-                            foundSystems.set(name, decl);
-                            break;
-                        default:
-                            break;
+            source.forEach((src) => {
+                const filePath = path.join(inDir, src);
+                console.time('addSource');
+                project.addSourceFileAtPath(filePath);
+                console.timeEnd('addSource');
+                console.time('getSource');
+                const file = project.getSourceFile(filePath);
+                if (!file)
+                    throw new Error('file not found');
+                console.timeEnd('getSource');
+                console.time('exported Declaration');
+                const exportedDecls = file.getExportedDeclarations();
+                console.timeEnd('exported Declaration');
+                console.time('find components & systems');
+                // const exports = ;
+                for (const [name, declarations] of exportedDecls) {
+                    for (const decl of declarations) {
+                        const type = typeChecker.getTypeAtLocation(decl);
+                        switch (type.getSymbol()?.getName()) {
+                            case 'IEntityComponentType':
+                                foundComponents.set(name, decl);
+                                break;
+                            case 'IEntitySystem':
+                                foundSystems.set(name, decl);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
-            }
-            console.timeEnd('find components & systems');
+                console.timeEnd('find components & systems');
+            });
             console.log(foundComponents.size, foundSystems.size);
             console.time('createSourceFile');
             const sourceFile = project.createSourceFile(playerOutputPath, '', {
@@ -424,21 +424,21 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
             });
             // old way of doing imports, keep using `fixMissingImports` until it doesn't work
             if (oldImportFix) {
-                const imports = file.getImportDeclarations().map((i) => {
-                    const moduleSpecifier = i
-                        .getModuleSpecifier()
-                        .getLiteralText();
-                    console.log(moduleSpecifier);
-                    const namedImports = i.getNamedImports().map((ni) => {
-                        return ni.getText();
-                    });
-                    // TODO(bret): handle `* as Default` case
-                    return {
-                        moduleSpecifier,
-                        namedImports,
-                    };
-                });
-                sourceFile.addImportDeclarations(imports);
+                // const imports = file.getImportDeclarations().map((i) => {
+                // 	const moduleSpecifier = i
+                // 		.getModuleSpecifier()
+                // 		.getLiteralText();
+                // 	console.log(moduleSpecifier);
+                // 	const namedImports = i.getNamedImports().map((ni) => {
+                // 		return ni.getText();
+                // 	});
+                // 	// TODO(bret): handle `* as Default` case
+                // 	return {
+                // 		moduleSpecifier,
+                // 		namedImports,
+                // 	} as const;
+                // });
+                // sourceFile.addImportDeclarations(imports);
             }
             // sourceFile.fixMissingImports();
             console.timeEnd('pre');

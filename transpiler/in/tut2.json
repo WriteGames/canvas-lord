@@ -1,6 +1,6 @@
 {
 	"out": "platformer",
-	"source": "platformer/player.ts",
+	"source": ["platformer/player.ts"],
 	"fileName": "player.ts",
 	"name": "Player",
 	"extendsClass": "Entity",
