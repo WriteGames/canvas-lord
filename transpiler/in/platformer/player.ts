@@ -1,11 +1,6 @@
-import { BoxCollider } from 'canvas-lord/collider';
-import type { IEntity } from 'canvas-lord/core/entity';
-import type { Input } from 'canvas-lord/core/input';
-import { Sprite } from 'canvas-lord/graphic';
-import type { Camera } from 'canvas-lord/util/camera';
-import type { Ctx } from 'canvas-lord/util/canvas';
+import type { Camera, Ctx, IEntity, Input, Logger } from 'canvas-lord';
+import { BoxCollider, Sprite } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
-import type { Logger } from 'canvas-lord/util/logger';
 import { jumpKeys, leftKeys, rightKeys, type PlayerEntity } from './shared';
 // import type { IEntitySystem } from 'canvas-lord/util/types';
 
@@ -24,7 +19,7 @@ export const baseSystem: System = {
 	},
 };
 
-export const xInputLinear: System = {
+export const xInputLinearSystem: System = {
 	update(entity, input) {
 		entity.xSpeed = 0;
 		if (input.keyCheck(leftKeys)) entity.xSpeed -= 4;
@@ -32,14 +27,37 @@ export const xInputLinear: System = {
 	},
 };
 
-export const xInputAccel: System = {
+export const xInputAccelSystem: System = {
 	update(entity, input) {
-		const left = input.keyCheck(leftKeys);
-		const right = input.keyCheck(rightKeys);
-		if (left) entity.xSpeed -= entity.aSpeed;
-		if (right) entity.xSpeed -= entity.aSpeed;
-		if (!left && !right)
-			entity.xSpeed -= entity.fSpeed * Math.sign(entity.xSpeed);
+		let xDir = 0;
+		if (input.keyCheck(leftKeys)) xDir -= 1;
+		if (input.keyCheck(rightKeys)) xDir += 1;
+
+		if (xDir !== 0) entity.xSpeed += entity.aSpeed * xDir;
+		else entity.xSpeed -= entity.fSpeed * Math.sign(entity.xSpeed);
+
+		if (Math.abs(entity.xSpeed) > entity.mSpeed) {
+			entity.xSpeed = Math.sign(entity.xSpeed) * entity.mSpeed;
+		}
+	},
+};
+
+export const jumpSystem: System = {
+	update(entity, input) {
+		if (
+			input.keyPressed(jumpKeys) &&
+			entity.collide(entity.x, entity.y + 1, 'solid')
+		) {
+			entity.ySpeed = entity.jSpeed;
+		}
+	},
+};
+
+export const gravitySystem: System = {
+	update(entity, input) {
+		if (entity.ySpeed < 0 && !input.keyCheck(jumpKeys))
+			entity.ySpeed += entity.gSpeed;
+		entity.ySpeed += entity.gSpeed;
 	},
 };
 
@@ -67,7 +85,7 @@ export const moveYSystem: System = {
 
 			const sign = Math.sign(moveY);
 			for (let yy = 0, n = Math.abs(moveY); yy < n; ++yy) {
-				if (entity.collide(entity.x, entity.y + sign)) {
+				if (entity.collide(entity.x, entity.y + sign, 'solid')) {
 					moveY = 0;
 					entity.ySpeed = 0;
 				} else {
@@ -82,8 +100,19 @@ export const baseHorizontalMovementComponent = Components.createComponent({
 	xSpeed: 0,
 });
 export const accelerationComponent = Components.createComponent({
-	aSpeed: 0.05,
-	fSpeed: 0.05,
+	aSpeed: 0.2,
+	fSpeed: 0.4,
+	mSpeed: 2,
+	// aSpeed: 0.05,
+	// fSpeed: 0.05,
+	// mSpeed: 2.5,
+});
+
+export const jumpComponent = Components.createComponent({
+	ySpeed: 0,
+	yRemainder: 0,
+	gSpeed: 0.2,
+	jSpeed: -3.6,
 });
 
 // this.mSpeed = 2.5; // max speed

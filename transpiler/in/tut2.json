@@ -10,7 +10,41 @@
 			"add": {
 				"components": ["baseHorizontalMovementComponent"],
 				"systems": [
-					{ "name": "xInputLinear", "outputType": "inline" },
+					{ "name": "xInputLinearSystem", "outputType": "inline" },
+					{
+						"name": "moveXSystem",
+						"outputType": "function",
+						"alias": "moveX"
+					}
+				]
+			}
+		},
+		{
+			"add": {
+				"components": ["jumpComponent"],
+				"systems": [
+					{
+						"name": "jumpSystem",
+						"outputType": "inline"
+					},
+					{
+						"name": "gravitySystem",
+						"outputType": "inline"
+					},
+					{
+						"name": "moveXSystem",
+						"outputType": "function",
+						"alias": "moveX"
+					},
+					{
+						"name": "moveYSystem",
+						"outputType": "function",
+						"alias": "moveY"
+					}
+				]
+			},
+			"remove": {
+				"systems": [
 					{
 						"name": "moveXSystem",
 						"outputType": "function",
@@ -24,7 +58,7 @@
 				"components": ["accelerationComponent"],
 				"systems": [
 					{
-						"name": "xInputAccel",
+						"name": "xInputAccelSystem",
 						"outputType": "inline"
 					},
 					{
@@ -37,7 +71,7 @@
 			"remove": {
 				"components": [],
 				"systems": [
-					{ "name": "xInputLinear", "outputType": "inline" },
+					{ "name": "xInputLinearSystem", "outputType": "inline" },
 					{
 						"name": "moveXSystem",
 						"outputType": "function",

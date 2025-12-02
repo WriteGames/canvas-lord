@@ -16,6 +16,9 @@ export type PlayerEntity = IEntity & {
 	ySpeed: number;
 	aSpeed: number;
 	fSpeed: number;
+	mSpeed: number;
+	gSpeed: number;
+	jSpeed: number;
 	xRemainder: number;
 	yRemainder: number;
 	moveX: () => void;

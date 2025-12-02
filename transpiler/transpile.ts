@@ -12,6 +12,7 @@ import type { ClassOptions, System } from './shared.js';
 const transpileProject = true as boolean;
 const runEslint = true as boolean;
 const runPrettier = true as boolean;
+const copyFiles = true as boolean;
 
 const wholeThang = true as boolean;
 
@@ -66,6 +67,25 @@ const getValue = (initializer: tsm.Expression): unknown => {
 				return getValue(v as tsm.Expression);
 			}
 			return initializer.getText();
+		}
+
+		case SyntaxKind.PrefixUnaryExpression: {
+			const kk = initializer.asKind(SyntaxKind.PrefixUnaryExpression);
+			if (!kk) throw new Error('not a prefix unary');
+
+			let value = getValue(kk.getOperand());
+			switch (kk.getOperatorToken()) {
+				case SyntaxKind.MinusToken:
+					if (typeof value === 'number') value *= -1;
+					else throw new Error('cannot negate a non-number');
+					break;
+				default:
+					throw new Error(
+						`We do not yet support unary operator ${kk.getOperatorToken()}`,
+					);
+			}
+
+			return value;
 		}
 
 		default:
@@ -472,8 +492,10 @@ if (wholeThang) {
 			const timeStr = `generate step ${i}`;
 			console.time(timeStr);
 
+			const ext = i === 0 ? 'base' : `step-${i}`;
+
 			const sourceFile = project.createSourceFile(
-				testOutputPath.replace('.ts', `-step-${i}.ts`),
+				testOutputPath.replace('.ts', `.${ext}.ts`),
 				'',
 				{
 					overwrite: true,
@@ -490,24 +512,21 @@ if (wholeThang) {
 			}
 
 			if (step.remove) {
-				if (step.remove.components) {
-					step.remove.components.forEach((c) => {
-						const index = curComponents.indexOf(c);
-						if (index > -1) {
-							curComponents.splice(index, 1);
-						}
-					});
-				}
-				if (step.remove.systems) {
-					step.remove.systems.forEach((s) => {
-						const index = curSystems.findIndex(
-							(sy) => sy.name === s.name,
-						);
-						if (index > -1) {
-							curSystems.splice(index, 1);
-						}
-					});
-				}
+				step.remove.components?.forEach((c) => {
+					const index = curComponents.indexOf(c);
+					if (index > -1) {
+						curComponents.splice(index, 1);
+					}
+				});
+
+				step.remove.systems?.forEach((s) => {
+					const index = curSystems.findIndex(
+						(sy) => sy.name === s.name,
+					);
+					if (index > -1) {
+						curSystems.splice(index, 1);
+					}
+				});
 			}
 
 			const entityClass = createClass(
@@ -520,40 +539,13 @@ if (wholeThang) {
 				if (!entityClass.getMethod(m.name)) entityClass.addMethod(m);
 			});
 
-			// if (step.remove) {
-			// 	if (step.remove.components)
-			// 		removeComponents(
-			// 			entityClass,
-			// 			foundComponents,
-			// 			step.remove.components,
-			// 		);
-			// 	if (step.remove.systems)
-			// 		removeSystems(
-			// 			entityClass,
-			// 			foundSystems,
-			// 			step.remove.systems,
-			// 		);
-			// }
-			// if (step.add) {
-			// 	if (step.add.components)
-			// 		addComponents(
-			// 			entityClass,
-			// 			foundComponents,
-			// 			step.add.components,
-			// 		);
-			// 	if (step.add.systems)
-			// 		addSystems(entityClass, foundSystems, step.add.systems);
-			// }
-
+			// TODO(bret): Make sure `not_used` gets removed
 			cleanUpClass(entityClass);
 			console.timeEnd(timeStr);
 
 			sourceFile.fixMissingImports();
 			return sourceFile;
 		});
-
-		// TODO(bret): Make sure `not_used` gets removed
-		// cleanUpClass(baseEntityClass);
 
 		// old way of doing imports, keep using `fixMissingImports` until it doesn't work
 		if (oldImportFix) {
@@ -617,9 +609,9 @@ if (wholeThang) {
 		]);
 		await ESLint.outputFixes(results);
 		// console.log(results);
-		const formatter = await eslint.loadFormatter('stylish');
-		const resultText = formatter.format(results);
-		console.log(resultText);
+		// const formatter = await eslint.loadFormatter('stylish');
+		// const resultText = formatter.format(results);
+		// console.log(resultText);
 	}
 
 	if (runPrettier) {
@@ -663,14 +655,16 @@ if (wholeThang) {
 
 		await project.emit();
 
-		console.log('prettier files:', filePaths);
+		const prettierFiles = filePaths;
+
+		console.log('prettier files:', prettierFiles);
 
 		await prettier.resolveConfig(
 			'C:\\xampp\\apps\\canvas-lord\\.prettierrc.json',
 		);
 
 		await Promise.all(
-			filePaths.map(async (filePath) => {
+			prettierFiles.map(async (filePath) => {
 				const fileInfo = await prettier.getFileInfo(filePath, {
 					ignorePath,
 				});
@@ -679,26 +673,52 @@ if (wholeThang) {
 
 				const content = await fs.promises.readFile(filePath, 'utf-8');
 				const config = await prettier.resolveConfig(filePath);
-				const formatted = await prettier.format(content, {
+
+				let newContent = content.replaceAll(commentStr, '');
+				if (filePath.endsWith('.js')) {
+					newContent = newContent
+						.replaceAll(
+							/from ["'](?<group>[\w\-./]+)["'];/g,
+							(_, p1: string) => {
+								const name =
+									p1 === 'canvas-lord' ? `/js/${p1}` : p1;
+								return `from '${name}.js';`;
+							},
+						)
+						.replaceAll('../../in/platformer', '.');
+				}
+
+				const formatted = await prettier.format(newContent, {
 					...config,
 					filepath: filePath,
 				});
-				// console.log(formatted);
 
-				const newContent = formatted.replaceAll(commentStr, '');
-
-				await fs.promises.writeFile(filePath, newContent, 'utf-8');
+				await fs.promises.writeFile(filePath, formatted, 'utf-8');
 				console.log(`Formatted: ${filePath}`);
 			}),
 		);
+	}
+
+	// copy files
+	if (copyFiles) {
+		console.log('copying files');
+		const dir =
+			'C:\\xampp\\apps\\canvas-lord\\transpiler\\out3\\platformer';
+		const filePaths = await globby(['**/*.js'], {
+			cwd: dir,
+			gitignore: true,
+			ignore: [],
+			absolute: true,
+			dot: true,
+		});
+
+		const destDir =
+			'C:\\xampp\\apps\\write-games-blog\\js\\tutorials\\platformer';
 
 		await Promise.all(
 			filePaths.map(async (filePath) => {
-				const content = await fs.promises.readFile(filePath, 'utf-8');
-
-				const newContent = content.replaceAll(commentStr, '');
-
-				await fs.promises.writeFile(filePath, newContent, 'utf-8');
+				const dest = path.join(destDir, path.basename(filePath));
+				await fs.promises.copyFile(filePath, dest);
 			}),
 		);
 	}

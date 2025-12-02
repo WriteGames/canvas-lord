@@ -1,5 +1,4 @@
-import { BoxCollider } from 'canvas-lord/collider';
-import { Sprite } from 'canvas-lord/graphic';
+import { BoxCollider, Sprite } from 'canvas-lord';
 import * as Components from 'canvas-lord/util/components';
 import { jumpKeys, leftKeys, rightKeys } from './shared';
 export const baseSystem = {
@@ -8,7 +7,7 @@ export const baseSystem = {
         entity.graphic = Sprite.createRect(12, 16, '#ff3366');
     },
 };
-export const xInputLinear = {
+export const xInputLinearSystem = {
     update(entity, input) {
         entity.xSpeed = 0;
         if (input.keyCheck(leftKeys))
@@ -17,16 +16,35 @@ export const xInputLinear = {
             entity.xSpeed += 4;
     },
 };
-export const xInputAccel = {
+export const xInputAccelSystem = {
     update(entity, input) {
-        const left = input.keyCheck(leftKeys);
-        const right = input.keyCheck(rightKeys);
-        if (left)
-            entity.xSpeed -= entity.aSpeed;
-        if (right)
-            entity.xSpeed -= entity.aSpeed;
-        if (!left && !right)
+        let xDir = 0;
+        if (input.keyCheck(leftKeys))
+            xDir -= 1;
+        if (input.keyCheck(rightKeys))
+            xDir += 1;
+        if (xDir !== 0)
+            entity.xSpeed += entity.aSpeed * xDir;
+        else
             entity.xSpeed -= entity.fSpeed * Math.sign(entity.xSpeed);
+        if (Math.abs(entity.xSpeed) > entity.mSpeed) {
+            entity.xSpeed = Math.sign(entity.xSpeed) * entity.mSpeed;
+        }
+    },
+};
+export const jumpSystem = {
+    update(entity, input) {
+        if (input.keyPressed(jumpKeys) &&
+            entity.collide(entity.x, entity.y + 1, 'solid')) {
+            entity.ySpeed = entity.jSpeed;
+        }
+    },
+};
+export const gravitySystem = {
+    update(entity, input) {
+        if (entity.ySpeed < 0 && !input.keyCheck(jumpKeys))
+            entity.ySpeed += entity.gSpeed;
+        entity.ySpeed += entity.gSpeed;
     },
 };
 export const moveXSystem = {
@@ -51,7 +69,7 @@ export const moveYSystem = {
             entity.yRemainder -= moveY;
             const sign = Math.sign(moveY);
             for (let yy = 0, n = Math.abs(moveY); yy < n; ++yy) {
-                if (entity.collide(entity.x, entity.y + sign)) {
+                if (entity.collide(entity.x, entity.y + sign, 'solid')) {
                     moveY = 0;
                     entity.ySpeed = 0;
                 }
@@ -66,8 +84,18 @@ export const baseHorizontalMovementComponent = Components.createComponent({
     xSpeed: 0,
 });
 export const accelerationComponent = Components.createComponent({
-    aSpeed: 0.05,
-    fSpeed: 0.05,
+    aSpeed: 0.2,
+    fSpeed: 0.4,
+    mSpeed: 2,
+    // aSpeed: 0.05,
+    // fSpeed: 0.05,
+    // mSpeed: 2.5,
+});
+export const jumpComponent = Components.createComponent({
+    ySpeed: 0,
+    yRemainder: 0,
+    gSpeed: 0.2,
+    jSpeed: -3.6,
 });
 // this.mSpeed = 2.5; // max speed
 // this.gSpeed = 0.12; // gravity

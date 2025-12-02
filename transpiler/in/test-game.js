@@ -1,4 +1,4 @@
-import { Entity, Game, Scene } from 'canvas-lord/canvas-lord.js';
+import { Entity, Game, Scene } from 'canvas-lord/main.js';
 const game = new Game('my-game');
 const scene = new Scene();
 const player = new Entity();
