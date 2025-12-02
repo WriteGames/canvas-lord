@@ -670,6 +670,7 @@ interface TutorialStep {
 
 export interface ClassOptions extends ComponentsAndSystems {
 	out: string;
+	source: string;
 	fileName: string;
 	name: string;
 	extendsClass?: string;

@@ -17,6 +17,7 @@
 	"author": "Write Games",
 	"license": "ISC",
 	"dependencies": {
+		"@inquirer/prompts": "^8.0.2",
 		"canvas-lord": "workspace:*",
 		"globby": "^14.1.0",
 		"socket.io": "^4.8.1",
