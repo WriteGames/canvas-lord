@@ -1,34 +1,34 @@
-export * from './inspector';
+export * from './inspector.js';
 
 export * from './collider/index.js';
 
-export * from './core/asset-manager';
-export * from './core/CL';
-export * from './core/engine';
-export * from './core/entity';
-export * from './core/input';
-export * from './core/scene';
-export * from './core/scene';
+export * from './core/asset-manager.js';
+export * from './core/CL.js';
+export * from './core/engine.js';
+export * from './core/entity.js';
+export * from './core/input.js';
+export * from './core/scene.js';
+export * from './core/scene.js';
 
 export * from './graphic/index.js';
 
 export * from './math/index.js';
-export * from './math/misc';
+export * from './math/misc.js';
 
-export * from './util/buttons-overlay';
-export * from './util/camera';
-export * from './util/canvas';
-export * from './util/components';
-export * from './util/debug';
-export * from './util/delegate';
-export * from './util/draw';
-export * from './util/ease';
-export * from './util/event-bus';
-export * from './util/grid';
-export * from './util/logger';
-export * from './util/messages';
-export * from './util/quadtree'; // TODO(bret): revisit this
-export * from './util/systems';
-export * from './util/tween';
-export * from './util/tweener';
-export * from './util/types'; // TODO(bret): this should get deleted tbh
+export * from './util/buttons-overlay.js';
+export * from './util/camera.js';
+export * from './util/canvas.js';
+export * from './util/components.js';
+export * from './util/debug.js';
+export * from './util/delegate.js';
+export * from './util/draw.js';
+export * from './util/ease.js';
+export * from './util/event-bus.js';
+export * from './util/grid.js';
+export * from './util/logger.js';
+export * from './util/messages.js';
+export * from './util/quadtree.js'; // TODO(bret): revisit this
+export * from './util/systems.js';
+export * from './util/tween.js';
+export * from './util/tweener.js';
+export * from './util/types.js'; // TODO(bret): this should get deleted tbh
