@@ -1,4 +1,4 @@
-import { Draw, Scene, Entity } from '/bin/canvas-lord.js';
+import { Draw, Scene, Entity } from '/bin/main.js';
 import { Vec2 } from '/bin/math/index.js';
 import {
 	LineCollider,

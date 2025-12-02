@@ -6,7 +6,7 @@ import {
 	V2,
 	addPos,
 	subPos,
-} from './bin/canvas-lord.js';
+} from './bin/main.js';
 
 import { dirND, isPointOnLine, isPointInsidePath } from './bin/math/index.js';
 import { findAllPolygonsInGrid } from './bin/util/grid.js';

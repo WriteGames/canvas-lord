@@ -1,4 +1,4 @@
-import { Scene } from '../../bin/canvas-lord.js';
+import { Scene } from '../../bin/main.js';
 
 import { init } from '../sandbox.js';
 

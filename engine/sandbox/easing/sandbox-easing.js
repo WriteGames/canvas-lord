@@ -1,4 +1,4 @@
-import { Entity, Scene } from '../../bin/canvas-lord.js';
+import { Entity, Scene } from '../../bin/main.js';
 import { init } from '../sandbox.js';
 import { Ease as FPEase } from './flashpunk-ease.js';
 import { Ease as EASEYBOY } from '../../bin/util/ease.js';

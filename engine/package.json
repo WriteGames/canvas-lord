@@ -2,10 +2,10 @@
 	"name": "canvas-lord",
 	"version": "0.7.4",
 	"description": "A browser embeddable, interactive game tutorial engine",
-	"main": "canvas-lord.js",
+	"main": "main.js",
 	"type": "module",
 	"exports": {
-		".": "./bin/canvas-lord.js",
+		".": "./bin/main.js",
 		"./*": "./bin/*"
 	},
 	"packageManager": "pnpm@9.8.0",

@@ -1,4 +1,4 @@
-import { CL, Entity, Keys, Scene } from '../../bin/canvas-lord.js';
+import { CL, Entity, Keys, Scene } from '../../bin/main.js';
 import { init } from '../sandbox.js';
 import { EaseType, TransType, Tween } from '../../bin/util/tween.js';
 import { Sprite } from '../../bin/graphic/sprite.js';

@@ -1,4 +1,4 @@
-import { AssetManager, Game } from '../bin/canvas-lord.js';
+import { AssetManager, Game } from '../bin/main.js';
 
 const sandboxContainer = document.getElementById('sandbox') ?? document.body;
 

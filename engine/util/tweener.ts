@@ -1,4 +1,4 @@
-import { CL } from '../canvas-lord.ts';
+import { CL } from '../core/CL.ts';
 
 import { Vec2, lerpAngle } from '../math/index.ts';
 import { Ease, easeInOut, easeOut, easeOutIn, type EaseFunc } from './ease.ts';

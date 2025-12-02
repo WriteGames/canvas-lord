@@ -1,4 +1,4 @@
-import { Scene, Grid } from '../../bin/canvas-lord.js';
+import { Scene, Grid } from '../../bin/main.js';
 import { init } from '../sandbox.js';
 
 class GridScene extends Scene {

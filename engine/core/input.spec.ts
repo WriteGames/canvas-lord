@@ -1,4 +1,4 @@
-import type { Engine } from '../canvas-lord.js';
+import type { Engine } from '../main.js';
 import { Input, type Key } from './input.js';
 import { beforeEach, describe, expect, test } from 'vitest';
 

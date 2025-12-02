@@ -1,4 +1,3 @@
-export * from './canvas-lord';
 export * from './inspector';
 
 export * from './collider/index.js';

@@ -1,4 +1,4 @@
-import { Tileset } from './bin/canvas-lord.js';
+import { Tileset } from './bin/main.js';
 
 import {
 	cardinalNorms,

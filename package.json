@@ -2,7 +2,7 @@
 	"name": "canvas-lord-root",
 	"private": true,
 	"version": "1.0.0",
-	"main": "engine/canvas-lord.js",
+	"main": "engine/main.js",
 	"types": "engine/global.d.ts",
 	"packageManager": "pnpm@9.8.0",
 	"engines": {

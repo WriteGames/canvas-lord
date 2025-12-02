@@ -1,4 +1,4 @@
-import { Scene, Entity } from '../../bin/canvas-lord.js';
+import { Scene, Entity } from '../../bin/main.js';
 import { Keys } from '../../bin/core/input.js';
 import { CL } from '../../bin/core/CL.js';
 import { BoxCollider } from '../../bin/collider/box-collider.js';

@@ -1,4 +1,4 @@
-import { CL, Scene, Entity } from '../../bin/canvas-lord.js';
+import { CL, Scene, Entity } from '../../bin/main.js';
 import { init } from '../sandbox.js';
 
 class MyEntity extends Entity {

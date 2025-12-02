@@ -1,4 +1,4 @@
-import { Scene, Entity } from '../../bin/canvas-lord.js';
+import { Scene, Entity } from '../../bin/main.js';
 import { Sprite, Emitter } from '../../bin/graphic/index.js';
 import { init } from '../sandbox.js';
 

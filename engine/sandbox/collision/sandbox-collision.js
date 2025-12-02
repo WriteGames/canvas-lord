@@ -1,4 +1,4 @@
-import { Collision, Draw, Scene, Entity } from '/bin/canvas-lord.js';
+import { Collision, Draw, Scene, Entity } from '/bin/main.js';
 import * as Collide from '/bin/collider/collide.js';
 import { addPos, Vec2 } from '/bin/math/index.js';
 import {
@@ -10,7 +10,7 @@ import {
 	BoxCollider,
 } from '/bin/collider/index.js';
 import { EntityCollisionScene } from './entity-collision-scene.js';
-import { Keys } from '../../bin/canvas-lord.js';
+import { Keys } from '../../bin/main.js';
 import { init } from '../sandbox.js';
 import { Sprite, Text } from '../../bin/graphic/index.js';
 
