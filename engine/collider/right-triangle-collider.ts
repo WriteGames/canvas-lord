@@ -123,8 +123,13 @@ export class RightTriangleCollider
 		this.#computePoints(true);
 	}
 
-	constructor(w: number, h: number, orientation: Orientation, x = 0, y = 0) {
-		super(x, y);
+	constructor(
+		w: number,
+		h: number,
+		orientation: Orientation,
+		...tags: string[]
+	) {
+		super(...tags);
 
 		this.width = w;
 		this.height = h;

@@ -8,6 +8,10 @@ const RADIUS = 67;
 const SIZE_W = RADIUS * 2;
 const SIZE_H = RADIUS * 2;
 
+const TAG_1 = 'tag-1' as const;
+const TAG_2 = 'tag-2' as const;
+const TAG_3 = 'tag-3' as const;
+
 const entity00 = {
 	x: 0,
 	y: 0,
@@ -43,27 +47,29 @@ function testBounds(
 }
 
 describe('constructor', () => {
-	test('should accept two arguments', () => {
+	test('should accept one argument', () => {
 		const circleCollider = new CircleCollider(RADIUS);
 		expect(circleCollider.x).toEqual(0);
 		expect(circleCollider.y).toEqual(0);
 		expect(circleCollider.radius).toEqual(RADIUS);
+		expect(circleCollider.tag).toEqual(undefined);
+		expect(circleCollider.tags).toEqual([]);
 	});
 
-	test('should accept three arguments', () => {
-		const circleCollider = new CircleCollider(RADIUS, X_POS);
-		expect(circleCollider.x).toEqual(X_POS);
-		expect(circleCollider.y).toEqual(0);
+	test('should accept two arguments', () => {
+		const circleCollider = new CircleCollider(RADIUS, TAG_1);
 		expect(circleCollider.width).toEqual(SIZE_W);
 		expect(circleCollider.height).toEqual(SIZE_H);
+		expect(circleCollider.tag).toEqual(TAG_1);
+		expect(circleCollider.tags).toEqual([TAG_1]);
 	});
 
-	test('should accept four arguments', () => {
-		const circleCollider = new CircleCollider(RADIUS, X_POS, Y_POS);
-		expect(circleCollider.x).toEqual(X_POS);
-		expect(circleCollider.y).toEqual(Y_POS);
+	test('should accept any number of arguments', () => {
+		const circleCollider = new CircleCollider(RADIUS, TAG_1, TAG_2, TAG_3);
 		expect(circleCollider.width).toEqual(SIZE_W);
 		expect(circleCollider.height).toEqual(SIZE_H);
+		expect(circleCollider.tag).toEqual(TAG_1);
+		expect(circleCollider.tags).toEqual([TAG_1, TAG_2, TAG_3]);
 	});
 });
 
@@ -89,11 +95,12 @@ describe('getters/setters', () => {
 	const LEFT = X_POS;
 	const TOP = Y_POS;
 	const RIGHT = LEFT + SIZE_W - 1;
-	console.log({ RIGHT });
 	const BOTTOM = TOP + SIZE_H - 1;
 
 	beforeEach(() => {
-		circleCollider = new CircleCollider(RADIUS, X_POS, Y_POS);
+		circleCollider = new CircleCollider(RADIUS);
+		circleCollider.x = X_POS;
+		circleCollider.y = Y_POS;
 		circleCollider.assignParent(entity00);
 	});
 
@@ -127,7 +134,9 @@ describe('bounds', () => {
 		const BOTTOM = TOP + SIZE_H - 1;
 
 		beforeEach(() => {
-			circleCollider = new CircleCollider(RADIUS, X_POS, Y_POS);
+			circleCollider = new CircleCollider(RADIUS);
+			circleCollider.x = X_POS;
+			circleCollider.y = Y_POS;
 			circleCollider.assignParent(entity00);
 			circleCollider.originX = ORIGIN_X;
 			circleCollider.originY = ORIGIN_Y;
@@ -143,7 +152,9 @@ describe('bounds', () => {
 		const BOTTOM = TOP + SIZE_H - 1;
 
 		beforeEach(() => {
-			circleCollider = new CircleCollider(RADIUS, X_POS, Y_POS);
+			circleCollider = new CircleCollider(RADIUS);
+			circleCollider.x = X_POS;
+			circleCollider.y = Y_POS;
 			circleCollider.assignParent(entityWithPosition);
 		});
 

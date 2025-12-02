@@ -57,8 +57,8 @@ export abstract class Collider implements ICollider {
 	type: ColliderType = 'point' as const;
 	#tags: ColliderTag[] = [];
 	collidable = true;
-	x: number;
-	y: number;
+	x = 0;
+	y = 0;
 	originX = 0;
 	originY = 0;
 	#parent?: ColliderParent | null;
@@ -98,9 +98,8 @@ export abstract class Collider implements ICollider {
 			: Collider.#optionsNonCollidable;
 	}
 
-	constructor(x = 0, y = 0) {
-		this.x = x;
-		this.y = y;
+	constructor(...tags: string[]) {
+		this.addTags(...tags);
 	}
 
 	get w(): number {

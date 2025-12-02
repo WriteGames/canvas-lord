@@ -7,6 +7,10 @@ const Y1 = 45;
 
 const coords = [X1, Y1] as const;
 
+const TAG_1 = 'tag-1' as const;
+const TAG_2 = 'tag-2' as const;
+const TAG_3 = 'tag-3' as const;
+
 const entity00 = {
 	x: 0,
 	y: 0,
@@ -44,8 +48,26 @@ function testBounds(
 describe('constructor', () => {
 	test('should accept two arguments', () => {
 		const pointCollider = new PointCollider(...coords);
-		pointCollider.x = X1;
-		pointCollider.y = Y1;
+		expect(pointCollider.x).toEqual(X1);
+		expect(pointCollider.y).toEqual(Y1);
+		expect(pointCollider.tag).toEqual(undefined);
+		expect(pointCollider.tags).toEqual([]);
+	});
+
+	test('should accept three arguments', () => {
+		const pointCollider = new PointCollider(...coords, TAG_1);
+		expect(pointCollider.x).toEqual(X1);
+		expect(pointCollider.y).toEqual(Y1);
+		expect(pointCollider.tag).toEqual(TAG_1);
+		expect(pointCollider.tags).toEqual([TAG_1]);
+	});
+
+	test('should accept any number of arguments', () => {
+		const pointCollider = new PointCollider(...coords, TAG_1, TAG_2, TAG_3);
+		expect(pointCollider.x).toEqual(X1);
+		expect(pointCollider.y).toEqual(Y1);
+		expect(pointCollider.tag).toEqual(TAG_1);
+		expect(pointCollider.tags).toEqual([TAG_1, TAG_2, TAG_3]);
 	});
 });
 

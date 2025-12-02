@@ -40,8 +40,8 @@ export class BoxCollider extends Collider implements IBoxCollider {
 		return this.parent.y + this.y - this.originY + this.h - 1;
 	}
 
-	constructor(w: number, h: number, x = 0, y = 0) {
-		super(x, y);
+	constructor(w: number, h: number, ...tags: string[]) {
+		super(...tags);
 		if (w < 0) throw new Error('Invalid width');
 		if (h < 0) throw new Error('Invalid height');
 		this.#width = w;

@@ -7,6 +7,10 @@ const Y_POS = 55;
 const SIZE_W = 123;
 const SIZE_H = 777;
 
+const TAG_1 = 'tag-1' as const;
+const TAG_2 = 'tag-2' as const;
+const TAG_3 = 'tag-3' as const;
+
 const entity00 = {
 	x: 0,
 	y: 0,
@@ -44,26 +48,32 @@ function testBounds(
 describe('constructor', () => {
 	test('should accept two arguments', () => {
 		const boxCollider = new BoxCollider(SIZE_W, SIZE_H);
-		expect(boxCollider.x).toEqual(0);
-		expect(boxCollider.y).toEqual(0);
 		expect(boxCollider.width).toEqual(SIZE_W);
 		expect(boxCollider.height).toEqual(SIZE_H);
+		expect(boxCollider.tag).toEqual(undefined);
+		expect(boxCollider.tags).toEqual([]);
 	});
 
 	test('should accept three arguments', () => {
-		const boxCollider = new BoxCollider(SIZE_W, SIZE_H, X_POS);
-		expect(boxCollider.x).toEqual(X_POS);
-		expect(boxCollider.y).toEqual(0);
+		const boxCollider = new BoxCollider(SIZE_W, SIZE_H, TAG_1);
 		expect(boxCollider.width).toEqual(SIZE_W);
 		expect(boxCollider.height).toEqual(SIZE_H);
+		expect(boxCollider.tag).toEqual(TAG_1);
+		expect(boxCollider.tags).toEqual([TAG_1]);
 	});
 
-	test('should accept four arguments', () => {
-		const boxCollider = new BoxCollider(SIZE_W, SIZE_H, X_POS, Y_POS);
-		expect(boxCollider.x).toEqual(X_POS);
-		expect(boxCollider.y).toEqual(Y_POS);
+	test('should accept any number of arguments', () => {
+		const boxCollider = new BoxCollider(
+			SIZE_W,
+			SIZE_H,
+			TAG_1,
+			TAG_2,
+			TAG_3,
+		);
 		expect(boxCollider.width).toEqual(SIZE_W);
 		expect(boxCollider.height).toEqual(SIZE_H);
+		expect(boxCollider.tag).toEqual(TAG_1);
+		expect(boxCollider.tags).toEqual([TAG_1, TAG_2, TAG_3]);
 	});
 });
 
@@ -92,7 +102,9 @@ describe('getters/setters', () => {
 	const BOTTOM = TOP + SIZE_H - 1;
 
 	beforeEach(() => {
-		boxCollider = new BoxCollider(SIZE_W, SIZE_H, X_POS, Y_POS);
+		boxCollider = new BoxCollider(SIZE_W, SIZE_H);
+		boxCollider.x = X_POS;
+		boxCollider.y = Y_POS;
 		boxCollider.assignParent(entity00);
 	});
 
@@ -126,7 +138,9 @@ describe('bounds', () => {
 		const BOTTOM = TOP + SIZE_H - 1;
 
 		beforeEach(() => {
-			boxCollider = new BoxCollider(SIZE_W, SIZE_H, X_POS, Y_POS);
+			boxCollider = new BoxCollider(SIZE_W, SIZE_H);
+			boxCollider.x = X_POS;
+			boxCollider.y = Y_POS;
 			boxCollider.assignParent(entity00);
 			boxCollider.originX = ORIGIN_X;
 			boxCollider.originY = ORIGIN_Y;
@@ -142,7 +156,9 @@ describe('bounds', () => {
 		const BOTTOM = TOP + SIZE_H - 1;
 
 		beforeEach(() => {
-			boxCollider = new BoxCollider(SIZE_W, SIZE_H, X_POS, Y_POS);
+			boxCollider = new BoxCollider(SIZE_W, SIZE_H);
+			boxCollider.x = X_POS;
+			boxCollider.y = Y_POS;
 			boxCollider.assignParent(entityWithPosition);
 		});
 

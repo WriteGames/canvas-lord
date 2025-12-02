@@ -29,8 +29,10 @@ export class PointCollider extends Collider implements IPointCollider {
 		return this.parent.y + this.y - this.originY;
 	}
 
-	constructor(x = 0, y = 0) {
-		super(x, y);
+	constructor(x = 0, y = 0, ...tags: string[]) {
+		super(...tags);
+		this.x = x;
+		this.y = y;
 	}
 
 	centerOrigin(): void {

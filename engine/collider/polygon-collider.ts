@@ -73,8 +73,8 @@ export class PolygonCollider extends Collider implements IPolygonCollider {
 	}
 
 	// TODO(bret): throw error if points are invalid
-	constructor(points: Points, x = 0, y = 0) {
-		super(x, y);
+	constructor(points: Points, ...tags: string[]) {
+		super(...tags);
 
 		this.#points = points;
 	}

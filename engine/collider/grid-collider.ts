@@ -14,8 +14,8 @@ export class GridCollider extends Collider implements IGridCollider {
 	type = 'grid' as const;
 	grid: Grid;
 
-	constructor(grid: Grid, x = 0, y = 0) {
-		super(x, y);
+	constructor(grid: Grid, ...tags: string[]) {
+		super(...tags);
 		this.grid = grid;
 		this.grid.renderMode = Grid.RenderMode.OUTLINE;
 	}

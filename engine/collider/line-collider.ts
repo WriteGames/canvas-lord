@@ -82,8 +82,14 @@ export class LineCollider extends Collider implements ILineCollider {
 		return Math.abs(this.y1 - this.y2) + 1;
 	}
 
-	constructor(x1: number, y1: number, x2: number, y2: number, x = 0, y = 0) {
-		super(x, y);
+	constructor(
+		x1: number,
+		y1: number,
+		x2: number,
+		y2: number,
+		...tags: string[]
+	) {
+		super(...tags);
 		this.x1 = x1;
 		this.y1 = y1;
 		this.x2 = x2;

@@ -56,8 +56,8 @@ export class CircleCollider extends Collider implements ICircleCollider {
 		return this.y + this.parent.y - this.originY + this.radius / 2;
 	}
 
-	constructor(r: number, x = 0, y = 0) {
-		super(x, y);
+	constructor(r: number, ...tags: string[]) {
+		super(...tags);
 		if (r < 0) throw new Error('Invalid radius');
 		this.radius = r;
 	}

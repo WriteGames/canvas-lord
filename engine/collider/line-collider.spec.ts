@@ -12,6 +12,10 @@ const SIZE_H = Y2 - Y1 + 1;
 
 const coords = [X1, Y1, X2, Y2] as const;
 
+const TAG_1 = 'tag-1' as const;
+const TAG_2 = 'tag-2' as const;
+const TAG_3 = 'tag-3' as const;
+
 const entity00 = {
 	x: 0,
 	y: 0,
@@ -49,10 +53,32 @@ function testBounds(
 describe('constructor', () => {
 	test('should accept four arguments', () => {
 		const lineCollider = new LineCollider(...coords);
-		lineCollider.x1 = X1;
-		lineCollider.y1 = Y1;
-		lineCollider.x2 = X2;
-		lineCollider.y2 = Y2;
+		expect(lineCollider.x1).toEqual(X1);
+		expect(lineCollider.y1).toEqual(Y1);
+		expect(lineCollider.x2).toEqual(X2);
+		expect(lineCollider.y2).toEqual(Y2);
+		expect(lineCollider.tag).toEqual(undefined);
+		expect(lineCollider.tags).toEqual([]);
+	});
+
+	test('should accept five arguments', () => {
+		const lineCollider = new LineCollider(...coords, TAG_1);
+		expect(lineCollider.x1).toEqual(X1);
+		expect(lineCollider.y1).toEqual(Y1);
+		expect(lineCollider.x2).toEqual(X2);
+		expect(lineCollider.y2).toEqual(Y2);
+		expect(lineCollider.tag).toEqual(TAG_1);
+		expect(lineCollider.tags).toEqual([TAG_1]);
+	});
+
+	test('should accept any number of arguments', () => {
+		const lineCollider = new LineCollider(...coords, TAG_1, TAG_2, TAG_3);
+		expect(lineCollider.x1).toEqual(X1);
+		expect(lineCollider.y1).toEqual(Y1);
+		expect(lineCollider.x2).toEqual(X2);
+		expect(lineCollider.y2).toEqual(Y2);
+		expect(lineCollider.tag).toEqual(TAG_1);
+		expect(lineCollider.tags).toEqual([TAG_1, TAG_2, TAG_3]);
 	});
 });
 
