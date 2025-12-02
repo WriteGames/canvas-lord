@@ -1,0 +1,50 @@
+{
+	"out": "platformer",
+	"fileName": "player.ts",
+	"name": "Player",
+	"extendsClass": "Entity",
+	"components": [],
+	"systems": [{ "name": "baseSystem", "outputType": "inline" }],
+	"steps": [
+		{
+			"add": {
+				"components": ["baseHorizontalMovementComponent"],
+				"systems": [
+					{ "name": "xInputLinear", "outputType": "inline" },
+					{
+						"name": "moveXSystem",
+						"outputType": "function",
+						"alias": "moveX"
+					}
+				]
+			}
+		},
+		{
+			"add": {
+				"components": ["accelerationComponent"],
+				"systems": [
+					{
+						"name": "xInputAccel",
+						"outputType": "inline"
+					},
+					{
+						"name": "moveXSystem",
+						"outputType": "function",
+						"alias": "moveX"
+					}
+				]
+			},
+			"remove": {
+				"components": [],
+				"systems": [
+					{ "name": "xInputLinear", "outputType": "inline" },
+					{
+						"name": "moveXSystem",
+						"outputType": "function",
+						"alias": "moveX"
+					}
+				]
+			}
+		}
+	]
+}

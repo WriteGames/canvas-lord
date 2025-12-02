@@ -59,4 +59,3 @@ export const deleteSelfSystemMock = {
     name: 'deleteSelfSystem',
     type: 'IEntitySystem',
 };
-//# sourceMappingURL=mocks.js.map

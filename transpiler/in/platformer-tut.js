@@ -52,4 +52,3 @@ export const initGame = (Player, properties) => (id, src = '') => {
     });
     game.load(assetManager);
 };
-//# sourceMappingURL=platformer-tut.js.map

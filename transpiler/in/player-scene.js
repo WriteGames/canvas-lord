@@ -78,4 +78,3 @@ export class PlayerScene extends Scene {
         this.updateCamera();
     }
 }
-//# sourceMappingURL=player-scene.js.map

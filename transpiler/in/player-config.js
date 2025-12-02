@@ -23,4 +23,3 @@ export default {
         },
     ],
 };
-//# sourceMappingURL=player-config.js.map

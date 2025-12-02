@@ -1,45 +1,51 @@
+import { BoxCollider } from 'canvas-lord/collider';
+import { Sprite } from 'canvas-lord/graphic';
 import * as Components from 'canvas-lord/util/components';
-import { jumpKeys, leftKeys, rightKeys } from './platformer/shared';
-// export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
-// export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];
-// export const jumpKeys: Key[] = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
-export const EVENT_TYPE = {
-    UPDATE_CAN_JUMP: 'update-can-jump',
-    UPDATE_COYOTE: 'update-coyote',
-    JUMP: 'jump',
+import { jumpKeys, leftKeys, rightKeys } from './shared';
+export const baseSystem = {
+    init(entity) {
+        entity.collider = new BoxCollider(12, 16);
+        entity.graphic = Sprite.createRect(12, 16, '#ff3366');
+    },
+};
+export const xInputLinear = {
+    update(entity, input) {
+        entity.xSpeed = 0;
+        if (input.keyCheck(leftKeys))
+            entity.xSpeed -= 4;
+        if (input.keyCheck(rightKeys))
+            entity.xSpeed += 4;
+    },
+};
+export const xInputAccel = {
+    update(entity, input) {
+        const left = input.keyCheck(leftKeys);
+        const right = input.keyCheck(rightKeys);
+        if (left)
+            entity.xSpeed -= entity.aSpeed;
+        if (right)
+            entity.xSpeed -= entity.aSpeed;
+        if (!left && !right)
+            entity.xSpeed -= entity.fSpeed * Math.sign(entity.xSpeed);
+    },
 };
 export const moveXSystem = {
     update(entity) {
-        const grounded = entity.collide(entity.x, entity.y + 1);
-        const ledgeBoostHeights = Array.from({ length: 2 }, (_, i) => i + 1);
-        entity.xRemainder += entity.xspeed;
-        let moveX = Math.round(entity.xRemainder);
-        if (moveX !== 0) {
-            entity.xRemainder -= moveX;
-            const sign = Math.sign(moveX);
-            for (let xx = 0, n = Math.abs(moveX); xx < n; ++xx) {
-                if (entity.collide(entity.x + sign, entity.y)) {
-                    const yy = grounded === false &&
-                        entity.yspeed >= 0 &&
-                        (ledgeBoostHeights.find((y) => !entity.collide(entity.x + sign, entity.y - y)) ??
-                            false);
-                    if (yy === false) {
-                        moveX = 0;
-                        entity.xspeed =
-                            Math.min(Math.abs(entity.xspeed), 1.0) * sign;
-                        entity.xRemainder = 0;
-                        break;
-                    }
-                    entity.y -= yy;
-                }
-                entity.x += sign;
+        const xDir = Math.sign(entity.xSpeed);
+        for (let i = 0; i < Math.abs(entity.xSpeed); ++i) {
+            if (entity.collide(entity.x + xDir, entity.y, 'solid')) {
+                entity.xSpeed = 0;
+                break;
+            }
+            else {
+                entity.x += xDir;
             }
         }
     },
 };
 export const moveYSystem = {
     update(entity) {
-        entity.yRemainder += entity.yspeed;
+        entity.yRemainder += entity.ySpeed;
         let moveY = Math.round(entity.yRemainder);
         if (moveY !== 0) {
             entity.yRemainder -= moveY;
@@ -47,7 +53,7 @@ export const moveYSystem = {
             for (let yy = 0, n = Math.abs(moveY); yy < n; ++yy) {
                 if (entity.collide(entity.x, entity.y + sign)) {
                     moveY = 0;
-                    entity.yspeed = 0;
+                    entity.ySpeed = 0;
                 }
                 else {
                     entity.y += sign;
@@ -56,7 +62,16 @@ export const moveYSystem = {
         }
     },
 };
-export const baseHorizontalMovementComponent = Components.createComponent({});
+export const baseHorizontalMovementComponent = Components.createComponent({
+    xSpeed: 0,
+});
+export const accelerationComponent = Components.createComponent({
+    aSpeed: 0.05,
+    fSpeed: 0.05,
+});
+// this.mSpeed = 2.5; // max speed
+// this.gSpeed = 0.12; // gravity
+// this.jSpeed = -3.95; // initial jump velocity
 export const baseHorizontalMovementSystem = {
     update(entity) {
         entity.moveX();
@@ -72,11 +87,11 @@ export const horizontalMovementComponent = Components.createComponent({});
 // DOCS: make sure to point out the weird behavior here!
 export const horizontalMovementSystem = {
     update(entity, input) {
-        entity.xspeed = 0;
+        entity.xSpeed = 0;
         if (input.keyCheck(leftKeys))
-            entity.xspeed = -2;
+            entity.xSpeed = -2;
         if (input.keyCheck(rightKeys))
-            entity.xspeed = 2;
+            entity.xSpeed = 2;
     },
 };
 export const verticalMovementComponent = Components.createComponent({});
@@ -86,9 +101,9 @@ export const verticalMovementComponent = Components.createComponent({});
 export const verticalMovementSystem = {
     update(entity, input) {
         if (input.keyCheck(jumpKeys))
-            entity.yspeed = -1;
+            entity.ySpeed = -1;
         else
-            entity.yspeed = 1;
+            entity.ySpeed = 1;
     },
 };
 // IDEA(bret): find a way to essentially make the FPS a #define constant
@@ -113,7 +128,7 @@ export const verticalMovementComponent2 = Components.createComponent({
 // could be expanded to a if/else statement (also transform the first chunk into `+=`)
 export const verticalMovementSystem2 = {
     update(entity, input) {
-        const vComp = entity.component?.(verticalMovementComponent2);
+        const vComp = entity.component(verticalMovementComponent2);
         const grounded = entity.collide(entity.x, entity.y + 1);
         if (grounded && input.keyPressed(jumpKeys)) {
             vComp.jumpElapsed = 0;
@@ -126,14 +141,14 @@ export const verticalMovementSystem2 = {
             vComp.jumpActive = false;
         }
         if (vComp.jumpActive) {
-            entity.yspeed = -2;
+            entity.ySpeed = -2;
         }
         else {
             // add gravity
-            entity.yspeed = 2;
+            entity.ySpeed = 2;
         }
         // FIXME: don't hardcode strings (currently would result in an import loop)
-        if (entity.scene && 'logger' in entity.scene) {
+        if ('scene' in entity && 'logger' in entity.scene) {
             const logger = entity.scene.logger;
             logger.set('Can Jump', grounded);
             logger.set('Jump Elapsed', vComp.jumpElapsed);

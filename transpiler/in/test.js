@@ -67,4 +67,3 @@ export const gmPlayerSystem = {
         }, entity.x, entity.y, 32, 32);
     },
 };
-//# sourceMappingURL=test.js.map

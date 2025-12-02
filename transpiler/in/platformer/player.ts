@@ -1,73 +1,65 @@
+import { BoxCollider } from 'canvas-lord/collider';
 import type { IEntity } from 'canvas-lord/core/entity';
 import type { Input } from 'canvas-lord/core/input';
+import { Sprite } from 'canvas-lord/graphic';
+import type { Camera } from 'canvas-lord/util/camera';
+import type { Ctx } from 'canvas-lord/util/canvas';
 import * as Components from 'canvas-lord/util/components';
 import type { Logger } from 'canvas-lord/util/logger';
-import { jumpKeys, leftKeys, rightKeys } from './platformer/shared';
+import { jumpKeys, leftKeys, rightKeys, type PlayerEntity } from './shared';
+// import type { IEntitySystem } from 'canvas-lord/util/types';
 
-// export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
-// export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];
-// export const jumpKeys: Key[] = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
+type System = IEntitySystem<PlayerEntity>;
 
-export const EVENT_TYPE = {
-	UPDATE_CAN_JUMP: 'update-can-jump',
-	UPDATE_COYOTE: 'update-coyote',
-	JUMP: 'jump',
+export interface IEntitySystem<E extends IEntity = IEntity> {
+	init?: (entity: E) => void;
+	update?: (entity: E, input: Input) => void;
+	render?: (entity: E, ctx: Ctx, camera: Camera) => void;
+}
+
+export const baseSystem: System = {
+	init(entity: PlayerEntity) {
+		entity.collider = new BoxCollider(12, 16);
+		entity.graphic = Sprite.createRect(12, 16, '#ff3366');
+	},
 };
 
-type PlayerEntity = IEntity & {
-	xspeed: number;
-	yspeed: number;
-	xRemainder: number;
-	yRemainder: number;
-	moveX: () => void;
-	moveY: () => void;
-	collide: (x: number, y: number) => boolean;
+export const xInputLinear: System = {
+	update(entity, input) {
+		entity.xSpeed = 0;
+		if (input.keyCheck(leftKeys)) entity.xSpeed -= 4;
+		if (input.keyCheck(rightKeys)) entity.xSpeed += 4;
+	},
 };
 
-export const moveXSystem = {
+export const xInputAccel: System = {
+	update(entity, input) {
+		const left = input.keyCheck(leftKeys);
+		const right = input.keyCheck(rightKeys);
+		if (left) entity.xSpeed -= entity.aSpeed;
+		if (right) entity.xSpeed -= entity.aSpeed;
+		if (!left && !right)
+			entity.xSpeed -= entity.fSpeed * Math.sign(entity.xSpeed);
+	},
+};
+
+export const moveXSystem: System = {
 	update(entity: PlayerEntity) {
-		const grounded = entity.collide(entity.x, entity.y + 1);
-		const ledgeBoostHeights = Array.from({ length: 2 }, (_, i) => i + 1);
-
-		entity.xRemainder += entity.xspeed;
-
-		let moveX = Math.round(entity.xRemainder);
-
-		if (moveX !== 0) {
-			entity.xRemainder -= moveX;
-
-			const sign = Math.sign(moveX);
-			for (let xx = 0, n = Math.abs(moveX); xx < n; ++xx) {
-				if (entity.collide(entity.x + sign, entity.y)) {
-					const yy =
-						grounded === false &&
-						entity.yspeed >= 0 &&
-						(ledgeBoostHeights.find(
-							(y) =>
-								!entity.collide(entity.x + sign, entity.y - y),
-						) ??
-							false);
-
-					if (yy === false) {
-						moveX = 0;
-						entity.xspeed =
-							Math.min(Math.abs(entity.xspeed), 1.0) * sign;
-						entity.xRemainder = 0;
-						break;
-					}
-
-					entity.y -= yy;
-				}
-
-				entity.x += sign;
+		const xDir = Math.sign(entity.xSpeed);
+		for (let i = 0; i < Math.abs(entity.xSpeed); ++i) {
+			if (entity.collide(entity.x + xDir, entity.y, 'solid')) {
+				entity.xSpeed = 0;
+				break;
+			} else {
+				entity.x += xDir;
 			}
 		}
 	},
 };
 
-export const moveYSystem = {
+export const moveYSystem: System = {
 	update(entity: PlayerEntity) {
-		entity.yRemainder += entity.yspeed;
+		entity.yRemainder += entity.ySpeed;
 		let moveY = Math.round(entity.yRemainder);
 
 		if (moveY !== 0) {
@@ -77,7 +69,7 @@ export const moveYSystem = {
 			for (let yy = 0, n = Math.abs(moveY); yy < n; ++yy) {
 				if (entity.collide(entity.x, entity.y + sign)) {
 					moveY = 0;
-					entity.yspeed = 0;
+					entity.ySpeed = 0;
 				} else {
 					entity.y += sign;
 				}
@@ -86,15 +78,26 @@ export const moveYSystem = {
 	},
 };
 
-export const baseHorizontalMovementComponent = Components.createComponent({});
-export const baseHorizontalMovementSystem = {
+export const baseHorizontalMovementComponent = Components.createComponent({
+	xSpeed: 0,
+});
+export const accelerationComponent = Components.createComponent({
+	aSpeed: 0.05,
+	fSpeed: 0.05,
+});
+
+// this.mSpeed = 2.5; // max speed
+// this.gSpeed = 0.12; // gravity
+// this.jSpeed = -3.95; // initial jump velocity
+
+export const baseHorizontalMovementSystem: System = {
 	update(entity: PlayerEntity) {
 		entity.moveX();
 	},
 };
 
 export const baseVerticalMovementComponent = Components.createComponent({});
-export const baseVerticalMovementSystem = {
+export const baseVerticalMovementSystem: System = {
 	update(entity: PlayerEntity) {
 		entity.moveY();
 	},
@@ -103,11 +106,11 @@ export const baseVerticalMovementSystem = {
 export const horizontalMovementComponent = Components.createComponent({});
 
 // DOCS: make sure to point out the weird behavior here!
-export const horizontalMovementSystem = {
+export const horizontalMovementSystem: System = {
 	update(entity: PlayerEntity, input: Input) {
-		entity.xspeed = 0;
-		if (input.keyCheck(leftKeys)) entity.xspeed = -2;
-		if (input.keyCheck(rightKeys)) entity.xspeed = 2;
+		entity.xSpeed = 0;
+		if (input.keyCheck(leftKeys)) entity.xSpeed = -2;
+		if (input.keyCheck(rightKeys)) entity.xSpeed = 2;
 	},
 };
 
@@ -117,10 +120,10 @@ export const verticalMovementComponent = Components.createComponent({});
 // TODO: separate the yspeed & entity.moveY() into a separate component/system, and then have a component that adds a system to do the actual movement
 // TODO: alternatively, each scene/world could have its own understanding of how to register that component to systems (probably the best, albeit, the most typing)
 
-export const verticalMovementSystem = {
+export const verticalMovementSystem: System = {
 	update(entity: PlayerEntity, input: Input) {
-		if (input.keyCheck(jumpKeys)) entity.yspeed = -1;
-		else entity.yspeed = 1;
+		if (input.keyCheck(jumpKeys)) entity.ySpeed = -1;
+		else entity.ySpeed = 1;
 	},
 };
 
@@ -147,7 +150,7 @@ export const verticalMovementComponent2 = Components.createComponent({
 // could be expanded to a if/else statement (also transform the first chunk into `+=`)
 export const verticalMovementSystem2 = {
 	update(entity: PlayerEntity, input: Input) {
-		const vComp = entity.component?.(
+		const vComp = entity.component(
 			verticalMovementComponent2,
 		) as Components.ComponentProps<typeof verticalMovementComponent2>;
 
@@ -164,14 +167,14 @@ export const verticalMovementSystem2 = {
 		}
 
 		if (vComp.jumpActive) {
-			entity.yspeed = -2;
+			entity.ySpeed = -2;
 		} else {
 			// add gravity
-			entity.yspeed = 2;
+			entity.ySpeed = 2;
 		}
 
 		// FIXME: don't hardcode strings (currently would result in an import loop)
-		if (entity.scene && 'logger' in entity.scene) {
+		if ('scene' in entity && 'logger' in entity.scene) {
 			const logger = entity.scene.logger as Logger;
 			logger.set('Can Jump', grounded);
 			logger.set('Jump Elapsed', vComp.jumpElapsed);

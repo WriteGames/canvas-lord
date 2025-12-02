@@ -1,4 +1,4 @@
 {
 	"extends": "@writegames.com/style-guide/typescript",
-	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts", "**/out*/*"]
 }
