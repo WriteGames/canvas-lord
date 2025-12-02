@@ -11,7 +11,10 @@
 			"add": {
 				"components": ["baseHorizontalMovementComponent"],
 				"systems": [
-					{ "name": "xInputLinearSystem", "outputType": "inline" },
+					{
+						"name": "xInputLinearSystem",
+						"outputType": "inline"
+					},
 					{
 						"name": "moveXSystem",
 						"outputType": "function",
@@ -26,30 +29,18 @@
 				"systems": [
 					{
 						"name": "jumpSystem",
-						"outputType": "inline"
+						"outputType": "inline",
+						"before": "moveXSystem"
 					},
 					{
 						"name": "gravitySystem",
-						"outputType": "inline"
-					},
-					{
-						"name": "moveXSystem",
-						"outputType": "function",
-						"alias": "moveX"
+						"outputType": "inline",
+						"before": "moveXSystem"
 					},
 					{
 						"name": "moveYSystem",
 						"outputType": "function",
 						"alias": "moveY"
-					}
-				]
-			},
-			"remove": {
-				"systems": [
-					{
-						"name": "moveXSystem",
-						"outputType": "function",
-						"alias": "moveX"
 					}
 				]
 			}
@@ -60,24 +51,15 @@
 				"systems": [
 					{
 						"name": "xInputAccelSystem",
-						"outputType": "inline"
-					},
-					{
-						"name": "moveXSystem",
-						"outputType": "function",
-						"alias": "moveX"
+						"outputType": "inline",
+						"after": "xInputLinearSystem"
 					}
 				]
 			},
 			"remove": {
 				"components": [],
 				"systems": [
-					{ "name": "xInputLinearSystem", "outputType": "inline" },
-					{
-						"name": "moveXSystem",
-						"outputType": "function",
-						"alias": "moveX"
-					}
+					{ "name": "xInputLinearSystem", "outputType": "inline" }
 				]
 			}
 		}

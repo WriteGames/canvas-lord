@@ -184,7 +184,7 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
         const addToMethod = (target, method, options, block) => {
             const body = block.getChildAtIndex(1).getText();
             if (options.outputType === 'inline') {
-                method.addStatements([body]);
+                method.addStatements(['\n', body]);
             }
             else {
                 const parameters = [];
@@ -192,7 +192,10 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
                 if (body.includes('input.'))
                     parameters.push({ name: 'input', type: 'Input' });
                 if (!options.omitFromOutput)
-                    method.addStatements(`this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`);
+                    method.addStatements([
+                        '\n',
+                        `this.${options.alias}(${parameters.map(({ name }) => name).join(', ')});`,
+                    ]);
                 target.addMethod({
                     name: options.alias,
                     statements: [body],
@@ -379,7 +382,11 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
                 addSystems(baseEntityClass, foundSystems, systems);
                 return baseEntityClass;
             };
-            const curComponents = [...components];
+            const curComponents = components.map((c) => {
+                if (typeof c === 'string')
+                    return c;
+                return c.name;
+            });
             const curSystems = [...systems];
             steps.unshift({});
             const sourceFiles = steps.map((step, i) => {
@@ -389,17 +396,48 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
                 const sourceFile = project.createSourceFile(playerOutputPath.replace('.ts', `.${ext}.ts`), '', {
                     overwrite: true,
                 });
-                if (step.add) {
-                    if (step.add.components) {
-                        curComponents.push(...step.add.components);
+                step.add?.components?.forEach((comp) => {
+                    if (typeof comp === 'string') {
+                        curComponents.push(comp);
+                        return;
                     }
-                    if (step.add.systems) {
-                        curSystems.push(...step.add.systems);
+                    let at = curComponents.length;
+                    if (comp.at) {
+                        at = comp.at;
                     }
-                }
+                    if (comp.before) {
+                        at = curComponents.findIndex((c) => c === comp.before);
+                    }
+                    if (comp.after) {
+                        at = curComponents.findIndex((c) => c === comp.after);
+                        at++;
+                    }
+                    delete comp.at;
+                    delete comp.before;
+                    delete comp.after;
+                    curComponents.splice(at, 0, comp.name);
+                });
+                step.add?.systems?.forEach((sys) => {
+                    let at = curSystems.length;
+                    if (sys.at) {
+                        at = sys.at;
+                    }
+                    if (sys.before) {
+                        at = curSystems.findIndex((s) => s.name === sys.before);
+                    }
+                    if (sys.after) {
+                        at = curSystems.findIndex((s) => s.name === sys.after);
+                        at++;
+                    }
+                    delete sys.at;
+                    delete sys.before;
+                    delete sys.after;
+                    curSystems.splice(at, 0, sys);
+                });
                 if (step.remove) {
                     step.remove.components?.forEach((c) => {
-                        const index = curComponents.indexOf(c);
+                        const name = typeof c === 'string' ? c : c.name;
+                        const index = curComponents.indexOf(name);
                         if (index > -1) {
                             curComponents.splice(index, 1);
                         }
@@ -568,3 +606,4 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
     /*                                                                  */
     /*                                                                  */
 };
+//# sourceMappingURL=transpile.js.map

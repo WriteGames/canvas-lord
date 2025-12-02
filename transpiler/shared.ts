@@ -645,21 +645,34 @@ const transformerRemoveUnusedImports: ts.TransformerFactory<ts.SourceFile> = (
 	};
 };
 
-export type System = {
+interface InsertInfo {
+	at?: number;
+	before?: string;
+	after?: string;
+}
+
+export type System = ({
 	name: string;
-} & (
-	| {
-			outputType: 'inline';
-	  }
-	| {
-			outputType: 'function';
-			alias: string;
-			omitFromOutput?: boolean;
-	  }
-);
+} & InsertInfo) &
+	(
+		| {
+				outputType: 'inline';
+		  }
+		| {
+				outputType: 'function';
+				alias: string;
+				omitFromOutput?: boolean;
+		  }
+	);
+
+export type Component =
+	| string
+	| ({
+			name: string;
+	  } & InsertInfo);
 
 export interface ComponentsAndSystems {
-	components: string[];
+	components: Component[];
 	systems: System[];
 }
 
