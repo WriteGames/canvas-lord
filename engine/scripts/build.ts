@@ -28,7 +28,7 @@ await build({
 			formats: ['es'],
 			fileName: () => `canvas-lord-${version}.min.js`,
 		},
-		minify: 'esbuild',
+		minify: 'terser',
 		rollupOptions: {
 			treeshake: false,
 		},
