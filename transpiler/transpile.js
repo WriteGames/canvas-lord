@@ -8,11 +8,12 @@ import tsm, { Project, SyntaxKind } from 'ts-morph';
 // import { createClass, printFile, readTSFile } from './shared.js';
 const projectRoot = path.join(import.meta.dirname);
 const repoRoot = path.join(projectRoot, '..');
+const tsConfigFilePath = path.join(projectRoot, 'tsconfig.transpile.json');
 export const runTranspile = async ({ jsonFilePath, outDir, }) => {
     const inDir = path.dirname(jsonFilePath);
-    const transpileProject = true;
+    const transpileProjectIntoTS = true;
     const runEslint = true;
-    const runPrettier = true;
+    const runPrettierAndOutputJS = true;
     const copyFiles = true;
     const wholeThang = true;
     const oldImportFix = false;
@@ -291,10 +292,10 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
             });
         };
         const filesToFormat = [];
-        if (transpileProject) {
+        if (transpileProjectIntoTS) {
             console.time('project');
             const project = new Project({
-                tsConfigFilePath: './tsconfig.transpile.json',
+                tsConfigFilePath,
             });
             const typeChecker = project.getTypeChecker();
             console.timeEnd('project');
@@ -525,7 +526,7 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
             // const resultText = formatter.format(results);
             // console.log(resultText);
         }
-        if (runPrettier) {
+        if (runPrettierAndOutputJS) {
             const dir = outputPath;
             const prettierignorePath = path.join(repoRoot, '.prettierignore');
             const prettierConfigPath = path.join(repoRoot, '.prettierrc.json');
@@ -542,7 +543,6 @@ export const runTranspile = async ({ jsonFilePath, outDir, }) => {
                 const newContent = content.replaceAll('\n\n', `\n${commentStr}\n`);
                 await fs.promises.writeFile(filePath, newContent, 'utf-8');
             }));
-            const tsConfigFilePath = path.join(projectRoot, 'tsconfig.transpile.json');
             const project = new tsm.Project({
                 tsConfigFilePath,
             });

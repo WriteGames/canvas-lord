@@ -12,6 +12,8 @@ import type { ClassOptions, System } from './shared.js';
 const projectRoot = path.join(import.meta.dirname);
 const repoRoot = path.join(projectRoot, '..');
 
+const tsConfigFilePath = path.join(projectRoot, 'tsconfig.transpile.json');
+
 interface TranspilerOptions {
 	jsonFilePath: string;
 	outDir: string;
@@ -23,9 +25,9 @@ export const runTranspile = async ({
 }: TranspilerOptions): Promise<void> => {
 	const inDir = path.dirname(jsonFilePath);
 
-	const transpileProject = true as boolean;
+	const transpileProjectIntoTS = true as boolean;
 	const runEslint = true as boolean;
-	const runPrettier = true as boolean;
+	const runPrettierAndOutputJS = true as boolean;
 	const copyFiles = true as boolean;
 
 	const wholeThang = true as boolean;
@@ -407,10 +409,10 @@ export const runTranspile = async ({
 
 		const filesToFormat: string[] = [];
 
-		if (transpileProject) {
+		if (transpileProjectIntoTS) {
 			console.time('project');
 			const project = new Project({
-				tsConfigFilePath: './tsconfig.transpile.json',
+				tsConfigFilePath,
 			});
 			const typeChecker = project.getTypeChecker();
 			console.timeEnd('project');
@@ -693,7 +695,7 @@ export const runTranspile = async ({
 			// console.log(resultText);
 		}
 
-		if (runPrettier) {
+		if (runPrettierAndOutputJS) {
 			const dir = outputPath;
 			const prettierignorePath = path.join(repoRoot, '.prettierignore');
 			const prettierConfigPath = path.join(repoRoot, '.prettierrc.json');
@@ -724,10 +726,6 @@ export const runTranspile = async ({
 				}),
 			);
 
-			const tsConfigFilePath = path.join(
-				projectRoot,
-				'tsconfig.transpile.json',
-			);
 			const project = new tsm.Project({
 				tsConfigFilePath,
 			});
