@@ -1,6 +1,6 @@
 {
 	"name": "canvas-lord",
-	"version": "0.7.4",
+	"version": "0.8.0",
 	"description": "A browser embeddable, interactive game tutorial engine",
 	"main": "main.js",
 	"type": "module",
