@@ -1,6 +1,6 @@
-import fs from 'node:fs';
+import { Command } from 'commander';
+import { fileSelector } from 'inquirer-file-selector';
 import path from 'node:path';
-import { select } from '@inquirer/prompts';
 import { runTranspile } from './transpile.js';
 
 const projectRoot = path.join(import.meta.dirname);
@@ -8,21 +8,29 @@ const projectRoot = path.join(import.meta.dirname);
 
 const inDir = path.join(projectRoot, 'in');
 
-const items = await fs.promises.readdir(inDir);
-const jsonFiles = items.filter((filePath) => filePath.endsWith('.json'));
+let selectedFile: string | undefined;
 
-// const selectedFile = await select({
-// 	message: 'Enter your name',
-// 	choices: jsonFiles.map((value) => ({
-// 		name: value,
-// 		value,
-// 	})),
+const program = new Command();
+program.argument('[source]').action((source: string | undefined) => {
+	selectedFile = source;
+});
+program.parse();
 
-// 	default: 'tut2.json',
-// });
-const selectedFile = 'tut2.json';
+let jsonFilePath: string;
+if (selectedFile) {
+	// TODO(bret): double check to ensure that we're not using an absolute path or relative path, etc
+	jsonFilePath = path.join(inDir, selectedFile);
+} else {
+	const selection = await fileSelector({
+		message: 'Select a file or directory:',
+		basePath: inDir,
+		filter: (item) => item.isDirectory || /\.json$/i.test(item.name),
+		type: 'file',
+	});
 
-const jsonFilePath = path.join(inDir, selectedFile);
+	selectedFile = selection.path;
+	jsonFilePath = selectedFile;
+}
 
 // filePath needs to come from JSON
 // testOutputPath is brittle

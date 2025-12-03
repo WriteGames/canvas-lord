@@ -19,7 +19,9 @@
 	"dependencies": {
 		"@inquirer/prompts": "^8.0.2",
 		"canvas-lord": "workspace:*",
+		"commander": "^14.0.2",
 		"globby": "^14.1.0",
+		"inquirer-file-selector": "^1.0.1",
 		"socket.io": "^4.8.1",
 		"ts-morph": "^26.0.0"
 	},

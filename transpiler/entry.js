@@ -1,21 +1,31 @@
-import fs from 'node:fs';
+import { Command } from 'commander';
+import { fileSelector } from 'inquirer-file-selector';
 import path from 'node:path';
 import { runTranspile } from './transpile.js';
 const projectRoot = path.join(import.meta.dirname);
 // const repoRoot = path.join(projectRoot, '..');
 const inDir = path.join(projectRoot, 'in');
-const items = await fs.promises.readdir(inDir);
-const jsonFiles = items.filter((filePath) => filePath.endsWith('.json'));
-// const selectedFile = await select({
-// 	message: 'Enter your name',
-// 	choices: jsonFiles.map((value) => ({
-// 		name: value,
-// 		value,
-// 	})),
-// 	default: 'tut2.json',
-// });
-const selectedFile = 'tut2.json';
-const jsonFilePath = path.join(inDir, selectedFile);
+let selectedFile;
+const program = new Command();
+program.argument('[source]').action((source) => {
+    selectedFile = source;
+});
+program.parse();
+let jsonFilePath;
+if (selectedFile) {
+    // TODO(bret): double check to ensure that we're not using an absolute path or relative path, etc
+    jsonFilePath = path.join(inDir, selectedFile);
+}
+else {
+    const selection = await fileSelector({
+        message: 'Select a file or directory:',
+        basePath: inDir,
+        filter: (item) => item.isDirectory || /\.json$/i.test(item.name),
+        type: 'file',
+    });
+    selectedFile = selection.path;
+    jsonFilePath = selectedFile;
+}
 // filePath needs to come from JSON
 // testOutputPath is brittle
 // destDir
