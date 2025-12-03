@@ -1,6 +1,4 @@
-// import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
-import { Draw, Keys } from 'canvas-lord';
-import * as Components from 'canvas-lord/util/components';
+import { Components, Draw, Keys } from 'canvas-lord';
 export const moveXSystem = {
     update(entity, input) {
         const component = entity.component(testComponent);

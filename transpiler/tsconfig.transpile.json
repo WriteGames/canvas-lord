@@ -5,5 +5,6 @@
 		"alwaysStrict": false,
 		"strict": false,
 		"sourceMap": false
-	}
+	},
+	"references": [{ "path": "../engine" }]
 }

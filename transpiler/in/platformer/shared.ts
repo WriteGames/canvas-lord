@@ -1,5 +1,4 @@
-import type { IEntity } from 'canvas-lord/core/entity';
-import type { Key } from 'canvas-lord/core/input';
+import type { IEntity, Key } from 'canvas-lord';
 
 export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
 export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];

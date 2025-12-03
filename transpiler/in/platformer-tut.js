@@ -1,9 +1,8 @@
-import { Game } from 'canvas-lord';
+import { Game, Inspector } from 'canvas-lord';
 import { AssetManager } from 'canvas-lord/core/asset-manager';
-import { Inspector } from 'canvas-lord/inspector';
 import { PlayerScene } from './player-scene';
-export let assetManager;
-export const initGame = (Player, properties) => (id, src = '') => {
+let assetManager;
+export const initGame = (Player, properties) => async (id, src = '') => {
     const game = new Game(id);
     game.backgroundColor = '#87E1A3';
     assetManager = new AssetManager(`${src}img/`);
@@ -50,5 +49,5 @@ export const initGame = (Player, properties) => (id, src = '') => {
         game.render();
         inspector.onUpdate();
     });
-    game.load(assetManager);
+    await game.load(assetManager);
 };

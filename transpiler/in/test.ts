@@ -1,16 +1,17 @@
-import type { Entity, Input } from 'canvas-lord';
-import type { IEntitySystem } from 'canvas-lord/util/types';
-// import type { GetSystemUpdate, IEntitySystem } from 'canvas-lord/util/types';
+import type {
+	Entity,
+	Input,
+	GetSystemUpdate,
+	IEntitySystem,
+	Ctx,
+} from 'canvas-lord';
 
-import { Draw, Keys } from 'canvas-lord';
-import type { Ctx } from 'canvas-lord/util/canvas.ts';
-import * as Components from 'canvas-lord/util/components';
+import { Components, Draw, Keys } from 'canvas-lord';
 
 interface Player extends Entity {
 	speed: number;
 	// TODO(bret): we could get aliases based off of these tbh
-	// moveX: GetSystemUpdate<typeof moveXSystem>;
-	moveX: (input: Input) => void;
+	moveX: GetSystemUpdate<typeof moveXSystem>;
 }
 
 export const moveXSystem: IEntitySystem = {

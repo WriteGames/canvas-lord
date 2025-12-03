@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type -- blah */
 import crypto from 'node:crypto';
 
-import type {
-	IEntitySystem,
-	IEntityComponentType,
-} from 'canvas-lord/util/types';
+import type { IEntitySystem, IEntityComponentType } from 'canvas-lord';
 import ts from 'typescript';
 
 export const isExportKeyword = (m: ts.ModifierLike) =>

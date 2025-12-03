@@ -1,6 +1,5 @@
 import type { Camera, Ctx, IEntity, Input, Logger } from 'canvas-lord';
-import { BoxCollider, Sprite } from 'canvas-lord';
-import * as Components from 'canvas-lord/util/components';
+import { BoxCollider, Components, Sprite } from 'canvas-lord';
 import { jumpKeys, leftKeys, rightKeys, type PlayerEntity } from './shared';
 // import type { IEntitySystem } from 'canvas-lord/util/types';
 

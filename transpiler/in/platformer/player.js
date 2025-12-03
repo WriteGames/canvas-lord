@@ -1,5 +1,4 @@
-import { BoxCollider, Sprite } from 'canvas-lord';
-import * as Components from 'canvas-lord/util/components';
+import { BoxCollider, Components, Sprite } from 'canvas-lord';
 import { jumpKeys, leftKeys, rightKeys } from './shared';
 export const baseSystem = {
     init(entity) {

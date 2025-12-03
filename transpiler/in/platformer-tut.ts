@@ -1,12 +1,12 @@
-import { Game } from 'canvas-lord';
+import { Game, Inspector } from 'canvas-lord';
 import { AssetManager } from 'canvas-lord/core/asset-manager';
-import { Inspector } from 'canvas-lord/inspector';
-import { PlayerClass, PlayerScene } from './player-scene';
+import type { PlayerClass } from './player-scene';
+import { PlayerScene } from './player-scene';
 
-export let assetManager: AssetManager;
+let assetManager: AssetManager;
 export const initGame =
-	(Player: typeof PlayerClass, properties: any) =>
-	(id: string, src = '') => {
+	(Player: typeof PlayerClass, properties: string[]) =>
+	async (id: string, src = '') => {
 		const game = new Game(id);
 		game.backgroundColor = '#87E1A3';
 
@@ -35,7 +35,7 @@ export const initGame =
 		assetManager.onLoad.add(() => {
 			console.log('== AssetManager::onLoad()');
 
-			const splitScreen = true;
+			const splitScreen = true as boolean;
 
 			const sceneLeft = new PlayerScene(Player, game, assetManager);
 
@@ -63,5 +63,6 @@ export const initGame =
 
 			inspector.onUpdate();
 		});
-		game.load(assetManager);
+
+		await game.load(assetManager);
 	};

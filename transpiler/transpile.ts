@@ -728,6 +728,9 @@ export const runTranspile = async ({
 
 			const project = new tsm.Project({
 				tsConfigFilePath,
+				// do NOT compile canvas-lord files, please
+				skipLoadingLibFiles: true,
+				skipFileDependencyResolution: true,
 			});
 
 			project.addSourceFilesAtPaths(filePaths);

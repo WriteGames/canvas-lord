@@ -1,4 +1,5 @@
 {
 	"extends": "@writegames.com/style-guide/typescript",
-	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts", "**/out*/*"]
+	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts", "**/out*/*"],
+	"references": [{ "path": "../engine" }]
 }
