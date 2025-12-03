@@ -1,3 +1,10 @@
 {
-	"extends": "@writegames.com/style-guide/typescript"
+	"extends": "@writegames.com/style-guide/typescript",
+	"compilerOptions": {
+		"outDir": "bin",
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true
+	},
+	"exclude": ["bin"]
 }

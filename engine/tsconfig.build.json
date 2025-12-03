@@ -1,8 +1,10 @@
 {
-	"extends": "@writegames.com/style-guide/typescript",
-	"compilerOptions": {
-		"outDir": "bin",
-		"declaration": true
-	},
-	"exclude": ["**/*.config.ts", "**/*.spec.ts", "**/*.test.ts", "bin"]
+	"extends": "./tsconfig.json",
+	"exclude": [
+		"**/*.config.ts",
+		"**/*.spec.ts",
+		"**/*.test.ts",
+		"**/scripts/*",
+		"bin"
+	]
 }
