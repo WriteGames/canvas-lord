@@ -3,11 +3,11 @@
 	"version": "0.8.0",
 	"description": "A browser embeddable, interactive game tutorial engine",
 	"main": "./bin/main.js",
+	"module": "./bin/main.js",
 	"types": "./bin/main.d.ts",
 	"type": "module",
 	"exports": {
-		".": "./bin/main.js",
-		"./*": "./bin/*"
+		".": "./bin/main.js"
 	},
 	"packageManager": "pnpm@9.8.0",
 	"engines": {
