@@ -679,6 +679,8 @@ export const runTranspile = async ({
 		}
 
 		if (runEslint) {
+			console.log('Initializing eslint...');
+			console.time('eslint');
 			const eslint = new ESLint({
 				fix: true,
 				overrideConfigFile:
@@ -693,9 +695,12 @@ export const runTranspile = async ({
 			// const formatter = await eslint.loadFormatter('stylish');
 			// const resultText = formatter.format(results);
 			// console.log(resultText);
+			console.timeEnd('eslint');
 		}
 
 		if (runPrettierAndOutputJS) {
+			console.time('prettier');
+
 			const dir = outputPath;
 			const prettierignorePath = path.join(repoRoot, '.prettierignore');
 			const prettierConfigPath = path.join(repoRoot, '.prettierrc.json');
@@ -738,8 +743,6 @@ export const runTranspile = async ({
 			await project.emit();
 
 			const prettierFiles = filePaths;
-
-			console.log('prettier files:', prettierFiles);
 
 			await prettier.resolveConfig(prettierConfigPath);
 
@@ -785,11 +788,13 @@ export const runTranspile = async ({
 					console.log(`Formatted: ${filePath}`);
 				}),
 			);
+			console.timeEnd('prettier');
 		}
 
 		// copy files
 		if (copyFiles) {
 			console.log('copying files');
+			console.time('copy');
 			const dir = outputPath;
 			const filePaths = await globby(['**/*.js'], {
 				cwd: dir,
@@ -808,6 +813,7 @@ export const runTranspile = async ({
 					await fs.promises.copyFile(filePath, dest);
 				}),
 			);
+			console.timeEnd('copy');
 		}
 
 		console.timeEnd('whole thang');
