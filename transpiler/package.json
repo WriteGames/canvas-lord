@@ -18,7 +18,7 @@
 	"license": "ISC",
 	"dependencies": {
 		"@inquirer/prompts": "^8.0.2",
-		"canvas-lord": "0.8.0",
+		"canvas-lord": "workspace:*",
 		"globby": "^14.1.0",
 		"socket.io": "^4.8.1",
 		"ts-morph": "^26.0.0"

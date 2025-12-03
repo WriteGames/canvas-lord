@@ -73,8 +73,8 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2(@types/node@20.11.3)
       canvas-lord:
-        specifier: 0.8.0
-        version: 0.8.0
+        specifier: workspace:*
+        version: link:../engine
       globby:
         specifier: ^14.1.0
         version: 14.1.0
@@ -1537,10 +1537,6 @@ packages:
 
   caniuse-lite@1.0.30001700:
     resolution: {integrity: sha512-2S6XIXwaE7K7erT8dY+kLQcpa5ms63XlRkMkReXjle+kf6c5g38vyMl+Z5y8dSxOFDhcFe+nxnn261PLxBSQsQ==}
-
-  canvas-lord@0.8.0:
-    resolution: {integrity: sha512-zyH6nfGd8HXI47HE/9hAFk3n273WsqyNUm7iC/nvMqriGrRs7ccffHROEepEntI+2fq4+curd2gjBXIsWIx4WQ==}
-    engines: {node: ^22, pnpm: ^9}
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -5043,10 +5039,6 @@ snapshots:
   callsites@3.1.0: {}
 
   caniuse-lite@1.0.30001700: {}
-
-  canvas-lord@0.8.0:
-    dependencies:
-      '@writegames.com/game-math': 0.4.4
 
   ccount@2.0.1: {}
 
