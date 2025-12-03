@@ -19,12 +19,25 @@ tsconfig*json
 # sandbox
 sandbox/**
 
-# scripts
-scripts/**
-
 # yalc files
 **/.yalc
 yalc.lock
 
 # npm pack
 *.tgz
+
+# assets
+img/**
+**/*.html
+
+# Ignore generated files...
+*.js
+*.js.map
+# ...except those within /bin & /dist
+!bin/**/*.js
+!bin/**/*.js.map
+!dist/**/*.js
+!dist/**/*.js.map
+
+# scripts
+**/scripts/**
