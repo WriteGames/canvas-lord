@@ -16,6 +16,9 @@ tsconfig*json
 .vscode/**
 *.config.ts
 
+# tests
+*.spec.ts
+
 # sandbox
 sandbox/**
 
