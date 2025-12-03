@@ -2,7 +2,8 @@
 	"name": "canvas-lord",
 	"version": "0.8.0",
 	"description": "A browser embeddable, interactive game tutorial engine",
-	"main": "main.js",
+	"main": "./bin/main.js",
+	"types": "./bin/main.d.ts",
 	"type": "module",
 	"exports": {
 		".": "./bin/main.js",
