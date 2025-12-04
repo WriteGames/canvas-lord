@@ -110,6 +110,7 @@ export class Logger {
 	logs: Log[];
 	watched: Map<string, Log>;
 	watchedDelimiter: string;
+	fontSize = 10;
 
 	constructor(x: number, y: number, options: Partial<LoggerOptions> = {}) {
 		this.x = x;
@@ -173,7 +174,7 @@ export class Logger {
 		const drawX = this.x;
 		let drawY = this.y;
 
-		ctx.font = '10px Monospace';
+		ctx.font = `${this.fontSize}px Monospace`;
 
 		const glyph = ctx.measureText('0');
 		const ascenderHeight = glyph.actualBoundingBoxAscent;
@@ -192,7 +193,7 @@ export class Logger {
 				.sort((a, b) => b - a)[0] ?? 0;
 
 		const textWidth = glyph.width * longestLength;
-		const textHeight = 10;
+		const textHeight = this.fontSize;
 
 		const paddingX = 3;
 		const paddingY = 3;
