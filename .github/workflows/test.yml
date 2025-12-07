@@ -5,10 +5,13 @@ on:
         branches: [main]
 
 jobs:
-    lint:
+    test:
         runs-on: ubuntu-latest
-        steps:
-            - uses: ./.github/workflows/pnpm-install.yml
 
-            - name: Run ESLint
-              run: pnpm -F canvas-lord lint
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: ./.github/actions/setup-env
+
+            - name: Run tests
+              run: pnpm -F canvas-lord test
