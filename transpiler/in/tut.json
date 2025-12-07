@@ -1,0 +1,45 @@
+{
+	"name": "Player",
+	"extendsClass": "Entity",
+	"components": ["testComponent"],
+	"systems": [
+		{ "name": "moveLeftSystem", "outputType": "inline" },
+		{ "name": "moveRightSystem", "outputType": "inline" },
+		{
+			"name": "deleteSelfSystem",
+			"outputType": "function",
+			"alias": "deleteSelf"
+		}
+	],
+	"steps": [
+		{
+			"add": {
+				"components": ["testComponent2"],
+				"systems": [
+					{
+						"name": "moveXSystem",
+						"outputType": "function",
+						"alias": "moveX",
+						"omitFromOutput": true
+					},
+					{
+						"name": "horizontalMovementSystem",
+						"outputType": "inline"
+					}
+				]
+			},
+			"remove": {
+				"components": ["testComponent"],
+				"systems": [
+					{ "name": "moveLeftSystem", "outputType": "inline" },
+					{ "name": "moveRightSystem", "outputType": "inline" },
+					{
+						"name": "deleteSelfSystem",
+						"outputType": "function",
+						"alias": "deleteSelf"
+					}
+				]
+			}
+		}
+	]
+}

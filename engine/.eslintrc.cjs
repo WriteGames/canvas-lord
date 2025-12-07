@@ -20,7 +20,7 @@ module.exports = {
 		...baseESLintConfig.parserOptions,
 		project,
 	},
-	ignorePatterns: ['**/*.js'],
+	ignorePatterns: ['**/*.js', '**/*.d.ts'],
 	rules: {
 		...baseESLintConfig.rules,
 		'@typescript-eslint/array-type': [

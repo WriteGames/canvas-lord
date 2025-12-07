@@ -1,11 +1,12 @@
-import { IEntity } from 'canvas-lord/core/entity';
-import { Input, type Key } from 'canvas-lord/core/input.js';
-import * as Components from 'canvas-lord/util/components.js';
-import { Logger } from 'canvas-lord/util/logger.js';
+import type { IEntity } from 'canvas-lord/core/entity';
+import type { Input } from 'canvas-lord/core/input';
+import * as Components from 'canvas-lord/util/components';
+import type { Logger } from 'canvas-lord/util/logger';
+import { jumpKeys, leftKeys, rightKeys } from './platformer/shared';
 
-export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
-export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];
-export const jumpKeys: Key[] = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
+// export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
+// export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];
+// export const jumpKeys: Key[] = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
 
 export const EVENT_TYPE = {
 	UPDATE_CAN_JUMP: 'update-can-jump',

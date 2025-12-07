@@ -1,0 +1,17 @@
+name: 'Setup Environment'
+description: 'Installs node and pnpm'
+runs:
+    using: 'composite'
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup pnpm
+          uses: pnpm/action-setup@v4
+          with:
+              run_install: true
+
+        - name: Setup Node
+          uses: actions/setup-node@v6
+          with:
+              node-version: ${{ inputs.node_version || '22' }}
+              cache: 'pnpm'

@@ -11,7 +11,13 @@ const code = `
 		const jumpKeys = [' ', 'ArrowUp', 'w', 'W', 'z', 'Z'];
 `.slice(1, -1);
 
-export const CodeSnippet = () => {
+interface CodeSnippet {
+	children: string;
+}
+
+export const CodeSnippet = ({ children }: CodeSnippet) => {
+	const code = children; //.slice(0, -1);
+
 	const ref = useRef<HTMLElement>(null);
 
 	useEffect(() => {

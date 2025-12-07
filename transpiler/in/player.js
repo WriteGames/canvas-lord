@@ -1,7 +1,8 @@
-import * as Components from 'canvas-lord/util/components.js';
-export const leftKeys = ['ArrowLeft', 'KeyA'];
-export const rightKeys = ['ArrowRight', 'KeyD'];
-export const jumpKeys = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
+import * as Components from 'canvas-lord/util/components';
+import { jumpKeys, leftKeys, rightKeys } from './platformer/shared';
+// export const leftKeys: Key[] = ['ArrowLeft', 'KeyA'];
+// export const rightKeys: Key[] = ['ArrowRight', 'KeyD'];
+// export const jumpKeys: Key[] = ['Space', 'ArrowUp', 'KeyW', 'KeyZ'];
 export const EVENT_TYPE = {
     UPDATE_CAN_JUMP: 'update-can-jump',
     UPDATE_COYOTE: 'update-coyote',
@@ -153,4 +154,3 @@ export const verticalMovementSystem2 = {
         // }
     },
 };
-//# sourceMappingURL=player.js.map

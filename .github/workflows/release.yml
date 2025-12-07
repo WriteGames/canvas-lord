@@ -11,19 +11,8 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@v4
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v3
-              with:
-                  version: 9
-                  run_install: false
-            - name: Setup Node
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 22
-                  cache: 'pnpm'
-            - name: Install dependencies
-              run: pnpm install
+            - uses: ./.github/workflows/pnpm-install.yml
+
             - name: Build Canvas Lord (tsc)
               run: pnpm -F canvas-lord build
             - name: Build Canvas Lord (Vite)
