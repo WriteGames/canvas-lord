@@ -1,0 +1,14 @@
+name: Test
+
+on:
+    pull_request:
+        branches: [main]
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: ./.github/workflows/pnpm-install.yml
+
+            - name: Run ESLint
+              run: pnpm -F canvas-lord lint
