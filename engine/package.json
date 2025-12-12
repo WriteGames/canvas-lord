@@ -44,6 +44,6 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@writegames.com/game-math": "^0.4.4"
+		"@writegames.com/game-math": "^0.5.5"
 	}
 }
