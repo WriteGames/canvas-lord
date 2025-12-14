@@ -29,8 +29,8 @@ interface ITween {
 		duration: number,
 	): PropertyTweener<T>;
 	tweenSubtween(tween: Tween): SubtweenTweener;
-	setEase(ease: EaseType): this;
-	setTrans(trans: TransType): this;
+	setEase(ease: EaseType | keyof typeof EaseType): this;
+	setTrans(trans: TransType | keyof typeof TransType): this;
 	update(): void;
 	pause(): void;
 	play(): void;
@@ -117,13 +117,17 @@ export class Tween implements ITween {
 		return this.#addTweener(new SubtweenTweener(tween));
 	}
 
-	setEase(ease: EaseType): this {
-		this.#ease = ease;
+	setEase(trans: EaseType): this;
+	setEase(trans: keyof typeof EaseType): this;
+	setEase(ease: EaseType | keyof typeof EaseType): this {
+		this.#ease = typeof ease === 'string' ? EaseType[ease] : ease;
 		return this;
 	}
 
-	setTrans(trans: TransType): this {
-		this.#trans = trans;
+	setTrans(trans: TransType): this;
+	setTrans(trans: keyof typeof TransType): this;
+	setTrans(trans: TransType | keyof typeof TransType): this {
+		this.#trans = typeof trans === 'string' ? TransType[trans] : trans;
 		return this;
 	}
 
