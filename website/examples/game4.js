@@ -1,4 +1,4 @@
-import { V2, Draw, scalePos, addPos, subPos } from 'canvas-lord';
+import { V2, Draw, scaleVec, addVec, subVec } from 'canvas-lord';
 
 import { initGamesBase, assetManager } from './base-game';
 
@@ -20,9 +20,9 @@ class Player {
 		const height = unit * 3;
 
 		const size = [width, height];
-		const halfSize = scalePos(size, 0.5);
+		const halfSize = scaleVec(size, 0.5);
 
-		const center = scalePos([GAME_W, GAME_H], 0.5);
+		const center = scaleVec([GAME_W, GAME_H], 0.5);
 
 		Draw.rect(
 			ctx,
@@ -36,7 +36,7 @@ class Player {
 			GAME_H,
 		);
 
-		const upperLeft = subPos(center, halfSize);
+		const upperLeft = subVec(center, halfSize);
 		const wide = 1.15;
 		const slim = 2.0 - wide;
 		const deltas = [
@@ -51,7 +51,7 @@ class Player {
 
 		const points = [upperLeft];
 		for (let i = 0; i < deltas.length; ++i) {
-			const nextPoint = addPos(points[i], deltas[i]);
+			const nextPoint = addVec(points[i], deltas[i]);
 			points.push(nextPoint);
 		}
 		ctx.strokeStyle = 'white';

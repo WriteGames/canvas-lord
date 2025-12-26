@@ -1,13 +1,13 @@
 import type { AssetManager } from '../core/asset-manager.js';
 import {
-	addPos,
-	hashPos,
+	addVec,
+	hashVec,
 	indexToPos,
 	isWithinBounds,
-	posEqual,
+	vecEqual,
 	posToIndex,
-	scalePos,
-	subPos,
+	scaleVec,
+	subVec,
 	Vec2,
 } from '../math/index.js';
 import {
@@ -263,10 +263,10 @@ export const findAllPolygonsInGrid = (
 	const polygons: Polygon[] = [];
 
 	const offsets = {
-		[hashPos(norm.NU)]: [norm.RU, norm.NU],
-		[hashPos(norm.ND)]: [norm.LD, norm.ND],
-		[hashPos(norm.RN)]: [norm.RD, norm.RN],
-		[hashPos(norm.LN)]: [norm.LU, norm.LN],
+		[hashVec(norm.NU)]: [norm.RU, norm.NU],
+		[hashVec(norm.ND)]: [norm.LD, norm.ND],
+		[hashVec(norm.RN)]: [norm.RD, norm.RN],
+		[hashVec(norm.LN)]: [norm.LU, norm.LN],
 	} as const;
 
 	const shapes = findAllShapesInGrid(grid, columns, rows);
@@ -291,10 +291,10 @@ export const findAllPolygonsInGrid = (
 			const origin = interior ? 0 : -1;
 			const size = 16;
 			const m1 = size - 1;
-			const basePos = scalePos(pos, size);
+			const basePos = scaleVec(pos, size);
 
 			const [lastX, lastY] = points.length
-				? subPos(points[points.length - 1], basePos)
+				? subVec(points[points.length - 1], basePos)
 				: [origin, origin];
 
 			const offset = new Vec2(0, 0);
@@ -320,33 +320,37 @@ export const findAllPolygonsInGrid = (
 					break;
 			}
 
-			points.push(addPos(basePos, offset));
+			points.push(addVec(basePos, offset));
 		};
 
 		addPointsToPolygon(points, first, gridType === 1);
 
 		for (
 			let next = first, firstIter = true;
-			firstIter || !posEqual(curDir, norm.ND) || !posEqual(next, first);
+			firstIter || !vecEqual(curDir, norm.ND) || !vecEqual(next, first);
 			firstIter = false
 		) {
 			const [p1, p2] = (
-				offsets[hashPos(curDir)] as [V2CardinalNorm, V2CardinalNorm]
+				offsets[hashVec(curDir)] as [V2CardinalNorm, V2CardinalNorm]
 			)
-				.map((o) => addPos(next, o))
+				.map((o) => addVec(next, o))
 				.map((p) => {
-					return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
+					return isWithinBounds(
+						p,
+						Vec2.zero as number[] as [number, number],
+						new Vec2(columns, rows) as number[] as [number, number],
+					)
 						? (grid[posToIndex(p, columns)] as unknown as number)
 						: 0;
 				});
 
 			if (p2 === gridType) {
 				if (p1 === gridType) {
-					next = addPos(next, curDir);
+					next = addVec(next, curDir);
 					curDir = rotateNormBy90Deg(curDir, 1);
 				}
 
-				next = addPos(next, curDir);
+				next = addVec(next, curDir);
 
 				if (lastDir !== curDir)
 					addPointsToPolygon(points, next, gridType === 1);
@@ -434,7 +438,7 @@ const fillShape = (
 
 	let next;
 	while ((next = queue.pop())) {
-		const hash = hashPos(next);
+		const hash = hashVec(next);
 		if (visited.includes(hash)) continue;
 
 		const index = posToIndex(next, stride);
@@ -517,13 +521,13 @@ export class GridOutline {
 			this.polygons.forEach((polygon) => {
 				ctx.beginPath();
 				ctx.strokeStyle = this.outlineColor;
-				const start = addPos(polygon.points[0], [0.5, 0.5]);
+				const start = addVec(polygon.points[0], [0.5, 0.5]);
 				const cameraPos = new Vec2(camera[0], camera[1]);
-				const [_x, _y] = subPos(start, cameraPos);
+				const [_x, _y] = subVec(start, cameraPos);
 				ctx.moveTo(_x, _y);
 				polygon.points
 					.slice(1)
-					.map((p) => subPos(p, camera))
+					.map((p) => subVec(p, camera))
 					.forEach(([x, y]) => {
 						ctx.lineTo(x + 0.5, y + 0.5);
 					});
@@ -537,7 +541,7 @@ export class GridOutline {
 			ctx.fillStyle = this.pointsColor;
 			this.polygons.forEach((polygon) => {
 				polygon.points
-					.map((p) => subPos(p, camera))
+					.map((p) => subVec(p, camera))
 					.forEach(([x, y]) => {
 						ctx.fillRect(x - 1, y - 1, 3, 3);
 					});

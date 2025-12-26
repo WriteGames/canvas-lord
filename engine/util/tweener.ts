@@ -1,6 +1,6 @@
 import { CL } from '../core/CL.ts';
 
-import { Vec2, lerpAngle } from '../math/index.ts';
+import { Vec2, lerp, lerpAngle } from '../math/index.ts';
 import { Ease, easeInOut, easeOut, easeOutIn, type EaseFunc } from './ease.ts';
 import type { Tween } from './tween.ts';
 
@@ -48,7 +48,7 @@ interface Operations<T, U extends HasProp<T>> {
 }
 
 const _defaultAdd = (a: number, b: number): number => a + b;
-const _defaultLerp = Math.lerp;
+const _defaultLerp = lerp;
 const getOperations = <T, U extends HasProp<T>>(
 	value: PropType<T, U>,
 ): Operations<T, U> => {

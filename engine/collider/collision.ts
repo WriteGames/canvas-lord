@@ -1,8 +1,8 @@
 import {
 	Vec2,
-	addPos,
-	scalePos,
-	subPos,
+	addVec,
+	scaleVec,
+	subVec,
 	crossProduct2D,
 	dotProduct2D,
 	type Line2D,
@@ -30,13 +30,13 @@ const getSideOfLine = (
 
 // CLEANUP: clean these up (would break some non-TS files unfortunately)
 const _lineSegmentIntersection = ([a, b]: Line2D, [c, d]: Line2D): Vec2 => {
-	const r = subPos(b, a);
-	const s = subPos(d, c);
+	const r = subVec(b, a);
+	const s = subVec(d, c);
 
 	const rxs = crossProduct2D(r, s);
 
-	const t = crossProduct2D(subPos(c, a), s) / rxs;
-	const u = crossProduct2D(subPos(a, c), r) / -rxs;
+	const t = crossProduct2D(subVec(c, a), s) / rxs;
+	const u = crossProduct2D(subVec(a, c), r) / -rxs;
 
 	return new Vec2(t, u);
 };
@@ -51,7 +51,7 @@ export const getLineSegmentIntersection = (
 	const [t, u] = _lineSegmentIntersection(a, b);
 
 	return t >= 0 && t <= 1 && u >= 0 && u <= 1
-		? addPos(a[0], scalePos(subPos(a[1], a[0]), t))
+		? addVec(a[0], scaleVec(subVec(a[1], a[0]), t))
 		: null;
 };
 

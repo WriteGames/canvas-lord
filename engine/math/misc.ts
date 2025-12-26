@@ -1,19 +1,22 @@
 // CLEANUP(bret): This file is a bunch of random stuff, will need to clean up
 import type { Tileset } from '../graphic/index.js';
-import type { FuncReduceNumber, FuncReduceVector } from './index.js';
+import type { Vector } from './index.js';
 import {
-	addPos,
+	addVec,
 	clamp,
-	hashPos,
+	hashVec,
 	lerp,
 	RAD_180,
 	RAD_360,
 	RAD_540,
 	Random,
 	reduceSum,
-	subPos,
+	subVec,
 	Vec2,
 } from './index.js';
+
+type FuncReduceNumber = (acc: number, v: number) => number;
+type FuncReduceVector<T extends Vector = Vector> = (a: T, b: T) => number;
 
 // type Writeable<T> = {
 // 	-readonly [P in keyof T]: T[P];
@@ -35,15 +38,15 @@ const interlaceArrays = <T, U>(
 
 // export const mapByOffset = <V extends Vector>(
 export const mapByOffset = (offset: Vec2): ((pos: Vec2) => Vec2) => {
-	return (pos: Vec2): Vec2 => addPos(offset, pos);
+	return (pos: Vec2): Vec2 => addVec(offset, pos);
 };
 // export const mapFindOffset = <V extends Vector>(
 export const mapFindOffset = (origin: Vec2): ((pos: Vec2) => Vec2) => {
-	return (pos: Vec2): Vec2 => subPos(pos, origin);
+	return (pos: Vec2): Vec2 => subVec(pos, origin);
 };
 // export const flatMapByOffsets = <V extends Vector>(
 export const flatMapByOffsets = (offsets: Vec2[]): ((pos: Vec2) => Vec2[]) => {
-	return (pos: Vec2): Vec2[] => offsets.map((offset) => addPos(offset, pos));
+	return (pos: Vec2): Vec2[] => offsets.map((offset) => addVec(offset, pos));
 };
 
 // const pathToSegments = (path) =>
@@ -52,7 +55,7 @@ export const flatMapByOffsets = (offsets: Vec2[]): ((pos: Vec2) => Vec2[]) => {
 // 		vertices[(i + 1) % vertices.length],
 // 	]);
 
-// const getAngle = (a, b) => Math.atan2(...subPos(b, a)) * 180 / Math.PI;
+// const getAngle = (a, b) => Math.atan2(...subVec(b, a)) * 180 / Math.PI;
 const getAngle: FuncReduceVector = (a, b) =>
 	Math.atan2(b[1] - a[1], b[0] - a[0]);
 const getAngleBetween: FuncReduceNumber = (a, b) =>
@@ -159,16 +162,16 @@ class V2Map<K extends Vec2, V> {
 		this.#map = new Map();
 	}
 	delete(key: K): boolean {
-		return this.#map.delete(hashPos(key));
+		return this.#map.delete(hashVec(key));
 	}
 	get(key: K): V | undefined {
-		return this.#map.get(hashPos(key));
+		return this.#map.get(hashVec(key));
 	}
 	has(key: K): boolean {
-		return this.#map.has(hashPos(key));
+		return this.#map.has(hashVec(key));
 	}
 	set(key: K, value: V): this {
-		this.#map.set(hashPos(key), value);
+		this.#map.set(hashVec(key), value);
 		return this;
 	}
 }

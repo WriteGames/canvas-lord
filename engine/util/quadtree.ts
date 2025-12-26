@@ -1,9 +1,9 @@
 import {
 	type V3_T as V3,
-	addPos,
-	scalePos,
-	posEqual,
 	Vec2,
+	addVec,
+	scaleVec,
+	vecEqual,
 } from '../math/index.js';
 
 // TODO: capacity, aka when it splits
@@ -109,7 +109,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 			rangeX[1] - rangeX[0],
 			rangeY[1] - rangeY[0],
 		).scale(0.5);
-		this.midPoint = new Vec2(...addPos(this.posA, this.radii));
+		this.midPoint = new Vec2(...addVec(this.posA, this.radii));
 	}
 
 	getQuadIndex(pos: V2): QuadIndex {
@@ -171,9 +171,9 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 	}
 
 	expand(): void {
-		const newRangeX = scalePos(this.rangeX, 2);
+		const newRangeX = scaleVec(this.rangeX, 2);
 
-		const newRangeY = scalePos(this.rangeY, 2);
+		const newRangeY = scaleVec(this.rangeY, 2);
 
 		this.recompute(newRangeX, newRangeY);
 
@@ -220,7 +220,7 @@ export class QuadtreeNode<T> implements QuadtreeNode<T> {
 		const node = this.findNode(pos);
 		// return node;
 		return node?.children.find((child) => {
-			return posEqual(this.itemPosCallback(child), pos);
+			return vecEqual(this.itemPosCallback(child), pos);
 		});
 	}
 

@@ -4,8 +4,8 @@ import {
 	Grid,
 	Scene,
 	V2,
-	addPos,
-	subPos,
+	addVec,
+	subVec,
 } from './bin/main.js';
 
 import { dirND, isPointOnLine, isPointInsidePath } from './bin/math/index.js';
@@ -252,8 +252,8 @@ class LineSegmentScene extends Scene {
 		this.lines.forEach((line, i) => {
 			ctx.strokeStyle = this.intersecting[i] ? 'red' : 'white';
 			ctx.beginPath();
-			ctx.moveTo(...addPos(line[0], correction));
-			ctx.lineTo(...addPos(line[1], correction));
+			ctx.moveTo(...addVec(line[0], correction));
+			ctx.lineTo(...addVec(line[1], correction));
 			ctx.closePath();
 			ctx.stroke();
 		});
@@ -262,8 +262,8 @@ class LineSegmentScene extends Scene {
 		ctx.strokeStyle = inside ? 'lime' : 'white';
 
 		ctx.beginPath();
-		ctx.moveTo(...addPos(this.origin, correction));
-		ctx.lineTo(...addPos(this.target, correction));
+		ctx.moveTo(...addVec(this.origin, correction));
+		ctx.lineTo(...addVec(this.target, correction));
 		ctx.closePath();
 		ctx.stroke();
 
@@ -271,7 +271,7 @@ class LineSegmentScene extends Scene {
 			if (i !== null) {
 				ctx.strokeStyle = 'lime';
 				ctx.beginPath();
-				ctx.arc(...addPos(i, correction), 5, 0, 2 * Math.PI);
+				ctx.arc(...addVec(i, correction), 5, 0, 2 * Math.PI);
 				ctx.closePath();
 				ctx.stroke();
 			}
@@ -280,7 +280,7 @@ class LineSegmentScene extends Scene {
 		const pointColor = this.windingPointInsideShape ? '#00E0A7' : '#FF2C55';
 		ctx.fillStyle = pointColor;
 		ctx.beginPath();
-		ctx.arc(...addPos(this.windingPoint, correction), 0.5, 0, 2 * Math.PI);
+		ctx.arc(...addVec(this.windingPoint, correction), 0.5, 0, 2 * Math.PI);
 		ctx.closePath();
 		ctx.fill();
 
@@ -288,7 +288,7 @@ class LineSegmentScene extends Scene {
 			ctx.strokeStyle = pointColor;
 			ctx.beginPath();
 			ctx.arc(
-				...addPos(this.windingPoint, correction),
+				...addVec(this.windingPoint, correction),
 				8,
 				0,
 				2 * Math.PI,
@@ -390,11 +390,11 @@ class ContourTracingScene extends Scene {
 			ctx.beginPath();
 			ctx.strokeStyle = 'red';
 			ctx.moveTo(
-				...subPos(addPos(polygon.points[0], [0.5, 0.5]), this.camera),
+				...subVec(addVec(polygon.points[0], [0.5, 0.5]), this.camera),
 			);
 			polygon.points
 				.slice(1)
-				.map((p) => subPos(p, this.camera))
+				.map((p) => subVec(p, this.camera))
 				.forEach(([x, y]) => {
 					ctx.lineTo(x + 0.5, y + 0.5);
 				});

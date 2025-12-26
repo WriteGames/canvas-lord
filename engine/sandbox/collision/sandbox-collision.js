@@ -1,6 +1,6 @@
 import { Collision, Draw, Scene, Entity } from '/bin/main.js';
 import * as Collide from '/bin/collider/collide.js';
-import { addPos, Vec2 } from '/bin/math/index.js';
+import { addVec, Vec2 } from '/bin/math/index.js';
 import {
 	LineCollider,
 	PointCollider,
@@ -248,7 +248,7 @@ class ShapeCollisionScene extends Scene {
 					small.orientation = orientationS;
 					break;
 				case 'polygon':
-					const oo = addPos(point, [offsetX, offsetY]);
+					const oo = addVec(point, [offsetX, offsetY]);
 					resizePolygon(small, oo, RADIUS_S);
 					break;
 				default:
