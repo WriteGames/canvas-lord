@@ -22,7 +22,7 @@
 		"build": "tsc --build tsconfig.build.json --force",
 		"build:math": "tsc --outDir bin/math --p node_modules/@writegames.com/game-math/tsconfig.build.json",
 		"build:single-file": "node scripts/build.ts",
-		"postbuidld": "pnpm build:math",
+		"postbuild": "pnpm build:math",
 		"test": "vitest --pool=forks",
 		"lint": "eslint .",
 		"watch": "tsc-watch --p tsconfig.build.json --onSuccess \"pnpm postbuild\"",
