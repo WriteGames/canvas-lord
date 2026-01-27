@@ -10,6 +10,7 @@ import { Draw } from '../../bin/util/draw.js';
 import { Grid } from '../../bin/util/grid.js';
 import { init } from '../sandbox.js';
 
+import { Vec2 } from '../../bin/math/index.js';
 import {
 	cardinalNorms,
 	filterWithinBounds,
@@ -18,8 +19,7 @@ import {
 	mapFindOffset,
 	normToBitFlagMap,
 	reduceBitFlags,
-	Vec2,
-} from '../../bin/math/index.js';
+} from '../../bin/math/misc.js';
 
 class GraphicEntity extends Entity {
 	constructor(x, y, moveOffset, rotateSpeed) {
