@@ -24,12 +24,6 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	frameId = 0;
 	frameW = 0;
 	frameH = 0;
-	framesPerRow = 0;
-
-	sourceX = 0;
-	sourceY = 0;
-	sourceW: number | undefined;
-	sourceH: number | undefined;
 
 	color?: string;
 	blend?: boolean;
@@ -78,11 +72,6 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.frameId = 0;
 		this.frameW = frameW;
 		this.frameH = frameH;
-
-		this.sourceX = 0;
-		this.sourceY = 0;
-		this.sourceW = asset.image?.width;
-		this.sourceH = asset.image?.height;
 
 		this.callback = callback;
 	}
@@ -167,10 +156,10 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		if (!this.visible) return;
 
 		const { frameId, frameW, frameH } = this;
-		this.framesPerRow = Math.floor(this.imageSrc.width / frameW);
+		const framesPerRow = Math.floor(this.imageSrc.width / frameW);
 
-		const sourceX = (frameId % this.framesPerRow) * frameW;
-		const sourceY = Math.floor(frameId / this.framesPerRow) * frameH;
+		const sourceX = (frameId % framesPerRow) * frameW;
+		const sourceY = Math.floor(frameId / framesPerRow) * frameH;
 		let x = this.x - camera.x * this.scrollX;
 		let y = this.y - camera.y * this.scrollY;
 		if (this.relative) {
@@ -185,18 +174,12 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 		this.inc = 0;
 
-		// TODO(bret): remove these and allow Draw.image to make them optional
 		this.frame = 0;
 		this.frameId = 0;
 		this.frameW = 0;
 		this.frameH = 0;
-		this.framesPerRow = 0;
 
-		this.sourceX = 0;
-		this.sourceY = 0;
-		this.sourceW = undefined;
-		this.sourceH = undefined;
-
+		// TODO(bret): remove these and allow Draw.image to make them optional
 		this.color = undefined;
 		this.blend = undefined;
 
