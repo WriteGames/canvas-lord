@@ -6,6 +6,7 @@ import {
 	Sprite,
 	Tileset,
 } from '../../bin/graphic/index.js';
+import { loadAtlas, renderAtlas } from '../../bin/graphic/atlas.js';
 import { Draw } from '../../bin/util/draw.js';
 import { Grid } from '../../bin/util/grid.js';
 import { init } from '../sandbox.js';
@@ -360,8 +361,88 @@ class TilesetScene extends Scene {
 	}
 }
 
+const data = await loadAtlas('../../sandbox/img/mr_clean.json');
+
+const src = '../sandbox/img/mr_clean.png';
+
+const createAnim = (tag, length) =>
+	Array.from({ length }, (_, i) => `${tag}-${i}`);
+
+const anims = data.meta.frameTags.map(({ name, to, from }) =>
+	createAnim(name, to - from + 1),
+);
+let anim = anims[3];
+
+export class AtlasScene extends Scene {
+	asset;
+
+	frame = -1;
+	frameId = 0;
+
+	constructor(engine) {
+		super();
+
+		this.backgroundColor = '#8848aa';
+
+		const { assetManager } = engine;
+		if (!assetManager) throw new Error();
+
+		const asset = assetManager.sprites.get(src);
+		if (!asset) throw new Error();
+		this.asset = asset;
+
+		// const sprite = new Sprite(asset);
+		// sprite.alpha = 0.5;
+		// this.addGraphic(sprite);
+	}
+
+	update() {
+		++this.frame;
+
+		this.frameId = Math.floor(this.frame / 5);
+	}
+
+	render(ctx, _camera) {
+		// const [texture] = data.textures;
+		const texture = {
+			frames: data.frames,
+		};
+
+		if (false) {
+			for (let frameId = 0; frameId < texture.frames.length; ++frameId) {
+				const frame = texture.frames[frameId];
+
+				renderAtlas(
+					ctx,
+					this.asset,
+					frame,
+					frame.frame.x - frame.spriteSourceSize.x,
+					frame.frame.y - frame.spriteSourceSize.y,
+				);
+			}
+		}
+
+		if (true) {
+			const curFilename = anim[this.frameId % anim.length];
+			let frame;
+			if (Array.isArray(texture.frames)) {
+				frame = texture.frames.find(
+					({ filename }) => filename === curFilename,
+				);
+			} else {
+				frame = texture.frames[curFilename];
+			}
+
+			if (frame) {
+				renderAtlas(ctx, this.asset, frame, 0, 0);
+			}
+		}
+	}
+}
+
 const { assetManager } = init({
 	games: [
+		init.game('atlas', AtlasScene),
 		init.game('tileset', TilesetScene),
 		init.game('animation-2', AnimationScene2),
 		init.game('animation', AnimationScene),
@@ -377,6 +458,7 @@ const { assetManager } = init({
 			'particle-2.png',
 			'particle-3.png',
 			'../sandbox/img/animation.png',
+			'../sandbox/img/mr_clean.png',
 		],
 		atlases: ['../sandbox/img/animation.json'],
 	},
