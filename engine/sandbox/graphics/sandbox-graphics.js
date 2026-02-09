@@ -62,9 +62,9 @@ class GraphicScene extends Scene {
 	constructor(engine) {
 		super(engine);
 
-		const assetParticle = assetManager.sprites.get('particle.png');
-		const assetParticle2 = assetManager.sprites.get('particle-2.png');
-		const assetParticle3 = assetManager.sprites.get('particle-3.png');
+		const assetParticle = assetManager.assets.get('particle.png');
+		const assetParticle2 = assetManager.assets.get('particle-2.png');
+		const assetParticle3 = assetManager.assets.get('particle-3.png');
 
 		const halfW = engine.canvas.width >> 1;
 		const quarW = engine.canvas.width >> 2;
@@ -116,7 +116,7 @@ class RadioHead extends Entity {
 		this.label = label;
 
 		const anim = new AnimatedSprite(
-			assetManager.sprites.get('radiohead_spritesheet.png'),
+			assetManager.assets.get('radiohead_spritesheet.png'),
 			32,
 			32,
 		);
@@ -188,7 +188,7 @@ class Anim extends Entity {
 
 		const { loop = true, useCallback = false, frame = undefined } = options;
 
-		const asset = assetManager.sprites.get('../sandbox/img/animation.png');
+		const asset = assetManager.assets.get('../sandbox/img/animation.png');
 
 		const _callback = (name) => {
 			switch (name) {

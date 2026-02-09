@@ -1,12 +1,13 @@
-import { type AssetManager, Sfx } from './asset-manager.js';
-import { Input, type Key } from './input.js';
-import type { Scene } from './scene.js';
 import type { Ctx } from '../util/canvas.js';
 import { Debug } from '../util/debug.js';
+import { type AssetManager, Sfx } from './asset-manager.js';
+import { Input, type Key } from './input.js';
+import { Scene } from './scene.js';
 
+import { Delegate } from '../util/delegate.js';
+import { Preloader } from '../util/preloader.js';
 import type { CSSColor, RequiredAndOmit } from '../util/types.js';
 import { CL } from './CL.js';
-import { Delegate } from '../util/delegate.js';
 
 const defineUnwritableProperty: <T>(
 	obj: T,
@@ -430,6 +431,18 @@ export class Game implements Engine {
 
 	#init(): void {
 		this.onInit.invoke(this);
+	}
+
+	preload(onLoad?: () => void): void {
+		if (!this.assetManager) {
+			this.start();
+			return;
+		}
+
+		this.pushScene(new Preloader(this.assetManager, onLoad));
+		this.start();
+
+		void this.assetManager.loadAssets();
 	}
 
 	start(): void {

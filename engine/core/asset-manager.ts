@@ -1,33 +1,37 @@
 import { Delegate } from '../util/delegate.js';
 
-export type ImageAsset = {
+interface Asset {
 	fileName: string;
-} & (
-	| {
-			image: null;
-			loaded: false;
-	  }
-	| {
-			image: HTMLImageElement;
-			width: number;
-			height: number;
-			loaded: true;
-	  }
-);
+	bytesLoaded: number;
+	fileSize: number;
+}
 
-export type AudioAsset = {
-	fileName: string;
-} & (
-	| {
-			buffer: null;
-			loaded: false;
-	  }
-	| {
-			buffer: AudioBuffer;
-			duration: number;
-			loaded: true;
-	  }
-);
+export type ImageAsset = Asset &
+	(
+		| {
+				image: null;
+				loaded: false;
+		  }
+		| {
+				image: HTMLImageElement;
+				width: number;
+				height: number;
+				loaded: true;
+		  }
+	);
+
+export type AudioAsset = Asset &
+	(
+		| {
+				buffer: null;
+				loaded: false;
+		  }
+		| {
+				buffer: AudioBuffer;
+				duration: number;
+				loaded: true;
+		  }
+	);
 
 const isLoaded = <T extends { loaded: boolean }>(
 	asset: T,
@@ -36,6 +40,7 @@ const isLoaded = <T extends { loaded: boolean }>(
 } => asset.loaded;
 
 export interface AssetManager {
+	assets: Map<string, Asset>;
 	sprites: Map<string, ImageAsset>;
 	audio: Map<string, AudioAsset>;
 	spritesLoaded: number;
@@ -45,7 +50,10 @@ export interface AssetManager {
 }
 
 export class AssetManager {
+	loaded = false;
+
 	constructor(prefix = '') {
+		this.assets = new Map();
 		this.sprites = new Map();
 		this.audio = new Map();
 		this.spritesLoaded = 0;
@@ -54,36 +62,95 @@ export class AssetManager {
 		this.prefix = prefix;
 	}
 
-	get progress(): number {
-		const assets = [...this.sprites.keys(), ...this.audio.keys()];
-		return (this.spritesLoaded + this.audioFilesLoaded) / assets.length;
-	}
-
 	addImage(src: string): void {
-		this.sprites.set(src, { fileName: src, image: null, loaded: false });
+		const asset: ImageAsset = {
+			fileName: src,
+			bytesLoaded: 0,
+			fileSize: -1,
+			image: null,
+			loaded: false,
+		};
+		this.sprites.set(src, asset);
+		this.assets.set(src, asset);
 	}
 
 	addAudio(src: string): void {
-		this.audio.set(src, {
+		const asset: AudioAsset = {
 			fileName: src,
+			bytesLoaded: 0,
+			fileSize: -1,
 			buffer: null,
 			loaded: false,
-		});
+		};
+		this.audio.set(src, asset);
+		this.assets.set(src, asset);
+	}
+
+	get progress(): number {
+		const assets = [...this.assets.values()];
+		const totalBytes = assets.reduce(
+			(acc, { fileSize }) => acc + fileSize,
+			0,
+		);
+		const loadedBytes = assets.reduce(
+			(acc, { bytesLoaded }) => acc + bytesLoaded,
+			0,
+		);
+		return totalBytes > 0 ? loadedBytes / totalBytes : 0;
+	}
+
+	get percent(): number {
+		return 100 * this.progress;
+	}
+
+	#getFullPath(src: string): string {
+		return src.startsWith('http') ? src : `${this.prefix}${src}`;
+	}
+
+	async loadAsset(src: string, asset: Asset): Promise<Response> {
+		return fetch(src)
+			.then((res) => {
+				const reader = res.body?.getReader();
+				if (!reader) throw new Error('???');
+
+				asset.bytesLoaded = 0;
+
+				return new ReadableStream({
+					start(controller) {
+						const pump = (): Promise<void> | undefined => {
+							return reader.read().then(({ done, value }) => {
+								if (done) {
+									controller.close();
+									return;
+								}
+
+								asset.bytesLoaded += value.length;
+
+								controller.enqueue(value);
+								return pump();
+							});
+						};
+						return pump();
+					},
+				});
+			})
+			.then((stream) => new Response(stream));
 	}
 
 	async loadAudio(src: string): Promise<void> {
-		const fullPath = src.startsWith('http') ? src : `${this.prefix}${src}`;
+		const fullPath = this.#getFullPath(src);
 
-		await fetch(fullPath)
+		const audio = this.audio.get(src);
+		if (!audio) {
+			throw new Error(
+				`Loaded audio that doesn't exist in map ("${src}" / "${fullPath}")`,
+			);
+		}
+
+		await this.loadAsset(fullPath, audio)
 			.then((res) => res.arrayBuffer())
 			.then((arrayBuffer) => Sfx.audioCtx.decodeAudioData(arrayBuffer))
 			.then((audioBuffer) => {
-				const audio = this.audio.get(src);
-				if (!audio) {
-					throw new Error(
-						`Loaded audio that doesn't exist in map ("${src}" / "${fullPath}")`,
-					);
-				}
 				audio.loaded = true;
 				audio.buffer = audioBuffer;
 				if (isLoaded(audio)) {
@@ -99,22 +166,39 @@ export class AssetManager {
 			});
 	}
 
-	loadImage(src: string): void {
+	async preloadAsset(src: string): Promise<void> {
+		const fullPath = this.#getFullPath(src);
+		const asset = this.assets.get(src);
+		if (!asset) {
+			throw new Error(
+				`Attempting to preload image that doesn't exist in map ("${src}" / "${fullPath}")`,
+			);
+		}
+
+		await fetch(fullPath, {
+			method: 'HEAD',
+		}).then((res) => {
+			asset.fileSize = Number(res.headers.get('Content-Length'));
+		});
+	}
+
+	async loadImage(src: string): Promise<void> {
 		const image = new Image();
-		const fullPath = src.startsWith('http') ? src : `${this.prefix}${src}`;
+		const fullPath = this.#getFullPath(src);
 		if (
 			fullPath.startsWith('http') &&
 			!fullPath.startsWith(location.origin)
 		) {
 			image.crossOrigin = 'Anonymous';
 		}
+
+		const sprite = this.sprites.get(src);
+		if (!sprite) {
+			throw new Error(
+				`Attempting to load image that doesn't exist in map ("${src}" / "${fullPath}")`,
+			);
+		}
 		image.onload = (): void => {
-			const sprite = this.sprites.get(src);
-			if (!sprite) {
-				throw new Error(
-					`Loaded image that doesn't exist in map ("${src}" / "${fullPath}")`,
-				);
-			}
 			sprite.loaded = true;
 			sprite.image = image;
 			if (isLoaded(sprite)) {
@@ -123,19 +207,29 @@ export class AssetManager {
 			}
 			this.imageLoaded(src);
 		};
-		image.src = fullPath;
+		image.src = await this.loadAsset(fullPath, sprite)
+			.then((res) => res.blob())
+			.then((blob) => URL.createObjectURL(blob));
 	}
 
 	async loadAssets(): Promise<void> {
-		const sprites = [...this.sprites.keys()];
-		const audio = [...this.audio.keys()];
-		const assets = [...sprites, ...audio];
-		if (assets.length === 0) this.emitOnLoad('');
-		sprites.forEach((src) => {
-			this.loadImage(src);
-		});
-		// audio.forEach((src) => this.loadAudio(src));
-		await Promise.all(audio.map(async (src) => this.loadAudio(src)));
+		if (this.assets.size === 0) this.emitOnLoad('');
+
+		const assets = [...this.assets.keys()];
+		await Promise.all(assets.map(async (src) => this.preloadAsset(src)));
+
+		await Promise.all(
+			assets.map(async (src) => {
+				switch (true) {
+					case this.sprites.has(src):
+						return this.loadImage(src);
+					case this.audio.has(src):
+						return this.loadAudio(src);
+					default:
+						throw new Error('unsupported asset type');
+				}
+			}),
+		);
 	}
 
 	emitOnLoad(src: string): void {
@@ -144,14 +238,12 @@ export class AssetManager {
 		});
 	}
 
-	reloadAssets(): void {
+	async reloadAssets(): Promise<void> {
 		this.spritesLoaded = 0;
 		this.audioFilesLoaded = 0;
 		const sprites = [...this.sprites.keys()];
 		if (sprites.length === 0) this.emitOnLoad('');
-		sprites.forEach((src) => {
-			this.loadImage(src);
-		});
+		await Promise.all(sprites.map(async (src) => this.loadImage(src)));
 	}
 
 	_checkAllAssetsLoaded(): void {
