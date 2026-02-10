@@ -1,6 +1,9 @@
-import type { ImageAsset } from '../core/asset-manager.js';
+import type { AtlasAsset, ImageAsset } from '../core/asset-manager.js';
+import { Vec2 } from '../math/index.js';
+import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
+import { Graphic } from './graphic.js';
 
 interface AtlasFrame {
 	filename: string;
@@ -22,10 +25,17 @@ interface AtlasTexture {
 	frames: AtlasFrames;
 }
 
+interface AtlasFrameTag {
+	name: string;
+	from: number;
+	to: number;
+}
+
 interface AtlasMeta {
 	app: string;
 	version: string;
 	smartupdate: string;
+	frameTags?: AtlasFrameTag[];
 }
 
 export type AtlasData = {
@@ -39,8 +49,88 @@ export type AtlasData = {
 	  }
 );
 
-export async function loadAtlas(src: string): Promise<AtlasData> {
-	return fetch(src).then((res) => res.json() as Promise<AtlasData>);
+export const createAnim = (tag: string, length: number): string[] =>
+	Array.from({ length }, (_, i) => `${tag}-${i}`);
+
+// TODO(bret): implements ISpriteLike
+export class Atlas extends Graphic {
+	texture: ImageAsset;
+	data: AtlasAsset;
+
+	frame = -1;
+	frameId = 0;
+
+	anim: string[];
+
+	constructor(texture: ImageAsset, data: AtlasAsset) {
+		super();
+
+		this.texture = texture;
+		this.data = data;
+
+		if (!data.loaded) throw new Error();
+
+		const anims =
+			data.data.meta.frameTags?.map(({ name, to, from }) =>
+				createAnim(name, to - from + 1),
+			) ?? [];
+		this.anim = anims[0];
+	}
+
+	update(): void {
+		++this.frame;
+
+		this.frameId = Math.floor(this.frame / 5);
+	}
+
+	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
+		if (!this.visible) return;
+
+		if (!this.data.loaded) throw new Error();
+
+		const texture = this.data.data;
+
+		let frame: AtlasFrame | undefined;
+		if ('frames' in texture) {
+			if ((false as boolean) && Array.isArray(texture.frames)) {
+				for (
+					let frameId = 0;
+					frameId < texture.frames.length;
+					++frameId
+				) {
+					const frame = texture.frames[frameId];
+
+					renderAtlas(
+						ctx,
+						this.texture,
+						frame,
+						frame.frame.x - frame.spriteSourceSize.x,
+						frame.frame.y - frame.spriteSourceSize.y,
+					);
+				}
+			}
+
+			const curFilename = this.anim[this.frameId % this.anim.length];
+			if (Array.isArray(texture.frames)) {
+				frame = texture.frames.find(
+					({ filename }) => filename === curFilename,
+				);
+			} else {
+				frame = texture.frames[curFilename];
+			}
+		}
+
+		if (!frame) return;
+
+		let x = this.x - camera.x * this.scrollX;
+		let y = this.y - camera.y * this.scrollY;
+		if (this.relative) {
+			x += this.parent?.x ?? 0;
+			y += this.parent?.y ?? 0;
+		}
+
+		renderAtlas(ctx, this.texture, frame, x, y);
+	}
 }
 
 export function renderAtlas(

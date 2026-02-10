@@ -1,12 +1,12 @@
 import { Entity } from '../../bin/core/entity.js';
 import { Scene } from '../../bin/core/scene.js';
+import { Atlas } from '../../bin/graphic/atlas.js';
 import {
 	AnimatedSprite,
 	GraphicList,
 	Sprite,
 	Tileset,
 } from '../../bin/graphic/index.js';
-import { loadAtlas, renderAtlas } from '../../bin/graphic/atlas.js';
 import { Draw } from '../../bin/util/draw.js';
 import { Grid } from '../../bin/util/grid.js';
 import { init } from '../sandbox.js';
@@ -365,17 +365,7 @@ const atlasSrc = '../sandbox/img/mr_clean.json';
 
 const src = '../sandbox/img/mr_clean.png';
 
-const createAnim = (tag, length) =>
-	Array.from({ length }, (_, i) => `${tag}-${i}`);
-
 export class AtlasScene extends Scene {
-	asset;
-
-	frame = -1;
-	frameId = 0;
-
-	anim = null;
-
 	constructor(engine) {
 		super();
 
@@ -384,62 +374,17 @@ export class AtlasScene extends Scene {
 		const { assetManager } = engine;
 		if (!assetManager) throw new Error();
 
-		const asset = assetManager.getImage(src);
-		this.asset = asset;
+		const texture = assetManager.getImage(src);
+		const atlasData = assetManager.getAtlas(atlasSrc);
 
-		const { data } = assetManager.getAtlas(atlasSrc);
-		const anims = data.meta.frameTags.map(({ name, to, from }) =>
-			createAnim(name, to - from + 1),
-		);
-		this.anim = anims[0];
+		const atlas = new Atlas(texture, atlasData);
+		atlas.x = 100;
+		atlas.y = 30;
+		this.addGraphic(atlas);
 
 		// const sprite = new Sprite(asset);
 		// sprite.alpha = 0.5;
 		// this.addGraphic(sprite);
-	}
-
-	update() {
-		++this.frame;
-
-		this.frameId = Math.floor(this.frame / 5);
-	}
-
-	render(ctx, _camera) {
-		// const [texture] = data.textures;
-		const { data } = assetManager.getAtlas(atlasSrc);
-		const texture = {
-			frames: data.frames,
-		};
-
-		if (false) {
-			for (let frameId = 0; frameId < texture.frames.length; ++frameId) {
-				const frame = texture.frames[frameId];
-
-				renderAtlas(
-					ctx,
-					this.asset,
-					frame,
-					frame.frame.x - frame.spriteSourceSize.x,
-					frame.frame.y - frame.spriteSourceSize.y,
-				);
-			}
-		}
-
-		if (true) {
-			const curFilename = this.anim[this.frameId % this.anim.length];
-			let frame;
-			if (Array.isArray(texture.frames)) {
-				frame = texture.frames.find(
-					({ filename }) => filename === curFilename,
-				);
-			} else {
-				frame = texture.frames[curFilename];
-			}
-
-			if (frame) {
-				renderAtlas(ctx, this.asset, frame, 0, 0);
-			}
-		}
 	}
 }
 
