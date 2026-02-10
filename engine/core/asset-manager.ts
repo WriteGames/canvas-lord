@@ -25,6 +25,22 @@ export type ImageAsset = Asset &
 		  }
 	);
 
+type AtlasData = object;
+
+export type AtlasAsset = Asset &
+	(
+		| {
+				data: null;
+				loaded: false;
+		  }
+		| {
+				data: AtlasData;
+				width: number;
+				height: number;
+				loaded: true;
+		  }
+	);
+
 export type AudioAsset = Asset &
 	(
 		| {
@@ -45,7 +61,8 @@ const isLoaded = <T extends { loaded: boolean }>(
 } => asset.loaded;
 
 export interface AssetManager {
-	spritesLoaded: number;
+	imagesLoaded: number;
+	atlasesLoaded: number;
 	audioFilesLoaded: number;
 	onLoad: Delegate<(src: string) => void>;
 	prefix: string;
@@ -55,14 +72,17 @@ export class AssetManager {
 	loaded = false;
 
 	#assets: Map<string, Asset>;
-	#sprites: Map<string, ImageAsset>;
+	#images: Map<string, ImageAsset>;
+	#atlases: Map<string, AtlasAsset>;
 	#audio: Map<string, AudioAsset>;
 
 	constructor(prefix = '') {
 		this.#assets = new Map();
-		this.#sprites = new Map();
+		this.#images = new Map();
+		this.#atlases = new Map();
 		this.#audio = new Map();
-		this.spritesLoaded = 0;
+		this.imagesLoaded = 0;
+		this.atlasesLoaded = 0;
 		this.audioFilesLoaded = 0;
 		this.onLoad = new Delegate();
 		this.prefix = prefix;
@@ -77,13 +97,31 @@ export class AssetManager {
 				image: null,
 				loaded: false,
 			};
-			this.#sprites.set(src, asset);
+			this.#images.set(src, asset);
 			this.#assets.set(src, asset);
 		});
 	}
 
 	addImages(...src: string[] | string[][]): void {
 		this.addImage(...src);
+	}
+
+	addAtlas(...src: string[] | string[][]): void {
+		src.flat().forEach((src) => {
+			const asset: AtlasAsset = {
+				fileName: src,
+				bytesLoaded: 0,
+				fileSize: -1,
+				data: null,
+				loaded: false,
+			};
+			this.#atlases.set(src, asset);
+			this.#assets.set(src, asset);
+		});
+	}
+
+	addAtlases(...src: string[] | string[][]): void {
+		this.addAtlas(...src);
 	}
 
 	addAudio(...src: string[] | string[][]): void {
@@ -129,7 +167,7 @@ export class AssetManager {
 	}
 
 	getImage(src: string): Loaded & ImageAsset {
-		const result = this.#sprites.get(src);
+		const result = this.#images.get(src);
 		if (!result || !result.loaded)
 			throw new Error(`[getImage()] failed to get asset "${src}"`);
 		return result;
@@ -210,11 +248,28 @@ export class AssetManager {
 				this.audioLoaded(src);
 				return audio;
 			})
+			// VALIDATE(bret): why in the world..?
 			.then((audio) => {
 				if (audio.buffer) {
 					audio.duration = 10;
 				}
 			});
+	}
+
+	async loadAtlas(src: string): Promise<void> {
+		const fullPath = this.#getFullPath(src);
+		const atlas = this.#atlases.get(src);
+		if (!atlas) {
+			throw new Error(
+				`Attempting to load atlas that doesn't exist in map ("${src}" / "${fullPath}")`,
+			);
+		}
+
+		atlas.data = await this.loadAsset(fullPath, atlas).then(
+			(res) => res.json() as Promise<AtlasData>,
+		);
+
+		this.atlasLoaded(src);
 	}
 
 	async loadImage(src: string): Promise<void> {
@@ -227,7 +282,7 @@ export class AssetManager {
 			image.crossOrigin = 'Anonymous';
 		}
 
-		const sprite = this.#sprites.get(src);
+		const sprite = this.#images.get(src);
 		if (!sprite) {
 			throw new Error(
 				`Attempting to load image that doesn't exist in map ("${src}" / "${fullPath}")`,
@@ -256,8 +311,10 @@ export class AssetManager {
 		await Promise.all(
 			assets.map(async (src) => {
 				switch (true) {
-					case this.#sprites.has(src):
+					case this.#images.has(src):
 						return this.loadImage(src);
+					case this.#atlases.has(src):
+						return this.loadAtlas(src);
 					case this.#audio.has(src):
 						return this.loadAudio(src);
 					default:
@@ -274,16 +331,18 @@ export class AssetManager {
 	}
 
 	async reloadAssets(): Promise<void> {
-		this.spritesLoaded = 0;
+		this.imagesLoaded = 0;
+		this.atlasesLoaded = 0;
 		this.audioFilesLoaded = 0;
-		const sprites = [...this.#sprites.keys()];
+		const sprites = [...this.#images.keys()];
 		if (sprites.length === 0) this.emitOnLoad('');
 		await Promise.all(sprites.map(async (src) => this.loadImage(src)));
 	}
 
 	_checkAllAssetsLoaded(): void {
 		if (
-			this.spritesLoaded === this.#sprites.size &&
+			this.imagesLoaded === this.#images.size &&
+			this.atlasesLoaded === this.#atlases.size &&
 			this.audioFilesLoaded === this.#audio.size
 		) {
 			this.emitOnLoad('');
@@ -291,7 +350,12 @@ export class AssetManager {
 	}
 
 	imageLoaded(_src: string): void {
-		++this.spritesLoaded;
+		++this.imagesLoaded;
+		this._checkAllAssetsLoaded();
+	}
+
+	atlasLoaded(_src: string): void {
+		++this.atlasesLoaded;
 		this._checkAllAssetsLoaded();
 	}
 

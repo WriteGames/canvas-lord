@@ -378,5 +378,6 @@ const { assetManager } = init({
 			'particle-3.png',
 			'../sandbox/img/animation.png',
 		],
+		atlases: ['../sandbox/img/animation.json'],
 	},
 });

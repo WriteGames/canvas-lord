@@ -72,8 +72,9 @@ export const init = ({ games, assetSrc, assets, onLoad }) => {
 	}
 
 	const assetManager = new AssetManager(assetSrc);
-	assets?.images?.forEach((asset) => assetManager.addImage(asset));
-	assets?.audio?.forEach((asset) => assetManager.addAudio(asset));
+	assetManager.addImages(assets?.images ?? []);
+	assetManager.addAtlases(assets?.atlases ?? []);
+	assetManager.addAudio(assets?.audio ?? []);
 	assetManager.onLoad.add(() => {
 		if (loaded) return;
 		loaded = true;
