@@ -7,7 +7,7 @@ class EmitterEntity extends Entity {
 		super(x, y);
 
 		// const sprite = Sprite.createRect(8, 8, '#888');
-		const sprite = new Sprite(assetManager.sprites.get('particle.png'));
+		const sprite = new Sprite(assetManager.getImage('particle.png'));
 
 		const emitter = new Emitter(sprite, 0, 0);
 		this.graphic = emitter;

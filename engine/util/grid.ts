@@ -66,8 +66,7 @@ export class Grid {
 		tileW: number,
 		tileH: number,
 	): Grid {
-		const sprite = assetManager.sprites.get(src);
-		if (!sprite?.image) throw new Error(`"${src}" is not a valid image`);
+		const sprite = assetManager.getImage(src);
 
 		if (!pixelCtx) throw Error('pixelCtx failed to create');
 

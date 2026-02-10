@@ -40,7 +40,7 @@ class TilesetScene extends Scene {
 	}
 
 	initTileset(grid, assetManager) {
-		const img = assetManager.sprites.get('tileset.png');
+		const img = assetManager.getImage('tileset.png');
 		if (!img) throw new Error();
 		const tileset = new Tileset(img, grid.width, grid.height, 16, 16, {
 			startX: 1,

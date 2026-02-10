@@ -14,7 +14,7 @@ import { Inspector } from 'canvas-lord/inspector';
 
 const initTileset = (grid) => {
 	const tileset = new Tileset(
-		assetManager.sprites.get('tileset.png'),
+		assetManager.getImage('tileset.png'),
 		grid.width,
 		grid.height,
 		16,

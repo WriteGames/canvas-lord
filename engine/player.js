@@ -23,7 +23,7 @@ export class Player extends Entity {
 		super(x, y);
 
 		this.scene = null;
-		this.sprite = assetManager.sprites.get('radiohead_spritesheet.png');
+		this.sprite = assetManager.getImage('radiohead_spritesheet.png');
 
 		this.facing = 1;
 
@@ -408,7 +408,7 @@ export class PlayerWithComponents extends Entity {
 		super(x, y);
 
 		this.scene = null;
-		this.sprite = assetManager.sprites.get('radiohead_spritesheet.png');
+		this.sprite = assetManager.getImage('radiohead_spritesheet.png');
 
 		this.facing = 1;
 
@@ -443,9 +443,7 @@ export class PlayerWithComponents extends Entity {
 		imageComp.originX = 16;
 		imageComp.frameW = 32;
 		imageComp.frameH = 32;
-		imageComp.imageSrc = assetManager.sprites.get(
-			'radiohead_spritesheet.png',
-		);
+		imageComp.imageSrc = assetManager.getImage('radiohead_spritesheet.png');
 	}
 
 	moveX() {

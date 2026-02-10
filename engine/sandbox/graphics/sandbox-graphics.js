@@ -62,9 +62,9 @@ class GraphicScene extends Scene {
 	constructor(engine) {
 		super(engine);
 
-		const assetParticle = assetManager.assets.get('particle.png');
-		const assetParticle2 = assetManager.assets.get('particle-2.png');
-		const assetParticle3 = assetManager.assets.get('particle-3.png');
+		const assetParticle = assetManager.getImage('particle.png');
+		const assetParticle2 = assetManager.getImage('particle-2.png');
+		const assetParticle3 = assetManager.getImage('particle-3.png');
 
 		const halfW = engine.canvas.width >> 1;
 		const quarW = engine.canvas.width >> 2;
@@ -116,7 +116,7 @@ class RadioHead extends Entity {
 		this.label = label;
 
 		const anim = new AnimatedSprite(
-			assetManager.assets.get('radiohead_spritesheet.png'),
+			assetManager.getImage('radiohead_spritesheet.png'),
 			32,
 			32,
 		);
@@ -188,7 +188,7 @@ class Anim extends Entity {
 
 		const { loop = true, useCallback = false, frame = undefined } = options;
 
-		const asset = assetManager.assets.get('../sandbox/img/animation.png');
+		const asset = assetManager.getImage('../sandbox/img/animation.png');
 
 		const _callback = (name) => {
 			switch (name) {
@@ -318,7 +318,7 @@ class TilesetScene extends Scene {
 	}
 
 	initTileset(grid, assetManager) {
-		const img = assetManager.sprites.get('tileset.png');
+		const img = assetManager.getImage('tileset.png');
 		if (!img) throw new Error();
 		const tileset = new Tileset(img, grid.width, grid.height, 16, 16, {
 			startX: 1,
