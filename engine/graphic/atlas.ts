@@ -61,6 +61,7 @@ export class Atlas extends Graphic {
 	frameId = 0;
 
 	anim: string[];
+	anims: Record<string, string[]>;
 
 	constructor(texture: ImageAsset, data: AtlasAsset) {
 		super();
@@ -70,11 +71,17 @@ export class Atlas extends Graphic {
 
 		if (!data.loaded) throw new Error();
 
-		const anims =
-			data.data.meta.frameTags?.map(({ name, to, from }) =>
+		const tags = data.data.meta.frameTags ?? [];
+
+		this.anims = Object.fromEntries(
+			tags.map(({ name, to, from }) => [
+				name,
 				createAnim(name, to - from + 1),
-			) ?? [];
-		this.anim = anims[0];
+			]),
+		);
+
+		const anim = 'punch';
+		this.anim = this.anims[anim];
 	}
 
 	update(): void {
