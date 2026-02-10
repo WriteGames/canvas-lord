@@ -6,19 +6,12 @@ import { Draw } from './draw.js';
 export class Preloader extends Scene {
 	assetManager: AssetManager;
 
-	constructor(assetManager?: AssetManager, onLoad?: () => void) {
+	constructor(assetManager?: AssetManager) {
 		super();
 
 		this.backgroundColor = 'purple';
 
 		if (!assetManager) throw new Error('Needs asset manager');
-
-		assetManager.onLoad.add(() => {
-			setTimeout(() => {
-				this.engine.clearScenes();
-				onLoad?.();
-			}, 300);
-		});
 
 		this.assetManager = assetManager;
 	}

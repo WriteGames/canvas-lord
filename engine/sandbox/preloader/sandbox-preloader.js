@@ -108,7 +108,7 @@ const game = new Game('preloader', {
 	},
 });
 
-game.preload(() => {
+game.preload().then(() => {
 	game.pushScene(new TilesetScene());
 });
 
