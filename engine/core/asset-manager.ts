@@ -68,28 +68,36 @@ export class AssetManager {
 		this.prefix = prefix;
 	}
 
-	addImage(src: string): void {
-		const asset: ImageAsset = {
-			fileName: src,
-			bytesLoaded: 0,
-			fileSize: -1,
-			image: null,
-			loaded: false,
-		};
-		this.#sprites.set(src, asset);
-		this.#assets.set(src, asset);
+	addImage(...src: string[] | string[][]): void {
+		src.flat().forEach((src) => {
+			const asset: ImageAsset = {
+				fileName: src,
+				bytesLoaded: 0,
+				fileSize: -1,
+				image: null,
+				loaded: false,
+			};
+			this.#sprites.set(src, asset);
+			this.#assets.set(src, asset);
+		});
 	}
 
-	addAudio(src: string): void {
-		const asset: AudioAsset = {
-			fileName: src,
-			bytesLoaded: 0,
-			fileSize: -1,
-			buffer: null,
-			loaded: false,
-		};
-		this.#audio.set(src, asset);
-		this.#assets.set(src, asset);
+	addImages(...src: string[] | string[][]): void {
+		this.addImage(...src);
+	}
+
+	addAudio(...src: string[] | string[][]): void {
+		src.flat().forEach((src) => {
+			const asset: AudioAsset = {
+				fileName: src,
+				bytesLoaded: 0,
+				fileSize: -1,
+				buffer: null,
+				loaded: false,
+			};
+			this.#audio.set(src, asset);
+			this.#assets.set(src, asset);
+		});
 	}
 
 	get progress(): number {

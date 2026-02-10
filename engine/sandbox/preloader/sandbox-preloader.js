@@ -97,7 +97,8 @@ const assets = {
 };
 
 const assetManager = new AssetManager(assetSrc);
-assets?.images?.forEach((asset) => assetManager.addImage(asset));
+assetManager.addImage(assets?.images ?? []);
+assetManager.addAudio(assets?.audio ?? []);
 assets?.audio?.forEach((asset) => assetManager.addAudio(asset));
 
 const game = new Game('preloader', {
