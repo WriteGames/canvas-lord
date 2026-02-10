@@ -49,8 +49,19 @@ export type AtlasData = {
 	  }
 );
 
-export const createAnim = (tag: string, length: number): string[] =>
-	Array.from({ length }, (_, i) => `${tag}-${i}`);
+interface Animation {
+	name: string;
+	frames: string[];
+	frameRate: number;
+	loop: boolean;
+}
+
+export const createAnim = (tag: string, length: number): Animation => ({
+	name: tag,
+	frames: Array.from({ length }, (_, i) => `${tag}-${i}`),
+	frameRate: 5,
+	loop: true,
+});
 
 // TODO(bret): implements ISpriteLike
 export class Atlas extends Graphic {
@@ -60,8 +71,8 @@ export class Atlas extends Graphic {
 	frame = -1;
 	frameId = 0;
 
-	anim: string[];
-	anims: Record<string, string[]>;
+	anim: Animation;
+	anims: Record<string, Animation>;
 
 	constructor(texture: ImageAsset, data: AtlasAsset) {
 		super();
@@ -117,7 +128,8 @@ export class Atlas extends Graphic {
 				}
 			}
 
-			const curFilename = this.anim[this.frameId % this.anim.length];
+			const { frames } = this.anim;
+			const curFilename = frames[this.frameId % frames.length];
 			if (Array.isArray(texture.frames)) {
 				frame = texture.frames.find(
 					({ filename }) => filename === curFilename,

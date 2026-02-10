@@ -8,9 +8,16 @@ import { Draw } from '../util/draw.js';
 
 type AnimCallback = (name: string) => void;
 
+interface Frame {
+	sourceX: number;
+	sourceY: number;
+	sourceW: number;
+	sourceH: number;
+}
+
 interface Animation {
 	name: string;
-	frames: number[];
+	frames: Frame[];
 	frameRate: number;
 	loop: boolean;
 }
@@ -25,6 +32,8 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	frameW = 0;
 	frameH = 0;
 
+	frameData: Record<number | string, Frame>;
+
 	color?: string;
 	blend?: boolean;
 
@@ -32,6 +41,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	animations = new Map<string, Animation>();
 	currentAnimation?: Animation;
+	currentFrame: Frame;
 	callback?: AnimCallback;
 
 	get width(): number {
@@ -73,13 +83,38 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.frameW = frameW;
 		this.frameH = frameH;
 
+		const framesPerRow = Math.floor(this.imageSrc.width / frameW);
+		const framesPerCol = Math.floor(this.imageSrc.height / frameH);
+
+		const totalFrames = framesPerRow * framesPerCol;
+
+		const map = (frameId: number): Frame => ({
+			sourceX: (frameId % framesPerRow) * frameW,
+			sourceY: Math.floor(frameId / framesPerRow) * frameH,
+			sourceW: frameW,
+			sourceH: frameH,
+		});
+
+		this.frameData = Object.fromEntries(
+			Array.from({ length: totalFrames }, (_, i) => [i, map(i)]),
+		);
+
+		// TYPE(bret): Fix this
+		const curFrame = this.frameData[0] as Frame | undefined;
+		this.currentFrame = curFrame ?? {
+			sourceX: 0,
+			sourceY: 0,
+			sourceW: this.imageSrc.width,
+			sourceH: this.imageSrc.height,
+		};
+
 		this.callback = callback;
 	}
 
 	add(name: string, frames: number[], frameRate: number, loop = true): void {
 		const animation: Animation = {
 			name,
-			frames,
+			frames: frames.map((frameId) => this.frameData[frameId]),
 			frameRate,
 			loop,
 		};
@@ -116,25 +151,26 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	updateRect(): void {
 		if (!this.currentAnimation) return;
 
-		const { frames, frameRate } = this.currentAnimation;
+		const { frames: frames2, frameRate } = this.currentAnimation;
 		this.frame = Math.floor(this.inc / frameRate);
 		if (this.currentAnimation.loop) {
-			this.frame %= frames.length;
+			this.frame %= frames2.length;
 		} else {
-			this.frame = Math.min(this.frame, frames.length - 1);
+			this.frame = Math.min(this.frame, frames2.length - 1);
 		}
-		this.frameId = frames[this.frame];
+
+		this.currentFrame = frames2[this.frame];
 	}
 
 	update(): void {
 		if (!this.currentAnimation || this.done) return;
 
-		const { frames, frameRate } = this.currentAnimation;
+		const { frames: frames2, frameRate } = this.currentAnimation;
 
 		++this.inc;
 
 		let atEnd = false;
-		const dur = frameRate * frames.length;
+		const dur = frameRate * frames2.length;
 		if (this.inc >= dur) {
 			atEnd = true;
 			if (this.currentAnimation.loop) {
@@ -155,18 +191,15 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
 		if (!this.visible) return;
 
-		const { frameId, frameW, frameH } = this;
-		const framesPerRow = Math.floor(this.imageSrc.width / frameW);
-
-		const sourceX = (frameId % framesPerRow) * frameW;
-		const sourceY = Math.floor(frameId / framesPerRow) * frameH;
 		let x = this.x - camera.x * this.scrollX;
 		let y = this.y - camera.y * this.scrollY;
 		if (this.relative) {
 			x += this.parent?.x ?? 0;
 			y += this.parent?.y ?? 0;
 		}
-		Draw.image(ctx, this, x, y, sourceX, sourceY, frameW, frameH);
+
+		const { sourceX, sourceY, sourceW, sourceH } = this.currentFrame;
+		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
 	}
 
 	reset(): void {
@@ -185,5 +218,8 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 		this.animations.clear();
 		this.currentAnimation = undefined;
+		// DECIDE(bret): What do we want to set this to?
+		// this.currentFrame = ???
+		this.frameData = {};
 	}
 }
