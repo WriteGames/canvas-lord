@@ -1,3 +1,4 @@
+import type { AtlasData } from '../graphic/atlas.js';
 import { Delegate } from '../util/delegate.js';
 
 interface Asset {
@@ -24,8 +25,6 @@ export type ImageAsset = Asset &
 				loaded: true;
 		  }
 	);
-
-type AtlasData = object;
 
 export type AtlasAsset = Asset &
 	(
@@ -173,6 +172,13 @@ export class AssetManager {
 		return result;
 	}
 
+	getAtlas(src: string): Loaded & AtlasAsset {
+		const result = this.#atlases.get(src);
+		if (!result || !result.loaded)
+			throw new Error(`[getAtlas()] failed to get asset "${src}"`);
+		return result;
+	}
+
 	getAudio(src: string): Loaded & AudioAsset {
 		const result = this.#audio.get(src);
 		if (!result || !result.loaded)
@@ -269,6 +275,7 @@ export class AssetManager {
 			(res) => res.json() as Promise<AtlasData>,
 		);
 
+		atlas.loaded = true;
 		this.atlasLoaded(src);
 	}
 
@@ -314,6 +321,7 @@ export class AssetManager {
 					case this.#images.has(src):
 						return this.loadImage(src);
 					case this.#atlases.has(src):
+						console.log('loading', src);
 						return this.loadAtlas(src);
 					case this.#audio.has(src):
 						return this.loadAudio(src);

@@ -361,23 +361,20 @@ class TilesetScene extends Scene {
 	}
 }
 
-const data = await loadAtlas('../../sandbox/img/mr_clean.json');
+const atlasSrc = '../sandbox/img/mr_clean.json';
 
 const src = '../sandbox/img/mr_clean.png';
 
 const createAnim = (tag, length) =>
 	Array.from({ length }, (_, i) => `${tag}-${i}`);
 
-const anims = data.meta.frameTags.map(({ name, to, from }) =>
-	createAnim(name, to - from + 1),
-);
-let anim = anims[3];
-
 export class AtlasScene extends Scene {
 	asset;
 
 	frame = -1;
 	frameId = 0;
+
+	anim = null;
 
 	constructor(engine) {
 		super();
@@ -387,9 +384,14 @@ export class AtlasScene extends Scene {
 		const { assetManager } = engine;
 		if (!assetManager) throw new Error();
 
-		const asset = assetManager.sprites.get(src);
-		if (!asset) throw new Error();
+		const asset = assetManager.getImage(src);
 		this.asset = asset;
+
+		const { data } = assetManager.getAtlas(atlasSrc);
+		const anims = data.meta.frameTags.map(({ name, to, from }) =>
+			createAnim(name, to - from + 1),
+		);
+		this.anim = anims[0];
 
 		// const sprite = new Sprite(asset);
 		// sprite.alpha = 0.5;
@@ -404,6 +406,7 @@ export class AtlasScene extends Scene {
 
 	render(ctx, _camera) {
 		// const [texture] = data.textures;
+		const { data } = assetManager.getAtlas(atlasSrc);
 		const texture = {
 			frames: data.frames,
 		};
@@ -423,7 +426,7 @@ export class AtlasScene extends Scene {
 		}
 
 		if (true) {
-			const curFilename = anim[this.frameId % anim.length];
+			const curFilename = this.anim[this.frameId % this.anim.length];
 			let frame;
 			if (Array.isArray(texture.frames)) {
 				frame = texture.frames.find(
@@ -460,6 +463,6 @@ const { assetManager } = init({
 			'../sandbox/img/animation.png',
 			'../sandbox/img/mr_clean.png',
 		],
-		atlases: ['../sandbox/img/animation.json'],
+		atlases: [atlasSrc, '../sandbox/img/animation.json'],
 	},
 });

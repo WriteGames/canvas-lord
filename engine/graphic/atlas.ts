@@ -28,7 +28,7 @@ interface AtlasMeta {
 	smartupdate: string;
 }
 
-type AtlasData = {
+export type AtlasData = {
 	meta: AtlasMeta;
 } & (
 	| {
@@ -40,7 +40,7 @@ type AtlasData = {
 );
 
 export async function loadAtlas(src: string): Promise<AtlasData> {
-	return fetch(src).then((res) => res.json() as unknown as AtlasData);
+	return fetch(src).then((res) => res.json() as Promise<AtlasData>);
 }
 
 export function renderAtlas(
