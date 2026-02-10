@@ -652,7 +652,7 @@ export class Game implements Engine {
 
 		// reload assets
 		if (this.input.keyPressed('F2')) {
-			this.assetManager?.reloadAssets();
+			void this.assetManager?.reloadAssets();
 		}
 
 		debug?.update(this.input);
