@@ -381,10 +381,19 @@ export class AtlasScene extends Scene {
 		sprite.alpha = 0.5;
 		this.addGraphic(sprite);
 
-		const atlas = new Atlas(texture, atlasData);
+		// const atlas = new Atlas(texture, atlasData);
+		const atlas = Atlas.fromTexturePacker(atlasData);
 		atlas.x = 200;
 		atlas.y = 200;
 		this.addGraphic(atlas);
+
+		const anim = new AnimatedSprite(texture, 80, 80);
+		anim.x = 300;
+		anim.y = 250;
+		anim.applyAtlas(atlas);
+		anim.add('walk', ['walk-0', 'walk-1', 'walk-2', 'walk-3'], 5, true);
+		anim.play('walk');
+		this.addGraphic(anim);
 	}
 }
 

@@ -1,10 +1,11 @@
-import { Graphic } from './graphic.js';
-import type { ISpriteLike } from './sprite.js';
 import type { ImageAsset } from '../core/asset-manager.js';
 import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
+import type { Atlas, AtlasFrame } from './atlas.js';
+import { Graphic } from './graphic.js';
+import type { ISpriteLike } from './sprite.js';
 
 type AnimCallback = (name: string) => void;
 
@@ -17,7 +18,7 @@ interface Frame {
 
 interface Animation {
 	name: string;
-	frames: Frame[];
+	frames: Frame[] | AtlasFrame[];
 	frameRate: number;
 	loop: boolean;
 }
@@ -32,7 +33,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	frameW = 0;
 	frameH = 0;
 
-	frameData: Record<number | string, Frame>;
+	frameData: Record<number | string, Frame | AtlasFrame>;
 
 	color?: string;
 	blend?: boolean;
@@ -41,7 +42,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	animations = new Map<string, Animation>();
 	currentAnimation?: Animation;
-	currentFrame: Frame;
+	currentFrame: Frame | AtlasFrame;
 	callback?: AnimCallback;
 
 	get width(): number {
@@ -78,6 +79,16 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		)
 			throw new Error('please supply frameW/frameH');
 
+		// TYPE(bret): remove these two lines
+		this.frameData = {};
+		this.currentFrame = null as unknown as Frame | AtlasFrame;
+
+		this.applyGrid(frameW, frameH);
+
+		this.callback = callback;
+	}
+
+	applyGrid(frameW: number, frameH: number): this {
 		this.frame = 0;
 		this.frameId = 0;
 		this.frameW = frameW;
@@ -108,12 +119,31 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			sourceH: this.imageSrc.height,
 		};
 
-		this.callback = callback;
+		return this;
+	}
+
+	applyAtlas(atlas: Atlas): this {
+		this.frame = 0;
+		this.frameId = 0;
+		// this.frameW = frameW;
+		// this.frameH = frameH;
+
+		this.frameData = atlas.frameData;
+		const curFrame = Object.values(this.frameData)[0] as Frame | undefined;
+		this.currentFrame = curFrame ?? {
+			sourceX: 0,
+			sourceY: 0,
+			sourceW: this.imageSrc.width,
+			sourceH: this.imageSrc.height,
+		};
+
+		return this;
 	}
 
 	add(name: string, frames: number[], frameRate: number, loop = true): void {
 		const animation: Animation = {
 			name,
+			// @ts-expect-error - we are ignoring this for a minute
 			frames: frames.map((frameId) => this.frameData[frameId]),
 			frameRate,
 			loop,
@@ -198,8 +228,63 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			y += this.parent?.y ?? 0;
 		}
 
-		const { sourceX, sourceY, sourceW, sourceH } = this.currentFrame;
-		Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
+		if ('sourceX' in this.currentFrame) {
+			const { sourceX, sourceY, sourceW, sourceH } = this.currentFrame;
+			Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
+		} else {
+			const {
+				anchor = { x: 0, y: 0 },
+				frame,
+				sourceSize,
+				spriteSourceSize,
+				trimmed,
+				texture,
+			} = this.currentFrame;
+
+			const originX = anchor.x * frame.w;
+			const originY = anchor.y * frame.h;
+
+			let drawX = x + originX;
+			let drawY = y + originY;
+			if (trimmed) {
+				drawX += spriteSourceSize.x;
+				drawY += spriteSourceSize.y;
+			}
+
+			const sourceX = frame.x;
+			const sourceY = frame.y;
+			const w = frame.w;
+			const h = frame.h;
+
+			this.asset = texture;
+			Draw.image(ctx, this, drawX, drawY, sourceX, sourceY, w, h);
+
+			if (true as boolean) {
+				Draw.rect(
+					ctx,
+					{
+						color: 'lime',
+						type: 'stroke',
+					},
+					x,
+					y,
+					sourceSize.w,
+					sourceSize.h,
+				);
+
+				Draw.rect(
+					ctx,
+					{
+						color: 'red',
+						type: 'stroke',
+					},
+					drawX - originX,
+					drawY - originY,
+					w,
+					h,
+				);
+			}
+		}
 	}
 
 	reset(): void {

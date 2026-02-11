@@ -1,7 +1,8 @@
-import type { AtlasData } from '../graphic/atlas.js';
+import type { TPAtlasData } from '../graphic/loaders/texture-packer-loader.js';
 import { Delegate } from '../util/delegate.js';
 
 interface Asset {
+	manager: AssetManager;
 	fileName: string;
 	bytesLoaded: number;
 	fileSize: number;
@@ -33,7 +34,8 @@ export type AtlasAsset = Asset &
 				loaded: false;
 		  }
 		| {
-				data: AtlasData;
+				data: TPAtlasData;
+				textures: Record<string, ImageAsset>;
 				width: number;
 				height: number;
 				loaded: true;
@@ -90,6 +92,7 @@ export class AssetManager {
 	addImage(...src: string[] | string[][]): void {
 		src.flat().forEach((src) => {
 			const asset: ImageAsset = {
+				manager: this,
 				fileName: src,
 				bytesLoaded: 0,
 				fileSize: -1,
@@ -108,6 +111,7 @@ export class AssetManager {
 	addAtlas(...src: string[] | string[][]): void {
 		src.flat().forEach((src) => {
 			const asset: AtlasAsset = {
+				manager: this,
 				fileName: src,
 				bytesLoaded: 0,
 				fileSize: -1,
@@ -126,6 +130,7 @@ export class AssetManager {
 	addAudio(...src: string[] | string[][]): void {
 		src.flat().forEach((src) => {
 			const asset: AudioAsset = {
+				manager: this,
 				fileName: src,
 				bytesLoaded: 0,
 				fileSize: -1,
@@ -272,7 +277,7 @@ export class AssetManager {
 		}
 
 		atlas.data = await this.loadAsset(fullPath, atlas).then(
-			(res) => res.json() as Promise<AtlasData>,
+			(res) => res.json() as Promise<TPAtlasData>,
 		);
 
 		atlas.loaded = true;
