@@ -13,8 +13,9 @@ interface Loaded {
 	loaded: true;
 }
 
-export type ImageAsset = Asset &
-	(
+export type ImageAsset = Asset & {
+	type: 'image';
+} & (
 		| {
 				image: null;
 				loaded: false;
@@ -27,8 +28,9 @@ export type ImageAsset = Asset &
 		  }
 	);
 
-export type AtlasAsset = Asset &
-	(
+export type AtlasAsset = Asset & {
+	type: 'atlas';
+} & (
 		| {
 				data: null;
 				loaded: false;
@@ -42,8 +44,9 @@ export type AtlasAsset = Asset &
 		  }
 	);
 
-export type AudioAsset = Asset &
-	(
+export type AudioAsset = Asset & {
+	type: 'audio';
+} & (
 		| {
 				buffer: null;
 				loaded: false;
@@ -92,6 +95,7 @@ export class AssetManager {
 	addImage(...src: string[] | string[][]): void {
 		src.flat().forEach((src) => {
 			const asset: ImageAsset = {
+				type: 'image',
 				manager: this,
 				fileName: src,
 				bytesLoaded: 0,
@@ -111,6 +115,7 @@ export class AssetManager {
 	addAtlas(...src: string[] | string[][]): void {
 		src.flat().forEach((src) => {
 			const asset: AtlasAsset = {
+				type: 'atlas',
 				manager: this,
 				fileName: src,
 				bytesLoaded: 0,
@@ -130,6 +135,7 @@ export class AssetManager {
 	addAudio(...src: string[] | string[][]): void {
 		src.flat().forEach((src) => {
 			const asset: AudioAsset = {
+				type: 'audio',
 				manager: this,
 				fileName: src,
 				bytesLoaded: 0,

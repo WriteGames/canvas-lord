@@ -1,10 +1,7 @@
 import type { AtlasAsset, ImageAsset } from '../core/asset-manager.js';
-import { Vec2 } from '../math/index.js';
-import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
 import type { Animation } from './animation.js';
-import { Graphic } from './graphic.js';
 
 export interface AtlasFrame {
 	texture: ImageAsset;
@@ -30,8 +27,7 @@ export const createAnim = (tag: string, length: number): Animation => ({
 	loop: true,
 });
 
-// TODO(bret): implements ISpriteLike
-export class Atlas extends Graphic {
+export class Atlas {
 	frame = -1;
 	frameId = 0;
 
@@ -43,8 +39,6 @@ export class Atlas extends Graphic {
 		anims: Record<string, Animation>,
 		frameData: FrameData,
 	) {
-		super();
-
 		this.frameData = frameData;
 
 		const animsArr = Object.values(anims);
@@ -95,41 +89,6 @@ export class Atlas extends Graphic {
 		}
 
 		return new Atlas(anims, frameData);
-	}
-
-	update(): void {
-		++this.frame;
-
-		this.frameId = Math.floor(this.frame / 5);
-	}
-
-	render(ctx: Ctx, camera: Camera = Vec2.zero): void {
-		if (!this.visible) return;
-
-		// DECIDE(bret): What do we want to do here? How do we get to this case?
-		if (!this.curAnim) return;
-
-		const frameData = this.frameData;
-		const { frames } = this.curAnim;
-		const curFilename = frames[this.frameId % frames.length];
-		// if (Array.isArray(frameData)) {
-		// 	frame = frameData.find(
-		// 		({ filename }) => filename === curFilename,
-		// 	);
-		// } else {
-		const frame = frameData[curFilename];
-		// }
-
-		if ((frame as AtlasFrame | undefined) === undefined) return;
-
-		let x = this.x - camera.x * this.scrollX;
-		let y = this.y - camera.y * this.scrollY;
-		if (this.relative) {
-			x += this.parent?.x ?? 0;
-			y += this.parent?.y ?? 0;
-		}
-
-		renderAtlas(ctx, frame.texture, frame, x, y);
 	}
 }
 
