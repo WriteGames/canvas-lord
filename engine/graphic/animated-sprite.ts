@@ -3,25 +3,12 @@ import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import type { Atlas, AtlasFrame } from './atlas.js';
+import type { Animation, AnimFrameKey, Frame } from './animation.js';
+import type { Atlas } from './atlas.js';
 import { Graphic } from './graphic.js';
 import type { ISpriteLike } from './sprite.js';
 
 type AnimCallback = (name: string) => void;
-
-interface Frame {
-	sourceX: number;
-	sourceY: number;
-	sourceW: number;
-	sourceH: number;
-}
-
-interface Animation {
-	name: string;
-	frames: Frame[] | AtlasFrame[];
-	frameRate: number;
-	loop: boolean;
-}
 
 export class AnimatedSprite extends Graphic implements ISpriteLike {
 	asset: ImageAsset;
@@ -33,7 +20,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	frameW = 0;
 	frameH = 0;
 
-	frameData: Record<number | string, Frame | AtlasFrame>;
+	frameData: Record<AnimFrameKey, Frame>;
 
 	color?: string;
 	blend?: boolean;
@@ -42,7 +29,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 	animations = new Map<string, Animation>();
 	currentAnimation?: Animation;
-	currentFrame: Frame | AtlasFrame;
+	currentFrame: Frame;
 	callback?: AnimCallback;
 
 	get width(): number {
@@ -81,7 +68,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 
 		// TYPE(bret): remove these two lines
 		this.frameData = {};
-		this.currentFrame = null as unknown as Frame | AtlasFrame;
+		this.currentFrame = null as unknown as Frame;
 
 		this.applyGrid(frameW, frameH);
 
@@ -95,17 +82,19 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		this.frameH = frameH;
 
 		const framesPerRow = Math.floor(this.imageSrc.width / frameW);
-		const framesPerCol = Math.floor(this.imageSrc.height / frameH);
-
-		const totalFrames = framesPerRow * framesPerCol;
 
 		const map = (frameId: number): Frame => ({
-			sourceX: (frameId % framesPerRow) * frameW,
-			sourceY: Math.floor(frameId / framesPerRow) * frameH,
-			sourceW: frameW,
-			sourceH: frameH,
+			texture: this.asset,
+			frame: {
+				x: (frameId % framesPerRow) * frameW,
+				y: Math.floor(frameId / framesPerRow) * frameH,
+				w: frameW,
+				h: frameH,
+			},
 		});
 
+		const rowCount = Math.floor(this.imageSrc.height / frameH);
+		const totalFrames = framesPerRow * rowCount;
 		this.frameData = Object.fromEntries(
 			Array.from({ length: totalFrames }, (_, i) => [i, map(i)]),
 		);
@@ -113,10 +102,13 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 		// TYPE(bret): Fix this
 		const curFrame = this.frameData[0] as Frame | undefined;
 		this.currentFrame = curFrame ?? {
-			sourceX: 0,
-			sourceY: 0,
-			sourceW: this.imageSrc.width,
-			sourceH: this.imageSrc.height,
+			texture: this.asset,
+			frame: {
+				x: 0,
+				y: 0,
+				w: this.imageSrc.width,
+				h: this.imageSrc.height,
+			},
 		};
 
 		return this;
@@ -125,26 +117,35 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	applyAtlas(atlas: Atlas): this {
 		this.frame = 0;
 		this.frameId = 0;
-		// this.frameW = frameW;
-		// this.frameH = frameH;
+
+		// DECIDE(bret): We might want to have frameW/frameH be getters. However, using originX/Y gets really funky here
+		this.frameW = this.imageSrc.width;
+		this.frameH = this.imageSrc.height;
 
 		this.frameData = atlas.frameData;
 		const curFrame = Object.values(this.frameData)[0] as Frame | undefined;
 		this.currentFrame = curFrame ?? {
-			sourceX: 0,
-			sourceY: 0,
-			sourceW: this.imageSrc.width,
-			sourceH: this.imageSrc.height,
+			texture: this.asset,
+			frame: {
+				x: 0,
+				y: 0,
+				w: this.imageSrc.width,
+				h: this.imageSrc.height,
+			},
 		};
 
 		return this;
 	}
 
-	add(name: string, frames: number[], frameRate: number, loop = true): void {
+	add(
+		name: string,
+		frames: AnimFrameKey[],
+		frameRate: number,
+		loop = true,
+	): void {
 		const animation: Animation = {
 			name,
-			// @ts-expect-error - we are ignoring this for a minute
-			frames: frames.map((frameId) => this.frameData[frameId]),
+			frames,
 			frameRate,
 			loop,
 		};
@@ -189,7 +190,8 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			this.frame = Math.min(this.frame, frames2.length - 1);
 		}
 
-		this.currentFrame = frames2[this.frame];
+		const key = frames2[this.frame];
+		this.currentFrame = this.frameData[key];
 	}
 
 	update(): void {
@@ -228,10 +230,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			y += this.parent?.y ?? 0;
 		}
 
-		if ('sourceX' in this.currentFrame) {
-			const { sourceX, sourceY, sourceW, sourceH } = this.currentFrame;
-			Draw.image(ctx, this, x, y, sourceX, sourceY, sourceW, sourceH);
-		} else {
+		if ('trimmed' in this.currentFrame) {
 			const {
 				anchor = { x: 0, y: 0 },
 				frame,
@@ -284,6 +283,9 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 					h,
 				);
 			}
+		} else {
+			const { x: sX, y: sY, w, h } = this.currentFrame.frame;
+			Draw.image(ctx, this, x, y, sX, sY, w, h);
 		}
 	}
 

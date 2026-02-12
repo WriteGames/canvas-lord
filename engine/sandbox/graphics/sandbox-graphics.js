@@ -374,14 +374,15 @@ export class AtlasScene extends Scene {
 		const { assetManager } = engine;
 		if (!assetManager) throw new Error();
 
-		const texture = assetManager.getImage(src);
 		const atlasData = assetManager.getAtlas(atlasSrc);
+		const atlas = Atlas.fromTexturePacker(atlasData);
+
+		const texture = assetManager.getImage(src);
 
 		const sprite = new Sprite(texture);
 		sprite.alpha = 0.5;
 		this.addGraphic(sprite);
 
-		const atlas = Atlas.fromTexturePacker(atlasData);
 		const anim = new AnimatedSprite(texture, 80, 80);
 		anim.x = 200;
 		anim.y = 200;

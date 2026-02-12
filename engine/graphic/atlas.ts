@@ -1,24 +1,20 @@
 import type { AtlasAsset, ImageAsset } from '../core/asset-manager.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import type { Animation } from './animation.js';
+import type { Animation, AnimFrameKey } from './animation.js';
 
 export interface AtlasFrame {
 	texture: ImageAsset;
 	filename: string;
 	rotated: boolean;
 	trimmed: boolean;
-	// the full size of the original frame
 	sourceSize: { w: number; h: number };
-	// the cropped rect within the original image
 	spriteSourceSize: { x: number; y: number; w: number; h: number };
-	// the rect we want to use
 	frame: { x: number; y: number; w: number; h: number };
-	// the rotation point
-	anchor: { x: number; y: number };
+	anchor?: { x: number; y: number };
 }
 
-type FrameData = Record<string, AtlasFrame>;
+type FrameData = Record<AnimFrameKey, AtlasFrame>;
 
 export const createAnim = (tag: string, length: number): Animation => ({
 	name: tag,
@@ -31,7 +27,6 @@ export class Atlas {
 	frame = -1;
 	frameId = 0;
 
-	curAnim?: Animation;
 	anims: Record<string, Animation>;
 	frameData: FrameData;
 
@@ -39,14 +34,11 @@ export class Atlas {
 		anims: Record<string, Animation>,
 		frameData: FrameData,
 	) {
-		this.frameData = frameData;
-
 		const animsArr = Object.values(anims);
 		if (animsArr.length === 0) throw new Error('no animations supplied');
 
 		this.anims = anims;
-
-		this.curAnim = animsArr[0];
+		this.frameData = frameData;
 	}
 
 	static fromTexturePacker(data: AtlasAsset): Atlas {
