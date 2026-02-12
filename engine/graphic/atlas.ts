@@ -1,7 +1,7 @@
 import type { AtlasAsset, ImageAsset } from '../core/asset-manager.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import type { Animation, AnimFrameKey } from './animation.js';
+import type { Animation, FrameData } from './animation.js';
 
 export interface AtlasFrame {
 	texture: ImageAsset;
@@ -13,8 +13,6 @@ export interface AtlasFrame {
 	frame: { x: number; y: number; w: number; h: number };
 	anchor?: { x: number; y: number };
 }
-
-type FrameData = Record<AnimFrameKey, AtlasFrame>;
 
 export const createAnim = (tag: string, length: number): Animation => ({
 	name: tag,

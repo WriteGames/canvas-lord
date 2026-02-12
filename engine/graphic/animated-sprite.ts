@@ -3,7 +3,7 @@ import { Vec2 } from '../math/index.js';
 import type { Camera } from '../util/camera.js';
 import type { Ctx } from '../util/canvas.js';
 import { Draw } from '../util/draw.js';
-import type { Animation, AnimFrameKey, Frame } from './animation.js';
+import type { Animation, AnimFrameKey, Frame, FrameData } from './animation.js';
 import type { Atlas } from './atlas.js';
 import { Graphic } from './graphic.js';
 import type { ISpriteLike } from './sprite.js';
@@ -20,7 +20,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	frameW = 0;
 	frameH = 0;
 
-	frameData: Record<AnimFrameKey, Frame>;
+	frameData: FrameData;
 
 	color?: string;
 	blend?: boolean;
@@ -245,6 +245,9 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			const originX = anchor.x * frame.w;
 			const originY = anchor.y * frame.h;
 
+			this.originX = originX;
+			this.originY = originY;
+
 			let drawX = x + originX;
 			let drawY = y + originY;
 			if (trimmed) {
@@ -260,7 +263,7 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 			this.asset = texture;
 			Draw.image(ctx, this, drawX, drawY, sourceX, sourceY, w, h);
 
-			if (true as boolean) {
+			if (false as boolean) {
 				Draw.rect(
 					ctx,
 					{

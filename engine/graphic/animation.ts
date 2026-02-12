@@ -21,3 +21,5 @@ export type Frame =
 			};
 	  }
 	| AtlasFrame;
+
+export type FrameData = Record<AnimFrameKey, Frame>;
