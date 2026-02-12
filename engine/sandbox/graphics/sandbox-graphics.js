@@ -161,13 +161,10 @@ class AnimationScene extends Scene {
 			loop: false,
 		});
 
-		// this is so hacky, please don't do this!
-		radioHead2.update = (input) => {
+		radioHead2.onUpdate.add(() => {
 			// testing to make sure it doesn't restart
 			radioHead2.graphic.play('walk');
-		};
-
-		const titles = ['Anim', 'update -> .play()'];
+		});
 
 		const radioHeads = [radioHead1, radioHead2, radioHead3];
 		const padding = 50;
@@ -187,7 +184,12 @@ class Anim extends Entity {
 	constructor(x, y, play, options = {}) {
 		super(x, y);
 
-		const { loop = true, useCallback = false, frame = undefined } = options;
+		const {
+			loop = true,
+			useCallback = false,
+			frame = undefined,
+			rate = 1,
+		} = options;
 
 		const asset = assetManager.getImage('../sandbox/img/animation.png');
 
@@ -219,6 +221,7 @@ class Anim extends Entity {
 		gfx.add('2', anim2, fr, loop, callback);
 		gfx.add('3', anim3, fr, loop, callback);
 
+		gfx.rate = rate;
 		gfx.play(play, false, frame);
 
 		this.graphic = gfx;
@@ -243,6 +246,20 @@ class AnimationScene2 extends Scene {
 		const animCallback = new Anim(x, y, '1', {
 			loop: false,
 			useCallback: true,
+		});
+
+		x += spacing;
+		x += spacing;
+		const animRate1 = new Anim(x, y, 'all', {
+			rate: 2,
+		});
+		x += spacing;
+		const animRate2 = new Anim(x, y, 'all', {
+			rate: 1.7,
+		});
+		x += spacing;
+		const animRate3 = new Anim(x, y, 'all', {
+			rate: 0.5,
 		});
 
 		y += spacing;
@@ -287,6 +304,9 @@ class AnimationScene2 extends Scene {
 		this.addEntities(
 			animAll,
 			animCallback,
+			animRate1,
+			animRate2,
+			animRate3,
 			anim1,
 			anim2,
 			anim3,

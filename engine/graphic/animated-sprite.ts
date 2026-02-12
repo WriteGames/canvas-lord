@@ -32,6 +32,8 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	currentFrame: Frame;
 	callback?: AnimCallback;
 
+	rate = 1;
+
 	get width(): number {
 		return this.imageSrc.width;
 	}
@@ -182,27 +184,27 @@ export class AnimatedSprite extends Graphic implements ISpriteLike {
 	updateRect(): void {
 		if (!this.currentAnimation) return;
 
-		const { frames: frames2, frameRate } = this.currentAnimation;
+		const { frames, frameRate } = this.currentAnimation;
 		this.frame = Math.floor(this.inc / frameRate);
 		if (this.currentAnimation.loop) {
-			this.frame %= frames2.length;
+			this.frame %= frames.length;
 		} else {
-			this.frame = Math.min(this.frame, frames2.length - 1);
+			this.frame = Math.min(this.frame, frames.length - 1);
 		}
 
-		const key = frames2[this.frame];
+		const key = frames[this.frame];
 		this.currentFrame = this.frameData[key];
 	}
 
 	update(): void {
 		if (!this.currentAnimation || this.done) return;
 
-		const { frames: frames2, frameRate } = this.currentAnimation;
+		const { frames, frameRate } = this.currentAnimation;
 
-		++this.inc;
+		this.inc += this.rate;
 
 		let atEnd = false;
-		const dur = frameRate * frames2.length;
+		const dur = frameRate * frames.length;
 		if (this.inc >= dur) {
 			atEnd = true;
 			if (this.currentAnimation.loop) {
