@@ -334,11 +334,7 @@ export const findAllPolygonsInGrid = (
 			)
 				.map((o) => addVec(next, o))
 				.map((p) => {
-					return isWithinBounds(
-						p,
-						Vec2.zero as number[] as [number, number],
-						new Vec2(columns, rows) as number[] as [number, number],
-					)
+					return isWithinBounds(p, Vec2.zero, new Vec2(columns, rows))
 						? (grid[posToIndex(p, columns)] as unknown as number)
 						: 0;
 				});
